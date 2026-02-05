@@ -270,26 +270,32 @@
 
         .instruction-text {
             position: absolute;
-            top: 60%;
+            top: 55%;
             left: 50%;
             transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 32px;
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 36px;
+            font-weight: 600;
             text-align: center;
             z-index: 45;
             opacity: 0;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.6), 0 2px 10px rgba(0, 0, 0, 0.5);
             pointer-events: none;
         }
 
         .instruction-text.show {
-            animation: pulseInstruction 2s ease-in-out infinite;
+            animation: pulseInstruction 2.5s ease-in-out infinite;
         }
 
         @keyframes pulseInstruction {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
+            0%, 100% {
+                opacity: 0.7;
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.05);
+            }
         }
     </style>
 </head>
@@ -488,6 +494,74 @@
             particles.push(new Particle());
         }
 
+        class RopeSegment {
+            constructor(x, y, fixed = false) {
+                this.x = x;
+                this.y = y;
+                this.oldX = x;
+                this.oldY = y;
+                this.fixed = fixed;
+                this.radius = 8;
+            }
+
+            update() {
+                if (this.fixed) return;
+
+                const vx = this.x - this.oldX;
+                const vy = this.y - this.oldY;
+
+                this.oldX = this.x;
+                this.oldY = this.y;
+
+                const damping = 0.998;
+                const gravity = 0.6;
+
+                this.x += vx * damping;
+                this.y += vy * damping + gravity;
+
+                if (this.y > physicsCanvas.height + 100) {
+                    return;
+                }
+            }
+        }
+
+        class RopeConstraint {
+            constructor(p1, p2, length) {
+                this.p1 = p1;
+                this.p2 = p2;
+                this.length = length;
+                this.active = true;
+            }
+
+            solve() {
+                if (!this.active) return;
+
+                const dx = this.p2.x - this.p1.x;
+                const dy = this.p2.y - this.p1.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 0.1) return;
+
+                const diff = (this.length - dist) / dist;
+                const offsetX = dx * diff * 0.5;
+                const offsetY = dy * diff * 0.5;
+
+                if (!this.p1.fixed) {
+                    this.p1.x -= offsetX;
+                    this.p1.y -= offsetY;
+                }
+
+                if (!this.p2.fixed) {
+                    this.p2.x += offsetX;
+                    this.p2.y += offsetY;
+                }
+            }
+        }
+
+        const ropeSegments = [];
+        const ropeConstraints = [];
+        let ropeCreated = false;
+
         const physicsObjects = [];
         let animatingPhysics = false;
         let ribbonCut = false;
@@ -507,69 +581,156 @@
         }
 
         function animatePhysics() {
-            if (!animatingPhysics) return;
-
             physicsCtx.clearRect(0, 0, physicsCanvas.width, physicsCanvas.height);
 
-            physicsObjects.forEach((obj, index) => {
-                obj.update();
-                obj.draw();
+            if (ropeCreated) {
+                for (let i = 0; i < 5; i++) {
+                    ropeSegments.forEach(seg => seg.update());
+                    ropeConstraints.forEach(con => con.solve());
+                }
 
-                if (obj.opacity <= 0) {
-                    physicsObjects.splice(index, 1);
+                const someSegmentVisible = ropeSegments.some(seg => seg.y < physicsCanvas.height + 100);
+                if (someSegmentVisible || !ribbonCut) {
+                    drawRope();
+                }
+            }
+
+            if (animatingPhysics) {
+                physicsObjects.forEach((obj, index) => {
+                    obj.update();
+                    obj.draw();
+
+                    if (obj.opacity <= 0) {
+                        physicsObjects.splice(index, 1);
+                    }
+                });
+
+                if (physicsObjects.length === 0) {
+                    animatingPhysics = false;
+                }
+            }
+
+            requestAnimationFrame(animatePhysics);
+        }
+
+        function drawRope() {
+            if (ropeSegments.length < 2) return;
+
+            physicsCtx.save();
+
+            physicsCtx.lineWidth = 22;
+            physicsCtx.lineCap = 'round';
+            physicsCtx.lineJoin = 'round';
+
+            physicsCtx.shadowBlur = 25;
+            physicsCtx.shadowColor = 'rgba(255, 107, 107, 0.9)';
+
+            const gradient = physicsCtx.createLinearGradient(
+                ropeSegments[0].x,
+                ropeSegments[0].y,
+                ropeSegments[ropeSegments.length - 1].x,
+                ropeSegments[ropeSegments.length - 1].y
+            );
+            gradient.addColorStop(0, '#ff4757');
+            gradient.addColorStop(0.3, '#ff6b6b');
+            gradient.addColorStop(0.5, '#ff8787');
+            gradient.addColorStop(0.7, '#ff6b6b');
+            gradient.addColorStop(1, '#ff4757');
+
+            physicsCtx.strokeStyle = gradient;
+
+            physicsCtx.beginPath();
+            physicsCtx.moveTo(ropeSegments[0].x, ropeSegments[0].y);
+
+            for (let i = 1; i < ropeSegments.length; i++) {
+                const seg = ropeSegments[i];
+                const prevSeg = ropeSegments[i - 1];
+                const midX = (seg.x + prevSeg.x) / 2;
+                const midY = (seg.y + prevSeg.y) / 2;
+                physicsCtx.quadraticCurveTo(prevSeg.x, prevSeg.y, midX, midY);
+            }
+
+            physicsCtx.stroke();
+
+            ropeSegments.forEach(seg => {
+                if (seg.fixed && !ribbonCut) {
+                    physicsCtx.fillStyle = '#FFD700';
+                    physicsCtx.shadowBlur = 20;
+                    physicsCtx.shadowColor = 'rgba(255, 215, 0, 0.9)';
+                    physicsCtx.beginPath();
+                    physicsCtx.arc(seg.x, seg.y, 14, 0, Math.PI * 2);
+                    physicsCtx.fill();
+
+                    physicsCtx.strokeStyle = '#FFA500';
+                    physicsCtx.lineWidth = 3;
+                    physicsCtx.stroke();
                 }
             });
 
-            if (physicsObjects.length > 0) {
-                requestAnimationFrame(animatePhysics);
-            } else {
-                animatingPhysics = false;
-            }
+            physicsCtx.restore();
         }
 
         function createRibbon() {
             const centerX = physicsCanvas.width / 2;
-            const centerY = physicsCanvas.height / 2;
-            const ribbonWidth = 600;
-            const ribbonHeight = 15;
+            const centerY = physicsCanvas.height * 0.4;
+            const ropeLength = Math.min(800, physicsCanvas.width * 0.7);
+            const numSegments = 70;
+            const segmentLength = ropeLength / numSegments;
 
-            physicsCtx.fillStyle = '#ff6b6b';
-            physicsCtx.shadowBlur = 20;
-            physicsCtx.shadowColor = 'rgba(255, 107, 107, 0.8)';
+            const startX = centerX - ropeLength / 2;
 
-            const gradient = physicsCtx.createLinearGradient(centerX - ribbonWidth/2, 0, centerX + ribbonWidth/2, 0);
-            gradient.addColorStop(0, '#ff6b6b');
-            gradient.addColorStop(0.5, '#ff8787');
-            gradient.addColorStop(1, '#ff6b6b');
-
-            physicsCtx.fillStyle = gradient;
-            physicsCtx.fillRect(centerX - ribbonWidth/2, centerY - ribbonHeight/2, ribbonWidth, ribbonHeight);
-        }
-
-        function cutRibbon() {
-            const centerX = physicsCanvas.width / 2;
-            const centerY = physicsCanvas.height / 2;
-            const ribbonHeight = 15;
-
-            const pieceWidth = 80;
-            const numPieces = 15;
-
-            for (let i = 0; i < numPieces; i++) {
-                const x = centerX - (numPieces * pieceWidth) / 2 + i * pieceWidth;
-                const vx = (Math.random() - 0.5) * 10;
-                const vy = -5 - Math.random() * 8;
-                const rotation = (Math.random() - 0.5) * 0.5;
-                const color = i % 2 === 0 ? '#ff6b6b' : '#ff8787';
-
-                physicsObjects.push(new RibbonPiece(x, centerY, pieceWidth, ribbonHeight, vx, vy, rotation, color));
+            for (let i = 0; i <= numSegments; i++) {
+                const x = startX + i * segmentLength;
+                const y = centerY;
+                const fixed = (i === 0 || i === numSegments);
+                ropeSegments.push(new RopeSegment(x, y, fixed));
             }
 
-            for (let i = 0; i < 60; i++) {
-                physicsObjects.push(new Confetti(centerX, centerY));
+            for (let i = 0; i < ropeSegments.length - 1; i++) {
+                ropeConstraints.push(new RopeConstraint(ropeSegments[i], ropeSegments[i + 1], segmentLength));
+            }
+
+            ropeCreated = true;
+            animatePhysics();
+        }
+
+        function findClosestSegment(x, y) {
+            let minDist = Infinity;
+            let closestIndex = -1;
+
+            for (let i = 1; i < ropeSegments.length - 1; i++) {
+                const seg = ropeSegments[i];
+                const dist = Math.sqrt((seg.x - x) ** 2 + (seg.y - y) ** 2);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestIndex = i;
+                }
+            }
+
+            return closestIndex;
+        }
+
+        function cutRibbon(cutX, cutY) {
+            const cutIndex = findClosestSegment(cutX, cutY);
+            if (cutIndex === -1) return;
+
+            const cutSegment = ropeSegments[cutIndex];
+
+            for (let i = cutIndex - 2; i <= cutIndex + 2; i++) {
+                if (i >= 0 && i < ropeConstraints.length) {
+                    ropeConstraints[i].active = false;
+                }
+            }
+
+            ropeSegments.forEach(seg => {
+                seg.fixed = false;
+            });
+
+            for (let i = 0; i < 80; i++) {
+                physicsObjects.push(new Confetti(cutSegment.x, cutSegment.y));
             }
 
             animatingPhysics = true;
-            animatePhysics();
         }
 
         function showElement(element, delay, isLast = false) {
@@ -585,18 +746,19 @@
             }, delay);
         }
 
-        function checkRibbonCut(x, y) {
-            if (ribbonCut) return false;
+        function checkRopeIntersection(x, y) {
+            if (ribbonCut || ropeSegments.length === 0) return null;
 
-            const centerX = physicsCanvas.width / 2;
-            const centerY = physicsCanvas.height / 2;
-            const ribbonWidth = 600;
-            const ribbonHeight = 15;
+            for (let i = 0; i < ropeSegments.length; i++) {
+                const seg = ropeSegments[i];
+                const dist = Math.sqrt((seg.x - x) ** 2 + (seg.y - y) ** 2);
 
-            const inRibbonX = x > centerX - ribbonWidth / 2 && x < centerX + ribbonWidth / 2;
-            const inRibbonY = Math.abs(y - centerY) < ribbonHeight * 3;
+                if (dist < 30) {
+                    return { x: seg.x, y: seg.y };
+                }
+            }
 
-            return inRibbonX && inRibbonY;
+            return null;
         }
 
         function detectStrike() {
@@ -638,10 +800,11 @@
 
                 scissors.classList.add('cutting');
 
-                if (checkRibbonCut(canvasX, canvasY) && detectStrike()) {
+                const intersection = checkRopeIntersection(canvasX, canvasY);
+                if (intersection && detectStrike()) {
                     ribbonCut = true;
                     scissors.classList.remove('cutting');
-                    cutRibbon();
+                    cutRibbon(intersection.x, intersection.y);
                     continueSequence();
                 }
             }
