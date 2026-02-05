@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Kerala - Interactive Wall Games</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ribbon-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+        }
+
+        #instruction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 99;
+            text-shadow: 0 0 20px rgba(255,255,255,0.8);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <canvas id="ribbon-canvas"></canvas>
+    <div id="instruction">
+        <div>Touch to Cut the Ribbon</div>
+        <div style="font-size: 24px; margin-top: 20px;">Swipe or Click Across the Ribbon</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const ribbonCanvas = document.getElementById('ribbon-canvas');
+        const ribbonCtx = ribbonCanvas.getContext('2d');
+        const instruction = document.getElementById('instruction');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ribbonCanvas.width = window.innerWidth;
+        ribbonCanvas.height = window.innerHeight;
+
+        // Particle class
+        class Particle {
+            constructor() {
+                this.pos = { x: 0, y: 0 };
+                this.vel = { x: 0, y: 0 };
+                this.acc = { x: 0, y: 0 };
+                this.target = { x: 0, y: 0 };
+                this.closeEnoughTarget = 100;
+                this.maxSpeed = 6;
+                this.maxForce = 0.15;
+                this.particleSize = 3;
+                this.isKilled = false;
+                this.startColor = { r: 0, g: 0, b: 0 };
+                this.targetColor = { r: 0, g: 0, b: 0 };
+                this.colorWeight = 0;
+                this.colorBlendRate = 0.02;
+            }
+
+            move() {
+                let proximityMult = 1;
+                const distance = Math.sqrt(
+                    Math.pow(this.pos.x - this.target.x, 2) +
+                    Math.pow(this.pos.y - this.target.y, 2)
+                );
+
+                if (distance < this.closeEnoughTarget) {
+                    proximityMult = distance / this.closeEnoughTarget;
+                }
+
+                const towardsTarget = {
+                    x: this.target.x - this.pos.x,
+                    y: this.target.y - this.pos.y
+                };
+
+                const magnitude = Math.sqrt(towardsTarget.x * towardsTarget.x + towardsTarget.y * towardsTarget.y);
+                if (magnitude > 0) {
+                    towardsTarget.x = (towardsTarget.x / magnitude) * this.maxSpeed * proximityMult;
+                    towardsTarget.y = (towardsTarget.y / magnitude) * this.maxSpeed * proximityMult;
+                }
+
+                const steer = {
+                    x: towardsTarget.x - this.vel.x,
+                    y: towardsTarget.y - this.vel.y
+                };
+
+                const steerMagnitude = Math.sqrt(steer.x * steer.x + steer.y * steer.y);
+                if (steerMagnitude > 0) {
+                    steer.x = (steer.x / steerMagnitude) * this.maxForce;
+                    steer.y = (steer.y / steerMagnitude) * this.maxForce;
+                }
+
+                this.acc.x += steer.x;
+                this.acc.y += steer.y;
+
+                this.vel.x += this.acc.x;
+                this.vel.y += this.acc.y;
+                this.pos.x += this.vel.x;
+                this.pos.y += this.vel.y;
+                this.acc.x = 0;
+                this.acc.y = 0;
+            }
+
+            draw(ctx) {
+                if (this.colorWeight < 1.0) {
+                    this.colorWeight = Math.min(this.colorWeight + this.colorBlendRate, 1.0);
+                }
+
+                const currentColor = {
+                    r: Math.round(this.startColor.r + (this.targetColor.r - this.startColor.r) * this.colorWeight),
+                    g: Math.round(this.startColor.g + (this.targetColor.g - this.startColor.g) * this.colorWeight),
+                    b: Math.round(this.startColor.b + (this.targetColor.b - this.startColor.b) * this.colorWeight)
+                };
+
+                ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
+                ctx.fillRect(this.pos.x, this.pos.y, this.particleSize, this.particleSize);
+            }
+
+            kill() {
+                if (!this.isKilled) {
+                    const randomPos = this.generateRandomPos(canvas.width / 2, canvas.height / 2, (canvas.width + canvas.height) / 2);
+                    this.target.x = randomPos.x;
+                    this.target.y = randomPos.y;
+
+                    this.startColor = {
+                        r: this.startColor.r + (this.targetColor.r - this.startColor.r) * this.colorWeight,
+                        g: this.startColor.g + (this.targetColor.g - this.startColor.g) * this.colorWeight,
+                        b: this.startColor.b + (this.targetColor.b - this.startColor.b) * this.colorWeight
+                    };
+                    this.targetColor = { r: 0, g: 0, b: 0 };
+                    this.colorWeight = 0;
+
+                    this.isKilled = true;
+                }
+            }
+
+            generateRandomPos(x, y, mag) {
+                const randomX = Math.random() * canvas.width;
+                const randomY = Math.random() * canvas.height;
+
+                const direction = {
+                    x: randomX - x,
+                    y: randomY - y
+                };
+
+                const magnitude = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+                if (magnitude > 0) {
+                    direction.x = (direction.x / magnitude) * mag;
+                    direction.y = (direction.y / magnitude) * mag;
+                }
+
+                return {
+                    x: x + direction.x,
+                    y: y + direction.y
+                };
+            }
+        }
+
+        // Particle system
+        const particles = [];
+        let portalOpened = false;
+        let showParticles = false;
+        let currentStage = 'ribbon'; // ribbon, portal, svg, text, complete
+
+        // Ribbon state
+        let ribbonCut = false;
+        const ribbonSegments = [];
+        const ribbonY = canvas.height / 2;
+        const ribbonHeight = 80;
+        const ribbonColor = '#ff0066';
+        const numSegments = 20;
+
+        for (let i = 0; i < numSegments; i++) {
+            ribbonSegments.push({
+                x: (i / numSegments) * canvas.width,
+                y: ribbonY,
+                width: canvas.width / numSegments,
+                height: ribbonHeight,
+                cut: false,
+                angle: 0,
+                dy: 0,
+                gravity: 0.5
+            });
+        }
+
+        // Draw ribbon
+        function drawRibbon() {
+            ribbonCtx.clearRect(0, 0, ribbonCanvas.width, ribbonCanvas.height);
+
+            ribbonSegments.forEach(segment => {
+                if (!segment.cut) {
+                    ribbonCtx.fillStyle = ribbonColor;
+                    ribbonCtx.fillRect(segment.x, segment.y - ribbonHeight / 2, segment.width, ribbonHeight);
+
+                    // Draw bow
+                    if (Math.abs(segment.x - canvas.width / 2) < segment.width) {
+                        ribbonCtx.fillStyle = '#ff3388';
+                        ribbonCtx.beginPath();
+                        ribbonCtx.arc(canvas.width / 2, ribbonY, 60, 0, Math.PI * 2);
+                        ribbonCtx.fill();
+                    }
+                } else {
+                    ribbonCtx.save();
+                    ribbonCtx.translate(segment.x + segment.width / 2, segment.y);
+                    ribbonCtx.rotate(segment.angle);
+                    ribbonCtx.fillStyle = ribbonColor;
+                    ribbonCtx.fillRect(-segment.width / 2, -ribbonHeight / 2, segment.width, ribbonHeight);
+                    ribbonCtx.restore();
+
+                    segment.dy += segment.gravity;
+                    segment.y += segment.dy;
+                    segment.angle += 0.1;
+                }
+            });
+        }
+
+        // Handle ribbon cutting
+        let isDrawing = false;
+        let lastPos = { x: 0, y: 0 };
+
+        function handleCut(x, y) {
+            if (ribbonCut) return;
+
+            const distance = Math.abs(y - ribbonY);
+            if (distance < ribbonHeight) {
+                ribbonSegments.forEach(segment => {
+                    if (x >= segment.x && x <= segment.x + segment.width) {
+                        segment.cut = true;
+                    }
+                });
+
+                const allCut = ribbonSegments.every(s => s.cut);
+                if (allCut) {
+                    ribbonCut = true;
+                    instruction.classList.add('hidden');
+                    setTimeout(() => {
+                        openPortal();
+                    }, 1000);
+                }
+            }
+        }
+
+        ribbonCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            lastPos = { x: e.clientX, y: e.clientY };
+            handleCut(e.clientX, e.clientY);
+        });
+
+        ribbonCanvas.addEventListener('mousemove', (e) => {
+            if (isDrawing) {
+                handleCut(e.clientX, e.clientY);
+            }
+        });
+
+        ribbonCanvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        ribbonCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDrawing = true;
+            const touch = e.touches[0];
+            lastPos = { x: touch.clientX, y: touch.clientY };
+            handleCut(touch.clientX, touch.clientY);
+        });
+
+        ribbonCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (isDrawing) {
+                const touch = e.touches[0];
+                handleCut(touch.clientX, touch.clientY);
+            }
+        });
+
+        ribbonCanvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isDrawing = false;
+        });
+
+        // 3D Portal using Three.js
+        let scene, camera, renderer, portal;
+
+        function initPortal() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.position.z = 5;
+
+            // Create portal
+            const geometry = new THREE.TorusGeometry(2, 0.5, 16, 100);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                wireframe: false,
+                transparent: true,
+                opacity: 0
+            });
+            portal = new THREE.Mesh(geometry, material);
+            scene.add(portal);
+
+            // Add inner glow
+            const glowGeometry = new THREE.TorusGeometry(1.8, 0.3, 16, 100);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff00ff,
+                transparent: true,
+                opacity: 0
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            portal.add(glow);
+            portal.glow = glow;
+
+            // Add center disc
+            const discGeometry = new THREE.CircleGeometry(1.5, 32);
+            const discMaterial = new THREE.MeshBasicMaterial({
+                color: 0x000033,
+                transparent: true,
+                opacity: 0
+            });
+            const disc = new THREE.Mesh(discGeometry, discMaterial);
+            portal.add(disc);
+            portal.disc = disc;
+        }
+
+        function openPortal() {
+            currentStage = 'portal';
+            ribbonCanvas.style.display = 'none';
+            initPortal();
+
+            let openProgress = 0;
+            const openInterval = setInterval(() => {
+                openProgress += 0.02;
+
+                portal.material.opacity = Math.min(openProgress * 2, 1);
+                portal.glow.material.opacity = Math.min(openProgress * 1.5, 0.8);
+                portal.disc.material.opacity = Math.min(openProgress, 0.9);
+
+                portal.rotation.y += 0.05;
+                portal.rotation.x = Math.sin(openProgress * Math.PI) * 0.3;
+
+                renderer.render(scene, camera);
+
+                if (openProgress >= 1) {
+                    clearInterval(openInterval);
+                    setTimeout(() => {
+                        showSVGParticles();
+                    }, 1000);
+                }
+            }, 1000 / 60);
+        }
+
+        function generateRandomPos(x, y, mag) {
+            const randomX = Math.random() * canvas.width;
+            const randomY = Math.random() * canvas.height;
+
+            const direction = {
+                x: randomX - x,
+                y: randomY - y
+            };
+
+            const magnitude = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+            if (magnitude > 0) {
+                direction.x = (direction.x / magnitude) * mag;
+                direction.y = (direction.y / magnitude) * mag;
+            }
+
+            return {
+                x: x + direction.x,
+                y: y + direction.y
+            };
+        }
+
+        function showSVGParticles() {
+            currentStage = 'svg';
+            showParticles = true;
+
+            // Load and render Kerala SVG as particles
+            const svgImage = new Image();
+            svgImage.onload = function() {
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+
+                const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.4;
+                tempCanvas.width = svgImage.width * scale;
+                tempCanvas.height = svgImage.height * scale;
+
+                tempCtx.drawImage(svgImage, 0, 0, tempCanvas.width, tempCanvas.height);
+
+                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                const pixels = imageData.data;
+
+                const offsetX = (canvas.width - tempCanvas.width) / 2;
+                const offsetY = canvas.height / 2 - tempCanvas.height / 2 - 100;
+
+                const pixelStep = 8;
+                const coords = [];
+
+                for (let y = 0; y < tempCanvas.height; y += pixelStep) {
+                    for (let x = 0; x < tempCanvas.width; x += pixelStep) {
+                        const i = (y * tempCanvas.width + x) * 4;
+                        const alpha = pixels[i + 3];
+
+                        if (alpha > 128) {
+                            coords.push({
+                                x: x + offsetX,
+                                y: y + offsetY,
+                                r: pixels[i],
+                                g: pixels[i + 1],
+                                b: pixels[i + 2]
+                            });
+                        }
+                    }
+                }
+
+                // Shuffle for fluid motion
+                for (let i = coords.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [coords[i], coords[j]] = [coords[j], coords[i]];
+                }
+
+                coords.forEach((coord, index) => {
+                    const particle = new Particle();
+
+                    const randomPos = generateRandomPos(canvas.width / 2, canvas.height / 2, (canvas.width + canvas.height) / 2);
+                    particle.pos.x = randomPos.x;
+                    particle.pos.y = randomPos.y;
+
+                    particle.maxSpeed = Math.random() * 4 + 6;
+                    particle.maxForce = particle.maxSpeed * 0.08;
+                    particle.particleSize = 4;
+                    particle.colorBlendRate = Math.random() * 0.02 + 0.01;
+
+                    particle.startColor = { r: 0, g: 0, b: 0 };
+                    particle.targetColor = { r: coord.r, g: coord.g, b: coord.b };
+                    particle.colorWeight = 0;
+
+                    particle.target.x = coord.x;
+                    particle.target.y = coord.y;
+
+                    particles.push(particle);
+                });
+
+                setTimeout(() => {
+                    showTextParticles();
+                }, 4000);
+            };
+            svgImage.src = 'Kerala-map-en.svg';
+        }
+
+        function showTextParticles() {
+            currentStage = 'text';
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCtx.fillStyle = 'white';
+            tempCtx.font = 'bold 60px Arial';
+            tempCtx.textAlign = 'center';
+            tempCtx.textBaseline = 'middle';
+            tempCtx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 150);
+
+            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const pixels = imageData.data;
+
+            const pixelStep = 4;
+            const coords = [];
+
+            for (let y = 0; y < tempCanvas.height; y += pixelStep) {
+                for (let x = 0; x < tempCanvas.width; x += pixelStep) {
+                    const i = (y * tempCanvas.width + x) * 4;
+                    const alpha = pixels[i + 3];
+
+                    if (alpha > 128) {
+                        coords.push({ x, y });
+                    }
+                }
+            }
+
+            // Shuffle
+            for (let i = coords.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [coords[i], coords[j]] = [coords[j], coords[i]];
+            }
+
+            coords.forEach(coord => {
+                const particle = new Particle();
+
+                const randomPos = generateRandomPos(canvas.width / 2, canvas.height / 2, (canvas.width + canvas.height) / 2);
+                particle.pos.x = randomPos.x;
+                particle.pos.y = randomPos.y;
+
+                particle.maxSpeed = Math.random() * 4 + 6;
+                particle.maxForce = particle.maxSpeed * 0.08;
+                particle.particleSize = 3;
+                particle.colorBlendRate = Math.random() * 0.02 + 0.01;
+
+                particle.startColor = { r: 0, g: 0, b: 0 };
+                particle.targetColor = { r: 255, g: 255, b: 255 };
+                particle.colorWeight = 0;
+
+                particle.target.x = coord.x;
+                particle.target.y = coord.y;
+
+                particles.push(particle);
+            });
+
+            setTimeout(() => {
+                currentStage = 'complete';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 3000);
+            }, 4000);
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (currentStage === 'ribbon') {
+                drawRibbon();
+            } else if (currentStage === 'portal') {
+                // Portal animation handled in openPortal
+            } else if (showParticles) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Continue portal rotation
+                if (portal) {
+                    portal.rotation.y += 0.01;
+                    renderer.render(scene, camera);
+                }
+
+                particles.forEach((particle, index) => {
+                    particle.move();
+                    particle.draw(ctx);
+
+                    if (particle.isKilled) {
+                        if (particle.pos.x < 0 || particle.pos.x > canvas.width ||
+                            particle.pos.y < 0 || particle.pos.y > canvas.height) {
+                            particles.splice(index, 1);
+                        }
+                    }
+                });
+            }
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ribbonCanvas.width = window.innerWidth;
+            ribbonCanvas.height = window.innerHeight;
+
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+    </script>
+</body>
+</html>
