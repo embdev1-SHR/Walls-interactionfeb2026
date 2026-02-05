@@ -22,7 +22,7 @@
             height: 100%;
         }
 
-        #ribbon-canvas {
+        #rope-canvas {
             position: absolute;
             top: 0;
             left: 0;
@@ -43,6 +43,7 @@
             z-index: 99;
             text-shadow: 0 0 20px rgba(255,255,255,0.8);
             animation: pulse 2s ease-in-out infinite;
+            pointer-events: none;
         }
 
         @keyframes pulse {
@@ -53,28 +54,252 @@
         .hidden {
             display: none !important;
         }
+
+        #debug {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+            z-index: 200;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    <canvas id="ribbon-canvas"></canvas>
+    <canvas id="rope-canvas"></canvas>
     <div id="instruction">
-        <div>Touch to Cut the Ribbon</div>
-        <div style="font-size: 24px; margin-top: 20px;">Swipe or Click Across the Ribbon</div>
+        <div>Swipe Across the Rope to Cut It!</div>
+        <div style="font-size: 28px; margin-top: 20px;">✂️</div>
     </div>
+    <div id="debug"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const ribbonCanvas = document.getElementById('ribbon-canvas');
-        const ribbonCtx = ribbonCanvas.getContext('2d');
+        const ropeCanvas = document.getElementById('rope-canvas');
+        const ropeCtx = ropeCanvas.getContext('2d');
         const instruction = document.getElementById('instruction');
+        const debugDiv = document.getElementById('debug');
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        ribbonCanvas.width = window.innerWidth;
-        ribbonCanvas.height = window.innerHeight;
+        ropeCanvas.width = window.innerWidth;
+        ropeCanvas.height = window.innerHeight;
+
+        let debugText = '';
+        function debug(text) {
+            debugText = text;
+            debugDiv.textContent = text;
+            console.log(text);
+        }
+
+        // Rope physics using Verlet Integration
+        class RopePoint {
+            constructor(x, y, locked = false) {
+                this.x = x;
+                this.y = y;
+                this.oldX = x;
+                this.oldY = y;
+                this.locked = locked;
+                this.cut = false;
+            }
+
+            update(delta = 1) {
+                if (this.locked) return;
+
+                const velX = (this.x - this.oldX) * 0.99;
+                const velY = (this.y - this.oldY) * 0.99;
+
+                this.oldX = this.x;
+                this.oldY = this.y;
+
+                this.x += velX;
+                this.y += velY;
+                this.y += 0.5 * delta; // gravity
+            }
+
+            constrain() {
+                if (this.x < 0) this.x = 0;
+                if (this.x > ropeCanvas.width) this.x = ropeCanvas.width;
+                if (this.y > ropeCanvas.height) this.y = ropeCanvas.height;
+            }
+        }
+
+        class RopeSegment {
+            constructor(p1, p2) {
+                this.p1 = p1;
+                this.p2 = p2;
+                this.length = Math.sqrt(
+                    Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
+                );
+                this.cut = false;
+            }
+
+            update() {
+                if (this.cut || this.p1.cut || this.p2.cut) return;
+
+                const dx = this.p2.x - this.p1.x;
+                const dy = this.p2.y - this.p1.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const difference = this.length - distance;
+                const percent = difference / distance / 2;
+
+                const offsetX = dx * percent;
+                const offsetY = dy * percent;
+
+                if (!this.p1.locked) {
+                    this.p1.x -= offsetX;
+                    this.p1.y -= offsetY;
+                }
+
+                if (!this.p2.locked) {
+                    this.p2.x += offsetX;
+                    this.p2.y += offsetY;
+                }
+            }
+
+            draw() {
+                if (this.cut || this.p1.cut || this.p2.cut) return;
+
+                ropeCtx.beginPath();
+                ropeCtx.moveTo(this.p1.x, this.p1.y);
+                ropeCtx.lineTo(this.p2.x, this.p2.y);
+                ropeCtx.strokeStyle = '#ff0066';
+                ropeCtx.lineWidth = 20;
+                ropeCtx.lineCap = 'round';
+                ropeCtx.stroke();
+            }
+        }
+
+        // Create rope
+        const ropePoints = [];
+        const ropeSegments = [];
+        const numPoints = 50;
+        const ropeY = canvas.height / 2;
+        const ropeStartX = 100;
+        const ropeEndX = canvas.width - 100;
+
+        for (let i = 0; i < numPoints; i++) {
+            const x = ropeStartX + (ropeEndX - ropeStartX) * (i / (numPoints - 1));
+            const locked = i === 0 || i === numPoints - 1;
+            ropePoints.push(new RopePoint(x, ropeY, locked));
+        }
+
+        for (let i = 0; i < ropePoints.length - 1; i++) {
+            ropeSegments.push(new RopeSegment(ropePoints[i], ropePoints[i + 1]));
+        }
+
+        // Bow decoration
+        function drawBow() {
+            const centerX = canvas.width / 2;
+            ropeCtx.fillStyle = '#ff3388';
+            ropeCtx.beginPath();
+            ropeCtx.arc(centerX - 30, ropeY - 40, 20, 0, Math.PI * 2);
+            ropeCtx.arc(centerX + 30, ropeY - 40, 20, 0, Math.PI * 2);
+            ropeCtx.fill();
+
+            ropeCtx.fillStyle = '#ff0066';
+            ropeCtx.fillRect(centerX - 10, ropeY - 50, 20, 30);
+        }
+
+        let ropeCut = false;
+        let cutPoint = null;
+
+        function updateRope() {
+            for (let i = 0; i < 3; i++) {
+                ropeSegments.forEach(seg => seg.update());
+            }
+            ropePoints.forEach(point => {
+                point.update();
+                point.constrain();
+            });
+        }
+
+        function drawRope() {
+            ropeCtx.clearRect(0, 0, ropeCanvas.width, ropeCanvas.height);
+            ropeSegments.forEach(seg => seg.draw());
+
+            if (!ropeCut) {
+                drawBow();
+            }
+        }
+
+        // Handle cutting
+        let isDrawing = false;
+        let lastPos = { x: 0, y: 0 };
+        let cutSegments = 0;
+
+        function handleCut(x, y) {
+            if (ropeCut) return;
+
+            ropeSegments.forEach((segment, index) => {
+                if (segment.cut) return;
+
+                const minX = Math.min(segment.p1.x, segment.p2.x);
+                const maxX = Math.max(segment.p1.x, segment.p2.x);
+                const minY = Math.min(segment.p1.y, segment.p2.y);
+                const maxY = Math.max(segment.p1.y, segment.p2.y);
+
+                if (x >= minX - 30 && x <= maxX + 30 && y >= minY - 30 && y <= maxY + 30) {
+                    segment.cut = true;
+                    segment.p1.cut = true;
+                    segment.p2.cut = true;
+                    cutSegments++;
+
+                    if (cutSegments > ropeSegments.length * 0.3) {
+                        ropeCut = true;
+                        cutPoint = { x, y };
+                        instruction.classList.add('hidden');
+                        debug('Rope cut! Opening portal...');
+                        setTimeout(() => {
+                            openPortal();
+                        }, 1500);
+                    }
+                }
+            });
+        }
+
+        ropeCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            lastPos = { x: e.clientX, y: e.clientY };
+            handleCut(e.clientX, e.clientY);
+        });
+
+        ropeCanvas.addEventListener('mousemove', (e) => {
+            if (isDrawing) {
+                handleCut(e.clientX, e.clientY);
+            }
+        });
+
+        ropeCanvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        ropeCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDrawing = true;
+            const touch = e.touches[0];
+            lastPos = { x: touch.clientX, y: touch.clientY };
+            handleCut(touch.clientX, touch.clientY);
+        });
+
+        ropeCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (isDrawing) {
+                const touch = e.touches[0];
+                handleCut(touch.clientX, touch.clientY);
+            }
+        });
+
+        ropeCanvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isDrawing = false;
+        });
 
         // Particle class
         class Particle {
@@ -84,12 +309,12 @@
                 this.acc = { x: 0, y: 0 };
                 this.target = { x: 0, y: 0 };
                 this.closeEnoughTarget = 100;
-                this.maxSpeed = 6;
-                this.maxForce = 0.15;
-                this.particleSize = 3;
+                this.maxSpeed = 8;
+                this.maxForce = 0.2;
+                this.particleSize = 4;
                 this.isKilled = false;
                 this.startColor = { r: 0, g: 0, b: 0 };
-                this.targetColor = { r: 0, g: 0, b: 0 };
+                this.targetColor = { r: 255, g: 255, b: 255 };
                 this.colorWeight = 0;
                 this.colorBlendRate = 0.02;
             }
@@ -152,179 +377,29 @@
                 ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
                 ctx.fillRect(this.pos.x, this.pos.y, this.particleSize, this.particleSize);
             }
-
-            kill() {
-                if (!this.isKilled) {
-                    const randomPos = this.generateRandomPos(canvas.width / 2, canvas.height / 2, (canvas.width + canvas.height) / 2);
-                    this.target.x = randomPos.x;
-                    this.target.y = randomPos.y;
-
-                    this.startColor = {
-                        r: this.startColor.r + (this.targetColor.r - this.startColor.r) * this.colorWeight,
-                        g: this.startColor.g + (this.targetColor.g - this.startColor.g) * this.colorWeight,
-                        b: this.startColor.b + (this.targetColor.b - this.startColor.b) * this.colorWeight
-                    };
-                    this.targetColor = { r: 0, g: 0, b: 0 };
-                    this.colorWeight = 0;
-
-                    this.isKilled = true;
-                }
-            }
-
-            generateRandomPos(x, y, mag) {
-                const randomX = Math.random() * canvas.width;
-                const randomY = Math.random() * canvas.height;
-
-                const direction = {
-                    x: randomX - x,
-                    y: randomY - y
-                };
-
-                const magnitude = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
-                if (magnitude > 0) {
-                    direction.x = (direction.x / magnitude) * mag;
-                    direction.y = (direction.y / magnitude) * mag;
-                }
-
-                return {
-                    x: x + direction.x,
-                    y: y + direction.y
-                };
-            }
         }
 
-        // Particle system
         const particles = [];
-        let portalOpened = false;
-        let showParticles = false;
-        let currentStage = 'ribbon'; // ribbon, portal, svg, text, complete
-
-        // Ribbon state
-        let ribbonCut = false;
-        const ribbonSegments = [];
-        const ribbonY = canvas.height / 2;
-        const ribbonHeight = 80;
-        const ribbonColor = '#ff0066';
-        const numSegments = 20;
-
-        for (let i = 0; i < numSegments; i++) {
-            ribbonSegments.push({
-                x: (i / numSegments) * canvas.width,
-                y: ribbonY,
-                width: canvas.width / numSegments,
-                height: ribbonHeight,
-                cut: false,
-                angle: 0,
-                dy: 0,
-                gravity: 0.5
-            });
-        }
-
-        // Draw ribbon
-        function drawRibbon() {
-            ribbonCtx.clearRect(0, 0, ribbonCanvas.width, ribbonCanvas.height);
-
-            ribbonSegments.forEach(segment => {
-                if (!segment.cut) {
-                    ribbonCtx.fillStyle = ribbonColor;
-                    ribbonCtx.fillRect(segment.x, segment.y - ribbonHeight / 2, segment.width, ribbonHeight);
-
-                    // Draw bow
-                    if (Math.abs(segment.x - canvas.width / 2) < segment.width) {
-                        ribbonCtx.fillStyle = '#ff3388';
-                        ribbonCtx.beginPath();
-                        ribbonCtx.arc(canvas.width / 2, ribbonY, 60, 0, Math.PI * 2);
-                        ribbonCtx.fill();
-                    }
-                } else {
-                    ribbonCtx.save();
-                    ribbonCtx.translate(segment.x + segment.width / 2, segment.y);
-                    ribbonCtx.rotate(segment.angle);
-                    ribbonCtx.fillStyle = ribbonColor;
-                    ribbonCtx.fillRect(-segment.width / 2, -ribbonHeight / 2, segment.width, ribbonHeight);
-                    ribbonCtx.restore();
-
-                    segment.dy += segment.gravity;
-                    segment.y += segment.dy;
-                    segment.angle += 0.1;
-                }
-            });
-        }
-
-        // Handle ribbon cutting
-        let isDrawing = false;
-        let lastPos = { x: 0, y: 0 };
-
-        function handleCut(x, y) {
-            if (ribbonCut) return;
-
-            const distance = Math.abs(y - ribbonY);
-            if (distance < ribbonHeight) {
-                ribbonSegments.forEach(segment => {
-                    if (x >= segment.x && x <= segment.x + segment.width) {
-                        segment.cut = true;
-                    }
-                });
-
-                const allCut = ribbonSegments.every(s => s.cut);
-                if (allCut) {
-                    ribbonCut = true;
-                    instruction.classList.add('hidden');
-                    setTimeout(() => {
-                        openPortal();
-                    }, 1000);
-                }
-            }
-        }
-
-        ribbonCanvas.addEventListener('mousedown', (e) => {
-            isDrawing = true;
-            lastPos = { x: e.clientX, y: e.clientY };
-            handleCut(e.clientX, e.clientY);
-        });
-
-        ribbonCanvas.addEventListener('mousemove', (e) => {
-            if (isDrawing) {
-                handleCut(e.clientX, e.clientY);
-            }
-        });
-
-        ribbonCanvas.addEventListener('mouseup', () => {
-            isDrawing = false;
-        });
-
-        ribbonCanvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            isDrawing = true;
-            const touch = e.touches[0];
-            lastPos = { x: touch.clientX, y: touch.clientY };
-            handleCut(touch.clientX, touch.clientY);
-        });
-
-        ribbonCanvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if (isDrawing) {
-                const touch = e.touches[0];
-                handleCut(touch.clientX, touch.clientY);
-            }
-        });
-
-        ribbonCanvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            isDrawing = false;
-        });
-
-        // 3D Portal using Three.js
+        let currentStage = 'rope';
         let scene, camera, renderer, portal;
 
+        function generateRandomPos(x, y, mag) {
+            const angle = Math.random() * Math.PI * 2;
+            return {
+                x: x + Math.cos(angle) * mag,
+                y: y + Math.sin(angle) * mag
+            };
+        }
+
+        // 3D Portal
         function initPortal() {
+            debug('Initializing portal...');
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             camera.position.z = 5;
 
-            // Create portal
             const geometry = new THREE.TorusGeometry(2, 0.5, 16, 100);
             const material = new THREE.MeshBasicMaterial({
                 color: 0x00ffff,
@@ -335,7 +410,6 @@
             portal = new THREE.Mesh(geometry, material);
             scene.add(portal);
 
-            // Add inner glow
             const glowGeometry = new THREE.TorusGeometry(1.8, 0.3, 16, 100);
             const glowMaterial = new THREE.MeshBasicMaterial({
                 color: 0xff00ff,
@@ -346,7 +420,6 @@
             portal.add(glow);
             portal.glow = glow;
 
-            // Add center disc
             const discGeometry = new THREE.CircleGeometry(1.5, 32);
             const discMaterial = new THREE.MeshBasicMaterial({
                 color: 0x000033,
@@ -356,11 +429,13 @@
             const disc = new THREE.Mesh(discGeometry, discMaterial);
             portal.add(disc);
             portal.disc = disc;
+
+            debug('Portal initialized');
         }
 
         function openPortal() {
             currentStage = 'portal';
-            ribbonCanvas.style.display = 'none';
+            ropeCanvas.style.display = 'none';
             initPortal();
 
             let openProgress = 0;
@@ -378,6 +453,7 @@
 
                 if (openProgress >= 1) {
                     clearInterval(openInterval);
+                    debug('Portal fully open, loading SVG...');
                     setTimeout(() => {
                         showSVGParticles();
                     }, 1000);
@@ -385,38 +461,20 @@
             }, 1000 / 60);
         }
 
-        function generateRandomPos(x, y, mag) {
-            const randomX = Math.random() * canvas.width;
-            const randomY = Math.random() * canvas.height;
-
-            const direction = {
-                x: randomX - x,
-                y: randomY - y
-            };
-
-            const magnitude = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
-            if (magnitude > 0) {
-                direction.x = (direction.x / magnitude) * mag;
-                direction.y = (direction.y / magnitude) * mag;
-            }
-
-            return {
-                x: x + direction.x,
-                y: y + direction.y
-            };
-        }
-
         function showSVGParticles() {
             currentStage = 'svg';
-            showParticles = true;
+            debug('Loading Kerala SVG...');
 
-            // Load and render Kerala SVG as particles
             const svgImage = new Image();
+            svgImage.crossOrigin = 'anonymous';
+
             svgImage.onload = function() {
+                debug('SVG loaded, creating particles...');
+
                 const tempCanvas = document.createElement('canvas');
                 const tempCtx = tempCanvas.getContext('2d');
 
-                const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.4;
+                const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.35;
                 tempCanvas.width = svgImage.width * scale;
                 tempCanvas.height = svgImage.height * scale;
 
@@ -426,9 +484,9 @@
                 const pixels = imageData.data;
 
                 const offsetX = (canvas.width - tempCanvas.width) / 2;
-                const offsetY = canvas.height / 2 - tempCanvas.height / 2 - 100;
+                const offsetY = (canvas.height - tempCanvas.height) / 2 - 80;
 
-                const pixelStep = 8;
+                const pixelStep = 6;
                 const coords = [];
 
                 for (let y = 0; y < tempCanvas.height; y += pixelStep) {
@@ -436,7 +494,7 @@
                         const i = (y * tempCanvas.width + x) * 4;
                         const alpha = pixels[i + 3];
 
-                        if (alpha > 128) {
+                        if (alpha > 100) {
                             coords.push({
                                 x: x + offsetX,
                                 y: y + offsetY,
@@ -448,7 +506,8 @@
                     }
                 }
 
-                // Shuffle for fluid motion
+                debug(`Creating ${coords.length} SVG particles...`);
+
                 for (let i = coords.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [coords[i], coords[j]] = [coords[j], coords[i]];
@@ -457,17 +516,21 @@
                 coords.forEach((coord, index) => {
                     const particle = new Particle();
 
-                    const randomPos = generateRandomPos(canvas.width / 2, canvas.height / 2, (canvas.width + canvas.height) / 2);
+                    const randomPos = generateRandomPos(canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height));
                     particle.pos.x = randomPos.x;
                     particle.pos.y = randomPos.y;
 
-                    particle.maxSpeed = Math.random() * 4 + 6;
-                    particle.maxForce = particle.maxSpeed * 0.08;
+                    particle.maxSpeed = Math.random() * 3 + 6;
+                    particle.maxForce = particle.maxSpeed * 0.1;
                     particle.particleSize = 4;
-                    particle.colorBlendRate = Math.random() * 0.02 + 0.01;
+                    particle.colorBlendRate = Math.random() * 0.015 + 0.01;
 
                     particle.startColor = { r: 0, g: 0, b: 0 };
-                    particle.targetColor = { r: coord.r, g: coord.g, b: coord.b };
+                    particle.targetColor = {
+                        r: Math.max(100, coord.r),
+                        g: Math.max(100, coord.g),
+                        b: Math.max(100, coord.b)
+                    };
                     particle.colorWeight = 0;
 
                     particle.target.x = coord.x;
@@ -476,15 +539,27 @@
                     particles.push(particle);
                 });
 
+                debug(`${particles.length} particles created for SVG`);
+
                 setTimeout(() => {
                     showTextParticles();
-                }, 4000);
+                }, 5000);
             };
+
+            svgImage.onerror = function() {
+                debug('ERROR: Failed to load SVG!');
+                console.error('Could not load Kerala-map-en.svg');
+                setTimeout(() => {
+                    showTextParticles();
+                }, 2000);
+            };
+
             svgImage.src = 'Kerala-map-en.svg';
         }
 
         function showTextParticles() {
             currentStage = 'text';
+            debug('Creating text particles...');
 
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width;
@@ -492,15 +567,15 @@
             const tempCtx = tempCanvas.getContext('2d');
 
             tempCtx.fillStyle = 'white';
-            tempCtx.font = 'bold 60px Arial';
+            tempCtx.font = 'bold 70px Arial';
             tempCtx.textAlign = 'center';
             tempCtx.textBaseline = 'middle';
-            tempCtx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 150);
+            tempCtx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 120);
 
             const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
             const pixels = imageData.data;
 
-            const pixelStep = 4;
+            const pixelStep = 3;
             const coords = [];
 
             for (let y = 0; y < tempCanvas.height; y += pixelStep) {
@@ -514,7 +589,8 @@
                 }
             }
 
-            // Shuffle
+            debug(`Creating ${coords.length} text particles...`);
+
             for (let i = coords.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [coords[i], coords[j]] = [coords[j], coords[i]];
@@ -523,14 +599,14 @@
             coords.forEach(coord => {
                 const particle = new Particle();
 
-                const randomPos = generateRandomPos(canvas.width / 2, canvas.height / 2, (canvas.width + canvas.height) / 2);
+                const randomPos = generateRandomPos(canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height));
                 particle.pos.x = randomPos.x;
                 particle.pos.y = randomPos.y;
 
-                particle.maxSpeed = Math.random() * 4 + 6;
-                particle.maxForce = particle.maxSpeed * 0.08;
+                particle.maxSpeed = Math.random() * 3 + 6;
+                particle.maxForce = particle.maxSpeed * 0.1;
                 particle.particleSize = 3;
-                particle.colorBlendRate = Math.random() * 0.02 + 0.01;
+                particle.colorBlendRate = Math.random() * 0.015 + 0.01;
 
                 particle.startColor = { r: 0, g: 0, b: 0 };
                 particle.targetColor = { r: 255, g: 255, b: 255 };
@@ -542,54 +618,56 @@
                 particles.push(particle);
             });
 
+            debug(`Total ${particles.length} particles (SVG + text)`);
+
             setTimeout(() => {
                 currentStage = 'complete';
+                debug('Complete! Redirecting...');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 3000);
-            }, 4000);
+            }, 5000);
         }
 
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
 
-            if (currentStage === 'ribbon') {
-                drawRibbon();
-            } else if (currentStage === 'portal') {
-                // Portal animation handled in openPortal
-            } else if (showParticles) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            if (currentStage === 'rope') {
+                updateRope();
+                drawRope();
+            } else if (currentStage === 'portal' || currentStage === 'svg' || currentStage === 'text' || currentStage === 'complete') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Continue portal rotation
                 if (portal) {
                     portal.rotation.y += 0.01;
                     renderer.render(scene, camera);
                 }
 
-                particles.forEach((particle, index) => {
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const particle = particles[i];
                     particle.move();
                     particle.draw(ctx);
 
                     if (particle.isKilled) {
-                        if (particle.pos.x < 0 || particle.pos.x > canvas.width ||
-                            particle.pos.y < 0 || particle.pos.y > canvas.height) {
-                            particles.splice(index, 1);
+                        if (particle.pos.x < -100 || particle.pos.x > canvas.width + 100 ||
+                            particle.pos.y < -100 || particle.pos.y > canvas.height + 100) {
+                            particles.splice(i, 1);
                         }
                     }
-                });
+                }
             }
         }
 
         animate();
+        debug('Ready - Cut the rope!');
 
-        // Handle window resize
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            ribbonCanvas.width = window.innerWidth;
-            ribbonCanvas.height = window.innerHeight;
+            ropeCanvas.width = window.innerWidth;
+            ropeCanvas.height = window.innerHeight;
 
             if (camera && renderer) {
                 camera.aspect = window.innerWidth / window.innerHeight;
