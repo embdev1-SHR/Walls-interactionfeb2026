@@ -238,14 +238,14 @@
         <div class="controls-content">
             <div class="control-group">
                 <label class="control-label">
-                    Turbulence Force
+                    Cloud Density
                     <span class="control-value" id="turbulenceValue">60</span>
                 </label>
                 <input type="range" id="turbulenceSlider" min="0" max="100" value="60">
             </div>
             <div class="control-group">
                 <label class="control-label">
-                    Wave Speed
+                    Drift Speed
                     <span class="control-value" id="waveSpeedValue">50</span>
                 </label>
                 <input type="range" id="waveSpeedSlider" min="10" max="100" value="50">
@@ -275,7 +275,7 @@
         </div>
     </div>
 
-    <div class="info-text">Move your mouse or touch the screen • Multi-touch supported</div>
+    <div class="info-text">Move your mouse or touch to interact with the cloud • Multi-touch supported</div>
     <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
 
     <script>
@@ -326,17 +326,20 @@
                 const turbulence = turbulenceForce / 100;
                 const speedFactor = waveSpeed / 50;
 
-                this.noise += this.noiseSpeed * speedFactor;
+                this.noise += this.noiseSpeed * speedFactor * 0.3;
 
                 const depthFactor = 0.3 + this.baseZ * 0.7;
 
-                const waveX = Math.sin(this.baseY * this.frequency + time * 0.0004 * speedFactor + this.phaseX) * 40 * turbulence * depthFactor;
-                const waveY = Math.cos(this.baseX * this.frequency + time * 0.0003 * speedFactor + this.phaseY) * 40 * turbulence * depthFactor;
-                const waveZ = Math.sin((this.baseX + this.baseY) * this.frequency * 0.5 + time * 0.0002 * speedFactor + this.phaseZ) * 0.3 * turbulence;
+                const driftX = Math.sin(this.noise * 0.5) * 0.8 * speedFactor * depthFactor;
+                const driftY = Math.cos(this.noise * 0.7) * 0.8 * speedFactor * depthFactor;
+                const driftZ = Math.sin(this.noise * 0.3) * 0.002 * speedFactor;
 
-                const noiseOffsetX = Math.sin(this.noise) * 25 * turbulence * depthFactor;
-                const noiseOffsetY = Math.cos(this.noise * 1.3) * 25 * turbulence * depthFactor;
-                const noiseOffsetZ = Math.sin(this.noise * 0.7) * 0.2 * turbulence;
+                const cloudOffsetX = Math.sin(time * 0.0001 + this.phaseX) * 100 * turbulence * depthFactor;
+                const cloudOffsetY = Math.cos(time * 0.00008 + this.phaseY) * 100 * turbulence * depthFactor;
+                const cloudOffsetZ = Math.sin(time * 0.00006 + this.phaseZ) * 0.15 * turbulence;
+
+                const perlinX = Math.sin(this.baseY * 0.002 + time * 0.0002) * Math.cos(time * 0.00015 + this.phaseX) * 60 * turbulence * depthFactor;
+                const perlinY = Math.cos(this.baseX * 0.002 + time * 0.00015) * Math.sin(time * 0.0001 + this.phaseY) * 60 * turbulence * depthFactor;
 
                 let forceX = 0;
                 let forceY = 0;
@@ -355,24 +358,28 @@
                     }
                 });
 
-                const targetX = this.baseX + waveX + noiseOffsetX + forceX;
-                const targetY = this.baseY + waveY + noiseOffsetY + forceY;
-                const targetZ = Math.max(0, Math.min(1, this.baseZ + waveZ + noiseOffsetZ));
+                const targetX = this.baseX + cloudOffsetX + perlinX + forceX;
+                const targetY = this.baseY + cloudOffsetY + perlinY + forceY;
+                const targetZ = Math.max(0, Math.min(1, this.baseZ + cloudOffsetZ));
 
-                this.vx += (targetX - this.x) * 0.04;
-                this.vy += (targetY - this.y) * 0.04;
-                this.vz += (targetZ - this.z) * 0.02;
+                this.vx += driftX;
+                this.vy += driftY;
+                this.vz += driftZ;
 
-                this.vx *= 0.88;
-                this.vy *= 0.88;
-                this.vz *= 0.90;
+                this.vx += (targetX - this.x) * 0.008;
+                this.vy += (targetY - this.y) * 0.008;
+                this.vz += (targetZ - this.z) * 0.004;
+
+                this.vx *= 0.96;
+                this.vy *= 0.96;
+                this.vz *= 0.97;
 
                 this.x += this.vx;
                 this.y += this.vy;
                 this.z += this.vz;
 
-                if (this.baseX < -100 || this.baseX > canvas.width + 100 ||
-                    this.baseY < -100 || this.baseY > canvas.height + 100) {
+                if (this.baseX < -200 || this.baseX > canvas.width + 200 ||
+                    this.baseY < -200 || this.baseY > canvas.height + 200) {
                     this.reset();
                 }
             }
@@ -412,7 +419,7 @@
             requestAnimationFrame(animate);
             animationTime++;
 
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.06)';
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.04)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             for (let i = interactionPoints.length - 1; i >= 0; i--) {
