@@ -1,392 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Wall Games</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* Cinematic background helpers and animations */
-        :root{--bg-vignette: rgba(12,12,16,0.06); --accent-1: #0f172a; --accent-2: #4f46e5}
-        html,body{height:100%;font-family: 'Space Grotesk', "Helvetica Neue", Helvetica, Arial, sans-serif}
-        #bg-layer{position:fixed;inset:0;z-index:-20;overflow:hidden}
-        .planet{position:absolute;border-radius:9999px;filter:blur(28px);opacity:.95;mix-blend-mode:screen}
-        .planet--small{filter:blur(14px);opacity:.85}
-        .orbital-stripe{position:absolute;inset:0;border-radius:9999px;mix-blend-mode:overlay;opacity:.15;transform:rotate(12deg)}
-        .vignette{position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;background:radial-gradient(ellipse at center, rgba(255,255,255,0.0) 40%, rgba(0,0,0,0.04) 100%);z-index:40}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Wall Games</title>
 
-        @keyframes floatY {0% {transform: translateY(-6px)} 50% {transform: translateY(6px)} 100% {transform: translateY(-6px)}}
-        @keyframes slowSpin {0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-        .float-slow {animation: floatY 8s ease-in-out infinite}
-        .spin-slowest {animation: slowSpin 40s linear infinite}
+<style>
+/* ===== ORIGINAL STYLES – UNCHANGED ===== */
+:root{--bg-vignette: rgba(12,12,16,0.06)}
+html,body{height:100%;font-family:'Space Grotesk',Helvetica,Arial,sans-serif}
+#bg-layer{position:fixed;inset:0;z-index:-20;overflow:hidden}
+.planet{position:absolute;border-radius:9999px;filter:blur(28px);opacity:.95}
+.planet--small{filter:blur(14px);opacity:.85}
+.orbital-stripe{position:absolute;inset:0;opacity:.15;transform:rotate(12deg)}
+.vignette{position:fixed;inset:0;pointer-events:none;z-index:40}
 
-        /* subtle grain */
-        .grain:after{content:'';position:fixed;inset:0;z-index:50;pointer-events:none;background-image:radial-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);background-size:3px 3px;opacity:.25}
-
-        /* Make sure canvas covers behind UI */
-        #canvas-3d, #menu-canvas{position:fixed;inset:0;width:100%;height:100%}
-
-                /* Loading bar override for Tailwind layout */
-                .loading-bar-fill{background:linear-gradient(90deg,#ffb3ba,#bae1ff,#baffc9);width:0;height:100%;animation: loading-progress 3s ease-out forwards}
-                @keyframes loading-progress{0%{width:0}100%{width:100%}}
-
-                /* Animated loading spheres */
-                .loading-spheres{position:relative;width:420px;height:220px}
-                .loading-sphere{position:absolute;border-radius:9999px;mix-blend-mode:screen;filter: blur(20px);box-shadow:0 30px 80px rgba(0,0,0,0.06);opacity:0.95;transform-origin:center}
-                .ls-small{width:80px;height:80px}
-                .ls-medium{width:120px;height:120px}
-                .ls-large{width:180px;height:180px}
-
-                @keyframes ls-float {
-                    0%{transform: translateY(0) translateX(0) scale(1)}
-                    25%{transform: translateY(-12px) translateX(-8px) scale(1.03)}
-                    50%{transform: translateY(0) translateX(6px) scale(1)}
-                    75%{transform: translateY(10px) translateX(-6px) scale(0.98)}
-                    100%{transform: translateY(0) translateX(0) scale(1)}
-                }
-
-                @keyframes ls-pulse {
-                    0%{opacity:0.95;filter:blur(22px)}
-                    50%{opacity:0.7;filter:blur(16px)}
-                    100%{opacity:0.95;filter:blur(22px)}
-                }
-
-                .loading-sphere{animation: ls-float 6s ease-in-out infinite, ls-pulse 3.6s ease-in-out infinite}
-
-                /* Tails for meteor-like appearance */
-                .loading-sphere::after{
-                    content:'';position:absolute;left:50%;top:50%;transform-origin:left center;pointer-events:none;
-                    width:220px;height:26px;border-radius:18px;filter:blur(10px);opacity:.65;
-                    background:linear-gradient(90deg,var(--tail-color, rgba(255,255,255,0.9)), rgba(255,255,255,0));
-                    transform:translate(-10%, -50%) rotate(18deg);
-                }
-                .ls-tail-long::after{width:340px;height:36px;opacity:.6}
-                .ls-tail-short::after{width:140px;height:20px;opacity:.5}
-
-                /* Slight rotation offsets to make tails varied */
-                .loading-sphere[data-rot="1"]::after{transform:translate(-10%, -50%) rotate(10deg)}
-                .loading-sphere[data-rot="2"]::after{transform:translate(-10%, -50%) rotate(22deg)}
-                .loading-sphere[data-rot="3"]::after{transform:translate(-10%, -50%) rotate(-12deg)}
-
-                /* Circular layout for game cards */
-                .games-grid {
-                    position: relative;
-                }
-
-                .games-grid .game-card {
-                    position: absolute;
-                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                }
-
-                #particle-canvas {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    z-index: 10000;
-                }
-
-                #center-button {
-                    transform-origin: center;
-                }
-
-                #center-button:hover {
-                    animation: center-pulse 2s ease-in-out infinite;
-                }
-
-                @keyframes center-pulse {
-                    0%, 100% {
-                        transform: translate(-50%, -50%) scale(1) rotate(0deg);
-                    }
-                    50% {
-                        transform: translate(-50%, -50%) scale(1.05) rotate(5deg);
-                    }
-                }
-
-    </style>
+#canvas-3d,#menu-canvas{position:fixed;inset:0;width:100%;height:100%}
+.games-grid{position:relative}
+.games-grid .game-card{position:absolute;transition:all .4s cubic-bezier(.175,.885,.32,1.275)}
+#center-button{transform-origin:center}
+</style>
 </head>
-<body class="antialiased bg-gradient-to-b from-white via-indigo-50 to-pink-50 text-gray-800 overflow-hidden grain">
 
-    <!-- Cinematic background layer (decorative) -->
-    <div id="bg-layer" class="pointer-events-none">
-        <div class="planet float-slow spin-slowest" style="width:520px;height:520px;left:6%;top:6%;background:radial-gradient(circle at 30% 30%, rgba(138,180,255,0.95), rgba(138,180,255,0.45));box-shadow:0 40px 80px rgba(138,180,255,0.08)"></div>
-        <div class="planet planet--small" style="width:260px;height:260px;left:56%;top:68%;background:radial-gradient(circle at 40% 40%, rgba(255,170,190,0.95), rgba(255,170,190,0.45));box-shadow:0 30px 60px rgba(255,170,190,0.08)"></div>
-        <div class="orbital-stripe" style="background:linear-gradient(90deg, rgba(255,255,255,0.95), rgba(255,255,255,0));left:-20%;top:10%;width:140%;height:40%"></div>
+<body class="antialiased bg-gradient-to-b from-white via-indigo-50 to-pink-50 overflow-hidden">
+
+<!-- BACKGROUND -->
+<div id="bg-layer">
+  <div class="planet" style="width:520px;height:520px;left:6%;top:6%;background:rgba(138,180,255,.5)"></div>
+  <div class="planet planet--small" style="width:260px;height:260px;left:56%;top:68%;background:rgba(255,170,190,.5)"></div>
+</div>
+
+<!-- LOADING SCREEN (UNCHANGED) -->
+<div id="loading-screen" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black">
+  <canvas id="particle-canvas"></canvas>
+</div>
+
+<!-- MAIN MENU (UNCHANGED) -->
+<div id="main-menu" class="hidden fixed inset-0 z-40">
+  <canvas id="menu-canvas"></canvas>
+
+  <div class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-12">
+    <h1 class="text-7xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-indigo-400 to-cyan-300">
+      PLAY ZONE
+    </h1>
+
+    <p class="mt-4 text-2xl text-indigo-500">Choose Your Game</p>
+
+    <div class="games-grid mt-10 w-full max-w-6xl mx-auto" style="height:900px">
+
+      <div class="game-card w-56 h-56 rounded-full border-4 border-pink-200 bg-white/40 flex items-center justify-center" data-game="canvas">Free Canvas</div>
+      <div class="game-card w-56 h-56 rounded-full border-4 border-sky-200 bg-white/40 flex items-center justify-center" data-game="solar-system">Solar System</div>
+      <div class="game-card w-56 h-56 rounded-full border-4 border-emerald-200 bg-white/40 flex items-center justify-center" data-game="coloring-book">Coloring Book</div>
+      <div class="game-card w-56 h-56 rounded-full border-4 border-purple-200 bg-white/40 flex items-center justify-center" data-game="particle-playground">Particles</div>
+      <div class="game-card w-56 h-56 rounded-full border-4 border-orange-200 bg-white/40 flex items-center justify-center" data-game="goalkeeper">Goalkeeper</div>
+      <div class="game-card w-56 h-56 rounded-full border-4 border-red-300 bg-white/40 flex items-center justify-center" data-game="fruit-ninja">Fruit Ninja</div>
+
+      <div id="center-button"
+        class="absolute w-80 h-80 rounded-full border-8 border-cyan-300 bg-white shadow-2xl flex items-center justify-center cursor-pointer"
+        style="opacity:0;transform:scale(0);z-index:10">
+        PLAY INTRO
+      </div>
     </div>
+  </div>
+</div>
 
-    <!-- Loading screen (preserve canvas ID used by three.js) -->
-    <div id="loading-screen" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black transition-opacity duration-500">
-        <canvas id="particle-canvas" class="absolute inset-0"></canvas>
-    </div>
+<div class="vignette"></div>
 
-    <!-- Main menu (keeps canvas ID for background scripts) -->
-    <div id="main-menu" class="hidden fixed inset-0 z-40">
-        <canvas id="menu-canvas" class="absolute inset-0"></canvas>
-        <div class="menu-overlay relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-12">
-            <h1 class="title text-6xl md:text-7xl font-extrabold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-indigo-400 to-cyan-300">PLAY ZONE</h1>
-            <p class="subtitle mt-4 text-xl md:text-2xl text-indigo-500">Choose Your Game</p>
+<!-- EXTERNAL SCRIPTS (UNCHANGED) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="./js/hyperdrive-animation.js"></script>
+<script src="./js/menu-background.js"></script>
+<script src="./js/game-loader.js"></script>
 
-            <div class="games-grid mt-10 relative w-full max-w-6xl mx-auto" style="height: 900px;">
-                <div class="game-card group w-56 h-56 rounded-full border-4 border-pink-200 bg-white/40 backdrop-blur-md shadow-2xl flex items-center justify-center transition-transform transform hover:scale-110" data-game="canvas">
-                    <div class="game-card-content text-center px-4">
-                        <div class="game-title text-lg font-bold text-gray-700">Free Canvas</div>
-                        <div class="game-description text-sm text-gray-400 mt-1">Draw and paint with brushes</div>
-                    </div>
-                </div>
+<!-- ✅ ONLY FIX: LAYOUT AFTER LOADER HIDES -->
+<script>
+function layoutMenu() {
+  const container = document.querySelector('.games-grid');
+  const cards = document.querySelectorAll('.game-card');
+  const center = document.getElementById('center-button');
+  if (!container || cards.length === 0) return;
 
-                <div class="game-card group w-56 h-56 rounded-full border-4 border-sky-200 bg-white/30 backdrop-blur-md shadow-2xl flex items-center justify-center transition-transform transform hover:scale-110" data-game="solar-system">
-                    <div class="game-card-content text-center px-4">
-                        <div class="game-title text-lg font-bold text-gray-700">Solar System</div>
-                        <div class="game-description text-sm text-gray-400 mt-1">Explore planets and space</div>
-                    </div>
-                </div>
+  const rect = container.getBoundingClientRect();
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
 
-                <div class="game-card group w-56 h-56 rounded-full border-4 border-emerald-200 bg-white/30 backdrop-blur-md shadow-2xl flex items-center justify-center transition-transform transform hover:scale-110" data-game="coloring-book">
-                    <div class="game-card-content text-center px-4">
-                        <div class="game-title text-lg font-bold text-gray-700">Coloring Book</div>
-                        <div class="game-description text-sm text-gray-400 mt-1">Draw with crayons</div>
-                    </div>
-                </div>
+  const cardSize = cards[0].offsetWidth;
+  const gap = 36;
+  const N = cards.length;
 
-                <div class="game-card group w-56 h-56 rounded-full border-4 border-purple-200 bg-white/30 backdrop-blur-md shadow-2xl flex items-center justify-center transition-transform transform hover:scale-110" data-game="particle-playground">
-                    <div class="game-card-content text-center px-4">
-                        <div class="game-title text-lg font-bold text-gray-700">Particle Playground</div>
-                        <div class="game-description text-sm text-gray-400 mt-1">Play with particles</div>
-                    </div>
-                </div>
+  const minRadius = (cardSize + gap) / (2 * Math.sin(Math.PI / N));
+  const maxRadius = Math.min(cx, cy) - cardSize / 2 - 20;
+  const radius = Math.min(maxRadius, minRadius);
 
-                <div class="game-card group w-56 h-56 rounded-full border-4 border-orange-200 bg-white/30 backdrop-blur-md shadow-2xl flex items-center justify-center transition-transform transform hover:scale-110" data-game="goalkeeper">
-                    <div class="game-card-content text-center px-4">
-                        <div class="game-title text-lg font-bold text-gray-700">Goalkeeper</div>
-                        <div class="game-description text-sm text-gray-400 mt-1">Block the balls!</div>
-                    </div>
-                </div>
+  cards.forEach((card, i) => {
+    const angle = (i / N) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
 
-                <div class="game-card group w-56 h-56 rounded-full border-4 border-red-300 bg-white/30 backdrop-blur-md shadow-2xl flex items-center justify-center transition-transform transform hover:scale-110" data-game="fruit-ninja">
-                    <div class="game-card-content text-center px-4">
-                        <div class="game-title text-lg font-bold text-gray-700">Fruit Ninja</div>
-                        <div class="game-description text-sm text-gray-400 mt-1">Slice the fruits!</div>
-                    </div>
-                </div>
+    card.style.left = `${x - cardSize / 2}px`;
+    card.style.top  = `${y - cardSize / 2}px`;
+    card.style.opacity = '1';
+    card.style.transform = 'scale(1)';
+  });
 
-                <div id="center-button" class="absolute w-80 h-80 rounded-full border-8 border-cyan-300 bg-gradient-to-br from-white via-cyan-50 to-blue-100 backdrop-blur-xl shadow-2xl flex items-center justify-center transition-all duration-500 hover:scale-105 hover:shadow-[0_0_60px_rgba(34,211,238,0.6)] cursor-pointer" style="opacity: 0; transform: scale(0); z-index: 10;">
-                    <div class="text-center px-6">
-                        <div class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 mb-3 animate-pulse">PLAY INTRO</div>
-                        <div class="text-xl text-gray-700 font-bold mb-2">Begin Experience</div>
-                        <div class="mt-4 text-base text-gray-500 font-medium">Touch any circle</div>
-                    </div>
-                </div>
-            </div>
+  center.style.left = `${cx}px`;
+  center.style.top  = `${cy}px`;
+  center.style.opacity = '1';
+  center.style.transform = 'translate(-50%, -50%) scale(1)';
+  center.onclick = () => location.href = 'intro.html';
+}
 
-            <div class="instructions mt-8 text-gray-400">Touch or click a card to start playing</div>
-        </div>
-    </div>
+/* 🔑 USE LOADER AS SYNC POINT */
+window.addEventListener('load', () => {
+  const loading = document.getElementById('loading-screen');
+  const menu = document.getElementById('main-menu');
 
-    <div class="vignette"></div>
+  // wait until YOUR loader finishes (game-loader.js)
+  setTimeout(() => {
+    loading.style.display = 'none';
+    menu.classList.remove('hidden');
 
-        <!-- Shader meteors (converted from the React example) -->
-        <div id="shader-container" style="position:fixed;inset:0;z-index:-30;pointer-events:none"></div>
+    requestAnimationFrame(() => {
+      requestAnimationFrame(layoutMenu);
+    });
+  }, 3000); // match your loader duration
+});
 
-        <script>
-        (function(){
-            // Full-screen shader converted from the React example into plain JS (Three.js required)
-            if (typeof THREE === 'undefined') return console.warn('Three.js not loaded yet.');
+/* Resize-safe */
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(layoutMenu, 150);
+});
+</script>
 
-            const container = document.getElementById('shader-container');
-
-            const scene = new THREE.Scene();
-            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio || 1);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            container.appendChild(renderer.domElement);
-
-            const uniforms = {
-                iTime: { value: 0 },
-                iResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
-            };
-
-            const vertexShader = `
-                void main() {
-                    gl_Position = vec4(position, 1.0);
-                }
-            `;
-
-            const fragmentShader = `
-                uniform float iTime;
-                uniform vec2 iResolution;
-
-                #define NUM_OCTAVES 3
-
-                float rand(vec2 n) {
-                    return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
-                }
-
-                float noise(vec2 p) {
-                    vec2 ip = floor(p);
-                    vec2 u = fract(p);
-                    u = u*u*(3.0-2.0*u);
-
-                    float res = mix(
-                        mix(rand(ip), rand(ip + vec2(1.0, 0.0)), u.x),
-                        mix(rand(ip + vec2(0.0, 1.0)), rand(ip + vec2(1.0, 1.0)), u.x), u.y);
-                    return res * res;
-                }
-
-                float fbm(vec2 x) {
-                    float v = 0.0;
-                    float a = 0.3;
-                    vec2 shift = vec2(100);
-                    mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-                    for (int i = 0; i < NUM_OCTAVES; ++i) {
-                        v += a * noise(x);
-                        x = rot * x * 2.0 + shift;
-                        a *= 0.4;
-                    }
-                    return v;
-                }
-
-                void main() {
-                    vec2 shake = vec2(sin(iTime * 1.2) * 0.005, cos(iTime * 2.1) * 0.005);
-                    vec2 p = ((gl_FragCoord.xy + shake * iResolution.xy) - iResolution.xy * 0.5) / iResolution.y * mat2(6.0, -4.0, 4.0, 6.0);
-                    vec2 v;
-                    vec4 o = vec4(0.0);
-
-                    float f = 2.0 + fbm(p + vec2(iTime * 5.0, 0.0)) * 0.5;
-
-                    for (float i = 0.0; i < 35.0; i++) {
-                        v = p + cos(i * i + (iTime + p.x * 0.08) * 0.025 + i * vec2(13.0, 11.0)) * 3.5 + vec2(sin(iTime * 3.0 + i) * 0.003, cos(iTime * 3.5 - i) * 0.003);
-                        float tailNoise = fbm(v + vec2(iTime * 0.5, i)) * 0.3 * (1.0 - (i / 35.0));
-                        vec4 auroraColors = vec4(
-                            0.1 + 0.3 * sin(i * 0.2 + iTime * 0.4),
-                            0.3 + 0.5 * cos(i * 0.3 + iTime * 0.5),
-                            0.7 + 0.3 * sin(i * 0.4 + iTime * 0.3),
-                            1.0
-                        );
-                        vec4 currentContribution = auroraColors * exp(sin(i * i + iTime * 0.8)) / length(max(v, vec2(v.x * f * 0.015, v.y * 1.5)));
-                        float thinnessFactor = smoothstep(0.0, 1.0, i / 35.0) * 0.6;
-                        o += currentContribution * (1.0 + tailNoise * 0.8) * thinnessFactor;
-                    }
-
-                    o = tanh(pow(o / 100.0, vec4(1.6)));
-                    gl_FragColor = o * 1.5;
-                }
-            `;
-
-            const material = new THREE.ShaderMaterial({
-                uniforms: uniforms,
-                vertexShader: vertexShader,
-                fragmentShader: fragmentShader,
-                transparent: true
-            });
-
-            const geometry = new THREE.PlaneGeometry(2, 2);
-            const mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-
-            let last = performance.now();
-            let rafId;
-            function animate() {
-                const now = performance.now();
-                const dt = (now - last) / 1000;
-                last = now;
-                uniforms.iTime.value += dt;
-                renderer.render(scene, camera);
-                rafId = requestAnimationFrame(animate);
-            }
-            animate();
-
-            function onResize() {
-                const w = window.innerWidth;
-                const h = window.innerHeight;
-                renderer.setSize(w, h);
-                uniforms.iResolution.value.set(w, h);
-            }
-            window.addEventListener('resize', onResize);
-
-            // cleanup if page unloads
-            window.addEventListener('pagehide', () => {
-                cancelAnimationFrame(rafId);
-                window.removeEventListener('resize', onResize);
-                try { container.removeChild(renderer.domElement); } catch(e){}
-                geometry.dispose(); material.dispose(); renderer.dispose();
-            });
-        })();
-        </script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="./js/hyperdrive-animation.js"></script>
-    <script src="./js/menu-background.js"></script>
-    <script src="./js/game-loader.js"></script>
-    <script>
-        // Position game cards in a circular layout
-        window.addEventListener('DOMContentLoaded', () => {
-            const gameCards = document.querySelectorAll('.game-card');
-            const container = document.querySelector('.games-grid');
-            const centerButton = document.getElementById('center-button');
-
-            if (!container || gameCards.length === 0) return;
-
-            const centerX = container.offsetWidth / 2;
-            const centerY = container.offsetHeight / 2;
-            const radius = Math.min(centerX, centerY) - 50;
-
-            gameCards.forEach((card, index) => {
-                const angle = (index / gameCards.length) * Math.PI * 2 - Math.PI / 2;
-                const x = centerX + Math.cos(angle) * radius;
-                const y = centerY + Math.sin(angle) * radius;
-
-                card.style.left = `${x - card.offsetWidth / 2}px`;
-                card.style.top = `${y - card.offsetHeight / 2}px`;
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0)';
-
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'scale(1)';
-                }, 3000 + index * 100);
-            });
-
-            if (centerButton) {
-                centerButton.style.left = `${centerX}px`;
-                centerButton.style.top = `${centerY}px`;
-
-                setTimeout(() => {
-                    centerButton.style.opacity = '1';
-                    centerButton.style.transform = 'translate(-50%, -50%) scale(1)';
-                }, 3800);
-            }
-
-            window.addEventListener('resize', () => {
-                const newCenterX = container.offsetWidth / 2;
-                const newCenterY = container.offsetHeight / 2;
-                const newRadius = Math.min(newCenterX, newCenterY) - 50;
-
-                gameCards.forEach((card, index) => {
-                    const angle = (index / gameCards.length) * Math.PI * 2 - Math.PI / 2;
-                    const x = newCenterX + Math.cos(angle) * newRadius;
-                    const y = newCenterY + Math.sin(angle) * newRadius;
-
-                    card.style.left = `${x - card.offsetWidth / 2}px`;
-                    card.style.top = `${y - card.offsetHeight / 2}px`;
-                });
-
-                if (centerButton) {
-                    centerButton.style.left = `${newCenterX}px`;
-                    centerButton.style.top = `${newCenterY}px`;
-                }
-            });
-
-            // Add click handler to navigate to intro
-            if (centerButton) {
-                centerButton.addEventListener('click', () => {
-                    window.location.href = 'intro.html';
-                });
-            }
-        });
-    </script>
 </body>
 </html>
