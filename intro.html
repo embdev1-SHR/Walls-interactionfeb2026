@@ -297,6 +297,139 @@
                 transform: translateX(-50%) scale(1.05);
             }
         }
+
+        .controls-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 40, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 1000;
+            min-width: 280px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .controls-panel.collapsed {
+            padding: 12px;
+            min-width: auto;
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .controls-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .controls-content {
+            max-height: 400px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .controls-panel.collapsed .controls-content {
+            max-height: 0;
+        }
+
+        .controls-panel.collapsed .controls-title {
+            display: none;
+        }
+
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .control-value {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            float: right;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 4px;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -341,6 +474,37 @@
 
     <button id="startButton">GET STARTED</button>
 
+    <div class="controls-panel" id="controlsPanel">
+        <div class="controls-header" id="controlsHeader">
+            <span class="controls-title">Particle Controls</span>
+            <button class="toggle-btn" id="toggleBtn">−</button>
+        </div>
+        <div class="controls-content">
+            <div class="control-group">
+                <label class="control-label">
+                    Turbulence Force
+                    <span class="control-value" id="turbulenceValue">50</span>
+                </label>
+                <input type="range" id="turbulenceSlider" min="0" max="100" value="50">
+            </div>
+            <div class="control-group">
+                <label class="control-label">
+                    Wave Speed
+                    <span class="control-value" id="waveSpeedValue">50</span>
+                </label>
+                <input type="range" id="waveSpeedSlider" min="10" max="100" value="50">
+            </div>
+            <div class="control-group">
+                <label class="control-label">Color Start</label>
+                <input type="color" id="colorStart" value="#667eea">
+            </div>
+            <div class="control-group">
+                <label class="control-label">Color End</label>
+                <input type="color" id="colorEnd" value="#764ba2">
+            </div>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d', { alpha: false });
@@ -364,43 +528,97 @@
         const logo = document.getElementById('logo');
         const startButton = document.getElementById('startButton');
 
+        let turbulenceForce = 50;
+        let waveSpeed = 50;
+        let colorStart = { r: 102, g: 126, b: 234 };
+        let colorEnd = { r: 118, g: 75, b: 162 };
+        const interactionPoints = [];
+
         class Particle {
             constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.z = Math.random();
-                this.speedZ = 0.001 + Math.random() * 0.002;
-                this.size = 0.5 + Math.random() * 1.5;
-                this.opacity = 0.3 + Math.random() * 0.4;
-                this.twinkle = Math.random() * Math.PI * 2;
-                this.twinkleSpeed = 0.02 + Math.random() * 0.02;
+                this.baseX = Math.random() * canvas.width;
+                this.baseY = Math.random() * canvas.height;
+                this.x = this.baseX;
+                this.y = this.baseY;
+                this.vx = 0;
+                this.vy = 0;
+                this.size = 1 + Math.random() * 2.5;
+                this.opacity = 0.4 + Math.random() * 0.6;
+                this.phaseX = Math.random() * Math.PI * 2;
+                this.phaseY = Math.random() * Math.PI * 2;
+                this.frequency = 0.001 + Math.random() * 0.002;
+                this.depth = Math.random();
+                this.noise = Math.random() * Math.PI * 2;
+                this.noiseSpeed = 0.01 + Math.random() * 0.02;
             }
 
-            update() {
-                this.z += this.speedZ;
-                if (this.z > 1) {
-                    this.z = 0;
-                    this.x = Math.random() * canvas.width;
-                    this.y = Math.random() * canvas.height;
+            update(time) {
+                const turbulence = turbulenceForce / 100;
+                const speedFactor = waveSpeed / 50;
+
+                this.noise += this.noiseSpeed * speedFactor;
+
+                const waveX = Math.sin(this.baseY * this.frequency + time * 0.0005 * speedFactor + this.phaseX) * 30 * turbulence;
+                const waveY = Math.cos(this.baseX * this.frequency + time * 0.0003 * speedFactor + this.phaseY) * 30 * turbulence;
+
+                const noiseOffsetX = Math.sin(this.noise) * 20 * turbulence;
+                const noiseOffsetY = Math.cos(this.noise * 1.3) * 20 * turbulence;
+
+                let forceX = 0;
+                let forceY = 0;
+
+                interactionPoints.forEach(point => {
+                    const dx = this.x - point.x;
+                    const dy = this.y - point.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxDistance = point.radius;
+
+                    if (distance < maxDistance) {
+                        const force = (1 - distance / maxDistance) * point.strength;
+                        const angle = Math.atan2(dy, dx);
+                        forceX += Math.cos(angle) * force;
+                        forceY += Math.sin(angle) * force;
+                    }
+                });
+
+                const targetX = this.baseX + waveX + noiseOffsetX + forceX;
+                const targetY = this.baseY + waveY + noiseOffsetY + forceY;
+
+                this.vx += (targetX - this.x) * 0.05;
+                this.vy += (targetY - this.y) * 0.05;
+
+                this.vx *= 0.85;
+                this.vy *= 0.85;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.baseX < -50 || this.baseX > canvas.width + 50 ||
+                    this.baseY < -50 || this.baseY > canvas.height + 50) {
+                    this.baseX = Math.random() * canvas.width;
+                    this.baseY = Math.random() * canvas.height;
+                    this.x = this.baseX;
+                    this.y = this.baseY;
                 }
-                this.twinkle += this.twinkleSpeed;
             }
 
             draw() {
-                const scale = this.z * this.z;
-                const x = (this.x - canvas.width / 2) * (1 + scale * 0.3) + canvas.width / 2;
-                const y = (this.y - canvas.height / 2) * (1 + scale * 0.3) + canvas.height / 2;
-                const size = this.size * (0.5 + scale);
-                const alpha = this.opacity * scale * (0.7 + Math.sin(this.twinkle) * 0.3);
+                const depthScale = 0.5 + this.depth * 0.5;
+                const size = this.size * depthScale;
+                const alpha = this.opacity * depthScale;
+
+                const t = this.depth;
+                const r = Math.floor(colorStart.r + (colorEnd.r - colorStart.r) * t);
+                const g = Math.floor(colorStart.g + (colorEnd.g - colorStart.g) * t);
+                const b = Math.floor(colorStart.b + (colorEnd.b - colorStart.b) * t);
 
                 ctx.save();
                 ctx.globalAlpha = alpha;
-                const hue = 200 + this.z * 60;
-                ctx.fillStyle = `hsl(${hue}, 100%, ${70 + this.z * 30}%)`;
-                ctx.shadowBlur = 8 * scale;
-                ctx.shadowColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
+                ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                ctx.shadowBlur = 12 * depthScale;
+                ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${alpha * 0.8})`;
                 ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
             }
@@ -490,9 +708,11 @@
         }
 
         const particles = [];
-        for (let i = 0; i < 500; i++) {
+        for (let i = 0; i < 800; i++) {
             particles.push(new Particle());
         }
+
+        let animationTime = 0;
 
         class RopeSegment {
             constructor(x, y, fixed = false) {
@@ -570,12 +790,21 @@
 
         function animate() {
             requestAnimationFrame(animate);
+            animationTime++;
 
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.08)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            for (let i = interactionPoints.length - 1; i >= 0; i--) {
+                interactionPoints[i].life--;
+                interactionPoints[i].strength *= 0.95;
+                if (interactionPoints[i].life <= 0) {
+                    interactionPoints.splice(i, 1);
+                }
+            }
+
             particles.forEach(p => {
-                p.update();
+                p.update(animationTime);
                 p.draw();
             });
         }
@@ -870,6 +1099,88 @@
                 startButton.classList.add('show');
             }, currentTime);
         }
+
+        function addParticleInteraction(x, y, strength = 200) {
+            interactionPoints.push({
+                x: x,
+                y: y,
+                radius: 200,
+                strength: strength,
+                life: 15
+            });
+        }
+
+        function handleParticleInteraction(e) {
+            const rect = canvas.getBoundingClientRect();
+
+            if (e.touches) {
+                for (let i = 0; i < e.touches.length; i++) {
+                    const touch = e.touches[i];
+                    const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+                    const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+                    addParticleInteraction(x, y, 180);
+                }
+            } else {
+                const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+                const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+                addParticleInteraction(x, y, 180);
+            }
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        const controlsPanel = document.getElementById('controlsPanel');
+        const controlsHeader = document.getElementById('controlsHeader');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const turbulenceSlider = document.getElementById('turbulenceSlider');
+        const turbulenceValue = document.getElementById('turbulenceValue');
+        const waveSpeedSlider = document.getElementById('waveSpeedSlider');
+        const waveSpeedValue = document.getElementById('waveSpeedValue');
+        const colorStartInput = document.getElementById('colorStart');
+        const colorEndInput = document.getElementById('colorEnd');
+
+        controlsHeader.addEventListener('click', () => {
+            controlsPanel.classList.toggle('collapsed');
+            toggleBtn.textContent = controlsPanel.classList.contains('collapsed') ? '+' : '−';
+        });
+
+        turbulenceSlider.addEventListener('input', (e) => {
+            turbulenceForce = parseFloat(e.target.value);
+            turbulenceValue.textContent = Math.round(turbulenceForce);
+        });
+
+        waveSpeedSlider.addEventListener('input', (e) => {
+            waveSpeed = parseFloat(e.target.value);
+            waveSpeedValue.textContent = Math.round(waveSpeed);
+        });
+
+        colorStartInput.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (rgb) colorStart = rgb;
+        });
+
+        colorEndInput.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (rgb) colorEnd = rgb;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!ribbonCut) return;
+            handleParticleInteraction(e);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!ribbonCut) return;
+            e.preventDefault();
+            handleParticleInteraction(e);
+        }, { passive: false });
 
         function startSequence() {
             createRibbon();
