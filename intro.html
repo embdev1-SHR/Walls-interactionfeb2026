@@ -461,7 +461,7 @@
                 this.trail = [];
                 this.maxTrailLength = 3;
                 this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.15;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.1;
                 this.depth = Math.random();
                 this.arrived = false;
             }
@@ -475,11 +475,6 @@
             }
 
             move() {
-                this.trail.unshift({ x: this.pos.x, y: this.pos.y });
-                if (this.trail.length > this.maxTrailLength) {
-                    this.trail.pop();
-                }
-
                 const distance = Math.sqrt(
                     Math.pow(this.pos.x - this.target.x, 2) +
                     Math.pow(this.pos.y - this.target.y, 2)
@@ -489,7 +484,15 @@
                     this.arrived = true;
                     this.vel.x *= 0.8;
                     this.vel.y *= 0.8;
+                    this.trail.length = 0;
                     return;
+                }
+
+                if (!this.arrived && this.maxTrailLength > 0) {
+                    this.trail.unshift({ x: this.pos.x, y: this.pos.y });
+                    if (this.trail.length > this.maxTrailLength) {
+                        this.trail.pop();
+                    }
                 }
 
                 let proximityMult = 1;
@@ -556,20 +559,22 @@
                 const depthScale = 0.7 + this.depth * 0.6;
                 const size = this.particleSize * depthScale;
 
-                for (let i = this.trail.length - 1; i >= 0; i--) {
-                    const trailAlpha = ((i + 1) / this.trail.length) * easedWeight * 0.4;
-                    const trailSize = size * ((i + 1) / this.trail.length) * 0.7;
+                if (this.trail.length > 0 && !this.arrived) {
+                    for (let i = this.trail.length - 1; i >= 0; i--) {
+                        const trailAlpha = ((i + 1) / this.trail.length) * easedWeight * 0.3;
+                        const trailSize = size * ((i + 1) / this.trail.length) * 0.6;
 
-                    ctx.save();
-                    ctx.globalAlpha = trailAlpha;
-                    ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
-                    ctx.fillRect(
-                        this.trail[i].x - trailSize / 2,
-                        this.trail[i].y - trailSize / 2,
-                        trailSize,
-                        trailSize
-                    );
-                    ctx.restore();
+                        ctx.save();
+                        ctx.globalAlpha = trailAlpha;
+                        ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
+                        ctx.fillRect(
+                            this.trail[i].x - trailSize / 2,
+                            this.trail[i].y - trailSize / 2,
+                            trailSize,
+                            trailSize
+                        );
+                        ctx.restore();
+                    }
                 }
 
                 ctx.save();
@@ -578,18 +583,20 @@
 
                 ctx.globalAlpha = easedWeight;
 
-                const glowSize = size * 2.5;
-                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
-                gradient.addColorStop(0, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${0.8 * easedWeight})`);
-                gradient.addColorStop(0.4, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${0.3 * easedWeight})`);
-                gradient.addColorStop(1, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0)`);
+                if (!this.arrived) {
+                    const glowSize = size * 2;
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+                    gradient.addColorStop(0, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${0.6 * easedWeight})`);
+                    gradient.addColorStop(0.5, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${0.2 * easedWeight})`);
+                    gradient.addColorStop(1, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0)`);
 
-                ctx.fillStyle = gradient;
-                ctx.fillRect(-glowSize, -glowSize, glowSize * 2, glowSize * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(-glowSize, -glowSize, glowSize * 2, glowSize * 2);
+                }
 
                 ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
-                ctx.shadowBlur = 8 * depthScale;
-                ctx.shadowColor = `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0.8)`;
+                ctx.shadowBlur = this.arrived ? 4 * depthScale : 6 * depthScale;
+                ctx.shadowColor = `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${this.arrived ? 0.5 : 0.7})`;
                 ctx.fillRect(-size / 2, -size / 2, size, size);
 
                 ctx.restore();
@@ -599,19 +606,26 @@
         const particles = [];
         let currentStage = 'ribbon';
         let connectParticles = true;
-        const connectionDistance = 120;
+        const connectionDistance = 100;
+        let svgImage = null;
+        let svgOpacity = 0;
+        let textOpacity = 0;
+        let stageTimer = 0;
 
         function drawConnections() {
-            if (!connectParticles) return;
+            if (!connectParticles || svgOpacity > 0.3 || textOpacity > 0.3) return;
 
-            const arrivedParticles = particles.filter(p => p.arrived);
+            const arrivedParticles = particles.filter(p => p.arrived && !p.isKilled);
             if (arrivedParticles.length < 2) return;
 
+            const maxConnections = 200;
+            let connectionCount = 0;
+
             ctx.save();
-            for (let i = 0; i < arrivedParticles.length; i++) {
+            for (let i = 0; i < arrivedParticles.length && connectionCount < maxConnections; i++) {
                 const p1 = arrivedParticles[i];
 
-                for (let j = i + 1; j < arrivedParticles.length; j++) {
+                for (let j = i + 1; j < arrivedParticles.length && connectionCount < maxConnections; j++) {
                     const p2 = arrivedParticles[j];
 
                     const dx = p2.pos.x - p1.pos.x;
@@ -619,7 +633,7 @@
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (distance < connectionDistance) {
-                        const opacity = (1 - distance / connectionDistance) * 0.15 * p1.colorWeight * p2.colorWeight;
+                        const opacity = (1 - distance / connectionDistance) * 0.1 * p1.colorWeight * p2.colorWeight;
 
                         ctx.globalAlpha = opacity;
                         ctx.strokeStyle = `rgba(${p1.targetColor.r}, ${p1.targetColor.g}, ${p1.targetColor.b}, ${opacity})`;
@@ -628,6 +642,7 @@
                         ctx.moveTo(p1.pos.x, p1.pos.y);
                         ctx.lineTo(p2.pos.x, p2.pos.y);
                         ctx.stroke();
+                        connectionCount++;
                     }
                 }
             }
@@ -655,8 +670,9 @@
 
         function showSVGParticles() {
             currentStage = 'svg';
+            stageTimer = 0;
 
-            const svgImage = new Image();
+            svgImage = new Image();
             svgImage.crossOrigin = 'anonymous';
 
             svgImage.onload = function() {
@@ -675,7 +691,7 @@
                 const offsetX = (canvas.width - tempCanvas.width) / 2;
                 const offsetY = (canvas.height - tempCanvas.height) / 2 - 80;
 
-                const pixelStep = 6;
+                const pixelStep = 8;
                 const coords = [];
 
                 for (let y = 0; y < tempCanvas.height; y += pixelStep) {
@@ -695,6 +711,17 @@
                     }
                 }
 
+                const maxParticles = 3000;
+                if (coords.length > maxParticles) {
+                    const step = Math.ceil(coords.length / maxParticles);
+                    const reducedCoords = [];
+                    for (let i = 0; i < coords.length; i += step) {
+                        reducedCoords.push(coords[i]);
+                    }
+                    coords.length = 0;
+                    coords.push(...reducedCoords);
+                }
+
                 for (let i = coords.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [coords[i], coords[j]] = [coords[j], coords[i]];
@@ -708,23 +735,17 @@
                     particle.pos.x = canvas.width / 2 + Math.cos(angle) * distance;
                     particle.pos.y = canvas.height / 2 + Math.sin(angle) * distance;
 
-                    particle.maxSpeed = Math.random() * 4 + 8;
-                    particle.maxForce = particle.maxSpeed * 0.15;
-                    particle.particleSize = Math.random() * 2 + 4;
-                    particle.colorBlendRate = Math.random() * 0.02 + 0.015;
-                    particle.closeEnoughTarget = 80 + Math.random() * 40;
+                    particle.maxSpeed = Math.random() * 3 + 9;
+                    particle.maxForce = particle.maxSpeed * 0.18;
+                    particle.particleSize = Math.random() * 1.5 + 4;
+                    particle.colorBlendRate = Math.random() * 0.025 + 0.02;
+                    particle.closeEnoughTarget = 70 + Math.random() * 30;
                     particle.depth = Math.random();
 
-                    const distanceFromCenter = Math.sqrt(
-                        Math.pow(coord.x - canvas.width / 2, 2) +
-                        Math.pow(coord.y - canvas.height / 2, 2)
-                    );
-                    const normalizedDistance = distanceFromCenter / (Math.max(canvas.width, canvas.height) / 2);
-
                     particle.startColor = {
-                        r: Math.floor(coord.r * 0.3),
-                        g: Math.floor(coord.g * 0.3),
-                        b: Math.floor(coord.b * 0.3)
+                        r: Math.floor(coord.r * 0.2),
+                        g: Math.floor(coord.g * 0.2),
+                        b: Math.floor(coord.b * 0.2)
                     };
                     particle.targetColor = {
                         r: Math.max(120, coord.r + 30),
@@ -736,14 +757,14 @@
                     particle.target.x = coord.x;
                     particle.target.y = coord.y;
 
-                    particle.maxTrailLength = Math.floor(3 + Math.random() * 3);
+                    particle.maxTrailLength = Math.floor(2 + Math.random() * 2);
 
                     particles.push(particle);
                 });
 
                 setTimeout(() => {
-                    showTextParticles();
-                }, 5000);
+                    transitionToText();
+                }, 6000);
             };
 
             svgImage.onerror = function() {
@@ -755,8 +776,19 @@
             svgImage.src = 'Kerala-map-en.svg';
         }
 
+        function transitionToText() {
+            particles.forEach(p => p.isKilled = true);
+
+            setTimeout(() => {
+                particles.length = 0;
+                svgOpacity = 0;
+                showTextParticles();
+            }, 1000);
+        }
+
         function showTextParticles() {
             currentStage = 'text';
+            stageTimer = 0;
 
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width;
@@ -772,7 +804,7 @@
             const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
             const pixels = imageData.data;
 
-            const pixelStep = 3;
+            const pixelStep = 4;
             const coords = [];
 
             for (let y = 0; y < tempCanvas.height; y += pixelStep) {
@@ -784,6 +816,17 @@
                         coords.push({ x, y });
                     }
                 }
+            }
+
+            const maxParticles = 2500;
+            if (coords.length > maxParticles) {
+                const step = Math.ceil(coords.length / maxParticles);
+                const reducedCoords = [];
+                for (let i = 0; i < coords.length; i += step) {
+                    reducedCoords.push(coords[i]);
+                }
+                coords.length = 0;
+                coords.push(...reducedCoords);
             }
 
             for (let i = coords.length - 1; i > 0; i--) {
@@ -799,45 +842,33 @@
                 particle.pos.x = canvas.width / 2 + Math.cos(angle) * distance;
                 particle.pos.y = canvas.height / 2 + Math.sin(angle) * distance;
 
-                particle.maxSpeed = Math.random() * 4 + 9;
-                particle.maxForce = particle.maxSpeed * 0.15;
-                particle.particleSize = Math.random() * 1.5 + 3;
-                particle.colorBlendRate = Math.random() * 0.02 + 0.015;
-                particle.closeEnoughTarget = 70 + Math.random() * 30;
+                particle.maxSpeed = Math.random() * 3 + 10;
+                particle.maxForce = particle.maxSpeed * 0.2;
+                particle.particleSize = Math.random() * 1 + 3;
+                particle.colorBlendRate = Math.random() * 0.025 + 0.02;
+                particle.closeEnoughTarget = 60 + Math.random() * 25;
                 particle.depth = Math.random();
 
-                particle.startColor = { r: 80, g: 80, b: 100 };
+                particle.startColor = { r: 60, g: 60, b: 80 };
                 particle.targetColor = { r: 255, g: 255, b: 255 };
                 particle.colorWeight = 0;
 
                 particle.target.x = coord.x;
                 particle.target.y = coord.y;
 
-                particle.maxTrailLength = Math.floor(2 + Math.random() * 2);
+                particle.maxTrailLength = Math.floor(1 + Math.random() * 2);
 
                 particles.push(particle);
             });
 
             setTimeout(() => {
                 currentStage = 'complete';
-                ctx.save();
-                ctx.globalAlpha = 0;
+                stageTimer = 0;
 
-                let fadeProgress = 0;
-                const fadeInterval = setInterval(() => {
-                    fadeProgress += 0.02;
-                    ctx.globalAlpha = fadeProgress;
-
-                    if (fadeProgress >= 1) {
-                        clearInterval(fadeInterval);
-                        setTimeout(() => {
-                            window.location.href = 'index.html';
-                        }, 1000);
-                    }
-                }, 1000 / 60);
-
-                ctx.restore();
-            }, 5000);
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2500);
+            }, 6000);
         }
 
         let lastTime = performance.now();
@@ -863,32 +894,81 @@
                     }
                 }
             } else if (currentStage === 'svg' || currentStage === 'text' || currentStage === 'complete') {
+                stageTimer += deltaTime;
+
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                const batchSize = Math.min(particles.length, 50);
-                for (let batch = 0; batch < Math.ceil(particles.length / batchSize); batch++) {
-                    const start = batch * batchSize;
-                    const end = Math.min(start + batchSize, particles.length);
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const particle = particles[i];
+                    particle.move();
 
-                    for (let i = end - 1; i >= start; i--) {
-                        const particle = particles[i];
-                        particle.move();
-
-                        if (particle.isKilled) {
-                            if (particle.pos.x < -100 || particle.pos.x > canvas.width + 100 ||
-                                particle.pos.y < -100 || particle.pos.y > canvas.height + 100) {
-                                particles.splice(i, 1);
-                                continue;
-                            }
+                    if (particle.isKilled) {
+                        if (particle.pos.x < -100 || particle.pos.x > canvas.width + 100 ||
+                            particle.pos.y < -100 || particle.pos.y > canvas.height + 100) {
+                            particles.splice(i, 1);
+                            continue;
                         }
                     }
                 }
 
-                drawConnections();
+                if (currentStage === 'svg' && stageTimer > 2000) {
+                    svgOpacity = Math.min(1, (stageTimer - 2000) / 2000);
+                }
+
+                if (currentStage === 'text' && stageTimer > 2500) {
+                    textOpacity = Math.min(1, (stageTimer - 2500) / 1500);
+                }
+
+                if (currentStage === 'svg' && svgImage && svgOpacity > 0) {
+                    const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.35;
+                    const svgWidth = svgImage.width * scale;
+                    const svgHeight = svgImage.height * scale;
+                    const offsetX = (canvas.width - svgWidth) / 2;
+                    const offsetY = (canvas.height - svgHeight) / 2 - 80;
+
+                    ctx.save();
+                    ctx.globalAlpha = svgOpacity;
+                    ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
+                    ctx.restore();
+                }
+
+                if ((currentStage === 'text' || currentStage === 'complete') && textOpacity > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = textOpacity;
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 70px -apple-system, BlinkMacSystemFont, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+                    ctx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 120);
+                    ctx.restore();
+                }
+
+                if (svgOpacity < 1 || currentStage === 'text' || currentStage === 'complete') {
+                    drawConnections();
+                }
 
                 for (let i = 0; i < particles.length; i++) {
-                    particles[i].draw(ctx);
+                    const particle = particles[i];
+                    ctx.save();
+                    if (currentStage === 'svg' && svgOpacity > 0) {
+                        ctx.globalAlpha = Math.max(0, 1 - svgOpacity);
+                    } else if (currentStage === 'text' && textOpacity > 0) {
+                        ctx.globalAlpha = Math.max(0, 1 - textOpacity * 0.5);
+                    }
+                    particle.draw(ctx);
+                    ctx.restore();
+                }
+
+                if (currentStage === 'complete' && stageTimer > 1500) {
+                    const fadeOut = Math.min(1, (stageTimer - 1500) / 1000);
+                    ctx.save();
+                    ctx.globalAlpha = fadeOut;
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.restore();
                 }
             }
         }
