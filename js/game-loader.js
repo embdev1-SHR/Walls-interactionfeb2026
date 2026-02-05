@@ -50,7 +50,7 @@ function loadGame(gameName) {
                 window.location.href = 'FreeCanvas.html';
                 break;
             case 'solar-system':
-                window.location.href = 'Solar System';
+                window.location.href = 'solar-system.html';
                 break;
             case 'music-maker':
                 window.location.href = 'games/music-maker.html';
