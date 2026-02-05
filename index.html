@@ -70,6 +70,25 @@
                 .loading-sphere[data-rot="2"]::after{transform:translate(-10%, -50%) rotate(22deg)}
                 .loading-sphere[data-rot="3"]::after{transform:translate(-10%, -50%) rotate(-12deg)}
 
+                /* Circular layout for game cards */
+                .games-grid {
+                    position: relative;
+                }
+
+                .games-grid .game-card {
+                    position: absolute;
+                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+
+                #particle-canvas {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 10000;
+                }
+
     </style>
 </head>
 <body class="antialiased bg-gradient-to-b from-white via-indigo-50 to-pink-50 text-gray-800 overflow-hidden grain">
@@ -82,20 +101,8 @@
     </div>
 
     <!-- Loading screen (preserve canvas ID used by three.js) -->
-    <div id="loading-screen" class="fixed inset-0 z-[10000] flex items-center justify-center bg-transparent">
-        <canvas id="canvas-3d" class="absolute inset-0"></canvas>
-
-        <div class="relative z-20 flex flex-col items-center gap-6">
-            <div class="loading-spheres">
-                <div class="loading-sphere ls-large ls-tail-long" data-rot="1" style="left:0%;top:10%;background:radial-gradient(circle at 30% 30%, rgba(79,70,229,0.95), rgba(79,70,229,0.35)); --tail-color: rgba(79,70,229,0.85); animation-delay:0s"></div>
-                <div class="loading-sphere ls-medium ls-tail-long" data-rot="2" style="left:36%;top:4%;background:radial-gradient(circle at 40% 40%, rgba(236,72,153,0.95), rgba(236,72,153,0.28)); --tail-color: rgba(236,72,153,0.85); animation-delay:0.6s"></div>
-                <div class="loading-sphere ls-small ls-tail-short" data-rot="3" style="left:66%;top:34%;background:radial-gradient(circle at 40% 40%, rgba(16,185,129,0.95), rgba(16,185,129,0.28)); --tail-color: rgba(16,185,129,0.75); animation-delay:1s"></div>
-                <div class="loading-sphere ls-small ls-tail-short" data-rot="2" style="left:18%;top:52%;background:radial-gradient(circle at 40% 40%, rgba(99,102,241,0.9), rgba(99,102,241,0.25)); --tail-color: rgba(99,102,241,0.75); animation-delay:1.6s"></div>
-                <div class="loading-sphere ls-medium ls-tail-long" data-rot="1" style="left:50%;top:60%;background:radial-gradient(circle at 30% 30%, rgba(250,204,21,0.9), rgba(250,204,21,0.22)); --tail-color: rgba(250,204,21,0.7); animation-delay:2.2s"></div>
-            </div>
-
-            <div class="text-4xl md:text-5xl font-extrabold tracking-widest text-gray-800">LOADING</div>
-        </div>
+    <div id="loading-screen" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black transition-opacity duration-500">
+        <canvas id="particle-canvas" class="absolute inset-0"></canvas>
     </div>
 
     <!-- Main menu (keeps canvas ID for background scripts) -->
@@ -105,7 +112,7 @@
             <h1 class="title text-6xl md:text-7xl font-extrabold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-indigo-400 to-cyan-300">PLAY ZONE</h1>
             <p class="subtitle mt-4 text-xl md:text-2xl text-indigo-500">Choose Your Game</p>
 
-            <div class="games-grid mt-10 grid grid-cols-2 md:grid-cols-3 gap-8 place-items-center max-w-6xl w-full">
+            <div class="games-grid mt-10 relative w-full max-w-4xl mx-auto" style="height: 700px;">
                 <div class="game-card group w-56 h-56 rounded-full border-4 border-pink-200 bg-white/40 backdrop-blur-md shadow-2xl flex items-center justify-center transition-transform transform hover:scale-110" data-game="canvas">
                     <div class="game-card-content text-center px-4">
                         <div class="game-title text-lg font-bold text-gray-700">Free Canvas</div>
@@ -293,8 +300,52 @@
         </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="./js/loading-animation.js"></script>
+    <script src="./js/hyperdrive-animation.js"></script>
     <script src="./js/menu-background.js"></script>
     <script src="./js/game-loader.js"></script>
+    <script>
+        // Position game cards in a circular layout
+        window.addEventListener('DOMContentLoaded', () => {
+            const gameCards = document.querySelectorAll('.game-card');
+            const container = document.querySelector('.games-grid');
+
+            if (!container || gameCards.length === 0) return;
+
+            const centerX = container.offsetWidth / 2;
+            const centerY = container.offsetHeight / 2;
+            const radius = Math.min(centerX, centerY) - 150;
+
+            gameCards.forEach((card, index) => {
+                const angle = (index / gameCards.length) * Math.PI * 2 - Math.PI / 2;
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+
+                card.style.left = `${x - card.offsetWidth / 2}px`;
+                card.style.top = `${y - card.offsetHeight / 2}px`;
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0)';
+
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
+                }, 3000 + index * 100);
+            });
+
+            window.addEventListener('resize', () => {
+                const newCenterX = container.offsetWidth / 2;
+                const newCenterY = container.offsetHeight / 2;
+                const newRadius = Math.min(newCenterX, newCenterY) - 150;
+
+                gameCards.forEach((card, index) => {
+                    const angle = (index / gameCards.length) * Math.PI * 2 - Math.PI / 2;
+                    const x = newCenterX + Math.cos(angle) * newRadius;
+                    const y = newCenterY + Math.sin(angle) * newRadius;
+
+                    card.style.left = `${x - card.offsetWidth / 2}px`;
+                    card.style.top = `${y - card.offsetHeight / 2}px`;
+                });
+            });
+        });
+    </script>
 </body>
 </html>
