@@ -11,10 +11,14 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             font-family: 'Arial', sans-serif;
             overflow: hidden;
-            background: linear-gradient(to bottom, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
+            background: #ffffff;
             color: #333;
         }
 
@@ -22,9 +26,9 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
+            width: 100vw;
+            height: 100vh;
+            background: #ffffff;
             z-index: 10000;
             display: flex;
             flex-direction: column;
@@ -33,11 +37,11 @@
         }
 
         #canvas-3d {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
         }
 
         .loading-text {
@@ -47,8 +51,9 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5rem;
-            color: #FFB3BA;
+            color: #FF6B9D;
             margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .loading-bar {
@@ -75,32 +80,35 @@
 
         #main-menu {
             display: none;
-            width: 100%;
-            height: 100%;
-            position: relative;
-            background: linear-gradient(to bottom, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #ffffff;
         }
 
         #menu-canvas {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
         }
 
         .menu-overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 2rem;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .title {
@@ -109,13 +117,15 @@
             text-transform: uppercase;
             letter-spacing: 1rem;
             margin-bottom: 1rem;
-            color: #FFB3BA;
+            color: #FF6B9D;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .subtitle {
             font-size: 1.5rem;
-            color: #BAE1FF;
+            color: #4A90E2;
             margin-bottom: 2.5rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .games-grid {

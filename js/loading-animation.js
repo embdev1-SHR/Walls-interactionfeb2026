@@ -5,7 +5,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setClearColor(0xf5f7fa);
+renderer.setClearColor(0xffffff);
 camera.position.z = 50;
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
@@ -19,39 +19,46 @@ const pointLight2 = new THREE.PointLight(0xFFB3BA, 0.5, 100);
 pointLight2.position.set(20, -20, 20);
 scene.add(pointLight2);
 
-const pastelColors = [
+const planetColors = [
     0xBAE1FF,
     0xFFB3BA,
     0xE0BBE4,
-    0xBAFFC9
+    0xBAFFC9,
+    0xFFF9C4,
+    0xFFDEBA,
+    0xFEC8D8,
+    0xD4A5A5,
+    0xC5CAE9,
+    0xB2DFDB
 ];
 
 const spheres = [];
-const sphereCount = 8;
+const sphereCount = 35;
 
 for (let i = 0; i < sphereCount; i++) {
-    const size = 3 + Math.random() * 4;
+    const size = 2 + Math.random() * 5;
     const geometry = new THREE.SphereGeometry(size, 64, 64);
     const material = new THREE.MeshPhongMaterial({
-        color: pastelColors[i % pastelColors.length],
+        color: planetColors[Math.floor(Math.random() * planetColors.length)],
         shininess: 100,
         transparent: true,
-        opacity: 0.6
+        opacity: 0.4 + Math.random() * 0.3
     });
 
     const sphere = new THREE.Mesh(geometry, material);
 
     sphere.position.set(
+        (Math.random() - 0.5) * 100,
         (Math.random() - 0.5) * 60,
-        (Math.random() - 0.5) * 40,
-        (Math.random() - 0.5) * 20
+        (Math.random() - 0.5) * 40 - 10
     );
 
     sphere.userData = {
         originalX: sphere.position.x,
         originalY: sphere.position.y,
-        floatSpeed: 0.3 + Math.random() * 0.2,
-        floatRange: 2 + Math.random() * 3,
+        originalZ: sphere.position.z,
+        floatSpeed: 0.2 + Math.random() * 0.3,
+        floatRange: 1.5 + Math.random() * 2.5,
         offset: Math.random() * Math.PI * 2
     };
 
