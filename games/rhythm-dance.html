@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm Dance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            overflow: hidden;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .placeholder-text {
+            font-size: 2rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            color: #fff;
+        }
+
+        .back-button {
+            padding: 1.5rem 3rem;
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: white;
+            color: #fcb69f;
+            transform: scale(1.1);
+        }
+
+        .icon {
+            font-size: 8rem;
+            margin-bottom: 2rem;
+            animation: dance 1s ease-in-out infinite;
+        }
+
+        @keyframes dance {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">💃</div>
+        <h1>Rhythm Dance</h1>
+        <p class="placeholder-text">Coming Soon!</p>
+        <p class="placeholder-text" style="font-size: 1.5rem;">Dance and move to the beat with motion tracking</p>
+        <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
+    </div>
+</body>
+</html>

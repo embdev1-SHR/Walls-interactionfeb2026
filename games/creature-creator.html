@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Creator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            overflow: hidden;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .placeholder-text {
+            font-size: 2rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+
+        .back-button {
+            padding: 1.5rem 3rem;
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: white;
+            color: #fed6e3;
+            transform: scale(1.1);
+        }
+
+        .icon {
+            font-size: 8rem;
+            margin-bottom: 2rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🦄</div>
+        <h1>Creature Creator</h1>
+        <p class="placeholder-text">Coming Soon!</p>
+        <p class="placeholder-text" style="font-size: 1.5rem;">Design and customize your own magical creatures</p>
+        <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
+    </div>
+</body>
+</html>
