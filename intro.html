@@ -27,6 +27,173 @@
             height: 100%;
         }
 
+        .ribbon-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 400px;
+            z-index: 50;
+            opacity: 0;
+        }
+
+        .ribbon-container.show {
+            animation: fadeInRibbon 1s ease forwards;
+        }
+
+        .ribbon-container.hide {
+            animation: fadeOutRibbon 1s ease forwards;
+        }
+
+        @keyframes fadeInRibbon {
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOutRibbon {
+            to { opacity: 0; }
+        }
+
+        .ribbon {
+            position: absolute;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, #ff6b6b 0%, #ff8787 50%, #ff6b6b 100%);
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .ribbon-left, .ribbon-right {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            top: 0;
+            transition: transform 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .ribbon-left {
+            left: 0;
+            transform-origin: right center;
+        }
+
+        .ribbon-right {
+            right: 0;
+            transform-origin: left center;
+        }
+
+        .ribbon-container.cut .ribbon-left {
+            transform: translateX(-150%) rotate(-15deg);
+        }
+
+        .ribbon-container.cut .ribbon-right {
+            transform: translateX(150%) rotate(15deg);
+        }
+
+        .scissors {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 80px;
+            height: 80px;
+            opacity: 0;
+            transition: all 1s ease;
+            filter: drop-shadow(0 4px 10px rgba(255, 215, 0, 0.5));
+        }
+
+        .scissors.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .scissors.cutting {
+            animation: cut 0.6s ease;
+        }
+
+        @keyframes cut {
+            0%, 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            25% { transform: translate(-50%, -50%) scale(1.1) rotate(-10deg); }
+            75% { transform: translate(-50%, -50%) scale(1.1) rotate(10deg); }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            top: 50%;
+            left: 50%;
+            opacity: 0;
+        }
+
+        .confetti.burst {
+            animation: confettiBurst 1.5s ease-out forwards;
+        }
+
+        @keyframes confettiBurst {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) rotate(720deg);
+            }
+        }
+
+        .kerala-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 800px;
+            height: 80%;
+            max-height: 800px;
+            z-index: 60;
+            opacity: 0;
+            display: none;
+        }
+
+        .kerala-container.show {
+            display: block;
+            animation: fadeInKerala 1s ease forwards;
+        }
+
+        .kerala-container.hide {
+            animation: fadeOutKerala 1s ease forwards;
+        }
+
+        @keyframes fadeInKerala {
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOutKerala {
+            to { opacity: 0; }
+        }
+
+        .kerala-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 30px rgba(0, 255, 0, 0.5));
+        }
+
+        .kerala-svg path {
+            fill: none;
+            stroke: #00ff00;
+            stroke-width: 2;
+            stroke-dasharray: 3000;
+            stroke-dashoffset: 3000;
+            animation: drawKerala 3s ease forwards;
+        }
+
+        @keyframes drawKerala {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
         .intro-text {
             position: absolute;
             top: 50%;
@@ -46,6 +213,12 @@
         .intro-text.small {
             font-size: 48px;
             font-weight: 400;
+            letter-spacing: 2px;
+        }
+
+        .intro-text.medium {
+            font-size: 60px;
+            font-weight: 500;
             letter-spacing: 2px;
         }
 
@@ -152,6 +325,34 @@
 <body>
     <canvas id="canvas"></canvas>
 
+    <div class="ribbon-container" id="ribbonContainer">
+        <div class="ribbon ribbon-left"></div>
+        <div class="ribbon ribbon-right"></div>
+        <svg class="scissors" id="scissors" viewBox="0 0 100 100">
+            <defs>
+                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <circle cx="30" cy="35" r="12" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="2"/>
+            <circle cx="30" cy="65" r="12" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="2"/>
+            <line x1="30" y1="35" x2="70" y2="45" stroke="url(#goldGradient)" stroke-width="4" stroke-linecap="round"/>
+            <line x1="30" y1="65" x2="70" y2="55" stroke="url(#goldGradient)" stroke-width="4" stroke-linecap="round"/>
+            <path d="M 65 40 L 85 25 L 90 30 L 70 50 Z" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="1.5"/>
+            <path d="M 65 60 L 85 75 L 90 70 L 70 50 Z" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <div class="kerala-container" id="keralaContainer">
+        <svg class="kerala-svg" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet">
+            <path d="M 150 100 Q 180 80 220 90 T 280 100 Q 320 110 340 140 L 360 180 Q 370 220 360 260 L 340 320 Q 320 360 280 380 L 240 400 Q 200 410 170 400 L 140 380 Q 120 360 110 330 L 100 280 Q 95 240 100 200 L 110 160 Q 120 120 150 100 Z" />
+        </svg>
+    </div>
+
+    <div id="welcomeText" class="intro-text">Welcome Kerala</div>
+    <div id="realityText" class="intro-text medium">To the new reality</div>
     <div id="text1" class="intro-text">Experience the New Vision</div>
     <div id="text2" class="intro-text small">that is</div>
     <div id="text3" class="intro-text">Bigger</div>
@@ -169,6 +370,11 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
+        const ribbonContainer = document.getElementById('ribbonContainer');
+        const scissors = document.getElementById('scissors');
+        const keralaContainer = document.getElementById('keralaContainer');
+        const welcomeText = document.getElementById('welcomeText');
+        const realityText = document.getElementById('realityText');
         const text1 = document.getElementById('text1');
         const text2 = document.getElementById('text2');
         const text3 = document.getElementById('text3');
@@ -237,6 +443,28 @@
 
         animate();
 
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#ffd93d', '#6bcf7f', '#4d96ff', '#ff8787', '#a8dadc'];
+            const container = ribbonContainer;
+
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.setProperty('--tx', `${(Math.random() - 0.5) * 400}px`);
+                confetti.style.setProperty('--ty', `${(Math.random() - 0.5) * 400}px`);
+                container.appendChild(confetti);
+
+                setTimeout(() => {
+                    confetti.classList.add('burst');
+                }, 10);
+
+                setTimeout(() => {
+                    confetti.remove();
+                }, 1600);
+            }
+        }
+
         function showElement(element, delay, isLast = false) {
             setTimeout(() => {
                 element.classList.add('animate-in');
@@ -250,15 +478,67 @@
             }, delay);
         }
 
-        showElement(text1, 500);
-        showElement(text2, 3500);
-        showElement(text3, 5500);
-        showElement(text4, 7500);
-        showElement(logo, 9500, true);
+        let currentTime = 0;
+
+        setTimeout(() => {
+            ribbonContainer.classList.add('show');
+        }, 500);
+        currentTime = 500;
+
+        setTimeout(() => {
+            scissors.classList.add('show');
+        }, currentTime + 800);
+        currentTime += 800;
+
+        setTimeout(() => {
+            scissors.classList.add('cutting');
+        }, currentTime + 500);
+        currentTime += 500;
+
+        setTimeout(() => {
+            ribbonContainer.classList.add('cut');
+            createConfetti();
+        }, currentTime + 300);
+        currentTime += 300;
+
+        setTimeout(() => {
+            ribbonContainer.classList.add('hide');
+        }, currentTime + 1500);
+        currentTime += 2000;
+
+        setTimeout(() => {
+            keralaContainer.classList.add('show');
+        }, currentTime);
+
+        setTimeout(() => {
+            keralaContainer.classList.add('hide');
+        }, currentTime + 3500);
+        currentTime += 4000;
+
+        showElement(welcomeText, currentTime);
+        currentTime += 2800;
+
+        showElement(realityText, currentTime);
+        currentTime += 2800;
+
+        showElement(text1, currentTime);
+        currentTime += 2800;
+
+        showElement(text2, currentTime);
+        currentTime += 2000;
+
+        showElement(text3, currentTime);
+        currentTime += 2000;
+
+        showElement(text4, currentTime);
+        currentTime += 2000;
+
+        showElement(logo, currentTime, true);
+        currentTime += 2000;
 
         setTimeout(() => {
             startButton.classList.add('show');
-        }, 11500);
+        }, currentTime);
 
         startButton.addEventListener('click', () => {
             window.location.href = 'index.html';
