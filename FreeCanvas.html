@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Interactive Wall Painter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #111;
+  touch-action: none;
+}
+
+canvas {
+  display: block;
+  background: #fff;
+}
+
+.toolbar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.6);
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.toolbar button {
+  background: #222;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.toolbar button.active {
+  background: #00bcd4;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button data-brush="pen" class="active">Pen</button>
+  <button data-brush="soft">Soft</button>
+  <button data-brush="marker">Marker</button>
+  <button data-brush="spray">Spray</button>
+  <button data-brush="ink">Ink</button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+ctx.lineCap = "round";
+ctx.lineJoin = "round";
+
+let currentBrush = "pen";
+const pointers = new Map();
+
+// ---------- UI ----------
+document.querySelectorAll(".toolbar button").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".toolbar button")
+      .forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentBrush = btn.dataset.brush;
+  };
+});
+
+// ---------- Utils ----------
+function randomColor() {
+  return `hsl(${Math.random() * 360}, 80%, 50%)`;
+}
+
+// ---------- Pointer Events ----------
+canvas.addEventListener("pointerdown", e => {
+  canvas.setPointerCapture(e.pointerId);
+
+  pointers.set(e.pointerId, {
+    x: e.clientX,
+    y: e.clientY,
+    color: randomColor()
+  });
+});
+
+canvas.addEventListener("pointermove", e => {
+  if (!pointers.has(e.pointerId)) return;
+  const p = pointers.get(e.pointerId);
+
+  drawBrush(p, e.clientX, e.clientY);
+
+  p.x = e.clientX;
+  p.y = e.clientY;
+});
+
+canvas.addEventListener("pointerup", stop);
+canvas.addEventListener("pointercancel", stop);
+canvas.addEventListener("pointerout", stop);
+
+function stop(e) {
+  pointers.delete(e.pointerId);
+}
+
+// ---------- Brushes ----------
+function drawBrush(p, x, y) {
+  switch (currentBrush) {
+    case "pen":
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 4;
+      drawLine(p, x, y);
+      break;
+
+    case "soft":
+      ctx.globalAlpha = 0.2;
+      ctx.lineWidth = 20;
+      drawLine(p, x, y);
+      break;
+
+    case "marker":
+      ctx.globalAlpha = 0.8;
+      ctx.lineWidth = 12;
+      drawLine(p, x, y);
+      break;
+
+    case "spray":
+      spray(p, x, y);
+      break;
+
+    case "ink":
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth = 2 + Math.random() * 6;
+      drawLine(p, x, y);
+      break;
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+function drawLine(p, x, y) {
+  ctx.strokeStyle = p.color;
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+}
+
+function spray(p, x, y) {
+  ctx.fillStyle = p.color;
+  for (let i = 0; i < 20; i++) {
+    const offsetX = (Math.random() - 0.5) * 30;
+    const offsetY = (Math.random() - 0.5) * 30;
+    ctx.fillRect(x + offsetX, y + offsetY, 1, 1);
+  }
+}
+
+// ---------- Resize ----------
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+</script>
+
+</body>
+</html>
