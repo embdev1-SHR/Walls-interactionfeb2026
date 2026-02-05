@@ -4,75 +4,153 @@
 <meta charset="UTF-8" />
 <title>Interactive Wall Painter</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+    :root{--glass: rgba(255,255,255,0.06);--glass-2: rgba(255,255,255,0.04);--accent-a:#7c3aed;--accent-b:#06b6d4}
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,58,237,0.08), transparent), linear-gradient(180deg,#07070a 0%, #0f1724 100%);
+      touch-action: none;
+      font-family: 'Space Grotesk', Arial, sans-serif;
+      color: #ecf2ff;
+    }
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: #111;
-  touch-action: none;
-}
+    canvas {
+      display: block;
+      background: #fff;
+      width:100vw;height:100vh;
+    }
 
-canvas {
-  display: block;
-  background: #fff;
-}
+    /* Right-side vertical toolbar (top-down) */
+    .toolbar {
+      position: fixed;
+      right: 18px;
+      top: 96px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 14px;
+      background: var(--glass);
+      backdrop-filter: blur(8px) saturate(120%);
+      box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+      z-index: 1200;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
 
-.toolbar {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.6);
-  padding: 8px;
-  border-radius: 10px;
-  display: flex;
-  gap: 6px;
-}
+    .toolbar button {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(6,7,20,0.36); /* darker translucent background for contrast */
+      color: rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .12s ease;
+      -webkit-tap-highlight-color: transparent;
+      backdrop-filter: blur(6px);
+    }
 
-.toolbar button {
-  background: #222;
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
+    .toolbar button:hover{ transform: translateY(-4px); box-shadow: 0 8px 20px rgba(2,6,23,0.6); }
 
-.toolbar button.active {
-  background: #00bcd4;
-}
+    .toolbar button .label{ display:none; }
 
-.back-button {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 0, 0, 0.7);
-  color: #fff;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  z-index: 1000;
-  transition: all 0.3s;
-}
+    /* SVG sizing inside toolbar buttons */
+    .toolbar button svg{ width:26px; height:26px; color: inherit; stroke-width:1.8 }
 
-.back-button:hover {
-  background: rgba(255, 0, 0, 0.9);
-  transform: scale(1.05);
-}
-</style>
+    /* Make SVG strokes inherit and give better contrast against glass */
+    .toolbar button{ color: rgba(255,255,255,0.9); }
+    .toolbar button svg{ stroke: currentColor; fill: none; }
+    .toolbar button:hover{ color: #fff; background: rgba(12,14,22,0.5); }
+    .toolbar button.active{ color: #fff; }
+
+    .toolbar button.active{
+      background: linear-gradient(135deg,var(--accent-a),var(--accent-b));
+      box-shadow: 0 10px 30px rgba(99,102,241,0.18);
+      border-color: rgba(255,255,255,0.08);
+      transform: translateY(-6px);
+      color: #fff;
+    }
+
+    /* Tooltip labels visible on wide screens */
+    @media(min-width:760px){
+      .toolbar button .label{ display:block; position:absolute; right:80px; background:rgba(6,7,20,0.7); padding:6px 10px; border-radius:8px; font-weight:600; font-size:14px; color:#fff; white-space:nowrap; opacity:0; transform:translateX(6px); transition:opacity .12s, transform .12s; }
+      .toolbar button:hover .label{ opacity:1; transform:translateX(0); }
+    }
+
+    /* Back button moved bottom-left */
+    .back-button {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      background: linear-gradient(90deg,#ef4444,#f97316);
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      z-index: 1200;
+      transition: transform .14s ease, box-shadow .14s ease;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.5);
+      font-weight:700;
+    }
+
+    .back-button:hover{ transform: translateY(-3px); }
+    </style>
 </head>
 <body>
 
 <div class="toolbar">
-  <button data-brush="pen" class="active">Pen</button>
-  <button data-brush="soft">Soft</button>
-  <button data-brush="marker">Marker</button>
-  <button data-brush="spray">Spray</button>
-  <button data-brush="ink">Ink</button>
+  <button data-brush="pen" class="active" title="Pen" aria-label="Pen brush">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 21v-3l11-11 3 3L6 21H3z"></path>
+      <path d="M14 7l3 3"></path>
+    </svg>
+    <span class="label">Pen</span>
+  </button>
+
+  <button data-brush="soft" title="Soft" aria-label="Soft brush">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M2 12c2-4 8-6 12-6 3 0 6 1 8 4v6a2 2 0 0 1-2 2c-3 0-6-1-8-3-4-3-8-3-10-3z" />
+      <path d="M7 17c0 1.5 2.5 3 5 3s5-1.5 5-3" />
+    </svg>
+    <span class="label">Soft</span>
+  </button>
+
+  <button data-brush="marker" title="Marker" aria-label="Marker brush">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M2 12l6 6 10-10-6-6L2 12z" />
+      <path d="M7 17l-3 3" />
+    </svg>
+    <span class="label">Marker</span>
+  </button>
+
+  <button data-brush="spray" title="Spray" aria-label="Spray brush">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="6" rx="1" />
+      <path d="M7 21a4 4 0 0 1 8 0" />
+      <path d="M12 9v2" />
+      <circle cx="17" cy="17" r="1" />
+      <circle cx="19" cy="14" r="1" />
+      <circle cx="14" cy="19" r="1" />
+    </svg>
+    <span class="label">Spray</span>
+  </button>
+
+  <button data-brush="ink" title="Ink" aria-label="Ink brush">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 2s4 4 4 7a4 4 0 0 1-8 0c0-3 4-7 4-7z" />
+      <path d="M8 21h8" />
+    </svg>
+    <span class="label">Ink</span>
+  </button>
 </div>
 
 <button class="back-button" onclick="window.location.href='index.html'">← Back to Menu</button>
