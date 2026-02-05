@@ -100,27 +100,28 @@
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            overflow: hidden;
         }
 
         .title {
-            font-size: 6rem;
+            font-size: 5rem;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             color: #FFB3BA;
         }
 
         .subtitle {
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: #BAE1FF;
-            margin-bottom: 4rem;
+            margin-bottom: 2.5rem;
         }
 
         .games-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 4rem;
+            gap: 3rem;
             max-width: 1400px;
             justify-content: center;
             align-items: center;
@@ -138,6 +139,9 @@
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             overflow: hidden;
             box-shadow: 0 15px 40px rgba(255, 179, 186, 0.3);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
         .game-card:nth-child(2) {
@@ -206,6 +210,10 @@
                 width: 200px;
                 height: 200px;
             }
+
+            .title {
+                font-size: 5rem;
+            }
         }
 
         @media (max-width: 900px) {
@@ -220,6 +228,12 @@
 
             .title {
                 font-size: 4rem;
+                margin-top: 1rem;
+            }
+
+            .subtitle {
+                font-size: 1.7rem;
+                margin-bottom: 2rem;
             }
 
             .game-title {
@@ -232,6 +246,10 @@
         }
 
         @media (max-width: 600px) {
+            .menu-overlay {
+                padding: 2rem 1rem 6rem 1rem;
+            }
+
             .games-grid {
                 gap: 1.5rem;
             }
@@ -243,6 +261,7 @@
 
             .title {
                 font-size: 3rem;
+                letter-spacing: 0.5rem;
             }
 
             .subtitle {
@@ -251,12 +270,9 @@
         }
 
         .instructions {
-            position: absolute;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
             font-size: 1.2rem;
             color: #999;
+            margin-top: 2rem;
         }
     </style>
 </head>
