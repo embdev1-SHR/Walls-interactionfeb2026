@@ -266,10 +266,14 @@
                 <label class="control-label">Color End</label>
                 <input type="color" id="colorEnd" value="#228b22">
             </div>
+            <div class="control-group">
+                <label class="control-label">Touch Color</label>
+                <input type="color" id="touchColor" value="#ff8c00">
+            </div>
         </div>
     </div>
 
-    <div class="info-text">Autonomous particle flow field • Adjust controls to customize</div>
+    <div class="info-text">Touch or click to change particle colors • Multi-touch supported</div>
     <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
 
     <script>
@@ -284,6 +288,8 @@
         let targetParticleCount = 2000;
         let colorStart = { r: 50, g: 205, b: 50 };
         let colorEnd = { r: 34, g: 139, b: 34 };
+        let touchedColor = { r: 255, g: 140, b: 0 };
+        const touchPoints = [];
         let animationTime = 0;
 
         class Particle {
@@ -306,9 +312,15 @@
                 this.age = 0;
 
                 const t = this.z;
-                this.r = colorStart.r + (colorEnd.r - colorStart.r) * t;
-                this.g = colorStart.g + (colorEnd.g - colorStart.g) * t;
-                this.b = colorStart.b + (colorEnd.b - colorStart.b) * t;
+                this.baseR = colorStart.r + (colorEnd.r - colorStart.r) * t;
+                this.baseG = colorStart.g + (colorEnd.g - colorStart.g) * t;
+                this.baseB = colorStart.b + (colorEnd.b - colorStart.b) * t;
+
+                this.r = this.baseR;
+                this.g = this.baseG;
+                this.b = this.baseB;
+
+                this.touchProgress = 0;
             }
 
             update(time) {
@@ -337,6 +349,28 @@
                 }
 
                 if (++this.age > this.life) this.reset();
+
+                let nearTouchPoint = false;
+                for (let i = 0; i < touchPoints.length; i++) {
+                    const point = touchPoints[i];
+                    const dx = this.x - point.x;
+                    const dy = this.y - point.y;
+                    const distSq = dx * dx + dy * dy;
+                    if (distSq < point.radius * point.radius) {
+                        nearTouchPoint = true;
+                        break;
+                    }
+                }
+
+                if (nearTouchPoint) {
+                    this.touchProgress = Math.min(1, this.touchProgress + 0.1);
+                } else {
+                    this.touchProgress = Math.max(0, this.touchProgress - 0.02);
+                }
+
+                this.r = this.baseR + (touchedColor.r - this.baseR) * this.touchProgress;
+                this.g = this.baseG + (touchedColor.g - this.baseG) * this.touchProgress;
+                this.b = this.baseB + (touchedColor.b - this.baseB) * this.touchProgress;
             }
 
             draw() {
@@ -363,6 +397,13 @@
             ctx.fillStyle = 'rgba(10, 10, 10, 0.2)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            for (let i = touchPoints.length - 1; i >= 0; i--) {
+                touchPoints[i].life--;
+                if (touchPoints[i].life <= 0) {
+                    touchPoints.splice(i, 1);
+                }
+            }
+
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update(animationTime);
                 particles[i].draw();
@@ -379,6 +420,52 @@
             } : null;
         }
 
+        function addTouchColorChange(x, y, radius = 150) {
+            touchPoints.push({
+                x: x,
+                y: y,
+                radius: radius,
+                life: 60
+            });
+        }
+
+        let scaleX = 1, scaleY = 1, rectLeft = 0, rectTop = 0;
+
+        function updateCanvasScale() {
+            const rect = canvas.getBoundingClientRect();
+            scaleX = canvas.width / rect.width;
+            scaleY = canvas.height / rect.height;
+            rectLeft = rect.left;
+            rectTop = rect.top;
+        }
+        updateCanvasScale();
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.touches.length; i++) {
+                const touch = e.touches[i];
+                const x = (touch.clientX - rectLeft) * scaleX;
+                const y = (touch.clientY - rectTop) * scaleY;
+                addTouchColorChange(x, y);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.touches.length; i++) {
+                const touch = e.touches[i];
+                const x = (touch.clientX - rectLeft) * scaleX;
+                const y = (touch.clientY - rectTop) * scaleY;
+                addTouchColorChange(x, y, 120);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('click', (e) => {
+            const x = (e.clientX - rectLeft) * scaleX;
+            const y = (e.clientY - rectTop) * scaleY;
+            addTouchColorChange(x, y);
+        });
+
         const controlsPanel = document.getElementById('controlsPanel');
         const controlsHeader = document.getElementById('controlsHeader');
         const toggleBtn = document.getElementById('toggleBtn');
@@ -390,6 +477,7 @@
         const particleCountValue = document.getElementById('particleCountValue');
         const colorStartInput = document.getElementById('colorStart');
         const colorEndInput = document.getElementById('colorEnd');
+        const touchColorInput = document.getElementById('touchColor');
 
         controlsHeader.addEventListener('click', () => {
             controlsPanel.classList.toggle('collapsed');
@@ -418,9 +506,9 @@
                 colorStart = rgb;
                 particles.forEach(p => {
                     const t = p.z;
-                    p.r = colorStart.r + (colorEnd.r - colorStart.r) * t;
-                    p.g = colorStart.g + (colorEnd.g - colorStart.g) * t;
-                    p.b = colorStart.b + (colorEnd.b - colorStart.b) * t;
+                    p.baseR = colorStart.r + (colorEnd.r - colorStart.r) * t;
+                    p.baseG = colorStart.g + (colorEnd.g - colorStart.g) * t;
+                    p.baseB = colorStart.b + (colorEnd.b - colorStart.b) * t;
                 });
             }
         });
@@ -431,16 +519,22 @@
                 colorEnd = rgb;
                 particles.forEach(p => {
                     const t = p.z;
-                    p.r = colorStart.r + (colorEnd.r - colorStart.r) * t;
-                    p.g = colorStart.g + (colorEnd.g - colorStart.g) * t;
-                    p.b = colorStart.b + (colorEnd.b - colorStart.b) * t;
+                    p.baseR = colorStart.r + (colorEnd.r - colorStart.r) * t;
+                    p.baseG = colorStart.g + (colorEnd.g - colorStart.g) * t;
+                    p.baseB = colorStart.b + (colorEnd.b - colorStart.b) * t;
                 });
             }
+        });
+
+        touchColorInput.addEventListener('input', (e) => {
+            const rgb = hexToRgb(e.target.value);
+            if (rgb) touchedColor = rgb;
         });
 
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            updateCanvasScale();
         });
 
         animate();
