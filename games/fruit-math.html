@@ -13,10 +13,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#4ade80}
 .stats{display:flex;gap:14px;font-size:clamp(11px,1.2vw,15px);font-weight:600}
 .stat-val{color:#fbbf24;font-weight:800}
-.mode-bar{flex-shrink:0;display:flex;justify-content:center;gap:6px;padding:0 12px 10px;flex-wrap:wrap}
+
+.toolbar-toggle{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;cursor:pointer;font-size:clamp(11px,1.1vw,13px);font-weight:700;color:rgba(255,255,255,.4);transition:color .3s}
+.toolbar-toggle:hover{color:rgba(255,255,255,.7)}
+.toggle-arrow{font-size:8px;transition:transform .3s;display:inline-block}
+.toggle-arrow.open{transform:rotate(180deg)}
+.toolbar-drawer{flex-shrink:0;max-height:0;overflow:hidden;transition:max-height .3s ease}
+.toolbar-drawer.open{max-height:60px}
+.toolbar-options{display:flex;justify-content:center;gap:6px;padding:4px 12px 10px;flex-wrap:wrap}
 .mode-btn{padding:6px 14px;font-size:clamp(10px,1vw,13px);font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(74,222,128,.15);background:rgba(74,222,128,.05);color:rgba(255,255,255,.5)}
 .mode-btn:hover{background:rgba(74,222,128,.1)}
 .mode-btn.active{background:rgba(74,222,128,.2);border-color:#4ade80;color:#4ade80}
+
 .game-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(12px,2.5vh,24px);padding:0 20px;min-height:0}
 .fruit-display{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;min-height:clamp(60px,10vh,100px)}
 .fruit-group{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(74,222,128,.15);border-radius:12px}
@@ -63,12 +71,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="stat">Q: <span class="stat-val" id="qNum">1</span></div>
     </div>
   </div>
-  <div class="mode-bar">
-    <div class="mode-btn active" data-mode="addition">Addition</div>
-    <div class="mode-btn" data-mode="subtraction">Subtraction</div>
-    <div class="mode-btn" data-mode="multiplication">Multiplication</div>
-    <div class="mode-btn" data-mode="division">Division</div>
-    <div class="mode-btn" data-mode="factors">Factors</div>
+  <div class="toolbar-toggle" id="toolbarToggle">
+    <span>Mode: Addition</span>
+    <span class="toggle-arrow" id="toggleArrow">&#9660;</span>
+  </div>
+  <div class="toolbar-drawer" id="toolbarDrawer">
+    <div class="toolbar-options">
+      <div class="mode-btn active" data-mode="addition">Addition</div>
+      <div class="mode-btn" data-mode="subtraction">Subtraction</div>
+      <div class="mode-btn" data-mode="multiplication">Multiply</div>
+      <div class="mode-btn" data-mode="division">Division</div>
+      <div class="mode-btn" data-mode="factors">Factors</div>
+    </div>
   </div>
   <div class="game-area">
     <div class="fruit-display" id="fruitDisplay"></div>
@@ -89,6 +103,11 @@ var FRUITS = [
   '\uD83C\uDF52','\uD83E\uDD5D'
 ];
 
+var MODE_LABELS = {
+  addition:'Addition', subtraction:'Subtraction',
+  multiplication:'Multiply', division:'Division', factors:'Factors'
+};
+
 var mode = 'addition';
 var score = 0, questionNum = 0;
 var answering = false;
@@ -107,82 +126,66 @@ function fruitRow(fruit, count, cut, delay) {
 }
 
 function generateAddition() {
-  var a = rand(1, 8), b = rand(1, 8);
+  var a = rand(1, 12), b = rand(1, 12);
   var f1 = pickFruit(), f2 = pickFruit();
   var answer = a + b;
-
   var display = '<div class="fruit-group">' + fruitRow(f1, a, false, true) + '</div>' +
     '<span class="op-symbol">+</span>' +
     '<div class="fruit-group">' + fruitRow(f2, b, false, true) + '</div>';
   var eq = a + ' ' + f1 + ' + ' + b + ' ' + f2 + ' = <span class="highlight">?</span>';
-
   return {display: display, equation: eq, answer: answer, resultHtml: ''};
 }
 
 function generateSubtraction() {
-  var a = rand(4, 12), b = rand(1, a - 1);
+  var a = rand(4, 15), b = rand(1, a - 1);
   var f = pickFruit();
   var answer = a - b;
-
   var display = '<div class="fruit-group">' + fruitRow(f, a, false, true) + '</div>' +
     '<span class="op-symbol">\u2212</span>' +
     '<div class="fruit-group">' + fruitRow(f, b, true, true) + '</div>';
   var eq = a + ' ' + f + ' - ' + b + ' ' + f + ' = <span class="highlight">?</span>';
-
   return {display: display, equation: eq, answer: answer, resultHtml: ''};
 }
 
 function generateMultiplication() {
-  var groups = rand(2, 5), perGroup = rand(2, 5);
+  var groups = rand(2, 6), perGroup = rand(2, 6);
   var f = pickFruit();
   var answer = groups * perGroup;
-
   var display = '';
   for (var g = 0; g < groups; g++) {
     display += '<div class="fruit-group">' + fruitRow(f, perGroup, false, true) + '</div>';
     if (g < groups - 1) display += '<span class="op-symbol" style="font-size:18px">x</span>';
   }
   var eq = groups + ' groups of ' + perGroup + ' ' + f + ' = <span class="highlight">?</span>';
-
   return {display: display, equation: eq, answer: answer, resultHtml: ''};
 }
 
 function generateDivision() {
-  var divisor = rand(2, 5), quotient = rand(2, 5);
+  var divisor = rand(2, 6), quotient = rand(2, 6);
   var total = divisor * quotient;
   var f = pickFruit();
   var answer = quotient;
-
   var display = '<div class="fruit-group">' + fruitRow(f, total, false, true) + '</div>';
   var eq = total + ' ' + f + ' \u00F7 ' + divisor + ' = <span class="highlight">?</span> in each group';
-
   var resultHtml = '<div class="factor-display">';
   for (var g = 0; g < divisor; g++) {
     resultHtml += '<div class="factor-group"><div class="factor-label">Group ' + (g+1) + '</div>';
     resultHtml += '<div class="factor-fruits">' + fruitRow(f, quotient, false, false) + '</div></div>';
   }
   resultHtml += '</div>';
-
   return {display: display, equation: eq, answer: answer, resultHtml: resultHtml};
 }
 
 function generateFactors() {
-  var composites = [4,6,8,9,10,12,15,16,18,20];
+  var composites = [4,6,8,9,10,12,14,15,16,18,20,21,24,25,28,30];
   var n = composites[rand(0, composites.length - 1)];
   var f = pickFruit();
-
   var factors = [];
-  for (var i = 1; i <= n; i++) {
-    if (n % i === 0) factors.push(i);
-  }
-
-  var display = '<div class="fruit-group">' + fruitRow(f, Math.min(n, 12), false, true) + '</div>';
-  if (n > 12) display = '<div class="fruit-group" style="font-size:28px">' + n + ' ' + f + '</div>';
+  for (var i = 1; i <= n; i++) { if (n % i === 0) factors.push(i); }
+  var display = '<div class="fruit-group">' + (n <= 12 ? fruitRow(f, n, false, true) : '<span style="font-size:28px">' + n + ' ' + f + '</span>') + '</div>';
   var eq = 'How many factors does <span class="highlight">' + n + '</span> have?';
   var answer = factors.length;
-
   var resultHtml = '<div style="text-align:center;color:rgba(255,255,255,.6);font-size:14px">Factors of ' + n + ': ' + factors.join(', ') + '</div>';
-
   return {display: display, equation: eq, answer: answer, resultHtml: resultHtml};
 }
 
@@ -206,8 +209,7 @@ function generateOptions(answer) {
     if (opts.indexOf(w) === -1) opts.push(w);
   }
   for (var i = opts.length - 1; i > 0; i--) {
-    var j = rand(0, i);
-    var tmp = opts[i]; opts[i] = opts[j]; opts[j] = tmp;
+    var j = rand(0, i); var tmp = opts[i]; opts[i] = opts[j]; opts[j] = tmp;
   }
   return opts;
 }
@@ -247,14 +249,11 @@ function showQuestion() {
 function checkAnswer(val, btn) {
   if (answering) return;
   answering = true;
-
   if (val === currentQ.answer) {
     btn.classList.add('correct');
     score += 10;
     document.getElementById('feedback').innerHTML = '<span style="color:#22c55e">Correct!</span>';
-    if (currentQ.resultHtml) {
-      document.getElementById('resultZone').innerHTML = currentQ.resultHtml;
-    }
+    if (currentQ.resultHtml) document.getElementById('resultZone').innerHTML = currentQ.resultHtml;
     playTone(523, 0.15);
   } else {
     btn.classList.add('wrong');
@@ -262,14 +261,16 @@ function checkAnswer(val, btn) {
       if (parseInt(b.textContent) === currentQ.answer) b.classList.add('correct');
     });
     document.getElementById('feedback').innerHTML = '<span style="color:#ef4444">Answer: ' + currentQ.answer + '</span>';
-    if (currentQ.resultHtml) {
-      document.getElementById('resultZone').innerHTML = currentQ.resultHtml;
-    }
+    if (currentQ.resultHtml) document.getElementById('resultZone').innerHTML = currentQ.resultHtml;
     playTone(200, 0.2);
   }
-
   document.getElementById('score').textContent = score;
   setTimeout(showQuestion, 1800);
+}
+
+function toggleToolbar() {
+  document.getElementById('toolbarDrawer').classList.toggle('open');
+  document.getElementById('toggleArrow').classList.toggle('open');
 }
 
 function playTone(freq, dur) {
@@ -289,11 +290,16 @@ function bindTouch(el, fn) {
   el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
 }
 
+bindTouch(document.getElementById('toolbarToggle'), toggleToolbar);
+
 document.querySelectorAll('.mode-btn').forEach(function(btn) {
   bindTouch(btn, function() {
     mode = btn.dataset.mode;
     document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
+    document.querySelector('#toolbarToggle span:first-child').textContent = 'Mode: ' + MODE_LABELS[mode];
+    document.getElementById('toolbarDrawer').classList.remove('open');
+    document.getElementById('toggleArrow').classList.remove('open');
     questionNum = 0; score = 0;
     document.getElementById('score').textContent = 0;
     showQuestion();

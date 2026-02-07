@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Forest Animals Showcase</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden}
@@ -36,19 +37,19 @@ body{
 
 .app{position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column}
 
-.header{flex-shrink:0;text-align:center;padding:12px 20px 6px}
-.header h1{font-size:clamp(18px,2.8vw,28px);font-weight:800;color:#a5d6a7;text-shadow:0 3px 12px rgba(0,0,0,.6)}
-.header p{font-size:clamp(10px,1.3vw,13px);color:rgba(255,255,255,.45)}
+.header{flex-shrink:0;text-align:center;padding:10px 20px 4px}
+.header h1{font-size:clamp(16px,2.4vw,24px);font-weight:800;color:#a5d6a7;text-shadow:0 3px 12px rgba(0,0,0,.6)}
+.header p{font-size:clamp(9px,1.1vw,12px);color:rgba(255,255,255,.4)}
 
 .scroll-area{
   flex:1;min-height:0;position:relative;
   display:flex;align-items:stretch;
-  padding:8px 0;
+  padding:6px 0;
 }
 .scroll-track{
-  display:flex;gap:16px;
+  display:flex;gap:12px;
   overflow-x:auto;overflow-y:hidden;
-  padding:0 48px;
+  padding:0 44px;
   scroll-snap-type:x mandatory;
   scroll-behavior:smooth;
   -webkit-overflow-scrolling:touch;
@@ -58,115 +59,111 @@ body{
 
 .arrow-btn{
   position:absolute;top:50%;transform:translateY(-50%);
-  width:clamp(36px,3.5vw,44px);height:clamp(36px,3.5vw,44px);
+  width:clamp(30px,3vw,38px);height:clamp(30px,3vw,38px);
   border-radius:50%;
   background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
   border:2px solid rgba(129,199,132,.35);
-  color:white;font-size:clamp(14px,1.6vw,18px);
+  color:white;font-size:clamp(12px,1.4vw,16px);
   cursor:pointer;z-index:10;
   display:flex;align-items:center;justify-content:center;
   transition:all .3s;
 }
 .arrow-btn:hover{background:rgba(129,199,132,.2);border-color:rgba(129,199,132,.6)}
 .arrow-btn:active{transform:translateY(-50%) scale(.92)}
-.arrow-left{left:6px}
-.arrow-right{right:6px}
+.arrow-left{left:4px}
+.arrow-right{right:4px}
 
 .card{
   flex-shrink:0;
-  width:clamp(280px,28vw,380px);
+  width:clamp(200px,20vw,260px);
   scroll-snap-align:center;
   background:rgba(255,255,255,.04);
   border:1px solid rgba(129,199,132,.2);
-  border-radius:16px;
+  border-radius:14px;
   display:flex;flex-direction:column;
   overflow:hidden;
   transition:border-color .3s,box-shadow .3s;
 }
 .card:hover{
   border-color:rgba(129,199,132,.45);
-  box-shadow:0 6px 30px rgba(0,0,0,.4),0 0 20px rgba(129,199,132,.08);
+  box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 16px rgba(129,199,132,.08);
 }
 
 .model-area{
   flex-shrink:0;
-  height:clamp(140px,18vh,200px);
+  height:clamp(110px,14vh,160px);
   background:rgba(0,0,0,.3);
   display:flex;align-items:center;justify-content:center;
   position:relative;overflow:hidden;
   border-bottom:1px solid rgba(129,199,132,.12);
+  cursor:grab;
+  touch-action:none;
 }
+.model-area:active{cursor:grabbing}
 .model-placeholder{
-  perspective:300px;
-  width:90px;height:90px;
+  perspective:250px;
+  width:70px;height:70px;
   position:relative;
 }
 .cube{
   width:100%;height:100%;position:relative;
   transform-style:preserve-3d;
-  animation:spin 8s linear infinite;
-}
-@keyframes spin{
-  0%{transform:rotateX(-20deg) rotateY(0)}
-  100%{transform:rotateX(-20deg) rotateY(360deg)}
+  transition:transform .05s linear;
 }
 .cube-face{
-  position:absolute;width:90px;height:90px;
+  position:absolute;width:70px;height:70px;
   display:flex;align-items:center;justify-content:center;
-  font-size:48px;
+  font-size:38px;
   border:2px solid rgba(129,199,132,.3);
   background:rgba(15,40,25,.8);
   backface-visibility:visible;
 }
-.cube-face:nth-child(1){transform:rotateY(0deg) translateZ(45px)}
-.cube-face:nth-child(2){transform:rotateY(90deg) translateZ(45px)}
-.cube-face:nth-child(3){transform:rotateY(180deg) translateZ(45px)}
-.cube-face:nth-child(4){transform:rotateY(-90deg) translateZ(45px)}
-.cube-face:nth-child(5){transform:rotateX(90deg) translateZ(45px)}
-.cube-face:nth-child(6){transform:rotateX(-90deg) translateZ(45px)}
+.cube-face:nth-child(1){transform:rotateY(0deg) translateZ(35px)}
+.cube-face:nth-child(2){transform:rotateY(90deg) translateZ(35px)}
+.cube-face:nth-child(3){transform:rotateY(180deg) translateZ(35px)}
+.cube-face:nth-child(4){transform:rotateY(-90deg) translateZ(35px)}
+.cube-face:nth-child(5){transform:rotateX(90deg) translateZ(35px)}
+.cube-face:nth-child(6){transform:rotateX(-90deg) translateZ(35px)}
 .model-badge{
-  position:absolute;bottom:6px;right:8px;
-  font-size:9px;color:rgba(255,255,255,.3);
-  background:rgba(0,0,0,.4);padding:2px 8px;border-radius:8px;
-  letter-spacing:.5px;
+  position:absolute;bottom:4px;right:6px;
+  font-size:8px;color:rgba(255,255,255,.3);
+  background:rgba(0,0,0,.4);padding:2px 6px;border-radius:6px;
 }
 
 .card-body{
-  flex:1;padding:12px 16px;display:flex;flex-direction:column;gap:6px;
+  flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:4px;
   overflow-y:auto;min-height:0;
 }
 .card-body::-webkit-scrollbar{width:3px}
 .card-body::-webkit-scrollbar-thumb{background:rgba(129,199,132,.25);border-radius:3px}
 
-.card-top{display:flex;align-items:center;gap:10px;margin-bottom:2px}
-.card-emoji{font-size:clamp(28px,3vw,38px);filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))}
+.card-top{display:flex;align-items:center;gap:8px;margin-bottom:1px}
+.card-emoji{font-size:clamp(22px,2.5vw,30px);filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))}
 .card-titles{display:flex;flex-direction:column}
-.card-name{font-size:clamp(15px,1.6vw,20px);font-weight:700;color:#a5d6a7;line-height:1.2}
-.card-latin{font-size:clamp(9px,.9vw,11px);font-style:italic;color:rgba(255,255,255,.3)}
+.card-name{font-size:clamp(12px,1.3vw,16px);font-weight:700;color:#a5d6a7;line-height:1.2}
+.card-latin{font-size:clamp(8px,.8vw,10px);font-style:italic;color:rgba(255,255,255,.3)}
 
-.card-desc{font-size:clamp(11px,1.1vw,13px);color:rgba(255,255,255,.65);line-height:1.5}
+.card-desc{font-size:clamp(9px,.95vw,11px);color:rgba(255,255,255,.6);line-height:1.45}
 
-.facts-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:3px}
+.facts-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:2px}
 .facts-list li{
-  font-size:clamp(10px,1vw,12px);color:rgba(255,255,255,.7);
-  line-height:1.45;padding:3px 0 3px 18px;position:relative;
+  font-size:clamp(9px,.85vw,11px);color:rgba(255,255,255,.65);
+  line-height:1.4;padding:2px 0 2px 14px;position:relative;
 }
 .facts-list li::before{
-  content:'';position:absolute;left:2px;top:50%;transform:translateY(-50%);
-  width:7px;height:7px;border-radius:50%;
+  content:'';position:absolute;left:1px;top:50%;transform:translateY(-50%);
+  width:6px;height:6px;border-radius:50%;
   background:rgba(129,199,132,.5);border:1px solid rgba(129,199,132,.7);
 }
 .facts-list li:nth-child(2)::before{background:rgba(255,193,7,.5);border-color:rgba(255,193,7,.7)}
 .facts-list li:nth-child(3)::before{background:rgba(79,195,247,.5);border-color:rgba(79,195,247,.7)}
-.facts-list li:nth-child(4)::before{background:rgba(239,154,154,.5);border-color:rgba(239,154,154,.7)}
-.facts-list li:nth-child(5)::before{background:rgba(206,147,216,.5);border-color:rgba(206,147,216,.7)}
 
 .card-sound{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:5px 12px;margin-top:auto;align-self:flex-start;
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;margin-top:auto;align-self:flex-start;
   background:rgba(129,199,132,.1);border:1px solid rgba(129,199,132,.3);
-  border-radius:16px;color:#a5d6a7;
-  font-size:clamp(9px,1vw,12px);font-weight:600;
+  border-radius:14px;color:#a5d6a7;
+  font-size:clamp(8px,.9vw,11px);font-weight:600;
   cursor:pointer;transition:all .3s;flex-shrink:0;
 }
 .card-sound:hover,.card-sound:active{background:rgba(129,199,132,.22)}
@@ -174,10 +171,10 @@ body{
 
 .footer{
   flex-shrink:0;text-align:center;
-  padding:6px 20px 12px;
+  padding:4px 20px 10px;
 }
 .btn-back{
-  padding:8px 26px;font-size:14px;font-weight:600;
+  padding:6px 22px;font-size:13px;font-weight:600;
   background:rgba(129,199,132,.1);border:2px solid rgba(129,199,132,.3);
   color:white;border-radius:50px;cursor:pointer;
   transition:all .3s;backdrop-filter:blur(8px);
@@ -203,7 +200,7 @@ body{
 <div class="app">
   <div class="header">
     <h1>Forest Animals Showcase</h1>
-    <p>Scroll through the animals to learn fun facts and hear their sounds</p>
+    <p>Drag to rotate 3D models -- tap to hear sounds</p>
   </div>
 
   <div class="scroll-area">
@@ -221,145 +218,121 @@ body{
 var ANIMALS = [
   {
     name:'Red Deer', latin:'Cervus elaphus', emoji:'\uD83E\uDD8C',
-    desc:'Majestic woodland herbivores found across European and Asian forests. Males grow impressive antlers each year.',
+    desc:'Majestic woodland herbivores. Males grow impressive antlers each year.',
     facts:[
-      'Antlers grow up to 1 inch per day -- fastest bone growth in nature!',
-      'Males roar up to 20 times per minute during mating season',
-      'Can run at 40 mph -- faster than a city bus!',
-      'Shed and regrow their antlers every single year',
-      'Babies (fawns) are born with white spots for camouflage'
+      'Antlers grow up to 1 inch per day!',
+      'Can run at 40 mph',
+      'Babies are born with white spots for camouflage'
     ],
     sound:{type:'bellow',freq:130,dur:0.9}
   },
   {
     name:'Red Fox', latin:'Vulpes vulpes', emoji:'\uD83E\uDD8A',
-    desc:'Clever and adaptable predators with exceptional hearing. The most widespread wild carnivore on Earth.',
+    desc:'Clever predators with exceptional hearing. Most widespread wild carnivore.',
     facts:[
       'Can hear a watch ticking from 40 yards away!',
-      'Use Earth\'s magnetic field like a compass to hunt',
-      'Have over 40 different calls and vocalizations',
-      'Their pupils are vertical slits -- just like a cat!',
-      'Pounce on prey using a special "mousing leap"'
+      'Use Earth\'s magnetic field to hunt',
+      'Have over 40 different calls'
     ],
     sound:{type:'bark',freq:800,dur:0.12}
   },
   {
     name:'Brown Bear', latin:'Ursus arctos', emoji:'\uD83D\uDC3B',
-    desc:'Powerful omnivores that roam vast territories. Among the largest land predators still walking the Earth.',
+    desc:'Powerful omnivores among the largest land predators on Earth.',
     facts:[
-      'Can eat 90 pounds of food per day before winter sleep!',
-      'Sprint at 35 mph -- faster than most horses',
-      'Nose is 7 times better than a bloodhound\'s',
-      'Hibernate for 5 to 7 months without eating or drinking',
-      'Cubs are born blind and weigh less than a pound'
+      'Can eat 90 pounds of food per day!',
+      'Sprint at 35 mph',
+      'Hibernate for 5 to 7 months'
     ],
     sound:{type:'growl',freq:75,dur:1.2}
   },
   {
     name:'Great Horned Owl', latin:'Bubo virginianus', emoji:'\uD83E\uDD89',
-    desc:'Silent nocturnal hunters with extraordinary night vision. Their feathers muffle sound for stealthy flight.',
+    desc:'Silent nocturnal hunters with extraordinary night vision.',
     facts:[
-      'Can turn their head 270 degrees -- almost all the way around!',
-      'Fly in complete silence thanks to special feather edges',
-      'Eyes are fixed in place -- they can\'t move them at all',
-      'Grip strength is 300 PSI -- 10x stronger than a human hand',
-      'Hunt in pitch darkness using only sound to locate prey'
+      'Can turn their head 270 degrees!',
+      'Fly in complete silence',
+      'Grip strength is 300 PSI'
     ],
     sound:{type:'hoot',freq:300,dur:0.4}
   },
   {
     name:'Raccoon', latin:'Procyon lotor', emoji:'\uD83E\uDD9D',
-    desc:'Curious and intelligent creatures famous for their masked faces and dexterous front paws.',
+    desc:'Curious creatures famous for masked faces and dexterous paws.',
     facts:[
-      'Can remember how to solve puzzles for 3 whole years!',
-      'Front paws are incredibly sensitive -- like tiny human hands',
-      'Wash their food in water before eating it',
-      'Can rotate their hind feet 180 degrees to climb DOWN trees',
-      'Active mostly at night with amazing night vision'
+      'Remember puzzles for 3 years!',
+      'Paws are like tiny human hands',
+      'Wash food in water before eating'
     ],
     sound:{type:'chitter',freq:600,dur:0.06}
   },
   {
     name:'Red Squirrel', latin:'Sciurus vulgaris', emoji:'\uD83D\uDC3F\uFE0F',
-    desc:'Acrobatic woodland gymnasts that spend their lives leaping between treetops at amazing speeds.',
+    desc:'Acrobatic woodland gymnasts leaping between treetops.',
     facts:[
-      'Bury up to 10,000 nuts each autumn as food stores!',
-      'Can leap 10 times their own body length in one jump',
-      'Front teeth never stop growing -- they gnaw to keep them short',
-      'Plant thousands of trees by forgetting where they buried nuts',
-      'Tail is used as a blanket, umbrella, and balance beam'
+      'Bury 10,000 nuts each autumn!',
+      'Leap 10x their body length',
+      'Plant trees by forgetting buried nuts'
     ],
     sound:{type:'chirp',freq:900,dur:0.15}
   },
   {
     name:'Beaver', latin:'Castor fiber', emoji:'\uD83E\uDDAB',
-    desc:'Nature\'s engineers that reshape entire landscapes by building dams and lodges from wood and mud.',
+    desc:'Nature\'s engineers reshaping landscapes with dams and lodges.',
     facts:[
-      'Build dams that can stretch over 800 meters long!',
-      'Hold their breath underwater for up to 15 minutes',
-      'Teeth are orange because they contain iron -- super strong!',
-      'Slap their flat tail on water to warn others of danger',
-      'Second-largest rodent in the world after the capybara'
+      'Dams can stretch over 800 meters!',
+      'Hold breath for 15 minutes',
+      'Teeth contain iron -- super strong!'
     ],
     sound:{type:'slap',freq:200,dur:0.15}
   },
   {
     name:'Grey Wolf', latin:'Canis lupus', emoji:'\uD83D\uDC3A',
-    desc:'Highly social pack hunters with complex communication. Each howl is unique, like a vocal fingerprint.',
+    desc:'Social pack hunters with complex communication.',
     facts:[
-      'Howls can be heard from 16 kilometers away!',
-      'Each wolf has a unique howl -- like a voice fingerprint',
-      'Hunt in organized packs with complex strategies',
-      'Can travel 50 miles in a single day while hunting',
-      'Pups are cared for by the entire pack, not just parents'
+      'Howls heard from 16 km away!',
+      'Each howl is unique like a fingerprint',
+      'Travel 50 miles in a single day'
     ],
     sound:{type:'howl',freq:220,dur:2.0}
   },
   {
     name:'Golden Eagle', latin:'Aquila chrysaetos', emoji:'\uD83E\uDD85',
-    desc:'Apex aerial predators with incredible eyesight. They dive at speeds rivaling sports cars.',
+    desc:'Apex aerial predators with incredible eyesight.',
     facts:[
-      'Dive at speeds up to 240 km/h -- faster than a sports car!',
-      'Can spot a rabbit from over 3 kilometers away',
-      'Eyesight is 8 times sharper than a human\'s',
-      'Wingspan reaches up to 2.3 meters (7.5 feet) wide',
-      'Mate for life and use the same nest for decades'
+      'Dive at speeds up to 240 km/h!',
+      'Spot a rabbit from 3 km away',
+      'Mate for life'
     ],
     sound:{type:'screech',freq:1800,dur:0.6}
   },
   {
     name:'Hedgehog', latin:'Erinaceus europaeus', emoji:'\uD83E\uDD94',
-    desc:'Tiny nocturnal insectivores covered in protective spines. They curl into a tight ball when threatened.',
+    desc:'Tiny nocturnal insectivores covered in protective spines.',
     facts:[
-      'Covered in about 7,000 spines that are replaced each year!',
-      'Curl into a tight spiky ball when scared -- nearly impossible to open',
-      'Immune to some snake venoms that would harm other animals',
-      'Snore loudly when they sleep -- just like humans!',
-      'Can run over 6 feet per second despite tiny legs'
+      'Covered in about 7,000 spines!',
+      'Curl into a tight spiky ball',
+      'Immune to some snake venoms'
     ],
     sound:{type:'snuffle',freq:400,dur:0.5}
   },
   {
     name:'Forest Gecko', latin:'Phelsuma grandis', emoji:'\uD83E\uDD8E',
-    desc:'Masters of camouflage and climbing. Their toe pads use van der Waals forces to grip any surface.',
+    desc:'Masters of camouflage and climbing any surface.',
     facts:[
-      'Can regrow their tail if a predator grabs it!',
-      'Toe pads have millions of tiny hairs that stick to any surface',
-      'No eyelids -- they lick their eyeballs to keep them clean',
-      'Some species can change color to match their surroundings',
-      'Can climb straight up glass walls and even walk on ceilings'
+      'Can regrow their tail!',
+      'Lick their eyeballs to clean them',
+      'Walk on ceilings'
     ],
     sound:{type:'click',freq:1500,dur:0.04}
   },
   {
     name:'European Hare', latin:'Lepus europaeus', emoji:'\uD83D\uDC07',
-    desc:'Lightning-fast runners born ready to sprint from day one. Among the fastest land animals in Europe.',
+    desc:'Lightning-fast runners born ready to sprint from day one.',
     facts:[
-      'Sprint at 70 km/h -- one of the fastest land animals!',
-      'Can jump 3 meters high from a standing position',
-      'Have nearly 360-degree vision to spot predators everywhere',
-      'Born fully furred with eyes open -- ready to run from day one!',
-      'Zigzag when running to confuse predators chasing them'
+      'Sprint at 70 km/h!',
+      'Jump 3 meters high from standing',
+      'Nearly 360-degree vision'
     ],
     sound:{type:'thump',freq:55,dur:0.12}
   }
@@ -376,9 +349,9 @@ function buildCards() {
     animal.facts.forEach(function(f) { factsHtml += '<li>' + f + '</li>'; });
 
     card.innerHTML =
-      '<div class="model-area">' +
+      '<div class="model-area" data-idx="' + idx + '">' +
         '<div class="model-placeholder">' +
-          '<div class="cube">' +
+          '<div class="cube" data-cube="' + idx + '">' +
             '<div class="cube-face">' + animal.emoji + '</div>' +
             '<div class="cube-face">' + animal.emoji + '</div>' +
             '<div class="cube-face">' + animal.emoji + '</div>' +
@@ -387,7 +360,7 @@ function buildCards() {
             '<div class="cube-face">' + animal.emoji + '</div>' +
           '</div>' +
         '</div>' +
-        '<span class="model-badge">3D MODEL PLACEHOLDER</span>' +
+        '<span class="model-badge">DRAG TO ROTATE</span>' +
       '</div>' +
       '<div class="card-body">' +
         '<div class="card-top">' +
@@ -399,18 +372,69 @@ function buildCards() {
         '</div>' +
         '<div class="card-desc">' + animal.desc + '</div>' +
         '<ul class="facts-list">' + factsHtml + '</ul>' +
-        '<button class="card-sound" data-index="' + idx + '">&#128266; Play Sound</button>' +
+        '<button class="card-sound" data-index="' + idx + '">&#128266; Sound</button>' +
       '</div>';
 
-    var cubeEl = card.querySelector('.cube');
-    cubeEl.style.animationDelay = (-idx * 0.8) + 's';
-
     track.appendChild(card);
+  });
+
+  initAllCubeRotation();
+}
+
+function initAllCubeRotation() {
+  var areas = document.querySelectorAll('.model-area');
+  areas.forEach(function(area) {
+    var cubeEl = area.querySelector('.cube');
+    var rotX = -20, rotY = 0;
+    var startX, startY, dragging = false;
+    var autoSpin = true;
+    var autoFrame;
+
+    function autoRotate() {
+      if (autoSpin) {
+        rotY += 0.5;
+        cubeEl.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
+      }
+      autoFrame = requestAnimationFrame(autoRotate);
+    }
+    autoRotate();
+
+    area.addEventListener('pointerdown', function(e) {
+      dragging = true;
+      autoSpin = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      area.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    area.addEventListener('pointermove', function(e) {
+      if (!dragging) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      rotY += dx * 0.8;
+      rotX -= dy * 0.8;
+      rotX = Math.max(-80, Math.min(80, rotX));
+      cubeEl.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
+      startX = e.clientX;
+      startY = e.clientY;
+      e.preventDefault();
+    });
+
+    area.addEventListener('pointerup', function(e) {
+      dragging = false;
+      setTimeout(function() { autoSpin = true; }, 2000);
+    });
+
+    area.addEventListener('pointercancel', function() {
+      dragging = false;
+      setTimeout(function() { autoSpin = true; }, 2000);
+    });
   });
 }
 
 function scrollBy(dir) {
-  var cardW = track.querySelector('.card').offsetWidth + 16;
+  var cardW = track.querySelector('.card').offsetWidth + 12;
   track.scrollBy({ left: dir * cardW, behavior: 'smooth' });
 }
 

@@ -13,6 +13,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#38bdf8}
 .stats{display:flex;gap:16px;font-size:clamp(12px,1.3vw,16px);font-weight:600}
 .stat-val{color:#fbbf24;font-weight:800}
+
+.toolbar-toggle{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;cursor:pointer;font-size:clamp(11px,1.1vw,13px);font-weight:700;color:rgba(255,255,255,.4);transition:color .3s}
+.toolbar-toggle:hover{color:rgba(255,255,255,.7)}
+.toggle-arrow{font-size:8px;transition:transform .3s;display:inline-block}
+.toggle-arrow.open{transform:rotate(180deg)}
+.toolbar-drawer{flex-shrink:0;max-height:0;overflow:hidden;transition:max-height .3s ease}
+.toolbar-drawer.open{max-height:60px}
+.toolbar-options{display:flex;justify-content:center;gap:8px;padding:4px 20px 10px}
+.diff-btn{padding:6px 20px;font-size:clamp(11px,1.1vw,14px);font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(56,189,248,.2);background:rgba(56,189,248,.06);color:rgba(255,255,255,.5)}
+.diff-btn:hover{background:rgba(56,189,248,.12)}
+.diff-btn.active{background:rgba(56,189,248,.2);border-color:#38bdf8;color:#38bdf8}
+
 .instructions{flex-shrink:0;text-align:center;padding:0 20px 8px;font-size:clamp(10px,1.1vw,13px);color:rgba(255,255,255,.4)}
 .game-area{flex:1;display:flex;align-items:center;justify-content:center;padding:0 20px}
 .grid-wrapper{position:relative}
@@ -59,6 +71,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="stat">Best: <span class="stat-val" id="best">0</span></div>
     </div>
   </div>
+  <div class="toolbar-toggle" id="toolbarToggle">
+    <span>Difficulty: Easy</span>
+    <span class="toggle-arrow" id="toggleArrow">&#9660;</span>
+  </div>
+  <div class="toolbar-drawer" id="toolbarDrawer">
+    <div class="toolbar-options">
+      <div class="diff-btn active" data-diff="easy">Easy</div>
+      <div class="diff-btn" data-diff="medium">Medium</div>
+      <div class="diff-btn" data-diff="hard">Hard</div>
+    </div>
+  </div>
   <div class="instructions">Tap two adjacent numbers to multiply them. Products over 100 explode for bonus points!</div>
   <div class="game-area">
     <div class="grid-wrapper" id="gridWrapper">
@@ -81,17 +104,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 
 <script>
-var COLS = 6, ROWS = 5;
+var DIFF_CFG = {
+  easy: {cols:5, rows:4, maxNum:9, time:120, fillRate:0.6, label:'Easy'},
+  medium: {cols:6, rows:5, maxNum:9, time:90, fillRate:0.65, label:'Medium'},
+  hard: {cols:7, rows:6, maxNum:12, time:75, fillRate:0.7, label:'Hard'}
+};
+
+var difficulty = 'easy';
+var COLS, ROWS;
 var board = [];
 var selectedCell = null;
 var score = 0, bestScore = 0;
-var timeLeft = 90, timerInterval;
+var timeLeft, timerInterval;
 var cellSize;
+
+function applyDifficulty() {
+  var cfg = DIFF_CFG[difficulty];
+  COLS = cfg.cols; ROWS = cfg.rows;
+}
 
 function calcCellSize() {
   var vw = window.innerWidth, vh = window.innerHeight;
   var maxGridW = Math.min(vw * 0.85, 600);
-  var maxGridH = vh * 0.55;
+  var maxGridH = vh * 0.50;
   var sw = Math.floor((maxGridW - (COLS - 1) * 6) / COLS);
   var sh = Math.floor((maxGridH - (ROWS - 1) * 6) / ROWS);
   cellSize = Math.min(sw, sh, 80);
@@ -100,11 +135,12 @@ function calcCellSize() {
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
 function initBoard() {
+  var cfg = DIFF_CFG[difficulty];
   board = [];
   for (var r = 0; r < ROWS; r++) {
     board[r] = [];
     for (var c = 0; c < COLS; c++) {
-      board[r][c] = Math.random() < 0.6 ? rand(2, 9) : 0;
+      board[r][c] = Math.random() < cfg.fillRate ? rand(2, cfg.maxNum) : 0;
     }
   }
 }
@@ -220,10 +256,11 @@ function applyGravity() {
 }
 
 function fillEmpty() {
+  var cfg = DIFF_CFG[difficulty];
   var filled = false;
   for (var c = 0; c < COLS; c++) {
     if (board[0][c] === 0 && Math.random() < 0.7) {
-      board[0][c] = rand(2, 9);
+      board[0][c] = rand(2, cfg.maxNum);
       filled = true;
     }
   }
@@ -234,7 +271,7 @@ function fillEmpty() {
 }
 
 function startTimer() {
-  timeLeft = 90;
+  timeLeft = DIFF_CFG[difficulty].time;
   document.getElementById('timer').textContent = timeLeft;
   clearInterval(timerInterval);
   timerInterval = setInterval(function() {
@@ -263,9 +300,15 @@ function newGame() {
   score = 0; selectedCell = null;
   document.getElementById('score').textContent = 0;
   document.getElementById('gameOverlay').classList.remove('active');
+  applyDifficulty();
   initBoard();
   renderGrid();
   startTimer();
+}
+
+function toggleToolbar() {
+  document.getElementById('toolbarDrawer').classList.toggle('open');
+  document.getElementById('toggleArrow').classList.toggle('open');
 }
 
 function playTone(freq, dur) {
@@ -285,6 +328,20 @@ function bindTouch(el, fn) {
   el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
 }
 
+bindTouch(document.getElementById('toolbarToggle'), toggleToolbar);
+
+document.querySelectorAll('.diff-btn').forEach(function(btn) {
+  bindTouch(btn, function() {
+    difficulty = btn.dataset.diff;
+    document.querySelectorAll('.diff-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelector('#toolbarToggle span:first-child').textContent = 'Difficulty: ' + DIFF_CFG[difficulty].label;
+    document.getElementById('toolbarDrawer').classList.remove('open');
+    document.getElementById('toggleArrow').classList.remove('open');
+    newGame();
+  });
+});
+
 document.getElementById('grid').addEventListener('click', function(e) {
   if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
   var cell = e.target.closest('.cell.filled');
@@ -301,6 +358,7 @@ bindTouch(document.getElementById('btnRestart'), newGame);
 bindTouch(document.getElementById('btnBackOver'), function() { location.href = '../index.html'; });
 
 window.addEventListener('resize', function() { renderGrid(); });
+applyDifficulty();
 newGame();
 
 var bgP = document.getElementById('bgP');

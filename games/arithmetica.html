@@ -14,10 +14,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .stats{display:flex;gap:16px;font-size:clamp(12px,1.3vw,16px);font-weight:600}
 .stat{display:flex;align-items:center;gap:4px}
 .stat-val{color:#fbbf24;font-weight:800}
-.difficulty-bar{flex-shrink:0;display:flex;justify-content:center;gap:8px;padding:0 20px 10px}
+
+.toolbar-toggle{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;cursor:pointer;font-size:clamp(11px,1.1vw,13px);font-weight:700;color:rgba(255,255,255,.4);transition:color .3s}
+.toolbar-toggle:hover{color:rgba(255,255,255,.7)}
+.toggle-arrow{font-size:8px;transition:transform .3s;display:inline-block}
+.toggle-arrow.open{transform:rotate(180deg)}
+.toolbar-drawer{flex-shrink:0;max-height:0;overflow:hidden;transition:max-height .3s ease}
+.toolbar-drawer.open{max-height:60px}
+.toolbar-options{display:flex;justify-content:center;gap:8px;padding:4px 20px 10px}
 .diff-btn{padding:6px 20px;font-size:clamp(11px,1.1vw,14px);font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(248,113,113,.2);background:rgba(248,113,113,.06);color:rgba(255,255,255,.5)}
 .diff-btn:hover{background:rgba(248,113,113,.12)}
 .diff-btn.active{background:rgba(248,113,113,.2);border-color:#f87171;color:#f87171}
+
 .game-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(16px,3vh,32px);padding:0 20px}
 .equation{font-size:clamp(48px,8vw,96px);font-weight:800;text-align:center;min-height:1.2em;color:white;text-shadow:0 4px 20px rgba(0,0,0,.5)}
 .equation .op{color:#f87171}
@@ -35,13 +43,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .streak-display{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80px;font-weight:800;color:#fbbf24;opacity:0;pointer-events:none;z-index:100;text-shadow:0 4px 20px rgba(0,0,0,.5)}
 .streak-display.show{animation:streakPop .8s ease forwards}
 @keyframes streakPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:50;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
-.overlay.active{display:flex}
-.overlay h2{font-size:clamp(28px,4vw,48px);font-weight:800;color:#f87171}
-.overlay .final-score{font-size:clamp(48px,8vw,80px);font-weight:800;color:#fbbf24}
-.overlay .final-label{font-size:clamp(14px,1.5vw,18px);color:rgba(255,255,255,.5)}
-.overlay-btn{padding:12px 32px;font-size:16px;font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(248,113,113,.4);background:rgba(248,113,113,.15);color:white}
-.overlay-btn:hover{background:rgba(248,113,113,.3);border-color:#f87171}
 .footer{flex-shrink:0;text-align:center;padding:8px 20px 14px}
 .btn-back{padding:8px 26px;font-size:14px;font-weight:600;background:rgba(248,113,113,.1);border:2px solid rgba(248,113,113,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s}
 .btn-back:hover{background:rgba(248,113,113,.2)}
@@ -62,13 +63,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="stats">
       <div class="stat">Score: <span class="stat-val" id="score">0</span></div>
       <div class="stat">Streak: <span class="stat-val" id="streak">0</span></div>
-      <div class="stat">Q: <span class="stat-val" id="qNum">1/20</span></div>
+      <div class="stat">Q: <span class="stat-val" id="qNum">1</span></div>
     </div>
   </div>
-  <div class="difficulty-bar">
-    <div class="diff-btn active" data-diff="easy">Easy</div>
-    <div class="diff-btn" data-diff="medium">Medium</div>
-    <div class="diff-btn" data-diff="hard">Hard</div>
+  <div class="toolbar-toggle" id="toolbarToggle">
+    <span>Difficulty: Easy</span>
+    <span class="toggle-arrow" id="toggleArrow">&#9660;</span>
+  </div>
+  <div class="toolbar-drawer" id="toolbarDrawer">
+    <div class="toolbar-options">
+      <div class="diff-btn active" data-diff="easy">Easy</div>
+      <div class="diff-btn" data-diff="medium">Medium</div>
+      <div class="diff-btn" data-diff="hard">Hard</div>
+    </div>
   </div>
   <div class="game-area">
     <div class="equation" id="equation"></div>
@@ -80,26 +87,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
-<div class="overlay" id="gameOverlay">
-  <h2>Game Over</h2>
-  <div class="final-label">Your Score</div>
-  <div class="final-score" id="finalScore">0</div>
-  <div class="final-label" id="finalMsg"></div>
-  <button class="overlay-btn" id="btnRestart">Play Again</button>
-  <button class="overlay-btn" id="btnBackOver">Back to Menu</button>
-</div>
-
 <script>
 var difficulty = 'easy';
-var score = 0, streakCount = 0, questionNum = 0, totalQuestions = 20;
+var score = 0, streakCount = 0, questionNum = 0;
 var timerInterval, timeLeft, maxTime = 10;
 var currentAnswer = 0;
 var answering = false;
 
 var DIFF = {
-  easy: {maxNum: 15, ops: ['+','-'], time: 12},
-  medium: {maxNum: 20, ops: ['+','-','x'], time: 10},
-  hard: {maxNum: 25, ops: ['+','-','x','\u00F7'], time: 8}
+  easy: {maxNum: 15, ops: ['+','-'], time: 12, label: 'Easy'},
+  medium: {maxNum: 50, ops: ['+','-','x'], time: 10, label: 'Medium'},
+  hard: {maxNum: 100, ops: ['+','-','x','\u00F7'], time: 8, label: 'Hard'}
 };
 
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -143,9 +141,8 @@ function generateOptions(answer) {
 }
 
 function showQuestion() {
-  if (questionNum >= totalQuestions) { endGame(); return; }
   questionNum++;
-  document.getElementById('qNum').textContent = questionNum + '/' + totalQuestions;
+  document.getElementById('qNum').textContent = questionNum;
   answering = false;
 
   var q = generateQuestion();
@@ -238,20 +235,18 @@ function showStreak(n) {
   el.classList.add('show');
 }
 
-function endGame() {
-  clearInterval(timerInterval);
-  document.getElementById('finalScore').textContent = score;
-  var msg = score >= 200 ? 'Amazing!' : score >= 100 ? 'Great job!' : 'Keep practicing!';
-  document.getElementById('finalMsg').textContent = msg;
-  document.getElementById('gameOverlay').classList.add('active');
-}
-
 function resetGame() {
   score = 0; streakCount = 0; questionNum = 0;
   document.getElementById('score').textContent = 0;
   document.getElementById('streak').textContent = 0;
-  document.getElementById('gameOverlay').classList.remove('active');
   showQuestion();
+}
+
+function toggleToolbar() {
+  var drawer = document.getElementById('toolbarDrawer');
+  var arrow = document.getElementById('toggleArrow');
+  drawer.classList.toggle('open');
+  arrow.classList.toggle('open');
 }
 
 function playTone(freq, dur) {
@@ -271,18 +266,21 @@ function bindTouch(el, fn) {
   el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
 }
 
+bindTouch(document.getElementById('toolbarToggle'), toggleToolbar);
+
 document.querySelectorAll('.diff-btn').forEach(function(btn) {
   bindTouch(btn, function() {
     difficulty = btn.dataset.diff;
     document.querySelectorAll('.diff-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
+    document.querySelector('#toolbarToggle span:first-child').textContent = 'Difficulty: ' + DIFF[difficulty].label;
+    document.getElementById('toolbarDrawer').classList.remove('open');
+    document.getElementById('toggleArrow').classList.remove('open');
     resetGame();
   });
 });
 
 bindTouch(document.getElementById('btnBack'), function() { location.href = '../index.html'; });
-bindTouch(document.getElementById('btnRestart'), function() { resetGame(); });
-bindTouch(document.getElementById('btnBackOver'), function() { location.href = '../index.html'; });
 
 showQuestion();
 
