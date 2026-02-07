@@ -64,6 +64,12 @@ function loadGame(gameName) {
             case 'fruit-ninja':
                 window.location.href = 'games/fruit-ninja.html';
                 break;
+            case 'forest-animals':
+                window.location.href = 'games/forest-animals.html';
+                break;
+            case 'hidden-animals':
+                window.location.href = 'games/hidden-animals.html';
+                break;
             default:
                 console.log('Game not found:', gameName);
                 mainMenu.style.display = 'block';
