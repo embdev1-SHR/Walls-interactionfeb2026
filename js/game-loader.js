@@ -1,37 +1,97 @@
-// Game loader functionality
+const CATEGORIES = {
+    'jungle': {
+        title: 'Jungle Games',
+        options: [
+            { name: 'Forest Animals', game: 'forest-animals' },
+            { name: 'Hidden Animals', game: 'hidden-animals' }
+        ]
+    },
+    'daily-skills': {
+        title: 'Daily Skills',
+        options: [
+            { name: 'Room Sorting', game: 'room-sorter' }
+        ]
+    }
+};
+
 const gameCards = document.querySelectorAll('.game-card');
 
 gameCards.forEach(card => {
     card.addEventListener('click', function() {
         const gameName = this.getAttribute('data-game');
+        const categoryName = this.getAttribute('data-category');
 
         if (this.classList.contains('locked')) {
-            // Play error sound
             playSound('error');
             return;
         }
 
-        // Play click sound
         playSound('click');
 
-        // Add click animation
         this.style.transform = 'scale(0.95)';
         setTimeout(() => {
             this.style.transform = '';
         }, 200);
 
-        // Load game after animation
-        setTimeout(() => {
-            loadGame(gameName);
-        }, 300);
+        if (categoryName) {
+            setTimeout(() => {
+                showSubmenu(categoryName);
+            }, 300);
+        } else if (gameName) {
+            setTimeout(() => {
+                loadGame(gameName);
+            }, 300);
+        }
     });
 
-    // Hover sound effect
     card.addEventListener('mouseenter', function() {
         if (!this.classList.contains('locked')) {
             playSound('hover');
         }
     });
+});
+
+function showSubmenu(categoryName) {
+    const category = CATEGORIES[categoryName];
+    if (!category) return;
+
+    const overlay = document.getElementById('submenu-overlay');
+    const title = document.getElementById('submenu-title');
+    const optionsContainer = document.getElementById('submenu-options');
+
+    title.textContent = category.title;
+    optionsContainer.innerHTML = '';
+
+    category.options.forEach(option => {
+        const optionEl = document.createElement('div');
+        optionEl.className = 'submenu-option';
+        optionEl.textContent = option.name;
+        optionEl.onclick = () => {
+            playSound('click');
+            closeSubmenu();
+            setTimeout(() => loadGame(option.game), 300);
+        };
+        optionsContainer.appendChild(optionEl);
+    });
+
+    overlay.classList.add('active');
+}
+
+function closeSubmenu() {
+    const overlay = document.getElementById('submenu-overlay');
+    overlay.classList.remove('active');
+}
+
+document.getElementById('submenu-close').addEventListener('click', () => {
+    playSound('click');
+    closeSubmenu();
+});
+
+document.getElementById('submenu-overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'submenu-overlay') {
+        playSound('click');
+        closeSubmenu();
+    }
 });
 
 function loadGame(gameName) {

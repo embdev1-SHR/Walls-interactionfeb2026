@@ -22,6 +22,16 @@ html,body{height:100%;font-family:'Space Grotesk',Helvetica,Arial,sans-serif}
 .games-grid{position:relative}
 .games-grid .game-card{position:absolute;transition:all .4s cubic-bezier(.175,.885,.32,1.275)}
 #center-button{transform-origin:center}
+
+.submenu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:50;display:none;align-items:center;justify-content:center}
+.submenu-overlay.active{display:flex}
+.submenu-box{background:white;border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:500px;width:90%}
+.submenu-title{font-size:28px;font-weight:800;text-align:center;margin-bottom:24px;color:#4f46e5}
+.submenu-options{display:flex;flex-direction:column;gap:16px}
+.submenu-option{padding:20px;background:linear-gradient(135deg,#f0f9ff,#e0e7ff);border:3px solid #4f46e5;border-radius:16px;text-align:center;font-size:18px;font-weight:700;cursor:pointer;transition:all .3s}
+.submenu-option:hover{transform:scale(1.05);box-shadow:0 8px 20px rgba(79,70,229,.3)}
+.submenu-close{margin-top:20px;padding:12px 24px;background:#ef4444;color:white;border:none;border-radius:12px;cursor:pointer;font-weight:700;width:100%;transition:all .3s}
+.submenu-close:hover{background:#dc2626}
 </style>
 </head>
 
@@ -57,9 +67,8 @@ html,body{height:100%;font-family:'Space Grotesk',Helvetica,Arial,sans-serif}
       <div class="game-card w-56 h-56 rounded-full border-4 border-purple-200 bg-white/40 flex items-center justify-center" data-game="particle-playground">Particles</div>
       <div class="game-card w-56 h-56 rounded-full border-4 border-orange-200 bg-white/40 flex items-center justify-center" data-game="goalkeeper">Goalkeeper</div>
       <div class="game-card w-56 h-56 rounded-full border-4 border-red-300 bg-white/40 flex items-center justify-center" data-game="fruit-ninja">Fruit Ninja</div>
-      <div class="game-card w-56 h-56 rounded-full border-4 border-green-300 bg-white/40 flex items-center justify-center text-center text-sm font-semibold" data-game="forest-animals">Forest Animals</div>
-      <div class="game-card w-56 h-56 rounded-full border-4 border-lime-300 bg-white/40 flex items-center justify-center text-center text-sm font-semibold" data-game="hidden-animals">Find Animals</div>
-      <div class="game-card w-56 h-56 rounded-full border-4 border-amber-300 bg-white/40 flex items-center justify-center text-center text-sm font-semibold" data-game="room-sorter">Room Sorter</div>
+      <div class="game-card w-56 h-56 rounded-full border-4 border-green-300 bg-white/40 flex items-center justify-center text-center text-sm font-semibold" data-category="jungle">Jungle</div>
+      <div class="game-card w-56 h-56 rounded-full border-4 border-amber-300 bg-white/40 flex items-center justify-center text-center text-sm font-semibold" data-category="daily-skills">Daily Skills</div>
 
       <div id="center-button"
         class="absolute w-80 h-80 rounded-full border-8 border-cyan-300 bg-white shadow-2xl flex items-center justify-center cursor-pointer"
@@ -67,6 +76,14 @@ html,body{height:100%;font-family:'Space Grotesk',Helvetica,Arial,sans-serif}
         PLAY INTRO
       </div>
     </div>
+  </div>
+</div>
+
+<div class="submenu-overlay" id="submenu-overlay">
+  <div class="submenu-box" id="submenu-box">
+    <h2 class="submenu-title" id="submenu-title">Category</h2>
+    <div class="submenu-options" id="submenu-options"></div>
+    <button class="submenu-close" id="submenu-close">Close</button>
   </div>
 </div>
 

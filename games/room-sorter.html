@@ -52,8 +52,6 @@ body{
   color:rgba(0,0,0,.45);
 }
 
-.room-furniture{position:absolute;z-index:1;font-size:clamp(30px,4vw,50px);opacity:.25;pointer-events:none}
-
 .items-area{
   position:absolute;top:0;left:0;right:0;
   height:52%;
@@ -89,7 +87,7 @@ body{
   animation:popIn .4s ease;
 }
 .item.wrong{animation:shake .4s ease}
-.item-emoji{font-size:clamp(36px,5vw,56px);line-height:1}
+.item-svg{width:clamp(50px,6vw,80px);height:clamp(50px,6vw,80px)}
 .item-name{
   font-size:clamp(10px,1.4vw,13px);font-weight:700;
   color:#5d4037;background:rgba(255,255,255,.85);
@@ -164,7 +162,6 @@ body{
   60%{transform:scale(1.05) rotate(1deg)}
   100%{transform:scale(1) rotate(0);opacity:1}
 }
-.overlay-icon{font-size:64px;margin-bottom:12px}
 .overlay-title{font-size:clamp(28px,5vw,42px);font-weight:800;color:#e65100;margin-bottom:8px}
 .overlay-msg{font-size:clamp(16px,2.5vw,20px);color:#5d4037;margin-bottom:20px;line-height:1.5}
 .overlay-btn{
@@ -210,23 +207,17 @@ body{
     <div class="room room-bedroom" data-room="bedroom">
       <div class="room-bg"></div>
       <div class="room-label">Bedroom</div>
-      <div class="room-count" id="count-bedroom">0/0</div>
-      <div class="room-furniture" style="bottom:10px;left:10%">\u{1F6CF}\u{FE0F}</div>
-      <div class="room-furniture" style="bottom:10px;right:10%">\u{1FA91}</div>
+      <div class="room-count" id="count-bedroom">0/3</div>
     </div>
     <div class="room room-kitchen" data-room="kitchen">
       <div class="room-bg"></div>
       <div class="room-label">Kitchen</div>
-      <div class="room-count" id="count-kitchen">0/0</div>
-      <div class="room-furniture" style="bottom:10px;left:8%">\u{1F9F1}</div>
-      <div class="room-furniture" style="bottom:10px;right:12%">\u{1F9F4}</div>
+      <div class="room-count" id="count-kitchen">0/3</div>
     </div>
     <div class="room room-living" data-room="living">
       <div class="room-bg"></div>
       <div class="room-label">Living Room</div>
-      <div class="room-count" id="count-living">0/0</div>
-      <div class="room-furniture" style="bottom:10px;left:12%">\u{1FA91}</div>
-      <div class="room-furniture" style="bottom:10px;right:8%">\u{1F4FA}</div>
+      <div class="room-count" id="count-living">0/3</div>
     </div>
   </div>
 
@@ -237,7 +228,7 @@ body{
     </div>
     <div class="hud-box">
       <div class="hud-label">Time Left</div>
-      <div class="hud-val" id="timerVal">1:30</div>
+      <div class="hud-val" id="timerVal">2:00</div>
     </div>
   </div>
 
@@ -245,7 +236,7 @@ body{
 
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="progress-text" id="progressText">0 / 0 items sorted</div>
+    <div class="progress-text" id="progressText">0 / 9 items sorted</div>
   </div>
 
   <button class="btn-back" onclick="location.href='../index.html'">Menu</button>
@@ -253,7 +244,6 @@ body{
 
 <div class="overlay" id="winOverlay">
   <div class="overlay-box">
-    <div class="overlay-icon">\u{1F3E0}</div>
     <div class="overlay-title" id="overlayTitle">All Tidy!</div>
     <div class="overlay-msg" id="overlayMsg"></div>
     <div>
@@ -266,48 +256,27 @@ body{
 <script>
 const ITEMS = {
   bedroom: [
-    { emoji: '\u{1F6CF}\u{FE0F}', name: 'Bed' },
-    { emoji: '\u{1FA91}', name: 'Chair' },
-    { emoji: '\u{1F4A1}', name: 'Lamp' },
-    { emoji: '\u{1F9F8}', name: 'Teddy Bear' },
-    { emoji: '\u{1F6CC}', name: 'Pillow' },
-    { emoji: '\u{23F0}', name: 'Alarm Clock' },
-    { emoji: '\u{1F4DA}', name: 'Books' },
-    { emoji: '\u{1FA9E}', name: 'Mirror' },
-    { emoji: '\u{1F455}', name: 'T-Shirt' },
-    { emoji: '\u{1F45F}', name: 'Sneakers' }
+    { svg: '<svg viewBox="0 0 64 64"><rect x="8" y="28" width="48" height="24" fill="#8B4513" rx="2"/><rect x="12" y="32" width="40" height="16" fill="#D2691E"/><rect x="6" y="52" width="4" height="8" fill="#654321"/><rect x="54" y="52" width="4" height="8" fill="#654321"/></svg>', name: 'Bed' },
+    { svg: '<svg viewBox="0 0 64 64"><rect x="22" y="12" width="20" height="6" fill="#8B4513" rx="3"/><rect x="24" y="18" width="16" height="24" fill="#A0522D"/><rect x="18" y="42" width="28" height="4" fill="#654321"/><rect x="20" y="46" width="4" height="12" fill="#654321"/><rect x="40" y="46" width="4" height="12" fill="#654321"/></svg>', name: 'Chair' },
+    { svg: '<svg viewBox="0 0 64 64"><circle cx="32" cy="24" r="12" fill="#FFD700"/><path d="M32 36 L32 48 M22 42 L42 42 M28 48 L36 48" stroke="#8B4513" stroke-width="3" fill="none"/><rect x="28" y="48" width="8" height="12" fill="#654321"/></svg>', name: 'Lamp' }
   ],
   kitchen: [
-    { emoji: '\u{1F373}', name: 'Frying Pan' },
-    { emoji: '\u{1F52A}', name: 'Knife' },
-    { emoji: '\u{1F944}', name: 'Spoon' },
-    { emoji: '\u{1F375}', name: 'Teacup' },
-    { emoji: '\u{1F372}', name: 'Cooking Pot' },
-    { emoji: '\u{1F9C1}', name: 'Cupcake' },
-    { emoji: '\u{1F34E}', name: 'Apple' },
-    { emoji: '\u{1F9C3}', name: 'Juice Box' },
-    { emoji: '\u{1F37D}\u{FE0F}', name: 'Plate' },
-    { emoji: '\u{1F9F4}', name: 'Soap Bottle' }
+    { svg: '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="36" rx="24" ry="4" fill="#666"/><path d="M8 36 Q8 20 32 20 Q56 20 56 36" fill="#888" stroke="#555" stroke-width="2"/><rect x="30" y="10" width="4" height="12" fill="#333"/></svg>', name: 'Pan' },
+    { svg: '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="44" rx="18" ry="3" fill="#E8E8E8"/><rect x="28" y="44" width="8" height="4" fill="#C0C0C0"/><path d="M32 12 L28 44 M32 12 L36 44" fill="#D3D3D3" stroke="#A9A9A9" stroke-width="2"/><circle cx="32" cy="12" r="6" fill="#FFD700"/></svg>', name: 'Spoon' },
+    { svg: '<svg viewBox="0 0 64 64"><rect x="16" y="24" width="32" height="20" fill="#FF6B6B" rx="2"/><circle cx="32" cy="20" r="8" fill="#FFD93D"/><rect x="28" y="8" width="8" height="12" fill="#8B4513"/></svg>', name: 'Pot' }
   ],
   living: [
-    { emoji: '\u{1F4FA}', name: 'Television' },
-    { emoji: '\u{1F6CB}\u{FE0F}', name: 'Sofa' },
-    { emoji: '\u{1F5BC}\u{FE0F}', name: 'Picture Frame' },
-    { emoji: '\u{1F56F}\u{FE0F}', name: 'Candle' },
-    { emoji: '\u{1F3B5}', name: 'Music Speaker' },
-    { emoji: '\u{1F4D6}', name: 'Magazine' },
-    { emoji: '\u{1FAB4}', name: 'House Plant' },
-    { emoji: '\u{1F9F9}', name: 'Broom' },
-    { emoji: '\u{231A}', name: 'Wall Clock' },
-    { emoji: '\u{1F9E9}', name: 'Puzzle' }
+    { svg: '<svg viewBox="0 0 64 64"><rect x="12" y="20" width="40" height="28" fill="#2C3E50"/><rect x="14" y="22" width="36" height="24" fill="#3498DB"/><rect x="28" y="48" width="8" height="8" fill="#34495E"/><rect x="20" y="56" width="24" height="4" fill="#2C3E50"/></svg>', name: 'TV' },
+    { svg: '<svg viewBox="0 0 64 64"><rect x="8" y="28" width="48" height="20" fill="#E74C3C" rx="4"/><rect x="12" y="32" width="40" height="12" fill="#C0392B"/><rect x="6" y="48" width="4" height="8" fill="#8B4513"/><rect x="54" y="48" width="4" height="8" fill="#8B4513"/><circle cx="16" cy="36" r="3" fill="#D35400"/><circle cx="48" cy="36" r="3" fill="#D35400"/></svg>', name: 'Sofa' },
+    { svg: '<svg viewBox="0 0 64 64"><rect x="16" y="16" width="32" height="28" fill="#8B4513" rx="2"/><rect x="20" y="20" width="24" height="20" fill="#DEB887"/><path d="M24 28 L28 32 L40 20" stroke="#654321" stroke-width="2" fill="none"/><rect x="30" y="44" width="4" height="12" fill="#654321"/></svg>', name: 'Table' }
   ]
 };
 
-const TOTAL_TIME = 90;
+const TOTAL_TIME = 120;
 let timeLeft = TOTAL_TIME;
 let timerInterval = null;
 let gameScore = 0;
-let totalItems = 0;
+let totalItems = 9;
 let placedCount = 0;
 let gameOver = false;
 
@@ -333,25 +302,24 @@ function initGame() {
     list.forEach(it => combined.push({ ...it, room }));
   });
   shuffle(combined);
-  totalItems = combined.length;
 
   const areaRect = itemsArea.getBoundingClientRect();
-  const cols = Math.ceil(Math.sqrt(totalItems * (areaRect.width / areaRect.height)));
-  const rows = Math.ceil(totalItems / cols);
+  const cols = 3;
+  const rows = 3;
   const cellW = areaRect.width / cols;
   const cellH = (areaRect.height - 50) / rows;
 
   combined.forEach((it, i) => {
     const el = document.createElement('div');
     el.className = 'item';
-    el.innerHTML = '<span class="item-emoji">' + it.emoji + '</span><span class="item-name">' + it.name + '</span>';
+    el.innerHTML = '<div class="item-svg">' + it.svg + '</div><span class="item-name">' + it.name + '</span>';
     el.dataset.room = it.room;
     el.dataset.placed = 'false';
 
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const x = col * cellW + cellW * 0.5 - 30 + (Math.random() - 0.5) * 20;
-    const y = 50 + row * cellH + cellH * 0.5 - 30 + (Math.random() - 0.5) * 20;
+    const x = col * cellW + cellW * 0.5 - 40 + (Math.random() - 0.5) * 20;
+    const y = 50 + row * cellH + cellH * 0.5 - 40 + (Math.random() - 0.5) * 20;
 
     el.style.left = x + 'px';
     el.style.top = y + 'px';
@@ -428,12 +396,10 @@ function tryPlace(el, dropX, dropY) {
     playSound(true);
 
     const rr = room.getBoundingClientRect();
-    const nx = rr.left + 20 + Math.random() * (rr.width - 80);
+    const nx = rr.left + 20 + Math.random() * (rr.width - 120);
     const ny = rr.top + 50 + Math.random() * (rr.height - 100);
     el.style.left = nx + 'px';
     el.style.top = ny + 'px';
-
-    spawnStars(dropX, dropY);
 
     if (placedCount >= totalItems) endGame(true);
   } else {
@@ -450,25 +416,6 @@ function sendHome(el) {
   el.classList.remove('dragging');
   el.style.left = el.dataset.homeX + 'px';
   el.style.top = el.dataset.homeY + 'px';
-}
-
-function spawnStars(x, y) {
-  for (let i = 0; i < 8; i++) {
-    const s = document.createElement('div');
-    s.style.cssText =
-      'position:fixed;font-size:18px;pointer-events:none;z-index:9999;' +
-      'left:' + x + 'px;top:' + y + 'px;' +
-      'transition:all .6s ease-out;opacity:1;';
-    s.textContent = ['\u2B50', '\u2728', '\u{1F31F}'][i % 3];
-    document.body.appendChild(s);
-    const angle = (i / 8) * Math.PI * 2;
-    const dist = 40 + Math.random() * 50;
-    requestAnimationFrame(() => {
-      s.style.transform = 'translate(' + (Math.cos(angle) * dist) + 'px,' + (Math.sin(angle) * dist) + 'px) scale(0.3)';
-      s.style.opacity = '0';
-    });
-    setTimeout(() => s.remove(), 700);
-  }
 }
 
 function playSound(success) {

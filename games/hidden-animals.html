@@ -90,7 +90,8 @@
         }
 
         .cl-icon {
-            font-size: 22px;
+            width: 28px;
+            height: 28px;
             filter: grayscale(1) brightness(0.6);
             transition: all 0.35s ease;
             flex-shrink: 0;
@@ -235,7 +236,6 @@
             position: absolute;
             pointer-events: none;
             z-index: 60;
-            font-size: 18px;
             animation: burstOut 0.8s ease-out forwards;
         }
 
@@ -303,16 +303,16 @@
         resize();
 
         const ANIMAL_DEFS = [
-            { icon: '\u{1F98A}', name: 'Fox' },
-            { icon: '\u{1F43B}', name: 'Bear' },
-            { icon: '\u{1F98C}', name: 'Deer' },
-            { icon: '\u{1F989}', name: 'Owl' },
-            { icon: '\u{1F99D}', name: 'Raccoon' },
-            { icon: '\u{1F43F}\u{FE0F}', name: 'Squirrel' },
-            { icon: '\u{1F994}', name: 'Hedgehog' },
-            { icon: '\u{1F407}', name: 'Rabbit' },
-            { icon: '\u{1F985}', name: 'Eagle' },
-            { icon: '\u{1F98E}', name: 'Lizard' }
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="16" fill="#FF8C42"/><circle cx="18" cy="20" r="3" fill="#2C1810"/><circle cx="30" cy="20" r="3" fill="#2C1810"/><path d="M18 30 Q24 34 30 30" stroke="#2C1810" stroke-width="2" fill="none"/><circle cx="14" cy="14" r="5" fill="#FF8C42"/><circle cx="34" cy="14" r="5" fill="#FF8C42"/></svg>', name: 'Fox' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="28" rx="18" ry="16" fill="#8B4513"/><circle cx="18" cy="24" r="3" fill="#000"/><circle cx="30" cy="24" r="3" fill="#000"/><ellipse cx="24" cy="32" rx="4" ry="3" fill="#654321"/><circle cx="12" cy="12" r="6" fill="#8B4513"/><circle cx="36" cy="12" r="6" fill="#8B4513"/></svg>', name: 'Bear' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="26" rx="12" ry="16" fill="#D2691E"/><circle cx="20" cy="22" r="2" fill="#000"/><circle cx="28" cy="22" r="2" fill="#000"/><rect x="20" y="8" width="3" height="10" fill="#D2691E" transform="rotate(-20 21.5 13)"/><rect x="25" y="8" width="3" height="10" fill="#D2691E" transform="rotate(20 26.5 13)"/><ellipse cx="24" cy="28" rx="2" ry="3" fill="#8B4513"/></svg>', name: 'Deer' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="28" rx="14" ry="16" fill="#8B7355"/><circle cx="19" cy="24" r="5" fill="#FFD700"/><circle cx="29" cy="24" r="5" fill="#FFD700"/><circle cx="19" cy="24" r="3" fill="#000"/><circle cx="29" cy="24" r="3" fill="#000"/><path d="M20 34 L24 32 L28 34" stroke="#654321" stroke-width="2" fill="none"/></svg>', name: 'Owl' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="26" rx="16" ry="14" fill="#708090"/><circle cx="19" cy="23" r="3" fill="#000"/><circle cx="29" cy="23" r="3" fill="#000"/><ellipse cx="24" cy="30" rx="3" ry="2" fill="#000"/><rect x="18" y="14" width="12" height="3" fill="#505050" rx="2"/></svg>', name: 'Raccoon' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="28" r="12" fill="#CD853F"/><circle cx="20" cy="26" r="2" fill="#000"/><circle cx="28" cy="26" r="2" fill="#000"/><circle cx="24" cy="30" r="1.5" fill="#000"/><ellipse cx="24" cy="12" rx="8" ry="12" fill="#CD853F" transform="rotate(-15 24 12)"/></svg>', name: 'Squirrel' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="30" rx="14" ry="10" fill="#D2B48C"/><circle cx="20" cy="26" r="2" fill="#000"/><circle cx="28" cy="26" r="2" fill="#000"/><circle cx="24" cy="30" r="1" fill="#000"/><line x1="16" y1="20" x2="12" y2="18" stroke="#654321" stroke-width="2"/><line x1="32" y1="20" x2="36" y2="18" stroke="#654321" stroke-width="2"/></svg>', name: 'Hedgehog' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="28" rx="14" ry="12" fill="#F5DEB3"/><circle cx="20" cy="25" r="3" fill="#000"/><circle cx="28" cy="25" r="3" fill="#000"/><ellipse cx="24" cy="32" rx="2" ry="3" fill="#FFC0CB"/><ellipse cx="14" cy="16" rx="8" ry="10" fill="#F5DEB3" transform="rotate(30 14 16)"/><ellipse cx="34" cy="16" rx="8" ry="10" fill="#F5DEB3" transform="rotate(-30 34 16)"/></svg>', name: 'Rabbit' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="24" rx="16" ry="12" fill="#8B4513"/><path d="M8 24 L16 20 L16 28 Z" fill="#654321"/><path d="M40 24 L32 20 L32 28 Z" fill="#654321"/><circle cx="20" cy="22" r="2" fill="#FFD700"/><circle cx="28" cy="22" r="2" fill="#FFD700"/><path d="M20 28 L24 26 L28 28" stroke="#654321" stroke-width="2" fill="none"/></svg>', name: 'Eagle' },
+            { svg: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="20" cy="24" rx="6" ry="10" fill="#228B22"/><ellipse cx="32" cy="24" rx="14" ry="8" fill="#228B22"/><circle cx="18" cy="22" r="2" fill="#000"/><rect x="32" y="24" width="16" height="4" fill="#228B22" rx="2"/></svg>', name: 'Lizard' }
         ];
 
         let hiddenAnimals = [];
@@ -368,7 +368,7 @@
                 const item = document.createElement('div');
                 item.className = 'cl-item';
                 item.id = 'cl-' + i;
-                item.innerHTML = '<span class="cl-icon">' + a.icon + '</span><span class="cl-name">' + a.name + '</span>';
+                item.innerHTML = '<div class="cl-icon">' + a.svg + '</div><span class="cl-name">' + a.name + '</span>';
                 el.appendChild(item);
             });
         }
@@ -415,17 +415,14 @@
 
             hiddenAnimals.forEach(a => {
                 ctx.save();
-                ctx.font = a.size + 'px serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.translate(a.x, a.y);
 
                 if (a.found) {
                     a.revealScale = Math.min(1, a.revealScale + 0.06);
                     const s = 0.5 + a.revealScale * 0.5;
                     ctx.globalAlpha = 1;
-                    ctx.translate(a.x, a.y);
                     ctx.scale(s, s);
-                    ctx.fillText(a.icon, 0, 0);
+                    drawSVG(ctx, a.svg, a.size);
 
                     ctx.strokeStyle = 'rgba(129, 199, 132, ' + (0.6 * (1 - a.revealScale)) + ')';
                     ctx.lineWidth = 3;
@@ -436,12 +433,18 @@
                     a.phase += 0.015;
                     const pulse = Math.sin(a.phase) * 0.12 + 0.18;
                     ctx.globalAlpha = pulse;
-                    ctx.translate(a.x, a.y);
-                    ctx.fillText(a.icon, 0, 0);
+                    drawSVG(ctx, a.svg, a.size);
                 }
 
                 ctx.restore();
             });
+        }
+
+        function drawSVG(ctx, svgString, size) {
+            const img = new Image();
+            img.src = 'data:image/svg+xml;base64,' + btoa(svgString);
+            const halfSize = size / 2;
+            ctx.drawImage(img, -halfSize, -halfSize, size, size);
         }
 
         let hintCircle = null;
@@ -504,11 +507,15 @@
         }
 
         function spawnBurst(x, y) {
-            const emojis = ['\u2728', '\u{1F31F}', '\u2B50', '\u{1F33F}', '\u{1F343}'];
+            const burstSVGs = [
+                '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 L14 10 L22 12 L14 14 L12 22 L10 14 L2 12 L10 10 Z" fill="#FFD700"/></svg>',
+                '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="8" fill="#81c784"/></svg>',
+                '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 4 L14 10 L20 10 L15 14 L17 20 L12 16 L7 20 L9 14 L4 10 L10 10 Z" fill="#FFB74D"/></svg>'
+            ];
             for (let i = 0; i < 12; i++) {
                 const el = document.createElement('div');
                 el.className = 'found-burst';
-                el.textContent = emojis[i % emojis.length];
+                el.innerHTML = burstSVGs[i % burstSVGs.length];
                 el.style.left = x + 'px';
                 el.style.top = y + 'px';
                 const angle = (i / 12) * Math.PI * 2;
