@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fruit Math</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#0a1a0a 0%,#0d2818 50%,#0a1a0a 100%);color:white;-webkit-user-select:none;user-select:none}
+.app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
+.header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:8px}
+.header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#4ade80}
+.stats{display:flex;gap:14px;font-size:clamp(11px,1.2vw,15px);font-weight:600}
+.stat-val{color:#fbbf24;font-weight:800}
+.mode-bar{flex-shrink:0;display:flex;justify-content:center;gap:6px;padding:0 12px 10px;flex-wrap:wrap}
+.mode-btn{padding:6px 14px;font-size:clamp(10px,1vw,13px);font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(74,222,128,.15);background:rgba(74,222,128,.05);color:rgba(255,255,255,.5)}
+.mode-btn:hover{background:rgba(74,222,128,.1)}
+.mode-btn.active{background:rgba(74,222,128,.2);border-color:#4ade80;color:#4ade80}
+.game-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(12px,2.5vh,24px);padding:0 20px;min-height:0}
+.fruit-display{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;min-height:clamp(60px,10vh,100px)}
+.fruit-group{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(74,222,128,.15);border-radius:12px}
+.fruit-item{font-size:clamp(24px,4vw,40px);transition:all .3s;display:inline-block}
+.fruit-item.cut{animation:cutFruit .5s ease forwards}
+@keyframes cutFruit{0%{transform:scale(1)}30%{transform:scale(1.2) rotate(10deg)}60%{transform:scale(.5) rotate(-5deg);opacity:.5}100%{transform:scale(.3);opacity:0}}
+.fruit-item.appear{animation:fruitAppear .3s ease backwards}
+@keyframes fruitAppear{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+.op-symbol{font-size:clamp(28px,4vw,48px);font-weight:800;color:#4ade80}
+.equation-text{font-size:clamp(24px,4vw,44px);font-weight:800;text-align:center;color:white;text-shadow:0 3px 12px rgba(0,0,0,.5)}
+.equation-text .highlight{color:#fbbf24}
+.result-zone{display:flex;align-items:center;justify-content:center;gap:4px;min-height:50px}
+.factor-display{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.factor-group{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;background:rgba(255,255,255,.04);border:2px solid rgba(74,222,128,.15);border-radius:12px;min-width:60px}
+.factor-label{font-size:10px;color:rgba(255,255,255,.4);font-weight:600}
+.factor-fruits{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(8px,1.2vw,14px);width:clamp(260px,45vw,450px)}
+.ans-btn{padding:clamp(12px,2vh,20px);font-size:clamp(20px,3vw,34px);font-weight:800;background:rgba(255,255,255,.06);border:3px solid rgba(74,222,128,.2);border-radius:14px;color:white;cursor:pointer;transition:all .3s;text-align:center}
+.ans-btn:hover{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.5);transform:scale(1.04)}
+.ans-btn:active{transform:scale(.95)}
+.ans-btn.correct{background:rgba(34,197,94,.25);border-color:#22c55e;color:#22c55e;animation:pulse .4s ease}
+.ans-btn.wrong{background:rgba(239,68,68,.25);border-color:#ef4444;color:#ef4444;animation:shake .4s ease}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.feedback{font-size:clamp(16px,2vw,24px);font-weight:700;min-height:1.5em;text-align:center;transition:all .3s}
+.footer{flex-shrink:0;text-align:center;padding:8px 20px 14px}
+.btn-back{padding:8px 26px;font-size:14px;font-weight:600;background:rgba(74,222,128,.1);border:2px solid rgba(74,222,128,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s}
+.btn-back:hover{background:rgba(74,222,128,.2)}
+.bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-dot{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(74,222,128,.2);animation:float var(--dur) ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
+.touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(74,222,128,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:ringPop .6s ease forwards}
+@keyframes ringPop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
+</style>
+</head>
+<body>
+<div class="bg-particles" id="bgP"></div>
+
+<div class="app">
+  <div class="header">
+    <h1>Fruit Math</h1>
+    <div class="stats">
+      <div class="stat">Score: <span class="stat-val" id="score">0</span></div>
+      <div class="stat">Q: <span class="stat-val" id="qNum">1</span></div>
+    </div>
+  </div>
+  <div class="mode-bar">
+    <div class="mode-btn active" data-mode="addition">Addition</div>
+    <div class="mode-btn" data-mode="subtraction">Subtraction</div>
+    <div class="mode-btn" data-mode="multiplication">Multiplication</div>
+    <div class="mode-btn" data-mode="division">Division</div>
+    <div class="mode-btn" data-mode="factors">Factors</div>
+  </div>
+  <div class="game-area">
+    <div class="fruit-display" id="fruitDisplay"></div>
+    <div class="equation-text" id="equationText"></div>
+    <div class="result-zone" id="resultZone"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+  <div class="footer">
+    <button class="btn-back" id="btnBack">Back to Menu</button>
+  </div>
+</div>
+
+<script>
+var FRUITS = [
+  '\uD83C\uDF4E','\uD83C\uDF4A','\uD83C\uDF4B','\uD83C\uDF4D',
+  '\uD83C\uDF53','\uD83C\uDF47','\uD83C\uDF49','\uD83C\uDF51',
+  '\uD83C\uDF52','\uD83E\uDD5D'
+];
+
+var mode = 'addition';
+var score = 0, questionNum = 0;
+var answering = false;
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pickFruit() { return FRUITS[rand(0, FRUITS.length - 1)]; }
+
+function fruitRow(fruit, count, cut, delay) {
+  var html = '';
+  for (var i = 0; i < count; i++) {
+    var cls = 'fruit-item appear' + (cut ? ' cut' : '');
+    var d = delay ? ' style="animation-delay:' + (i * 0.06) + 's"' : '';
+    html += '<span class="' + cls + '"' + d + '>' + fruit + '</span>';
+  }
+  return html;
+}
+
+function generateAddition() {
+  var a = rand(1, 8), b = rand(1, 8);
+  var f1 = pickFruit(), f2 = pickFruit();
+  var answer = a + b;
+
+  var display = '<div class="fruit-group">' + fruitRow(f1, a, false, true) + '</div>' +
+    '<span class="op-symbol">+</span>' +
+    '<div class="fruit-group">' + fruitRow(f2, b, false, true) + '</div>';
+  var eq = a + ' ' + f1 + ' + ' + b + ' ' + f2 + ' = <span class="highlight">?</span>';
+
+  return {display: display, equation: eq, answer: answer, resultHtml: ''};
+}
+
+function generateSubtraction() {
+  var a = rand(4, 12), b = rand(1, a - 1);
+  var f = pickFruit();
+  var answer = a - b;
+
+  var display = '<div class="fruit-group">' + fruitRow(f, a, false, true) + '</div>' +
+    '<span class="op-symbol">\u2212</span>' +
+    '<div class="fruit-group">' + fruitRow(f, b, true, true) + '</div>';
+  var eq = a + ' ' + f + ' - ' + b + ' ' + f + ' = <span class="highlight">?</span>';
+
+  return {display: display, equation: eq, answer: answer, resultHtml: ''};
+}
+
+function generateMultiplication() {
+  var groups = rand(2, 5), perGroup = rand(2, 5);
+  var f = pickFruit();
+  var answer = groups * perGroup;
+
+  var display = '';
+  for (var g = 0; g < groups; g++) {
+    display += '<div class="fruit-group">' + fruitRow(f, perGroup, false, true) + '</div>';
+    if (g < groups - 1) display += '<span class="op-symbol" style="font-size:18px">x</span>';
+  }
+  var eq = groups + ' groups of ' + perGroup + ' ' + f + ' = <span class="highlight">?</span>';
+
+  return {display: display, equation: eq, answer: answer, resultHtml: ''};
+}
+
+function generateDivision() {
+  var divisor = rand(2, 5), quotient = rand(2, 5);
+  var total = divisor * quotient;
+  var f = pickFruit();
+  var answer = quotient;
+
+  var display = '<div class="fruit-group">' + fruitRow(f, total, false, true) + '</div>';
+  var eq = total + ' ' + f + ' \u00F7 ' + divisor + ' = <span class="highlight">?</span> in each group';
+
+  var resultHtml = '<div class="factor-display">';
+  for (var g = 0; g < divisor; g++) {
+    resultHtml += '<div class="factor-group"><div class="factor-label">Group ' + (g+1) + '</div>';
+    resultHtml += '<div class="factor-fruits">' + fruitRow(f, quotient, false, false) + '</div></div>';
+  }
+  resultHtml += '</div>';
+
+  return {display: display, equation: eq, answer: answer, resultHtml: resultHtml};
+}
+
+function generateFactors() {
+  var composites = [4,6,8,9,10,12,15,16,18,20];
+  var n = composites[rand(0, composites.length - 1)];
+  var f = pickFruit();
+
+  var factors = [];
+  for (var i = 1; i <= n; i++) {
+    if (n % i === 0) factors.push(i);
+  }
+
+  var display = '<div class="fruit-group">' + fruitRow(f, Math.min(n, 12), false, true) + '</div>';
+  if (n > 12) display = '<div class="fruit-group" style="font-size:28px">' + n + ' ' + f + '</div>';
+  var eq = 'How many factors does <span class="highlight">' + n + '</span> have?';
+  var answer = factors.length;
+
+  var resultHtml = '<div style="text-align:center;color:rgba(255,255,255,.6);font-size:14px">Factors of ' + n + ': ' + factors.join(', ') + '</div>';
+
+  return {display: display, equation: eq, answer: answer, resultHtml: resultHtml};
+}
+
+function generateQuestion() {
+  switch (mode) {
+    case 'addition': return generateAddition();
+    case 'subtraction': return generateSubtraction();
+    case 'multiplication': return generateMultiplication();
+    case 'division': return generateDivision();
+    case 'factors': return generateFactors();
+  }
+}
+
+function generateOptions(answer) {
+  var opts = [answer];
+  while (opts.length < 4) {
+    var off = rand(1, Math.max(3, Math.floor(answer * 0.4)));
+    var w = answer + (Math.random() < 0.5 ? off : -off);
+    if (w < 0) w = answer + off;
+    if (w === 0) w = 1;
+    if (opts.indexOf(w) === -1) opts.push(w);
+  }
+  for (var i = opts.length - 1; i > 0; i--) {
+    var j = rand(0, i);
+    var tmp = opts[i]; opts[i] = opts[j]; opts[j] = tmp;
+  }
+  return opts;
+}
+
+var currentQ;
+
+function showQuestion() {
+  questionNum++;
+  answering = false;
+  document.getElementById('qNum').textContent = questionNum;
+  document.getElementById('feedback').textContent = '';
+
+  currentQ = generateQuestion();
+  document.getElementById('fruitDisplay').innerHTML = currentQ.display;
+  document.getElementById('equationText').innerHTML = currentQ.equation;
+  document.getElementById('resultZone').innerHTML = '';
+
+  var opts = generateOptions(currentQ.answer);
+  var container = document.getElementById('answers');
+  container.innerHTML = '';
+  opts.forEach(function(val) {
+    var btn = document.createElement('div');
+    btn.className = 'ans-btn';
+    btn.textContent = val;
+    btn.addEventListener('click', function(e) {
+      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+      checkAnswer(val, btn);
+    });
+    btn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      checkAnswer(val, btn);
+    });
+    container.appendChild(btn);
+  });
+}
+
+function checkAnswer(val, btn) {
+  if (answering) return;
+  answering = true;
+
+  if (val === currentQ.answer) {
+    btn.classList.add('correct');
+    score += 10;
+    document.getElementById('feedback').innerHTML = '<span style="color:#22c55e">Correct!</span>';
+    if (currentQ.resultHtml) {
+      document.getElementById('resultZone').innerHTML = currentQ.resultHtml;
+    }
+    playTone(523, 0.15);
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.ans-btn').forEach(function(b) {
+      if (parseInt(b.textContent) === currentQ.answer) b.classList.add('correct');
+    });
+    document.getElementById('feedback').innerHTML = '<span style="color:#ef4444">Answer: ' + currentQ.answer + '</span>';
+    if (currentQ.resultHtml) {
+      document.getElementById('resultZone').innerHTML = currentQ.resultHtml;
+    }
+    playTone(200, 0.2);
+  }
+
+  document.getElementById('score').textContent = score;
+  setTimeout(showQuestion, 1800);
+}
+
+function playTone(freq, dur) {
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.12, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    o.start(); o.stop(ac.currentTime + dur);
+  } catch(e) {}
+}
+
+function bindTouch(el, fn) {
+  el.addEventListener('click', function(e) { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; fn(); });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
+}
+
+document.querySelectorAll('.mode-btn').forEach(function(btn) {
+  bindTouch(btn, function() {
+    mode = btn.dataset.mode;
+    document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    questionNum = 0; score = 0;
+    document.getElementById('score').textContent = 0;
+    showQuestion();
+  });
+});
+
+bindTouch(document.getElementById('btnBack'), function() { location.href = '../index.html'; });
+
+showQuestion();
+
+var bgP = document.getElementById('bgP');
+for (var i = 0; i < 30; i++) {
+  var d = document.createElement('div'); d.className = 'bg-dot';
+  d.style.left=(Math.random()*100)+'%'; d.style.top=(Math.random()*100)+'%';
+  d.style.setProperty('--dur',(4+Math.random()*6)+'s');
+  d.style.setProperty('--dx',((Math.random()-.5)*60)+'px');
+  d.style.setProperty('--dy',((Math.random()-.5)*60)+'px');
+  d.style.animationDelay=(Math.random()*5)+'s'; bgP.appendChild(d);
+}
+
+document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
+</script>
+</body>
+</html>

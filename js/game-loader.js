@@ -16,10 +16,25 @@ const CATEGORIES = {
     },
     'learning': {
         title: 'Learning',
+        subcategories: [
+            { name: 'Maths', key: 'learning-maths' },
+            { name: 'Alphabets', key: 'learning-alphabets' }
+        ]
+    },
+    'learning-maths': {
+        title: 'Maths',
+        parent: 'learning',
         options: [
-            { name: 'Alphabet Explorer', game: 'alphabet-explorer' },
-            { name: 'Number Fun', game: 'number-fun' },
-            { name: 'Colors & Shapes', game: 'colors-shapes' }
+            { name: 'Arithmetica', game: 'arithmetica' },
+            { name: 'Number Crunch', game: 'number-crunch' },
+            { name: 'Fruit Math', game: 'fruit-math' }
+        ]
+    },
+    'learning-alphabets': {
+        title: 'Alphabets',
+        parent: 'learning',
+        options: [
+            { name: 'Word Explorer', game: 'word-explorer' }
         ]
     }
 };
@@ -88,20 +103,60 @@ function showSubmenu(categoryName) {
     title.textContent = category.title;
     optionsContainer.innerHTML = '';
 
-    category.options.forEach(option => {
-        const optionEl = document.createElement('div');
-        optionEl.className = 'submenu-option';
-        optionEl.textContent = option.name;
-        optionEl.addEventListener('click', (e) => {
+    if (category.parent) {
+        const backEl = document.createElement('div');
+        backEl.className = 'submenu-option';
+        backEl.style.background = 'linear-gradient(135deg, #fef3c7, #fde68a)';
+        backEl.style.borderColor = '#f59e0b';
+        backEl.textContent = '\u2190 Back';
+        backEl.addEventListener('click', (e) => {
             if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-            handleOptionTap(option);
+            playSound('click');
+            showSubmenu(category.parent);
         });
-        optionEl.addEventListener('touchend', (e) => {
+        backEl.addEventListener('touchend', (e) => {
             e.preventDefault();
-            handleOptionTap(option);
+            playSound('click');
+            showSubmenu(category.parent);
         });
-        optionsContainer.appendChild(optionEl);
-    });
+        optionsContainer.appendChild(backEl);
+    }
+
+    if (category.subcategories) {
+        category.subcategories.forEach(sub => {
+            const subEl = document.createElement('div');
+            subEl.className = 'submenu-option';
+            subEl.textContent = sub.name;
+            subEl.addEventListener('click', (e) => {
+                if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                playSound('click');
+                showSubmenu(sub.key);
+            });
+            subEl.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                playSound('click');
+                showSubmenu(sub.key);
+            });
+            optionsContainer.appendChild(subEl);
+        });
+    }
+
+    if (category.options) {
+        category.options.forEach(option => {
+            const optionEl = document.createElement('div');
+            optionEl.className = 'submenu-option';
+            optionEl.textContent = option.name;
+            optionEl.addEventListener('click', (e) => {
+                if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                handleOptionTap(option);
+            });
+            optionEl.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleOptionTap(option);
+            });
+            optionsContainer.appendChild(optionEl);
+        });
+    }
 
     overlay.classList.add('active');
 }
@@ -182,14 +237,17 @@ function loadGame(gameName) {
             case 'sort-living':
                 window.location.href = 'games/room-sorter.html?room=living';
                 break;
-            case 'alphabet-explorer':
-                window.location.href = 'games/alphabet-explorer.html';
+            case 'arithmetica':
+                window.location.href = 'games/arithmetica.html';
                 break;
-            case 'number-fun':
-                window.location.href = 'games/number-fun.html';
+            case 'number-crunch':
+                window.location.href = 'games/number-crunch.html';
                 break;
-            case 'colors-shapes':
-                window.location.href = 'games/colors-shapes.html';
+            case 'fruit-math':
+                window.location.href = 'games/fruit-math.html';
+                break;
+            case 'word-explorer':
+                window.location.href = 'games/word-explorer.html';
                 break;
             default:
                 console.log('Game not found:', gameName);

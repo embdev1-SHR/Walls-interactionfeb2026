@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Word Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#1a1400 0%,#2d2006 50%,#1a1400 100%);color:white;-webkit-user-select:none;user-select:none}
+.ml{font-family:'Noto Sans Malayalam',-apple-system,sans-serif}
+.app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
+.header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:8px}
+.header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#fbbf24}
+.stats{display:flex;gap:14px;font-size:clamp(11px,1.2vw,15px);font-weight:600}
+.stat-val{color:#4ade80;font-weight:800}
+.lang-bar{flex-shrink:0;display:flex;justify-content:center;gap:8px;padding:0 20px 10px}
+.lang-btn{padding:6px 20px;font-size:clamp(11px,1.1vw,14px);font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(251,191,36,.2);background:rgba(251,191,36,.06);color:rgba(255,255,255,.5)}
+.lang-btn:hover{background:rgba(251,191,36,.1)}
+.lang-btn.active{background:rgba(251,191,36,.2);border-color:#fbbf24;color:#fbbf24}
+.game-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.5vh,28px);padding:0 20px;min-height:0}
+.hint-area{text-align:center}
+.hint-emoji{font-size:clamp(48px,7vw,80px)}
+.hint-text{font-size:clamp(12px,1.3vw,16px);color:rgba(255,255,255,.45);margin-top:4px}
+.word-slots{display:flex;gap:clamp(6px,1vw,12px);justify-content:center;flex-wrap:wrap}
+.slot{
+  width:clamp(40px,5vw,60px);height:clamp(48px,6vw,68px);
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(22px,3vw,36px);font-weight:800;
+  background:rgba(255,255,255,.04);border:3px solid rgba(251,191,36,.15);
+  border-radius:12px;transition:all .3s;color:transparent;
+}
+.slot.filled{color:#fbbf24;border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.08)}
+.slot.current{border-color:#fbbf24;box-shadow:0 0 12px rgba(251,191,36,.3);animation:slotPulse 1s ease-in-out infinite}
+@keyframes slotPulse{0%,100%{box-shadow:0 0 12px rgba(251,191,36,.2)}50%{box-shadow:0 0 20px rgba(251,191,36,.5)}}
+.slot.wrong{animation:slotShake .4s ease;border-color:#ef4444}
+@keyframes slotShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.slot.ml-slot{width:clamp(48px,6vw,72px);font-size:clamp(20px,2.8vw,32px)}
+.letter-tiles{display:flex;gap:clamp(6px,1vw,10px);justify-content:center;flex-wrap:wrap;max-width:clamp(320px,60vw,600px)}
+.tile{
+  width:clamp(44px,5.5vw,64px);height:clamp(44px,5.5vw,64px);
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(20px,2.5vw,32px);font-weight:700;
+  background:rgba(255,255,255,.06);border:2px solid rgba(251,191,36,.2);
+  border-radius:12px;cursor:pointer;transition:all .3s;
+  color:rgba(255,255,255,.7);
+}
+.tile:hover{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.5);transform:scale(1.08)}
+.tile:active{transform:scale(.93)}
+.tile.used{opacity:.25;pointer-events:none;transform:scale(.85)}
+.tile.ml-tile{width:clamp(52px,6vw,72px);font-size:clamp(18px,2.2vw,28px)}
+.celebration{position:fixed;inset:0;pointer-events:none;z-index:100}
+.confetti{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall var(--dur) ease-in forwards}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+.word-complete{font-size:clamp(28px,4vw,48px);font-weight:800;color:#4ade80;text-align:center;min-height:1.2em;transition:all .3s}
+.word-complete.show{animation:wordPop .5s ease}
+@keyframes wordPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.footer{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 20px 14px}
+.btn-back,.btn-skip{padding:8px 26px;font-size:14px;font-weight:600;background:rgba(251,191,36,.1);border:2px solid rgba(251,191,36,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s}
+.btn-back:hover,.btn-skip:hover{background:rgba(251,191,36,.2)}
+.bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-dot{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(251,191,36,.25);animation:float var(--dur) ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
+.touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(251,191,36,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:ringPop .6s ease forwards}
+@keyframes ringPop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
+</style>
+</head>
+<body>
+<div class="bg-particles" id="bgP"></div>
+<div class="celebration" id="celebration"></div>
+
+<div class="app">
+  <div class="header">
+    <h1>Word Explorer</h1>
+    <div class="stats">
+      <div class="stat">Score: <span class="stat-val" id="score">0</span></div>
+      <div class="stat">Words: <span class="stat-val" id="wordCount">0</span></div>
+    </div>
+  </div>
+  <div class="lang-bar">
+    <div class="lang-btn active" data-lang="en">English</div>
+    <div class="lang-btn" data-lang="ml">Malayalam</div>
+  </div>
+  <div class="game-area">
+    <div class="hint-area">
+      <div class="hint-emoji" id="hintEmoji"></div>
+      <div class="hint-text" id="hintText"></div>
+    </div>
+    <div class="word-slots" id="wordSlots"></div>
+    <div class="word-complete" id="wordComplete"></div>
+    <div class="letter-tiles" id="letterTiles"></div>
+  </div>
+  <div class="footer">
+    <button class="btn-skip" id="btnSkip">Skip</button>
+    <button class="btn-back" id="btnBack">Back to Menu</button>
+  </div>
+</div>
+
+<script>
+var EN_WORDS = [
+  {word:'CAT',hint:'A furry pet that purrs',emoji:'\uD83D\uDC31'},
+  {word:'DOG',hint:'A loyal pet that barks',emoji:'\uD83D\uDC36'},
+  {word:'FISH',hint:'Lives in water',emoji:'\uD83D\uDC1F'},
+  {word:'BIRD',hint:'Has wings and can fly',emoji:'\uD83D\uDC26'},
+  {word:'TREE',hint:'Grows in the ground, has leaves',emoji:'\uD83C\uDF33'},
+  {word:'STAR',hint:'Twinkles in the night sky',emoji:'\u2B50'},
+  {word:'MOON',hint:'Shines at night in the sky',emoji:'\uD83C\uDF19'},
+  {word:'SUN',hint:'Gives us light and warmth',emoji:'\u2600\uFE0F'},
+  {word:'BOOK',hint:'You read stories in this',emoji:'\uD83D\uDCD6'},
+  {word:'RAIN',hint:'Water falling from clouds',emoji:'\uD83C\uDF27\uFE0F'},
+  {word:'LION',hint:'King of the jungle',emoji:'\uD83E\uDD81'},
+  {word:'FROG',hint:'Green animal that jumps and says ribbit',emoji:'\uD83D\uDC38'},
+  {word:'BEAR',hint:'Big furry animal in the forest',emoji:'\uD83D\uDC3B'},
+  {word:'CAKE',hint:'Sweet treat for birthdays',emoji:'\uD83C\uDF82'},
+  {word:'BELL',hint:'Makes a ringing sound',emoji:'\uD83D\uDD14'},
+  {word:'BOAT',hint:'Floats on water',emoji:'\u26F5'},
+  {word:'LAMP',hint:'Gives light in a room',emoji:'\uD83D\uDCA1'},
+  {word:'DRUM',hint:'A musical instrument you hit',emoji:'\uD83E\uDD41'},
+  {word:'HAND',hint:'You have five fingers on each',emoji:'\u270B'},
+  {word:'KITE',hint:'Flies in the wind on a string',emoji:'\uD83E\uDE81'}
+];
+
+var ML_WORDS = [
+  {word:'\u0D05\u0D2E\u0D4D\u0D2E',hint:'Mother',emoji:'\uD83D\uDC69'},
+  {word:'\u0D05\u0D1A\u0D4D\u0D1B\u0D28\u0D4D\u200D',hint:'Father',emoji:'\uD83D\uDC68'},
+  {word:'\u0D2E\u0D30\u0D02',hint:'Tree',emoji:'\uD83C\uDF33'},
+  {word:'\u0D2A\u0D42\u0D35\u0D4D',hint:'Flower',emoji:'\uD83C\uDF3A'},
+  {word:'\u0D35\u0D40\u0D1F\u0D4D',hint:'House',emoji:'\uD83C\uDFE0'},
+  {word:'\u0D2A\u0D36\u0D41',hint:'Cow',emoji:'\uD83D\uDC04'},
+  {word:'\u0D2E\u0D40\u0D28\u0D4D\u200D',hint:'Fish',emoji:'\uD83D\uDC1F'},
+  {word:'\u0D2A\u0D15\u0D4D\u0D37\u0D3F',hint:'Bird',emoji:'\uD83D\uDC26'},
+  {word:'\u0D15\u0D3E\u0D31\u0D4D\u0D31\u0D4D',hint:'Wind',emoji:'\uD83C\uDF2C\uFE0F'},
+  {word:'\u0D2E\u0D34',hint:'Rain',emoji:'\uD83C\uDF27\uFE0F'},
+  {word:'\u0D28\u0D3F\u0D32',hint:'Moon',emoji:'\uD83C\uDF19'},
+  {word:'\u0D15\u0D23\u0D4D\u0D23\u0D4D',hint:'Eye',emoji:'\uD83D\uDC41\uFE0F'},
+  {word:'\u0D15\u0D48',hint:'Hand',emoji:'\u270B'},
+  {word:'\u0D2A\u0D42\u0D1A\u0D4D\u0D1A',hint:'Cat',emoji:'\uD83D\uDC31'},
+  {word:'\u0D28\u0D3E\u0D2F',hint:'Dog',emoji:'\uD83D\uDC36'}
+];
+
+var lang = 'en';
+var score = 0, wordsCompleted = 0;
+var currentWord, currentLetters, filledCount;
+var wordPool = [];
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = rand(0, i);
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function getChars(word) {
+  var chars = [];
+  var graphemeRegex = /[\u0D00-\u0D7F][\u0D00-\u0D7F]*[\u0D4D\u200D]?[\u0D00-\u0D7F]?|./g;
+
+  if (lang === 'ml') {
+    var segments = word.match(/[\u0D00-\u0D7F]+|[^\u0D00-\u0D7F]+/g) || [word];
+    segments.forEach(function(seg) {
+      if (/[\u0D00-\u0D7F]/.test(seg)) {
+        var mlChars = seg.match(/[\u0D00-\u0D7F](?:[\u0D3E-\u0D4D\u0D57\u200D][\u0D00-\u0D7F]?)*/g);
+        if (mlChars) chars = chars.concat(mlChars);
+      } else {
+        for (var i = 0; i < seg.length; i++) chars.push(seg[i]);
+      }
+    });
+  } else {
+    for (var i = 0; i < word.length; i++) chars.push(word[i]);
+  }
+  return chars;
+}
+
+function resetPool() {
+  wordPool = shuffle(lang === 'en' ? EN_WORDS : ML_WORDS);
+}
+
+function loadWord() {
+  if (wordPool.length === 0) resetPool();
+  var item = wordPool.pop();
+  currentWord = item;
+  currentLetters = getChars(item.word);
+  filledCount = 0;
+
+  document.getElementById('hintEmoji').textContent = item.emoji;
+  document.getElementById('hintText').textContent = item.hint;
+  document.getElementById('wordComplete').textContent = '';
+  document.getElementById('wordComplete').classList.remove('show');
+
+  var slotsHtml = '';
+  var isMl = lang === 'ml';
+  currentLetters.forEach(function(ch, i) {
+    slotsHtml += '<div class="slot' + (isMl ? ' ml-slot ml' : '') + (i === 0 ? ' current' : '') +
+      '" data-idx="' + i + '" data-char="' + ch + '">' + ch + '</div>';
+  });
+  document.getElementById('wordSlots').innerHTML = slotsHtml;
+
+  var extraCount = Math.min(6, Math.max(3, currentLetters.length));
+  var extraLetters = [];
+
+  if (isMl) {
+    var mlAll = '\u0D05\u0D06\u0D07\u0D08\u0D09\u0D0A\u0D0E\u0D0F\u0D10\u0D12\u0D13\u0D15\u0D16\u0D17\u0D18\u0D19\u0D1A\u0D1B\u0D1C\u0D1E\u0D1F\u0D20\u0D21\u0D22\u0D23\u0D24\u0D25\u0D26\u0D27\u0D28\u0D2A\u0D2B\u0D2C\u0D2D\u0D2E\u0D2F\u0D30\u0D32\u0D35\u0D36\u0D37\u0D38\u0D39\u0D33\u0D34\u0D31'.split('');
+    while (extraLetters.length < extraCount) {
+      var rl = mlAll[rand(0, mlAll.length - 1)];
+      if (currentLetters.indexOf(rl) === -1) extraLetters.push(rl);
+    }
+  } else {
+    var alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    while (extraLetters.length < extraCount) {
+      var rl = alpha[rand(0, 25)];
+      if (currentLetters.indexOf(rl) === -1 && extraLetters.indexOf(rl) === -1) extraLetters.push(rl);
+    }
+  }
+
+  var allTiles = shuffle(currentLetters.concat(extraLetters));
+  var tilesHtml = '';
+  allTiles.forEach(function(ch, i) {
+    tilesHtml += '<div class="tile' + (isMl ? ' ml-tile ml' : '') + '" data-char="' + ch +
+      '" data-tidx="' + i + '">' + ch + '</div>';
+  });
+  document.getElementById('letterTiles').innerHTML = tilesHtml;
+}
+
+function handleTileTap(tile) {
+  if (tile.classList.contains('used')) return;
+  var ch = tile.dataset.char;
+  var targetChar = currentLetters[filledCount];
+
+  if (ch === targetChar) {
+    tile.classList.add('used');
+    var slots = document.querySelectorAll('.slot');
+    slots[filledCount].classList.add('filled');
+    slots[filledCount].classList.remove('current');
+    filledCount++;
+
+    if (filledCount < currentLetters.length) {
+      slots[filledCount].classList.add('current');
+    }
+
+    playTone(440 + filledCount * 60, 0.1);
+
+    if (filledCount === currentLetters.length) {
+      wordCompleted();
+    }
+  } else {
+    var slots = document.querySelectorAll('.slot');
+    slots[filledCount].classList.add('wrong');
+    setTimeout(function() { slots[filledCount].classList.remove('wrong'); }, 400);
+    playTone(200, 0.15);
+  }
+}
+
+function wordCompleted() {
+  wordsCompleted++;
+  score += currentLetters.length * 10;
+  document.getElementById('score').textContent = score;
+  document.getElementById('wordCount').textContent = wordsCompleted;
+
+  var el = document.getElementById('wordComplete');
+  el.textContent = currentWord.word + ' ' + currentWord.emoji;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+
+  showConfetti();
+  playChord();
+
+  setTimeout(loadWord, 2000);
+}
+
+function showConfetti() {
+  var container = document.getElementById('celebration');
+  container.innerHTML = '';
+  var colors = ['#fbbf24','#4ade80','#38bdf8','#f87171','#a78bfa','#fb923c'];
+  for (var i = 0; i < 40; i++) {
+    var c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = (Math.random() * 100) + '%';
+    c.style.top = '-10px';
+    c.style.background = colors[rand(0, colors.length - 1)];
+    c.style.setProperty('--dur', (1.5 + Math.random() * 2) + 's');
+    c.style.animationDelay = (Math.random() * 0.5) + 's';
+    c.style.width = (6 + Math.random() * 6) + 'px';
+    c.style.height = (6 + Math.random() * 6) + 'px';
+    container.appendChild(c);
+  }
+  setTimeout(function() { container.innerHTML = ''; }, 4000);
+}
+
+function playTone(freq, dur) {
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.12, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    o.start(); o.stop(ac.currentTime + dur);
+  } catch(e) {}
+}
+
+function playChord() {
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    [523, 659, 784].forEach(function(f, i) {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sine'; o.frequency.value = f;
+      var t = ac.currentTime + i * 0.08;
+      g.gain.setValueAtTime(0.1, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      o.start(t); o.stop(t + 0.3);
+    });
+  } catch(e) {}
+}
+
+function bindTouch(el, fn) {
+  el.addEventListener('click', function(e) { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; fn(); });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
+}
+
+document.getElementById('letterTiles').addEventListener('click', function(e) {
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  var tile = e.target.closest('.tile');
+  if (tile) handleTileTap(tile);
+});
+document.getElementById('letterTiles').addEventListener('touchend', function(e) {
+  var tile = e.target.closest('.tile');
+  if (tile) { e.preventDefault(); handleTileTap(tile); }
+});
+
+document.querySelectorAll('.lang-btn').forEach(function(btn) {
+  bindTouch(btn, function() {
+    lang = btn.dataset.lang;
+    document.querySelectorAll('.lang-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    score = 0; wordsCompleted = 0;
+    document.getElementById('score').textContent = 0;
+    document.getElementById('wordCount').textContent = 0;
+    resetPool();
+    loadWord();
+  });
+});
+
+bindTouch(document.getElementById('btnSkip'), function() { loadWord(); });
+bindTouch(document.getElementById('btnBack'), function() { location.href = '../index.html'; });
+
+resetPool();
+loadWord();
+
+var bgP = document.getElementById('bgP');
+for (var i = 0; i < 30; i++) {
+  var d = document.createElement('div'); d.className = 'bg-dot';
+  d.style.left=(Math.random()*100)+'%'; d.style.top=(Math.random()*100)+'%';
+  d.style.setProperty('--dur',(4+Math.random()*6)+'s');
+  d.style.setProperty('--dx',((Math.random()-.5)*60)+'px');
+  d.style.setProperty('--dy',((Math.random()-.5)*60)+'px');
+  d.style.animationDelay=(Math.random()*5)+'s'; bgP.appendChild(d);
+}
+
+document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
+</script>
+</body>
+</html>
