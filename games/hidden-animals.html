@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Hidden Animals - Find Them All!</title>
+<title>Hidden Animals - Bamboo Forest</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  background:#020e08;overflow:hidden;color:white;
+  background:#0a1f14;overflow:hidden;color:white;
   -webkit-user-select:none;user-select:none;touch-action:none;
 }
 .game-wrap{position:relative;width:100vw;height:100vh;overflow:hidden}
@@ -39,7 +39,7 @@ canvas{position:absolute;inset:0;z-index:0}
 
 .info-popup{
   position:absolute;z-index:200;
-  background:rgba(10,40,25,.94);backdrop-filter:blur(14px);
+  background:rgba(10,35,22,.94);backdrop-filter:blur(14px);
   border:2px solid rgba(76,175,80,.6);border-radius:16px;
   padding:12px 18px;min-width:180px;max-width:260px;
   pointer-events:none;
@@ -95,8 +95,10 @@ canvas{position:absolute;inset:0;z-index:0}
   position:absolute;bottom:12px;z-index:100;
   padding:10px 22px;font-size:14px;font-weight:600;border-radius:50px;
   cursor:pointer;transition:all .3s;backdrop-filter:blur(10px);border:2px solid;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
 }
 .btn-corner:hover{transform:scale(1.05)}
+.btn-corner:active{transform:scale(.95)}
 .btn-hint{left:14px;background:rgba(255,193,7,.15);border-color:rgba(255,193,7,.4);color:white}
 .btn-hint:hover{background:rgba(255,193,7,.25)}
 .btn-hint:disabled{opacity:.35;cursor:not-allowed;transform:none}
@@ -122,8 +124,10 @@ canvas{position:absolute;inset:0;z-index:0}
   padding:12px 32px;font-size:16px;font-weight:600;
   background:rgba(129,199,132,.2);border:2px solid rgba(129,199,132,.6);
   color:white;border-radius:50px;cursor:pointer;transition:all .3s;margin:5px;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
 }
 .overlay-btn:hover{background:rgba(129,199,132,.35);transform:scale(1.05)}
+.overlay-btn:active{transform:scale(.95)}
 
 .ripple{
   position:absolute;
@@ -252,7 +256,7 @@ function shuffle(a) {
 var gameAnimals = shuffle(ALL_ANIMALS).slice(0, GAME_COUNT);
 var hiddenAnimals = [];
 var score = 0, hints = 3, elapsed = 0, timer = null;
-var trees = [], foliage = [], bushes = [], groundPlants = [], lightRays = [], mist = [];
+var bamboos = [], mist = [], particles = [];
 
 function resize() {
   W = cvs.width = fgCvs.width = window.innerWidth;
@@ -263,82 +267,75 @@ function resize() {
 window.addEventListener('resize', resize);
 
 function buildScene() {
-  trees = [];
+  bamboos = [];
+
   for (var layer = 0; layer < 3; layer++) {
-    var count = layer === 0 ? 18 : layer === 1 ? 12 : 8;
+    var count = layer === 0 ? 30 : layer === 1 ? 20 : 14;
+    var alpha = layer === 0 ? 0.25 : layer === 1 ? 0.5 : 0.85;
+    var wMin = layer === 0 ? 4 : layer === 1 ? 8 : 12;
+    var wMax = layer === 0 ? 8 : layer === 1 ? 14 : 22;
+
     for (var i = 0; i < count; i++) {
-      trees.push({
-        x: (i / count) * W + (Math.random() - .5) * W * .1,
-        trunkW: layer === 0 ? (6 + Math.random() * 8) : layer === 1 ? (10 + Math.random() * 14) : (14 + Math.random() * 20),
-        trunkH: H * (.2 + Math.random() * .35 + layer * .08),
-        canopyR: layer === 0 ? (25 + Math.random() * 35) : layer === 1 ? (40 + Math.random() * 55) : (55 + Math.random() * 70),
-        hue: 90 + Math.random() * 60,
+      var bx = (i / count) * W + (Math.random() - 0.5) * (W / count) * 0.8;
+      var bw = wMin + Math.random() * (wMax - wMin);
+      var bh = H * (0.6 + Math.random() * 0.4);
+      var hue = 80 + Math.random() * 40;
+      var segLen = 40 + Math.random() * 30;
+
+      bamboos.push({
+        x: bx,
+        w: bw,
+        h: bh,
+        hue: hue,
         layer: layer,
-        alpha: layer === 0 ? .3 : layer === 1 ? .6 : .9
+        alpha: alpha,
+        segLen: segLen,
+        phase: Math.random() * Math.PI * 2,
+        lean: (Math.random() - 0.5) * 8,
+        leaves: []
       });
+
+      var segs = Math.floor(bh / segLen);
+      var leaves = [];
+      for (var s = 1; s < segs; s++) {
+        if (Math.random() > 0.4) {
+          var side = Math.random() > 0.5 ? 1 : -1;
+          leaves.push({
+            seg: s,
+            side: side,
+            len: 15 + Math.random() * 30 * (layer === 2 ? 1.2 : 0.7),
+            angle: side * (20 + Math.random() * 30),
+            hue: 85 + Math.random() * 45,
+            phase: Math.random() * Math.PI * 2
+          });
+        }
+      }
+      bamboos[bamboos.length - 1].leaves = leaves;
     }
   }
 
-  foliage = [];
-  for (var i = 0; i < 180; i++) {
-    foliage.push({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      r: 15 + Math.random() * 65,
-      hue: 85 + Math.random() * 75,
-      sat: 25 + Math.random() * 35,
-      light: 8 + Math.random() * 16,
-      alpha: .05 + Math.random() * .18,
-      speed: .15 + Math.random() * .5,
-      phase: Math.random() * Math.PI * 2
-    });
-  }
-
-  bushes = [];
-  for (var i = 0; i < 40; i++) {
-    bushes.push({
-      x: Math.random() * W,
-      y: H * (.5 + Math.random() * .45),
-      w: 40 + Math.random() * 80,
-      h: 25 + Math.random() * 50,
-      hue: 90 + Math.random() * 55,
-      alpha: .25 + Math.random() * .35,
-      phase: Math.random() * Math.PI * 2
-    });
-  }
-
-  groundPlants = [];
-  for (var i = 0; i < 90; i++) {
-    groundPlants.push({
-      x: Math.random() * W,
-      h: 15 + Math.random() * 100,
-      lean: (Math.random() - .5) * 25,
-      hue: 90 + Math.random() * 60,
-      alpha: .12 + Math.random() * .3,
-      phase: Math.random() * Math.PI * 2
-    });
-  }
-
-  lightRays = [];
-  for (var i = 0; i < 8; i++) {
-    lightRays.push({
-      x: W * (.05 + Math.random() * .9),
-      w: 25 + Math.random() * 50,
-      alpha: .015 + Math.random() * .03,
-      speed: .1 + Math.random() * .25,
-      phase: Math.random() * Math.PI * 2
-    });
-  }
-
   mist = [];
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < 8; i++) {
     mist.push({
       x: Math.random() * W,
-      y: H * (.3 + Math.random() * .5),
-      w: 200 + Math.random() * 400,
-      h: 40 + Math.random() * 80,
-      alpha: .03 + Math.random() * .06,
-      speed: .08 + Math.random() * .15,
+      y: H * (0.25 + Math.random() * 0.5),
+      w: 150 + Math.random() * 350,
+      h: 30 + Math.random() * 60,
+      alpha: 0.02 + Math.random() * 0.04,
+      speed: 0.06 + Math.random() * 0.12,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  particles = [];
+  for (var i = 0; i < 25; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 1 + Math.random() * 2.5,
+      speed: 0.1 + Math.random() * 0.3,
+      drift: (Math.random() - 0.5) * 0.5,
+      alpha: 0.2 + Math.random() * 0.5,
       phase: Math.random() * Math.PI * 2
     });
   }
@@ -347,55 +344,31 @@ function buildScene() {
 function drawForeground() {
   fgCtx.clearRect(0, 0, W, H);
 
-  var canopyGrad = fgCtx.createLinearGradient(0, 0, 0, H * .2);
-  canopyGrad.addColorStop(0, 'rgba(5,20,10,.85)');
-  canopyGrad.addColorStop(1, 'rgba(5,20,10,0)');
-  fgCtx.fillStyle = canopyGrad;
-  fgCtx.fillRect(0, 0, W, H * .2);
+  var topGrad = fgCtx.createLinearGradient(0, 0, 0, H * 0.08);
+  topGrad.addColorStop(0, 'rgba(8,28,16,.5)');
+  topGrad.addColorStop(1, 'rgba(8,28,16,0)');
+  fgCtx.fillStyle = topGrad;
+  fgCtx.fillRect(0, 0, W, H * 0.08);
 
-  for (var i = 0; i < 30; i++) {
-    var lx = Math.random() * W;
-    var lr = 30 + Math.random() * 70;
-    fgCtx.beginPath();
-    fgCtx.ellipse(lx, -5, lr, lr * .5, 0, 0, Math.PI * 2);
-    fgCtx.fillStyle = 'hsla(' + (90 + Math.random() * 50) + ',40%,' + (8 + Math.random() * 10) + '%,' + (.15 + Math.random() * .3) + ')';
-    fgCtx.fill();
-  }
-
-  for (var i = 0; i < 12; i++) {
-    var vx = Math.random() * W;
-    var vLen = 60 + Math.random() * 150;
-    fgCtx.strokeStyle = 'hsla(' + (100 + Math.random() * 40) + ',35%,15%,' + (.08 + Math.random() * .15) + ')';
-    fgCtx.lineWidth = 1.5;
-    fgCtx.beginPath();
-    fgCtx.moveTo(vx, 0);
-    fgCtx.quadraticCurveTo(vx + (Math.random() - .5) * 30, vLen * .5, vx + (Math.random() - .5) * 20, vLen);
-    fgCtx.stroke();
-    if (Math.random() > .5) {
-      fgCtx.beginPath();
-      fgCtx.ellipse(vx + (Math.random() - .5) * 10, vLen, 8, 5, 0, 0, Math.PI * 2);
-      fgCtx.fillStyle = 'hsla(110,35%,14%,.15)';
-      fgCtx.fill();
-    }
-  }
-
-  var groundGrad = fgCtx.createLinearGradient(0, H - 50, 0, H);
-  groundGrad.addColorStop(0, 'rgba(5,18,10,0)');
-  groundGrad.addColorStop(1, 'rgba(5,18,10,.6)');
-  fgCtx.fillStyle = groundGrad;
-  fgCtx.fillRect(0, H - 50, W, 50);
+  var btmGrad = fgCtx.createLinearGradient(0, H - 40, 0, H);
+  btmGrad.addColorStop(0, 'rgba(8,24,14,0)');
+  btmGrad.addColorStop(1, 'rgba(8,24,14,.4)');
+  fgCtx.fillStyle = btmGrad;
+  fgCtx.fillRect(0, H - 40, W, 40);
 }
 
 function placeAnimals() {
   hiddenAnimals = [];
   var margin = 90;
   var minDist = 120;
+  var midTop = H * 0.22;
+  var midBot = H * 0.72;
 
   gameAnimals.forEach(function(def) {
     var x, y, tries = 0;
     do {
       x = margin + Math.random() * (W - margin * 2);
-      y = margin * 1.2 + Math.random() * (H - margin * 2.8);
+      y = midTop + Math.random() * (midBot - midTop);
       tries++;
     } while (tries < 400 && hiddenAnimals.some(function(a) { return Math.hypot(a.x - x, a.y - y) < minDist; }));
 
@@ -444,135 +417,137 @@ function startTimer() {
 }
 
 function drawScene(now) {
-  var t = now * .001;
+  var t = now * 0.001;
 
   var skyGrad = ctx.createLinearGradient(0, 0, 0, H);
-  skyGrad.addColorStop(0, '#061a0e');
-  skyGrad.addColorStop(.15, '#0a2a16');
-  skyGrad.addColorStop(.4, '#082212');
-  skyGrad.addColorStop(.7, '#061c0e');
-  skyGrad.addColorStop(1, '#031208');
+  skyGrad.addColorStop(0, '#0c2818');
+  skyGrad.addColorStop(0.3, '#0f3020');
+  skyGrad.addColorStop(0.6, '#0b2618');
+  skyGrad.addColorStop(1, '#071a10');
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, W, H);
 
-  var moonX = W * .12, moonY = H * .08;
-  var moonGrad = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 200);
-  moonGrad.addColorStop(0, 'rgba(180,220,180,.06)');
-  moonGrad.addColorStop(1, 'rgba(180,220,180,0)');
-  ctx.fillStyle = moonGrad;
-  ctx.fillRect(0, 0, W, H * .4);
+  var glowX = W * 0.15;
+  var glowY = H * 0.12;
+  var glow = ctx.createRadialGradient(glowX, glowY, 0, glowX, glowY, 300);
+  glow.addColorStop(0, 'rgba(180,220,170,.04)');
+  glow.addColorStop(1, 'rgba(180,220,170,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H * 0.5);
 
-  lightRays.forEach(function(r) {
-    var sway = Math.sin(t * r.speed + r.phase) * 12;
-    var a = r.alpha * (.5 + Math.sin(t * .4 + r.phase) * .5);
+  for (var li = 0; li < 5; li++) {
+    var rx = W * (0.1 + li * 0.2);
+    var rw = 15 + Math.sin(t * 0.15 + li) * 5;
+    var ra = 0.012 + Math.sin(t * 0.3 + li * 1.5) * 0.008;
+    if (ra < 0) continue;
     ctx.save();
-    ctx.globalAlpha = a;
-    ctx.fillStyle = 'rgba(160,210,140,.25)';
+    ctx.globalAlpha = ra;
+    ctx.fillStyle = 'rgba(160,210,140,.3)';
     ctx.beginPath();
-    ctx.moveTo(r.x + sway - r.w / 2, 0);
-    ctx.lineTo(r.x + sway + r.w / 2, 0);
-    ctx.lineTo(r.x + sway + r.w * 2, H);
-    ctx.lineTo(r.x + sway - r.w * 2, H);
+    ctx.moveTo(rx - rw, 0);
+    ctx.lineTo(rx + rw, 0);
+    ctx.lineTo(rx + rw * 3, H);
+    ctx.lineTo(rx - rw * 3, H);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
-  });
+  }
 
-  trees.filter(function(tr) { return tr.layer === 0; }).forEach(function(tr) { drawTree(tr, t); });
-
-  foliage.filter(function(f) { return f.r < 35; }).forEach(function(f) { drawFoliageBlob(f, t); });
-
-  trees.filter(function(tr) { return tr.layer === 1; }).forEach(function(tr) { drawTree(tr, t); });
-
-  foliage.filter(function(f) { return f.r >= 35 && f.r < 50; }).forEach(function(f) { drawFoliageBlob(f, t); });
-
-  bushes.filter(function(b) { return b.y < H * .7; }).forEach(function(b) { drawBush(b, t); });
-
-  trees.filter(function(tr) { return tr.layer === 2; }).forEach(function(tr) { drawTree(tr, t); });
-
-  foliage.filter(function(f) { return f.r >= 50; }).forEach(function(f) { drawFoliageBlob(f, t); });
-
-  bushes.filter(function(b) { return b.y >= H * .7; }).forEach(function(b) { drawBush(b, t); });
-
-  groundPlants.forEach(function(gp) {
-    var sway = Math.sin(t * .6 + gp.phase) * 5;
-    ctx.strokeStyle = 'hsla(' + gp.hue + ',40%,18%,' + gp.alpha + ')';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(gp.x, H);
-    ctx.quadraticCurveTo(gp.x + gp.lean + sway, H - gp.h * .6, gp.x + sway * 1.5, H - gp.h);
-    ctx.stroke();
-    if (gp.h > 40) {
-      ctx.beginPath();
-      ctx.ellipse(gp.x + sway * 1.5, H - gp.h, gp.h * .14, gp.h * .09, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'hsla(' + gp.hue + ',35%,16%,' + (gp.alpha * .5) + ')';
-      ctx.fill();
-    }
-  });
+  drawBambooLayer(0, t);
+  drawBambooLayer(1, t);
+  drawBambooLayer(2, t);
 
   mist.forEach(function(m) {
     var ox = Math.sin(t * m.speed + m.phase) * 40;
     ctx.beginPath();
     ctx.ellipse(m.x + ox, m.y, m.w, m.h, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(100,160,120,' + m.alpha + ')';
+    ctx.fillStyle = 'rgba(120,180,140,' + m.alpha + ')';
     ctx.fill();
   });
 
-  ctx.fillStyle = 'rgba(3,14,8,.35)';
-  ctx.fillRect(0, H - 30, W, 30);
-}
-
-function drawTree(tr, t) {
-  var sway = Math.sin(t * .2 + tr.x * .005) * 3 * tr.alpha;
-  var baseY = H - 15;
-
-  ctx.fillStyle = 'rgba(30,18,8,' + tr.alpha + ')';
-  ctx.fillRect(tr.x - tr.trunkW / 2, baseY - tr.trunkH, tr.trunkW, tr.trunkH + 15);
-  ctx.fillStyle = 'rgba(50,30,15,' + (tr.alpha * .5) + ')';
-  ctx.fillRect(tr.x - tr.trunkW / 2 + 2, baseY - tr.trunkH, tr.trunkW * .25, tr.trunkH);
-
-  if (tr.trunkH > H * .3) {
-    var bx = tr.x + (Math.random() > .5 ? 1 : -1) * tr.trunkW;
-    var by = baseY - tr.trunkH * (.4 + Math.random() * .3);
-    ctx.strokeStyle = 'rgba(30,18,8,' + (tr.alpha * .6) + ')';
-    ctx.lineWidth = tr.trunkW * .2;
+  particles.forEach(function(p) {
+    p.y -= p.speed;
+    p.x += p.drift + Math.sin(t + p.phase) * 0.3;
+    if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+    if (p.x < -10) p.x = W + 10;
+    if (p.x > W + 10) p.x = -10;
+    var pa = p.alpha * (0.5 + Math.sin(t * 2 + p.phase) * 0.5);
     ctx.beginPath();
-    ctx.moveTo(tr.x, by);
-    ctx.quadraticCurveTo(bx * .7 + tr.x * .3, by - 20, bx, by - 10);
-    ctx.stroke();
-  }
-
-  var cy = baseY - tr.trunkH - tr.canopyR * .2;
-  for (var l = 0; l < 4; l++) {
-    var r = tr.canopyR * (1 - l * .15);
-    var ox = sway * (1 + l * .4);
-    var oy = -l * tr.canopyR * .25;
-    ctx.beginPath();
-    ctx.arc(tr.x + ox, cy + oy, r, 0, Math.PI * 2);
-    ctx.fillStyle = 'hsla(' + tr.hue + ',45%,' + (8 + l * 3) + '%,' + (tr.alpha * .7) + ')';
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(200,240,200,' + pa + ')';
     ctx.fill();
-  }
+  });
 }
 
-function drawFoliageBlob(f, t) {
-  var ox = Math.sin(t * f.speed + f.phase) * 6;
-  var oy = Math.cos(t * f.speed * .7 + f.phase) * 4;
-  ctx.beginPath();
-  ctx.arc(f.x + ox, f.y + oy, f.r, 0, Math.PI * 2);
-  ctx.fillStyle = 'hsla(' + f.hue + ',' + f.sat + '%,' + f.light + '%,' + f.alpha + ')';
-  ctx.fill();
-}
+function drawBambooLayer(layer, t) {
+  bamboos.filter(function(b) { return b.layer === layer; }).forEach(function(b) {
+    var sway = Math.sin(t * 0.3 + b.phase) * (2 + b.layer) + b.lean;
+    var baseY = H + 5;
+    var topY = baseY - b.h;
 
-function drawBush(b, t) {
-  var sway = Math.sin(t * .4 + b.phase) * 4;
-  ctx.beginPath();
-  ctx.ellipse(b.x + sway, b.y, b.w, b.h, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'hsla(' + b.hue + ',40%,12%,' + b.alpha + ')';
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(b.x + sway - b.w * .3, b.y - b.h * .2, b.w * .6, b.h * .7, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'hsla(' + (b.hue + 10) + ',35%,10%,' + (b.alpha * .6) + ')';
-  ctx.fill();
+    var light = b.layer === 0 ? 12 : b.layer === 1 ? 18 : 24;
+    var sat = b.layer === 0 ? 30 : b.layer === 1 ? 38 : 45;
+
+    ctx.save();
+    ctx.globalAlpha = b.alpha;
+
+    var grad = ctx.createLinearGradient(b.x - b.w, 0, b.x + b.w, 0);
+    grad.addColorStop(0, 'hsla(' + b.hue + ',' + sat + '%,' + (light - 3) + '%,1)');
+    grad.addColorStop(0.35, 'hsla(' + b.hue + ',' + (sat + 5) + '%,' + (light + 6) + '%,1)');
+    grad.addColorStop(0.65, 'hsla(' + b.hue + ',' + (sat + 3) + '%,' + (light + 3) + '%,1)');
+    grad.addColorStop(1, 'hsla(' + b.hue + ',' + sat + '%,' + (light - 5) + '%,1)');
+
+    var segs = Math.floor(b.h / b.segLen);
+    for (var s = 0; s < segs; s++) {
+      var sy = baseY - s * b.segLen;
+      var sx = b.x + (sway * s / segs);
+      var segH = Math.min(b.segLen, baseY - topY - s * b.segLen);
+      if (segH <= 0) break;
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(sx - b.w / 2, sy - segH, b.w, segH, [b.w * 0.1]);
+      ctx.fill();
+
+      ctx.fillStyle = 'hsla(' + (b.hue + 10) + ',' + (sat + 10) + '%,' + (light + 10) + '%,' + (b.alpha * 0.3) + ')';
+      ctx.fillRect(sx - b.w / 2 + 1, sy - segH, b.w * 0.2, segH);
+
+      if (s > 0) {
+        ctx.fillStyle = 'hsla(' + b.hue + ',' + (sat + 5) + '%,' + (light + 2) + '%,1)';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, b.w * 0.65, b.w * 0.25, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    b.leaves.forEach(function(lf) {
+      var ly = baseY - lf.seg * b.segLen;
+      var lx = b.x + (sway * lf.seg / segs);
+      var leafSway = Math.sin(t * 0.8 + lf.phase) * 5;
+
+      ctx.save();
+      ctx.translate(lx, ly);
+      ctx.rotate((lf.angle + leafSway) * Math.PI / 180);
+
+      ctx.fillStyle = 'hsla(' + lf.hue + ',' + (sat + 15) + '%,' + (light + 5) + '%,' + (b.alpha * 0.8) + ')';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(lf.len * 0.3, -lf.len * 0.12, lf.len, -lf.len * 0.02);
+      ctx.quadraticCurveTo(lf.len * 0.3, lf.len * 0.06, 0, 0);
+      ctx.fill();
+
+      ctx.strokeStyle = 'hsla(' + (lf.hue + 10) + ',' + (sat + 5) + '%,' + (light + 12) + '%,' + (b.alpha * 0.4) + ')';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(lf.len * 0.95, -lf.len * 0.01);
+      ctx.stroke();
+
+      ctx.restore();
+    });
+
+    ctx.restore();
+  });
 }
 
 function loop(now) {
