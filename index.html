@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Interactive Wall Games</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -32,6 +32,17 @@ html,body{height:100%;font-family:'Space Grotesk',Helvetica,Arial,sans-serif}
 .submenu-option:hover{transform:scale(1.05);box-shadow:0 8px 20px rgba(79,70,229,.3)}
 .submenu-close{margin-top:20px;padding:12px 24px;background:#ef4444;color:white;border:none;border-radius:12px;cursor:pointer;font-weight:700;width:100%;transition:all .3s}
 .submenu-close:hover{background:#dc2626}
+
+*{touch-action:manipulation}
+.game-card,.submenu-option,.submenu-close,#center-button,.btn-back{
+  -webkit-tap-highlight-color:transparent;
+  cursor:pointer;
+}
+
+@keyframes touchRingPop{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(2);opacity:0}
+}
 </style>
 </head>
 
@@ -130,7 +141,14 @@ function layoutMenu() {
   center.style.top  = `${cy}px`;
   center.style.opacity = '1';
   center.style.transform = 'translate(-50%, -50%) scale(1)';
-  center.onclick = () => location.href = 'intro.html';
+  center.addEventListener('click', function(e) {
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+    location.href = 'intro.html';
+  });
+  center.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    location.href = 'intro.html';
+  });
 }
 
 /* 🔑 USE LOADER AS SYNC POINT */

@@ -174,7 +174,7 @@ body{-webkit-user-select:none;user-select:none;touch-action:none;background:#1a1
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     <div class="progress-text" id="progressText">0 / 5 items placed</div>
   </div>
-  <button class="btn-back" onclick="location.href='../index.html'">Menu</button>
+  <button class="btn-back" id="backBtn">Menu</button>
 </div>
 
 <div class="overlay" id="winOverlay">
@@ -182,8 +182,8 @@ body{-webkit-user-select:none;user-select:none;touch-action:none;background:#1a1
     <div class="overlay-title" id="overlayTitle"></div>
     <div class="overlay-msg" id="overlayMsg"></div>
     <div>
-      <button class="overlay-btn primary" onclick="location.reload()">Play Again</button>
-      <button class="overlay-btn secondary" onclick="location.href='../index.html'">Menu</button>
+      <button class="overlay-btn primary" id="playAgainBtn">Play Again</button>
+      <button class="overlay-btn secondary" id="menuBtn">Menu</button>
     </div>
   </div>
 </div>
@@ -1058,6 +1058,16 @@ window.addEventListener('mouseup', function(e) {
   checkDrop(mouseDrag.el, e.clientX, e.clientY);
   mouseDrag = null;
 });
+
+function navTo(url) { location.href = url; }
+function navReload() { location.reload(); }
+
+document.getElementById('backBtn').addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) navTo('../index.html'); });
+document.getElementById('backBtn').addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); navTo('../index.html'); });
+document.getElementById('playAgainBtn').addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) navReload(); });
+document.getElementById('playAgainBtn').addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); navReload(); });
+document.getElementById('menuBtn').addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) navTo('../index.html'); });
+document.getElementById('menuBtn').addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); navTo('../index.html'); });
 
 resize();
 initGame();

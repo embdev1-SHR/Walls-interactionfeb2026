@@ -18,32 +18,42 @@ const CATEGORIES = {
 
 const gameCards = document.querySelectorAll('.game-card');
 
-gameCards.forEach(card => {
-    card.addEventListener('click', function() {
-        const gameName = this.getAttribute('data-game');
-        const categoryName = this.getAttribute('data-category');
+function handleCardTap(card) {
+    const gameName = card.getAttribute('data-game');
+    const categoryName = card.getAttribute('data-category');
 
-        if (this.classList.contains('locked')) {
-            playSound('error');
-            return;
-        }
+    if (card.classList.contains('locked')) {
+        playSound('error');
+        return;
+    }
 
-        playSound('click');
+    playSound('click');
 
-        this.style.transform = 'scale(0.95)';
+    card.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        card.style.transform = '';
+    }, 200);
+
+    if (categoryName) {
         setTimeout(() => {
-            this.style.transform = '';
-        }, 200);
+            showSubmenu(categoryName);
+        }, 300);
+    } else if (gameName) {
+        setTimeout(() => {
+            loadGame(gameName);
+        }, 300);
+    }
+}
 
-        if (categoryName) {
-            setTimeout(() => {
-                showSubmenu(categoryName);
-            }, 300);
-        } else if (gameName) {
-            setTimeout(() => {
-                loadGame(gameName);
-            }, 300);
-        }
+gameCards.forEach(card => {
+    card.addEventListener('click', function(e) {
+        if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+        handleCardTap(this);
+    });
+
+    card.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        handleCardTap(this);
     });
 
     card.addEventListener('mouseenter', function() {
@@ -52,6 +62,12 @@ gameCards.forEach(card => {
         }
     });
 });
+
+function handleOptionTap(option) {
+    playSound('click');
+    closeSubmenu();
+    setTimeout(() => loadGame(option.game), 300);
+}
 
 function showSubmenu(categoryName) {
     const category = CATEGORIES[categoryName];
@@ -68,11 +84,14 @@ function showSubmenu(categoryName) {
         const optionEl = document.createElement('div');
         optionEl.className = 'submenu-option';
         optionEl.textContent = option.name;
-        optionEl.onclick = () => {
-            playSound('click');
-            closeSubmenu();
-            setTimeout(() => loadGame(option.game), 300);
-        };
+        optionEl.addEventListener('click', (e) => {
+            if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+            handleOptionTap(option);
+        });
+        optionEl.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleOptionTap(option);
+        });
         optionsContainer.appendChild(optionEl);
     });
 
@@ -84,13 +103,27 @@ function closeSubmenu() {
     overlay.classList.remove('active');
 }
 
-document.getElementById('submenu-close').addEventListener('click', () => {
+document.getElementById('submenu-close').addEventListener('click', (e) => {
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+    playSound('click');
+    closeSubmenu();
+});
+document.getElementById('submenu-close').addEventListener('touchend', (e) => {
+    e.preventDefault();
     playSound('click');
     closeSubmenu();
 });
 
 document.getElementById('submenu-overlay').addEventListener('click', (e) => {
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
     if (e.target.id === 'submenu-overlay') {
+        playSound('click');
+        closeSubmenu();
+    }
+});
+document.getElementById('submenu-overlay').addEventListener('touchend', (e) => {
+    if (e.target.id === 'submenu-overlay') {
+        e.preventDefault();
         playSound('click');
         closeSubmenu();
     }
@@ -200,8 +233,12 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-// Touch support for interactive wall
 document.addEventListener('touchstart', (event) => {
-    // Enable touch interactions
-    event.preventDefault();
-}, { passive: false });
+    for (let i = 0; i < event.changedTouches.length; i++) {
+        let t = event.changedTouches[i];
+        let ring = document.createElement('div');
+        ring.style.cssText = 'position:fixed;width:60px;height:60px;border:3px solid rgba(79,70,229,.5);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:touchRingPop .5s ease forwards;left:' + t.clientX + 'px;top:' + t.clientY + 'px;';
+        document.body.appendChild(ring);
+        ring.addEventListener('animationend', () => ring.remove());
+    }
+}, { passive: true });

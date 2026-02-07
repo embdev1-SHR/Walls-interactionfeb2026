@@ -186,15 +186,15 @@ canvas{position:absolute;inset:0;z-index:0}
   <div class="checklist" id="clList"></div>
 
   <button class="btn-corner btn-hint" id="hintBtn">Hint (3)</button>
-  <button class="btn-corner btn-menu" onclick="location.href='../index.html'">Menu</button>
+  <button class="btn-corner btn-menu" id="menuBtn">Menu</button>
 
   <div class="overlay" id="winOverlay">
     <div class="overlay-box">
       <div class="overlay-title">Well Done!</div>
       <div class="overlay-msg">All animals found!</div>
       <div class="overlay-stats" id="winStats"></div>
-      <button class="overlay-btn" onclick="location.reload()">Play Again</button>
-      <button class="overlay-btn" onclick="location.href='../index.html'" style="margin-left:6px">Menu</button>
+      <button class="overlay-btn" id="playAgainBtn">Play Again</button>
+      <button class="overlay-btn" id="winMenuBtn" style="margin-left:6px">Menu</button>
     </div>
   </div>
 </div>
@@ -707,11 +707,16 @@ function useHint() {
   if (hints <= 0) btn.disabled = true;
 }
 
-document.getElementById('hintBtn').addEventListener('click', useHint);
-document.getElementById('hintBtn').addEventListener('touchend', function(e) {
-  e.preventDefault();
-  useHint();
-});
+function addTouchBtn(id, fn) {
+  var el = document.getElementById(id);
+  el.addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) fn(); });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); fn(); });
+}
+
+addTouchBtn('hintBtn', useHint);
+addTouchBtn('menuBtn', function() { location.href = '../index.html'; });
+addTouchBtn('playAgainBtn', function() { location.reload(); });
+addTouchBtn('winMenuBtn', function() { location.href = '../index.html'; });
 
 function handleTap(x, y) {
   spawnRipple(x, y);

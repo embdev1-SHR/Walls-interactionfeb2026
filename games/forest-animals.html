@@ -233,7 +233,7 @@ body{
   <div class="carousel-dots" id="carouselDots"></div>
 
   <div class="footer">
-    <button class="btn-back" onclick="location.href='../index.html'">Back to Menu</button>
+    <button class="btn-back" id="backBtn">Back to Menu</button>
   </div>
 </div>
 
@@ -439,7 +439,8 @@ function buildCards() {
     var dot = document.createElement('div');
     dot.className = 'dot' + (i === 0 ? ' active' : '');
     dot.dataset.index = i;
-    dot.addEventListener('click', function() { goToSlide(parseInt(this.dataset.index)); });
+    dot.addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) goToSlide(parseInt(this.dataset.index)); });
+    dot.addEventListener('touchend', function(e) { e.preventDefault(); goToSlide(parseInt(this.dataset.index)); });
     dotsWrap.appendChild(dot);
   });
 }
@@ -675,6 +676,13 @@ function spawnRing(x, y) {
   document.body.appendChild(ring);
   ring.addEventListener('animationend', function() { ring.remove(); });
 }
+
+document.getElementById('backBtn').addEventListener('click', function(e) {
+  if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) location.href = '../index.html';
+});
+document.getElementById('backBtn').addEventListener('touchend', function(e) {
+  e.preventDefault(); location.href = '../index.html';
+});
 
 document.addEventListener('touchstart', function(e) {
   for (var i = 0; i < e.changedTouches.length; i++) {
