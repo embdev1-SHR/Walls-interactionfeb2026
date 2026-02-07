@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Number Explorer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#0a1628 0%,#0d2137 50%,#0a1628 100%);color:white;-webkit-user-select:none;user-select:none}
+.app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
+.header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#38bdf8}
+.btn-back{padding:8px 22px;font-size:13px;font-weight:600;background:rgba(56,189,248,.1);border:2px solid rgba(56,189,248,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s}
+.btn-back:hover{background:rgba(56,189,248,.2)}
+
+.center-display{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.5vh,16px);padding:0 20px;min-height:0}
+.big-number{font-size:clamp(120px,22vw,220px);font-weight:900;line-height:1;color:#38bdf8;text-shadow:0 0 60px rgba(56,189,248,.3);transition:all .4s;animation:numIn .4s ease}
+@keyframes numIn{0%{transform:scale(.5) rotateY(90deg);opacity:0}100%{transform:scale(1) rotateY(0);opacity:1}}
+.number-word{font-size:clamp(24px,4vw,44px);font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:4px;transition:all .4s}
+.dots-row{display:flex;flex-wrap:wrap;gap:clamp(6px,1vw,12px);justify-content:center;max-width:clamp(200px,40vw,400px);min-height:clamp(30px,5vh,60px);align-items:center}
+.dot{width:clamp(16px,2.5vw,28px);height:clamp(16px,2.5vw,28px);border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);animation:dotPop .3s ease backwards;box-shadow:0 2px 8px rgba(251,191,36,.3)}
+@keyframes dotPop{0%{transform:scale(0)}100%{transform:scale(1)}}
+.fun-fact{font-size:clamp(11px,1.2vw,15px);color:rgba(255,255,255,.35);max-width:400px;text-align:center;min-height:2em}
+
+.number-list{flex-shrink:0;padding:12px 16px 16px;background:rgba(0,0,0,.2);border-top:1px solid rgba(56,189,248,.1)}
+.list-label{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
+.list-scroll{display:flex;gap:8px;overflow-x:auto;padding:4px 0;scrollbar-width:none;-ms-overflow-style:none}
+.list-scroll::-webkit-scrollbar{display:none}
+.num-btn{flex-shrink:0;width:clamp(44px,5vw,56px);height:clamp(44px,5vw,56px);display:flex;align-items:center;justify-content:center;font-size:clamp(16px,2vw,22px);font-weight:800;background:rgba(56,189,248,.08);border:2px solid rgba(56,189,248,.15);border-radius:12px;cursor:pointer;transition:all .25s;color:rgba(255,255,255,.6)}
+.num-btn:hover{background:rgba(56,189,248,.15);border-color:rgba(56,189,248,.4);transform:scale(1.08)}
+.num-btn.active{background:rgba(56,189,248,.25);border-color:#38bdf8;color:#38bdf8;box-shadow:0 0 16px rgba(56,189,248,.25);transform:scale(1.1)}
+.nav-arrows{display:flex;justify-content:center;gap:16px;margin-top:8px}
+.arrow-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;background:rgba(56,189,248,.1);border:2px solid rgba(56,189,248,.2);border-radius:50%;cursor:pointer;transition:all .25s;color:rgba(255,255,255,.5)}
+.arrow-btn:hover{background:rgba(56,189,248,.2);color:white}
+
+.bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-dot{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(56,189,248,.2);animation:float var(--dur) ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
+.touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(56,189,248,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:ringPop .6s ease forwards}
+@keyframes ringPop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
+</style>
+</head>
+<body>
+<div class="bg-particles" id="bgP"></div>
+
+<div class="app">
+  <div class="header">
+    <h1>Number Explorer</h1>
+    <button class="btn-back" id="btnBack">Back to Menu</button>
+  </div>
+
+  <div class="center-display">
+    <div class="big-number" id="bigNumber">1</div>
+    <div class="number-word" id="numberWord">ONE</div>
+    <div class="dots-row" id="dotsRow"></div>
+    <div class="fun-fact" id="funFact"></div>
+  </div>
+
+  <div class="number-list">
+    <div class="list-label">Tap a number to explore</div>
+    <div class="list-scroll" id="numList"></div>
+    <div class="nav-arrows">
+      <div class="arrow-btn" id="prevBtn">&larr;</div>
+      <div class="arrow-btn" id="nextBtn">&rarr;</div>
+    </div>
+  </div>
+</div>
+
+<script>
+var WORDS = ['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN',
+  'ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN','TWENTY'];
+
+var FACTS = [
+  '',
+  '1 is the loneliest number',
+  '2 eyes, 2 ears, 2 hands!',
+  'A triangle has 3 sides',
+  '4 seasons in a year',
+  'A starfish has 5 arms',
+  'Insects have 6 legs',
+  '7 colors in a rainbow',
+  'An octopus has 8 arms',
+  '9 planets (with Pluto!)',
+  '10 fingers on your hands',
+  'A football team has 11 players',
+  '12 months in a year',
+  '13 is a lucky number!',
+  '14 days in 2 weeks',
+  '15 minutes is a quarter hour',
+  '16 ounces in a pound',
+  '17 is a prime number',
+  '18 holes on a golf course',
+  '19 is a prime number too!',
+  '20 fingers and toes total!'
+];
+
+var EMOJIS = ['','1\uFE0F\u20E3','\u270C\uFE0F','\uD83D\uDD3A','\uD83C\uDF40','\u2B50','\uD83D\uDC1E','\uD83C\uDF08','\uD83D\uDC19','\uD83C\uDF19','\uD83D\uDD1F',
+  '\u26BD','1\uFE0F\u20E32\uFE0F\u20E3','\uD83C\uDFB0','\uD83D\uDCC5','\u23F0','\uD83C\uDFCB\uFE0F','\uD83D\uDD22','\u26F3','#\uFE0F\u20E3','\uD83D\uDC4B'];
+
+var currentNum = 1;
+
+function showNumber(n) {
+  currentNum = n;
+  var el = document.getElementById('bigNumber');
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = 'numIn .4s ease';
+  el.textContent = n;
+
+  document.getElementById('numberWord').textContent = WORDS[n] || n.toString();
+  document.getElementById('funFact').textContent = (FACTS[n] || '') + ' ' + (EMOJIS[n] || '');
+
+  var dotsHtml = '';
+  var count = Math.min(n, 20);
+  for (var i = 0; i < count; i++) {
+    dotsHtml += '<div class="dot" style="animation-delay:' + (i * 0.04) + 's"></div>';
+  }
+  document.getElementById('dotsRow').innerHTML = dotsHtml;
+
+  document.querySelectorAll('.num-btn').forEach(function(btn) {
+    btn.classList.toggle('active', parseInt(btn.dataset.num) === n);
+  });
+
+  var activeBtn = document.querySelector('.num-btn.active');
+  if (activeBtn) activeBtn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+
+  playTone(200 + n * 30, 0.12);
+}
+
+function buildList() {
+  var container = document.getElementById('numList');
+  container.innerHTML = '';
+  for (var i = 1; i <= 20; i++) {
+    var btn = document.createElement('div');
+    btn.className = 'num-btn' + (i === 1 ? ' active' : '');
+    btn.dataset.num = i;
+    btn.textContent = i;
+    container.appendChild(btn);
+  }
+}
+
+function playTone(freq, dur) {
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.12, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    o.start(); o.stop(ac.currentTime + dur);
+  } catch(e) {}
+}
+
+function bindTouch(el, fn) {
+  el.addEventListener('click', function(e) { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; fn(); });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
+}
+
+document.getElementById('numList').addEventListener('click', function(e) {
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  var btn = e.target.closest('.num-btn');
+  if (btn) showNumber(parseInt(btn.dataset.num));
+});
+document.getElementById('numList').addEventListener('touchend', function(e) {
+  var btn = e.target.closest('.num-btn');
+  if (btn) { e.preventDefault(); showNumber(parseInt(btn.dataset.num)); }
+});
+
+bindTouch(document.getElementById('prevBtn'), function() {
+  var n = currentNum > 1 ? currentNum - 1 : 20;
+  showNumber(n);
+});
+bindTouch(document.getElementById('nextBtn'), function() {
+  var n = currentNum < 20 ? currentNum + 1 : 1;
+  showNumber(n);
+});
+bindTouch(document.getElementById('btnBack'), function() { location.href = '../index.html'; });
+
+buildList();
+showNumber(1);
+
+var bgP = document.getElementById('bgP');
+for (var i = 0; i < 30; i++) {
+  var d = document.createElement('div'); d.className = 'bg-dot';
+  d.style.left=(Math.random()*100)+'%'; d.style.top=(Math.random()*100)+'%';
+  d.style.setProperty('--dur',(4+Math.random()*6)+'s');
+  d.style.setProperty('--dx',((Math.random()-.5)*60)+'px');
+  d.style.setProperty('--dy',((Math.random()-.5)*60)+'px');
+  d.style.animationDelay=(Math.random()*5)+'s'; bgP.appendChild(d);
+}
+
+document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
+</script>
+</body>
+</html>

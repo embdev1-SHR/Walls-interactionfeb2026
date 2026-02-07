@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Word Creator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#1a0f00 0%,#2d1a06 50%,#1a0f00 100%);color:white;-webkit-user-select:none;user-select:none}
+.app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
+.header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#fb923c}
+.stats{display:flex;gap:14px;font-size:clamp(11px,1.2vw,15px);font-weight:600}
+.stat-val{color:#4ade80;font-weight:800}
+.round-info{flex-shrink:0;text-align:center;padding:0 20px 6px}
+.category-badge{display:inline-block;padding:4px 16px;font-size:clamp(11px,1.1vw,14px);font-weight:700;background:rgba(251,146,60,.15);border:2px solid rgba(251,146,60,.3);border-radius:50px;color:#fb923c}
+
+.game-area{flex:1;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,1.5vh,16px);padding:8px 16px;min-height:0;overflow-y:auto}
+.word-rows{display:flex;flex-direction:column;gap:clamp(8px,1.2vh,14px);width:100%;max-width:500px}
+.word-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,.03);border:2px solid rgba(251,146,60,.1);border-radius:12px;transition:all .3s;cursor:pointer}
+.word-row.selected{border-color:rgba(251,146,60,.5);background:rgba(251,146,60,.06);box-shadow:0 0 12px rgba(251,146,60,.1)}
+.word-row.completed{border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.06)}
+.word-emoji{font-size:clamp(28px,4vw,40px);flex-shrink:0}
+.word-boxes{display:flex;gap:4px;flex:1;justify-content:center}
+.letter-box{width:clamp(28px,4vw,40px);height:clamp(32px,4.5vw,44px);display:flex;align-items:center;justify-content:center;font-size:clamp(16px,2vw,22px);font-weight:800;background:rgba(255,255,255,.04);border:2px solid rgba(251,146,60,.12);border-radius:8px;color:transparent;transition:all .3s}
+.letter-box.filled{color:#fbbf24;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.06)}
+.letter-box.correct{color:#4ade80;border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.08)}
+.letter-box.wrong{border-color:#ef4444;animation:boxShake .4s ease}
+.letter-box.next{border-color:rgba(251,146,60,.5);box-shadow:0 0 8px rgba(251,146,60,.2)}
+@keyframes boxShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.word-status{flex-shrink:0;width:24px;text-align:center;font-size:16px}
+
+.letter-pack{flex-shrink:0;padding:10px 16px 16px;background:rgba(0,0,0,.2);border-top:1px solid rgba(251,146,60,.1)}
+.pack-label{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
+.pack-tiles{display:flex;gap:clamp(5px,.8vw,8px);justify-content:center;flex-wrap:wrap;max-width:500px;margin:0 auto}
+.pack-tile{width:clamp(38px,4.5vw,52px);height:clamp(38px,4.5vw,52px);display:flex;align-items:center;justify-content:center;font-size:clamp(18px,2.2vw,26px);font-weight:800;background:rgba(251,146,60,.08);border:2px solid rgba(251,146,60,.2);border-radius:10px;cursor:pointer;transition:all .25s;color:rgba(255,255,255,.7)}
+.pack-tile:hover{background:rgba(251,146,60,.15);border-color:rgba(251,146,60,.5);transform:scale(1.08)}
+.pack-tile:active{transform:scale(.93)}
+.pack-tile.used{opacity:.2;pointer-events:none;transform:scale(.8)}
+.controls{display:flex;justify-content:center;gap:10px;margin-top:8px}
+.ctrl-btn{padding:6px 20px;font-size:12px;font-weight:700;background:rgba(251,146,60,.1);border:2px solid rgba(251,146,60,.25);color:rgba(255,255,255,.6);border-radius:50px;cursor:pointer;transition:all .3s}
+.ctrl-btn:hover{background:rgba(251,146,60,.2);color:white}
+
+.celebration{position:fixed;inset:0;pointer-events:none;z-index:100}
+.confetti{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall var(--dur) ease-in forwards}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+.round-complete{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:clamp(32px,5vw,56px);font-weight:900;color:#4ade80;opacity:0;pointer-events:none;z-index:100;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+.round-complete.show{animation:roundPop 1.5s ease forwards}
+@keyframes roundPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}40%{transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+.overlay.active{display:flex}
+.overlay h2{font-size:clamp(28px,4vw,48px);font-weight:800;color:#fb923c}
+.overlay .big-txt{font-size:clamp(48px,8vw,80px);font-weight:800;color:#fbbf24}
+.overlay .sub-txt{font-size:clamp(14px,1.5vw,18px);color:rgba(255,255,255,.5)}
+.overlay-btn{padding:12px 32px;font-size:16px;font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(251,146,60,.4);background:rgba(251,146,60,.15);color:white}
+.overlay-btn:hover{background:rgba(251,146,60,.3)}
+
+.bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-dot{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(251,146,60,.2);animation:float var(--dur) ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
+.touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(251,146,60,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:ringPop .6s ease forwards}
+@keyframes ringPop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
+</style>
+</head>
+<body>
+<div class="bg-particles" id="bgP"></div>
+<div class="celebration" id="celebration"></div>
+<div class="round-complete" id="roundComplete"></div>
+
+<div class="app">
+  <div class="header">
+    <h1>Word Creator</h1>
+    <div class="stats">
+      <div class="stat">Score: <span class="stat-val" id="score">0</span></div>
+      <div class="stat">Round: <span class="stat-val" id="roundNum">1</span></div>
+    </div>
+  </div>
+  <div class="round-info">
+    <span class="category-badge" id="categoryBadge">Animals</span>
+  </div>
+  <div class="game-area">
+    <div class="word-rows" id="wordRows"></div>
+  </div>
+  <div class="letter-pack">
+    <div class="pack-label">Letter Pack</div>
+    <div class="pack-tiles" id="packTiles"></div>
+    <div class="controls">
+      <div class="ctrl-btn" id="btnUndo">Undo</div>
+      <div class="ctrl-btn" id="btnHint">Hint</div>
+      <div class="ctrl-btn" id="btnBack">Menu</div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="gameOverlay">
+  <h2>All Rounds Complete!</h2>
+  <div class="sub-txt">Final Score</div>
+  <div class="big-txt" id="finalScore">0</div>
+  <button class="overlay-btn" id="btnRestart">Play Again</button>
+  <button class="overlay-btn" id="btnBackOver">Back to Menu</button>
+</div>
+
+<script>
+var ROUNDS = [
+  {category:'Animals', words:[
+    {word:'CAT',emoji:'\uD83D\uDC31'},{word:'DOG',emoji:'\uD83D\uDC36'},{word:'FISH',emoji:'\uD83D\uDC1F'}
+  ]},
+  {category:'Fruits', words:[
+    {word:'APPLE',emoji:'\uD83C\uDF4E'},{word:'MANGO',emoji:'\uD83E\uDD6D'},{word:'GRAPE',emoji:'\uD83C\uDF47'}
+  ]},
+  {category:'Animals', words:[
+    {word:'LION',emoji:'\uD83E\uDD81'},{word:'BEAR',emoji:'\uD83D\uDC3B'},{word:'FROG',emoji:'\uD83D\uDC38'}
+  ]},
+  {category:'Fruits', words:[
+    {word:'LEMON',emoji:'\uD83C\uDF4B'},{word:'PEACH',emoji:'\uD83C\uDF51'},{word:'PLUM',emoji:'\uD83E\uDED0'}
+  ]},
+  {category:'Animals', words:[
+    {word:'DUCK',emoji:'\uD83E\uDD86'},{word:'GOAT',emoji:'\uD83D\uDC10'},{word:'DEER',emoji:'\uD83E\uDD8C'}
+  ]},
+  {category:'Fruits', words:[
+    {word:'PEAR',emoji:'\uD83C\uDF50'},{word:'FIG',emoji:'\uD83E\uDED2'},{word:'KIWI',emoji:'\uD83E\uDD5D'}
+  ]},
+  {category:'Animals', words:[
+    {word:'CRAB',emoji:'\uD83E\uDD80'},{word:'MOTH',emoji:'\uD83E\uDEB3'},{word:'SWAN',emoji:'\uD83E\uDDA2'}
+  ]},
+  {category:'Fruits & Animals', words:[
+    {word:'TIGER',emoji:'\uD83D\uDC2F'},{word:'MELON',emoji:'\uD83C\uDF48'},{word:'HORSE',emoji:'\uD83D\uDC0E'},{word:'BERRY',emoji:'\uD83C\uDF53'}
+  ]}
+];
+
+var currentRound = 0, score = 0;
+var selectedWordIdx = 0;
+var wordStates = [];
+var tileStates = [];
+var moveHistory = [];
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = rand(0, i); var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function loadRound() {
+  if (currentRound >= ROUNDS.length) { endGame(); return; }
+  var round = ROUNDS[currentRound];
+  document.getElementById('roundNum').textContent = currentRound + 1;
+  document.getElementById('categoryBadge').textContent = round.category;
+
+  wordStates = round.words.map(function(w) {
+    return {word: w.word, emoji: w.emoji, filled: '', completed: false};
+  });
+  selectedWordIdx = 0;
+  moveHistory = [];
+
+  var allLetters = [];
+  round.words.forEach(function(w) {
+    for (var i = 0; i < w.word.length; i++) allLetters.push(w.word[i]);
+  });
+  var extraCount = Math.min(5, Math.max(2, Math.floor(allLetters.length * 0.3)));
+  var alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (var i = 0; i < extraCount; i++) {
+    allLetters.push(alpha[rand(0, 25)]);
+  }
+  tileStates = shuffle(allLetters).map(function(ch) { return {letter: ch, used: false}; });
+
+  renderAll();
+}
+
+function renderAll() {
+  renderWords();
+  renderTiles();
+}
+
+function renderWords() {
+  var container = document.getElementById('wordRows');
+  container.innerHTML = '';
+  wordStates.forEach(function(ws, wi) {
+    var row = document.createElement('div');
+    row.className = 'word-row' + (wi === selectedWordIdx ? ' selected' : '') + (ws.completed ? ' completed' : '');
+    row.dataset.widx = wi;
+
+    var emoji = document.createElement('div');
+    emoji.className = 'word-emoji';
+    emoji.textContent = ws.emoji;
+    row.appendChild(emoji);
+
+    var boxes = document.createElement('div');
+    boxes.className = 'word-boxes';
+    for (var i = 0; i < ws.word.length; i++) {
+      var box = document.createElement('div');
+      var ch = ws.filled[i] || '';
+      box.className = 'letter-box';
+      if (ws.completed) {
+        box.classList.add('correct');
+        box.textContent = ws.word[i];
+        box.style.color = '#4ade80';
+      } else if (ch) {
+        box.classList.add('filled');
+        box.textContent = ch;
+        box.style.color = '#fbbf24';
+      } else if (wi === selectedWordIdx && i === ws.filled.length) {
+        box.classList.add('next');
+      }
+      box.textContent = ch || ws.word[i];
+      boxes.appendChild(box);
+    }
+    row.appendChild(boxes);
+
+    var status = document.createElement('div');
+    status.className = 'word-status';
+    status.textContent = ws.completed ? '\u2714' : '';
+    row.appendChild(status);
+
+    container.appendChild(row);
+  });
+}
+
+function renderTiles() {
+  var container = document.getElementById('packTiles');
+  container.innerHTML = '';
+  tileStates.forEach(function(ts, ti) {
+    var tile = document.createElement('div');
+    tile.className = 'pack-tile' + (ts.used ? ' used' : '');
+    tile.dataset.tidx = ti;
+    tile.textContent = ts.letter;
+    container.appendChild(tile);
+  });
+}
+
+function selectWord(idx) {
+  if (wordStates[idx].completed) return;
+  selectedWordIdx = idx;
+  renderWords();
+  playTone(400, 0.06);
+}
+
+function placeLetter(tileIdx) {
+  var ts = tileStates[tileIdx];
+  if (ts.used) return;
+  var ws = wordStates[selectedWordIdx];
+  if (ws.completed) {
+    for (var i = 0; i < wordStates.length; i++) {
+      if (!wordStates[i].completed) { selectedWordIdx = i; ws = wordStates[i]; break; }
+    }
+    if (ws.completed) return;
+  }
+  if (ws.filled.length >= ws.word.length) return;
+
+  var expectedChar = ws.word[ws.filled.length];
+  if (ts.letter === expectedChar) {
+    ts.used = true;
+    ws.filled += ts.letter;
+    moveHistory.push({wordIdx: selectedWordIdx, tileIdx: tileIdx});
+    playTone(440 + ws.filled.length * 60, 0.1);
+
+    if (ws.filled === ws.word) {
+      ws.completed = true;
+      score += ws.word.length * 10;
+      document.getElementById('score').textContent = score;
+      playChord();
+
+      var allDone = wordStates.every(function(w) { return w.completed; });
+      if (allDone) {
+        renderAll();
+        score += 50;
+        document.getElementById('score').textContent = score;
+        showRoundComplete();
+        setTimeout(function() {
+          currentRound++;
+          loadRound();
+        }, 2000);
+        return;
+      }
+
+      for (var i = 0; i < wordStates.length; i++) {
+        if (!wordStates[i].completed) { selectedWordIdx = i; break; }
+      }
+    }
+  } else {
+    playTone(200, 0.15);
+    renderAll();
+    setTimeout(function() {
+      var boxes = document.querySelectorAll('.word-row.selected .letter-box.next');
+      if (boxes.length) boxes[0].classList.add('wrong');
+    }, 10);
+    return;
+  }
+  renderAll();
+}
+
+function undoLast() {
+  if (moveHistory.length === 0) return;
+  var last = moveHistory.pop();
+  var ws = wordStates[last.wordIdx];
+  if (ws.completed) return;
+  ws.filled = ws.filled.slice(0, -1);
+  tileStates[last.tileIdx].used = false;
+  selectedWordIdx = last.wordIdx;
+  renderAll();
+  playTone(350, 0.06);
+}
+
+function giveHint() {
+  var ws = wordStates[selectedWordIdx];
+  if (ws.completed) return;
+  var needed = ws.word[ws.filled.length];
+  for (var i = 0; i < tileStates.length; i++) {
+    if (!tileStates[i].used && tileStates[i].letter === needed) {
+      placeLetter(i);
+      return;
+    }
+  }
+}
+
+function showRoundComplete() {
+  var el = document.getElementById('roundComplete');
+  el.textContent = 'Round Complete!';
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  showConfetti();
+}
+
+function showConfetti() {
+  var container = document.getElementById('celebration');
+  container.innerHTML = '';
+  var colors = ['#fb923c','#4ade80','#38bdf8','#fbbf24','#f87171','#a78bfa'];
+  for (var i = 0; i < 40; i++) {
+    var c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = (Math.random() * 100) + '%';
+    c.style.top = '-10px';
+    c.style.background = colors[rand(0, colors.length - 1)];
+    c.style.setProperty('--dur', (1.5 + Math.random() * 2) + 's');
+    c.style.animationDelay = (Math.random() * 0.5) + 's';
+    c.style.width = (6 + Math.random() * 6) + 'px';
+    c.style.height = (6 + Math.random() * 6) + 'px';
+    container.appendChild(c);
+  }
+  setTimeout(function() { container.innerHTML = ''; }, 4000);
+}
+
+function endGame() {
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('gameOverlay').classList.add('active');
+}
+
+function restartGame() {
+  currentRound = 0; score = 0;
+  document.getElementById('score').textContent = 0;
+  document.getElementById('gameOverlay').classList.remove('active');
+  loadRound();
+}
+
+function playTone(freq, dur) {
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.12, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    o.start(); o.stop(ac.currentTime + dur);
+  } catch(e) {}
+}
+
+function playChord() {
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    [523, 659, 784].forEach(function(f, i) {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sine'; o.frequency.value = f;
+      var t = ac.currentTime + i * 0.08;
+      g.gain.setValueAtTime(0.1, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      o.start(t); o.stop(t + 0.3);
+    });
+  } catch(e) {}
+}
+
+function bindTouch(el, fn) {
+  el.addEventListener('click', function(e) { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; fn(); });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
+}
+
+document.getElementById('wordRows').addEventListener('click', function(e) {
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  var row = e.target.closest('.word-row');
+  if (row) selectWord(parseInt(row.dataset.widx));
+});
+document.getElementById('wordRows').addEventListener('touchend', function(e) {
+  var row = e.target.closest('.word-row');
+  if (row) { e.preventDefault(); selectWord(parseInt(row.dataset.widx)); }
+});
+
+document.getElementById('packTiles').addEventListener('click', function(e) {
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  var tile = e.target.closest('.pack-tile');
+  if (tile) placeLetter(parseInt(tile.dataset.tidx));
+});
+document.getElementById('packTiles').addEventListener('touchend', function(e) {
+  var tile = e.target.closest('.pack-tile');
+  if (tile) { e.preventDefault(); placeLetter(parseInt(tile.dataset.tidx)); }
+});
+
+bindTouch(document.getElementById('btnUndo'), undoLast);
+bindTouch(document.getElementById('btnHint'), giveHint);
+bindTouch(document.getElementById('btnBack'), function() { location.href = '../index.html'; });
+bindTouch(document.getElementById('btnRestart'), restartGame);
+bindTouch(document.getElementById('btnBackOver'), function() { location.href = '../index.html'; });
+
+loadRound();
+
+var bgP = document.getElementById('bgP');
+for (var i = 0; i < 30; i++) {
+  var d = document.createElement('div'); d.className = 'bg-dot';
+  d.style.left=(Math.random()*100)+'%'; d.style.top=(Math.random()*100)+'%';
+  d.style.setProperty('--dur',(4+Math.random()*6)+'s');
+  d.style.setProperty('--dx',((Math.random()-.5)*60)+'px');
+  d.style.setProperty('--dy',((Math.random()-.5)*60)+'px');
+  d.style.animationDelay=(Math.random()*5)+'s'; bgP.appendChild(d);
+}
+
+document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
+</script>
+</body>
+</html>

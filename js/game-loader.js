@@ -25,6 +25,7 @@ const CATEGORIES = {
         title: 'Maths',
         parent: 'learning',
         options: [
+            { name: 'Number Explorer', game: 'number-explorer' },
             { name: 'Arithmetica', game: 'arithmetica' },
             { name: 'Number Crunch', game: 'number-crunch' },
             { name: 'Fruit Math', game: 'fruit-math' }
@@ -34,7 +35,9 @@ const CATEGORIES = {
         title: 'Alphabets',
         parent: 'learning',
         options: [
-            { name: 'Word Explorer', game: 'word-explorer' }
+            { name: 'Alphabet Explorer', game: 'alphabet-explorer' },
+            { name: 'Word Explorer', game: 'word-explorer' },
+            { name: 'Word Creator', game: 'word-creator' }
         ]
     }
 };
@@ -248,6 +251,15 @@ function loadGame(gameName) {
                 break;
             case 'word-explorer':
                 window.location.href = 'games/word-explorer.html';
+                break;
+            case 'number-explorer':
+                window.location.href = 'games/number-explorer.html';
+                break;
+            case 'alphabet-explorer':
+                window.location.href = 'games/alphabet-explorer.html';
+                break;
+            case 'word-creator':
+                window.location.href = 'games/word-creator.html';
                 break;
             default:
                 console.log('Game not found:', gameName);
