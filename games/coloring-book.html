@@ -1,1507 +1,498 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jungle Coloring Wall</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Jungle Coloring Wall</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+body{
+  font-family:'Comic Sans MS','Chalkboard SE','Arial Rounded MT Bold',cursive;
+  background:linear-gradient(180deg,#1a4d2e 0%,#2d5f3f 50%,#1a3a2e 100%);
+  overflow:hidden;touch-action:none;
+}
+.jungle-bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+.leaf{position:absolute;opacity:.12;font-size:70px;animation:sway 6s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-5deg) translateX(0)}50%{transform:rotate(5deg) translateX(8px)}}
 
-        body {
-            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', cursive;
-            background: linear-gradient(180deg, #1a4d2e 0%, #2d5f3f 50%, #1a3a2e 100%);
-            overflow: hidden;
-            touch-action: none;
-        }
+#canvas-container{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  z-index:1;
+}
+#coloring-canvas{
+  background:rgba(255,255,255,.96);
+  cursor:crosshair;position:absolute;
+  top:50%;left:50%;transform-origin:center center;
+}
 
-        /* Animated jungle background */
-        .jungle-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
+.template-panel{
+  position:fixed;right:12px;top:50%;transform:translateY(-50%);
+  background:linear-gradient(135deg,#2ecc71,#27ae60);
+  padding:14px 10px;border-radius:22px;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  display:flex;flex-direction:column;gap:10px;
+  max-height:75vh;overflow-y:auto;z-index:1000;
+  border:4px solid #fff;
+}
+.template-panel::-webkit-scrollbar{width:5px}
+.template-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.4);border-radius:5px}
+.tpl-btn{
+  width:64px;height:64px;border:3px solid #fff;border-radius:14px;
+  cursor:pointer;transition:all .3s;
+  background:linear-gradient(135deg,#fff,#f8f9fa);
+  font-size:38px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 10px rgba(0,0,0,.15);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.tpl-btn:active{transform:scale(.9)}
+.tpl-btn.active{border-color:#FF6347;border-width:4px;background:linear-gradient(135deg,#FFF9C4,#FFE082)}
 
-        .leaf {
-            position: absolute;
-            opacity: 0.15;
-            font-size: 80px;
-            animation: sway 6s ease-in-out infinite;
-        }
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:8px 12px 14px;z-index:1000;
+  background:linear-gradient(to top,rgba(0,0,0,.6),transparent);
+}
+.color-bar{
+  display:flex;gap:6px;align-items:center;
+  padding:10px 18px;
+  background:linear-gradient(135deg,#ff6b35,#f7931e);
+  border-radius:50px;border:4px solid #fff;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
+}
+.color-swatch{
+  width:44px;height:44px;border-radius:50%;
+  border:3px solid #fff;cursor:pointer;
+  transition:all .2s;box-shadow:0 4px 10px rgba(0,0,0,.25);
+  touch-action:none;-webkit-tap-highlight-color:transparent;
+  position:relative;flex-shrink:0;
+}
+.color-swatch:active{transform:scale(1.15)}
+.color-swatch.active{
+  border-color:#FFD700;border-width:4px;
+  transform:scale(1.1);
+  box-shadow:0 4px 18px rgba(255,215,0,.6);
+}
+.bar-divider{width:2px;height:32px;background:rgba(255,255,255,.4);border-radius:2px;flex-shrink:0}
+.size-slider{
+  width:80px;height:6px;border-radius:10px;
+  background:linear-gradient(90deg,#ff6b35,#f7931e);
+  outline:none;-webkit-appearance:none;flex-shrink:0;
+}
+.size-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.3);
+  border:2px solid #FFD700;
+}
+.tool-btn{
+  width:44px;height:44px;background:#fff;border:3px solid #fff;
+  border-radius:50%;cursor:pointer;font-size:20px;
+  transition:all .2s;box-shadow:0 4px 10px rgba(0,0,0,.15);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0;
+}
+.tool-btn:active{transform:scale(.9)}
+.tool-btn.active{background:#90EE90;box-shadow:inset 0 3px 8px rgba(0,0,0,.2)}
 
-        @keyframes sway {
-            0%, 100% { transform: rotate(-5deg) translateX(0); }
-            50% { transform: rotate(5deg) translateX(10px); }
-        }
+.controls-row{
+  display:flex;gap:10px;align-items:center;
+}
+.ctrl-btn{
+  padding:8px 18px;background:rgba(255,255,255,.15);
+  border:2px solid rgba(255,255,255,.3);border-radius:30px;
+  color:white;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;backdrop-filter:blur(6px);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.ctrl-btn:active{transform:scale(.93)}
 
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            z-index: 1;
-        }
+.pointer-dot{
+  position:fixed;width:10px;height:10px;border-radius:50%;
+  pointer-events:none;z-index:999;
+  transform:translate(-50%,-50%);
+  border:2px solid rgba(255,255,255,.8);
+  transition:width .15s,height .15s;
+}
 
-        #coloring-canvas {
-            background: rgba(255, 255, 255, 0.95);
-            cursor: crosshair;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform-origin: center center;
-        }
-
-        .toolbar {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-            padding: 20px 25px;
-            border-radius: 60px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            z-index: 1000;
-            border: 5px solid #fff;
-        }
-
-        .color-btn {
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .color-btn::after {
-            content: '🎨';
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%) scale(0);
-            font-size: 20px;
-            transition: all 0.3s;
-        }
-
-        .color-btn:hover::after {
-            transform: translateX(-50%) scale(1);
-        }
-
-        .color-btn:hover {
-            transform: scale(1.25) rotate(10deg);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-        }
-
-        .color-btn.active {
-            border-color: #FFD700;
-            border-width: 5px;
-            transform: scale(1.15);
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); }
-            50% { box-shadow: 0 6px 25px rgba(255, 215, 0, 0.8); }
-        }
-
-        .tool-btn {
-            width: 55px;
-            height: 55px;
-            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
-            border: 4px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 26px;
-            transition: all 0.3s;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .tool-btn:hover {
-            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
-            transform: scale(1.2) rotate(-10deg);
-        }
-
-        .tool-btn.active {
-            background: linear-gradient(135deg, #90EE90 0%, #7FD87F 100%);
-            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.3);
-            transform: scale(1.1);
-        }
-
-        .divider {
-            width: 3px;
-            height: 45px;
-            background: linear-gradient(180deg, transparent, #fff, transparent);
-            border-radius: 5px;
-        }
-
-        .template-selector {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-            padding: 25px 15px;
-            border-radius: 30px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-height: 85vh;
-            overflow-y: auto;
-            z-index: 1000;
-            border: 5px solid #fff;
-        }
-
-        .template-selector::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .template-selector::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
-
-        .template-selector::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 10px;
-        }
-
-        .template-btn {
-            width: 90px;
-            height: 90px;
-            border: 4px solid #fff;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-            font-size: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .template-btn:hover {
-            border-color: #FFD700;
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .template-btn.active {
-            border-color: #FF6347;
-            border-width: 5px;
-            background: linear-gradient(135deg, #FFF9C4 0%, #FFE082 100%);
-            transform: scale(1.05);
-        }
-
-        .size-slider {
-            width: 120px;
-            height: 8px;
-            border-radius: 10px;
-            background: linear-gradient(90deg, #ff6b35, #f7931e);
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .size-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            border: 3px solid #FFD700;
-        }
-
-        .size-slider::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            border: 3px solid #FFD700;
-        }
-
-        .controls-panel {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-            padding: 15px 30px;
-            border-radius: 50px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            z-index: 1000;
-            border: 5px solid #fff;
-        }
-
-        .control-btn {
-            padding: 12px 25px;
-            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
-            border: 3px solid #fff;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            color: #333;
-        }
-
-        .control-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-        }
-
-        .zoom-info {
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px 15px;
-            border-radius: 20px;
-        }
-
-        .animal-label {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 72px;
-            color: #FFD700;
-            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.6);
-            pointer-events: none;
-            z-index: 999;
-            animation: fadeInOut 2s ease-in-out;
-        }
-
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-    </style>
+.animal-label{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:64px;color:#FFD700;
+  text-shadow:3px 3px 6px rgba(0,0,0,.6);
+  pointer-events:none;z-index:999;
+  animation:fadeInOut 1.8s ease-in-out forwards;
+}
+@keyframes fadeInOut{
+  0%,100%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+</style>
 </head>
 <body>
-    <div class="jungle-bg" id="jungle-bg"></div>
-
-    <div class="toolbar">
-        <div class="color-btn active" data-color="#FF6B6B" style="background: #FF6B6B;"></div>
-        <div class="color-btn" data-color="#FF1493" style="background: #FF1493;"></div>
-        <div class="color-btn" data-color="#4ECDC4" style="background: #4ECDC4;"></div>
-        <div class="color-btn" data-color="#45B7D1" style="background: #45B7D1;"></div>
-        <div class="color-btn" data-color="#FFA07A" style="background: #FFA07A;"></div>
-        <div class="color-btn" data-color="#FFD700" style="background: #FFD700;"></div>
-        <div class="color-btn" data-color="#98D8C8" style="background: #98D8C8;"></div>
-        <div class="color-btn" data-color="#F7DC6F" style="background: #F7DC6F;"></div>
-        <div class="color-btn" data-color="#BB8FCE" style="background: #BB8FCE;"></div>
-        <div class="color-btn" data-color="#52B788" style="background: #52B788;"></div>
-        <div class="color-btn" data-color="#FF6347" style="background: #FF6347;"></div>
-        <div class="color-btn" data-color="#20B2AA" style="background: #20B2AA;"></div>
-
-        <div class="divider"></div>
-
-        <input type="range" class="size-slider" min="5" max="60" value="25" id="brush-size">
-
-        <div class="divider"></div>
-
-        <button class="tool-btn" id="eraser-btn" title="Eraser">🧽</button>
-        <button class="tool-btn" id="clear-btn" title="Clear All">🔄</button>
-    </div>
-
-    <div class="template-selector">
-        <button class="template-btn active" data-template="elephant">🐘</button>
-        <button class="template-btn" data-template="lion">🦁</button>
-        <button class="template-btn" data-template="monkey">🐵</button>
-        <button class="template-btn" data-template="parrot">🦜</button>
-        <button class="template-btn" data-template="snake">🐍</button>
-        <button class="template-btn" data-template="tiger">🐯</button>
-        <button class="template-btn" data-template="giraffe">🦒</button>
-        <button class="template-btn" data-template="crocodile">🐊</button>
-        <button class="template-btn" data-template="toucan">🦤</button>
-        <button class="template-btn" data-template="frog">🐸</button>
-    </div>
-
-    <div class="controls-panel">
-        <button class="control-btn" id="zoom-in">🔍 Zoom In</button>
-        <button class="control-btn" id="zoom-out">🔍 Zoom Out</button>
-        <button class="control-btn" id="reset-view">🎯 Reset</button>
-        <div class="zoom-info" id="zoom-info">100%</div>
-    </div>
-
-    <div id="canvas-container">
-        <canvas id="coloring-canvas"></canvas>
-    </div>
-
-    <script>
-        const canvas = document.getElementById('coloring-canvas');
-        const ctx = canvas.getContext('2d');
-
-        // Full screen canvas - spans multiple screens if needed
-        canvas.width = window.innerWidth * 2;
-        canvas.height = window.innerHeight * 2;
-
-        let isDrawing = false;
-        let currentColor = '#FF6B6B';
-        let brushSize = 25;
-        let isEraser = false;
-        let currentTemplate = 'elephant';
-
-        // Pan and zoom - start centered
-        let scale = 1;
-        let offsetX = 0;
-        let offsetY = 0;
-        let isPanning = false;
-        let startPanX = 0;
-        let startPanY = 0;
-
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        // Create jungle background
-        function createJungleBackground() {
-            const bg = document.getElementById('jungle-bg');
-            const leaves = ['🌿', '🍃', '🌴', '🌺', '🌸'];
-            for (let i = 0; i < 20; i++) {
-                const leaf = document.createElement('div');
-                leaf.className = 'leaf';
-                leaf.textContent = leaves[Math.floor(Math.random() * leaves.length)];
-                leaf.style.left = Math.random() * 100 + '%';
-                leaf.style.top = Math.random() * 100 + '%';
-                leaf.style.animationDelay = Math.random() * 6 + 's';
-                bg.appendChild(leaf);
-            }
-        }
-
-        createJungleBackground();
-
-        // Vector drawing functions for animals
-        function drawElephant() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 50, 180, 150, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Head
-            ctx.beginPath();
-            ctx.ellipse(cx, cy - 120, 130, 120, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Ears
-            ctx.beginPath();
-            ctx.ellipse(cx - 150, cy - 120, 70, 100, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 150, cy - 120, 70, 100, 0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Trunk
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - 60);
-            ctx.quadraticCurveTo(cx - 50, cy + 50, cx - 40, cy + 150);
-            ctx.quadraticCurveTo(cx - 30, cy + 180, cx - 10, cy + 190);
-            ctx.quadraticCurveTo(cx + 10, cy + 180, cx + 20, cy + 150);
-            ctx.quadraticCurveTo(cx + 30, cy + 50, cx, cy - 60);
-            ctx.fill();
-            ctx.stroke();
-
-            // Legs
-            for (let i = 0; i < 4; i++) {
-                const legX = cx - 100 + i * 70;
-                ctx.fillRect(legX - 25, cy + 150, 50, 120);
-                ctx.strokeRect(legX - 25, cy + 150, 50, 120);
-            }
-
-            // Eyes
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx - 50, cy - 140, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(cx + 50, cy - 140, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Tusks
-            ctx.fillStyle = 'white';
-            ctx.strokeStyle = '#333';
-            ctx.beginPath();
-            ctx.moveTo(cx - 40, cy - 40);
-            ctx.quadraticCurveTo(cx - 60, cy + 20, cx - 50, cy + 60);
-            ctx.lineTo(cx - 40, cy + 55);
-            ctx.quadraticCurveTo(cx - 45, cy + 20, cx - 30, cy - 40);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(cx + 40, cy - 40);
-            ctx.quadraticCurveTo(cx + 60, cy + 20, cx + 50, cy + 60);
-            ctx.lineTo(cx + 40, cy + 55);
-            ctx.quadraticCurveTo(cx + 45, cy + 20, cx + 30, cy - 40);
-            ctx.fill();
-            ctx.stroke();
-        }
-
-        function drawLion() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Mane
-            for (let i = 0; i < 16; i++) {
-                const angle = (i / 16) * Math.PI * 2;
-                const x = cx + Math.cos(angle) * 140;
-                const y = cy - 80 + Math.sin(angle) * 140;
-                ctx.beginPath();
-                ctx.arc(x, y, 50, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-
-            // Head
-            ctx.beginPath();
-            ctx.ellipse(cx, cy - 80, 110, 100, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Ears
-            ctx.beginPath();
-            ctx.arc(cx - 80, cy - 140, 35, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(cx + 80, cy - 140, 35, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 80, 140, 120, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Legs
-            for (let i = 0; i < 4; i++) {
-                const legX = cx - 90 + i * 60;
-                ctx.fillRect(legX - 20, cy + 150, 40, 110);
-                ctx.strokeRect(legX - 20, cy + 150, 40, 110);
-            }
-
-            // Tail
-            ctx.beginPath();
-            ctx.moveTo(cx + 140, cy + 100);
-            ctx.quadraticCurveTo(cx + 220, cy + 80, cx + 250, cy + 120);
-            ctx.lineWidth = 15;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(cx + 250, cy + 120, 30, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.lineWidth = 6;
-            ctx.stroke();
-
-            // Eyes
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx - 40, cy - 90, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(cx + 40, cy - 90, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Nose
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - 50);
-            ctx.lineTo(cx - 15, cy - 30);
-            ctx.lineTo(cx + 15, cy - 30);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        function drawMonkey() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 20, 120, 140, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Head
-            ctx.beginPath();
-            ctx.arc(cx, cy - 120, 100, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Ears
-            ctx.beginPath();
-            ctx.arc(cx - 90, cy - 120, 40, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(cx + 90, cy - 120, 40, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Face
-            ctx.beginPath();
-            ctx.ellipse(cx, cy - 100, 60, 70, 0, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFE5CC';
-            ctx.fill();
-            ctx.fillStyle = 'white';
-            ctx.stroke();
-
-            // Arms
-            ctx.beginPath();
-            ctx.ellipse(cx - 130, cy + 50, 30, 100, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 130, cy + 50, 30, 100, 0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Legs
-            ctx.beginPath();
-            ctx.ellipse(cx - 50, cy + 180, 30, 80, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 50, cy + 180, 30, 80, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Tail
-            ctx.beginPath();
-            ctx.moveTo(cx, cy + 140);
-            ctx.bezierCurveTo(cx + 100, cy + 180, cx + 150, cy + 80, cx + 180, cy - 50);
-            ctx.lineWidth = 15;
-            ctx.stroke();
-            ctx.lineWidth = 6;
-
-            // Eyes
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx - 30, cy - 110, 12, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(cx + 30, cy - 110, 12, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Smile
-            ctx.beginPath();
-            ctx.arc(cx, cy - 90, 30, 0.2, Math.PI - 0.2);
-            ctx.stroke();
-        }
-
-        function drawParrot() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 30, 100, 130, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Head
-            ctx.beginPath();
-            ctx.arc(cx, cy - 80, 80, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Beak
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.moveTo(cx + 40, cy - 70);
-            ctx.quadraticCurveTo(cx + 100, cy - 60, cx + 90, cy - 40);
-            ctx.lineTo(cx + 50, cy - 50);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = 'white';
-
-            // Wings
-            ctx.beginPath();
-            ctx.ellipse(cx - 80, cy + 20, 50, 100, -0.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 80, cy + 20, 50, 100, 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Tail feathers
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.ellipse(cx - 40 + i * 20, cy + 160, 20, 80, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-
-            // Legs
-            ctx.lineWidth = 10;
-            ctx.beginPath();
-            ctx.moveTo(cx - 30, cy + 140);
-            ctx.lineTo(cx - 30, cy + 200);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(cx + 30, cy + 140);
-            ctx.lineTo(cx + 30, cy + 200);
-            ctx.stroke();
-
-            ctx.lineWidth = 6;
-
-            // Feet
-            for (let i = -1; i <= 1; i++) {
-                ctx.beginPath();
-                ctx.moveTo(cx - 30, cy + 200);
-                ctx.lineTo(cx - 30 + i * 20, cy + 230);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(cx + 30, cy + 200);
-                ctx.lineTo(cx + 30 + i * 20, cy + 230);
-                ctx.stroke();
-            }
-
-            // Eye
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx + 20, cy - 90, 12, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Crest
-            ctx.fillStyle = 'white';
-            for (let i = 0; i < 3; i++) {
-                ctx.beginPath();
-                ctx.ellipse(cx - 20 + i * 20, cy - 140, 15, 40, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-        }
-
-        function drawSnake() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Coiled body
-            const coils = 5;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - 200);
-            
-            for (let i = 0; i < coils; i++) {
-                const y = cy - 200 + i * 70;
-                ctx.bezierCurveTo(
-                    cx + 150, y + 20,
-                    cx + 150, y + 50,
-                    cx, y + 70
-                );
-                ctx.bezierCurveTo(
-                    cx - 150, y + 90,
-                    cx - 150, y + 120,
-                    cx, y + 140
-                );
-            }
-
-            ctx.lineWidth = 80;
-            ctx.stroke();
-
-            // Head
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.ellipse(cx, cy - 240, 70, 60, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Eyes
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx - 25, cy - 250, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(cx + 25, cy - 250, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Tongue
-            ctx.strokeStyle = '#FF1493';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - 200);
-            ctx.lineTo(cx - 10, cy - 160);
-            ctx.moveTo(cx, cy - 200);
-            ctx.lineTo(cx + 10, cy - 160);
-            ctx.stroke();
-
-            // Pattern
-            ctx.fillStyle = 'white';
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            for (let i = 0; i < coils * 3; i++) {
-                const patternY = cy - 180 + i * 40;
-                const patternX = cx + (i % 2 === 0 ? 60 : -60);
-                ctx.beginPath();
-                ctx.arc(patternX, patternY, 20, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-        }
-
-        function drawTiger() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 50, 160, 130, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Head
-            ctx.beginPath();
-            ctx.ellipse(cx, cy - 100, 120, 110, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Ears
-            ctx.beginPath();
-            ctx.moveTo(cx - 90, cy - 160);
-            ctx.lineTo(cx - 70, cy - 120);
-            ctx.lineTo(cx - 50, cy - 150);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(cx + 90, cy - 160);
-            ctx.lineTo(cx + 70, cy - 120);
-            ctx.lineTo(cx + 50, cy - 150);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Legs
-            for (let i = 0; i < 4; i++) {
-                const legX = cx - 100 + i * 70;
-                ctx.fillRect(legX - 20, cy + 130, 40, 120);
-                ctx.strokeRect(legX - 20, cy + 130, 40, 120);
-            }
-
-            // Tail
-            ctx.beginPath();
-            ctx.moveTo(cx + 160, cy + 60);
-            ctx.quadraticCurveTo(cx + 250, cy + 40, cx + 280, cy - 20);
-            ctx.lineWidth = 25;
-            ctx.stroke();
-            ctx.lineWidth = 6;
-
-            // Stripes on body
-            for (let i = 0; i < 6; i++) {
-                ctx.beginPath();
-                ctx.moveTo(cx - 120, cy + 20 + i * 25);
-                ctx.lineTo(cx + 120, cy + 20 + i * 25);
-                ctx.lineWidth = 15;
-                ctx.stroke();
-                ctx.lineWidth = 6;
-            }
-
-            // Face features
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx - 40, cy - 110, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(cx + 40, cy - 110, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Nose
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - 70);
-            ctx.lineTo(cx - 15, cy - 50);
-            ctx.lineTo(cx + 15, cy - 50);
-            ctx.closePath();
-            ctx.fill();
-
-            // Whiskers
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
-            for (let i = -1; i <= 1; i++) {
-                ctx.beginPath();
-                ctx.moveTo(cx - 50, cy - 70 + i * 15);
-                ctx.lineTo(cx - 130, cy - 80 + i * 20);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(cx + 50, cy - 70 + i * 15);
-                ctx.lineTo(cx + 130, cy - 80 + i * 20);
-                ctx.stroke();
-            }
-        }
-
-        function drawGiraffe() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 100, 140, 120, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Neck
-            ctx.fillRect(cx - 30, cy - 300, 60, 400);
-            ctx.strokeRect(cx - 30, cy - 300, 60, 400);
-
-            // Head
-            ctx.beginPath();
-            ctx.ellipse(cx, cy - 330, 60, 50, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Snout
-            ctx.beginPath();
-            ctx.ellipse(cx + 40, cy - 320, 30, 20, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Ears
-            ctx.beginPath();
-            ctx.ellipse(cx - 40, cy - 360, 20, 30, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 20, cy - 360, 20, 30, 0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Ossicones (horns)
-            ctx.lineWidth = 10;
-            ctx.beginPath();
-            ctx.moveTo(cx - 30, cy - 370);
-            ctx.lineTo(cx - 30, cy - 410);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(cx + 10, cy - 370);
-            ctx.lineTo(cx + 10, cy - 410);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(cx - 30, cy - 410, 8, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(cx + 10, cy - 410, 8, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.lineWidth = 6;
-
-            // Legs
-            for (let i = 0; i < 4; i++) {
-                const legX = cx - 90 + i * 60;
-                ctx.fillRect(legX - 15, cy + 180, 30, 150);
-                ctx.strokeRect(legX - 15, cy + 180, 30, 150);
-            }
-
-            // Spots
-            ctx.fillStyle = 'white';
-            const spots = [
-                [cx - 80, cy + 80], [cx - 40, cy + 60], [cx, cy + 100],
-                [cx + 40, cy + 70], [cx + 80, cy + 90],
-                [cx - 20, cy - 100], [cx + 10, cy - 150], [cx - 15, cy - 200]
-            ];
-            spots.forEach(([x, y]) => {
-                ctx.beginPath();
-                ctx.ellipse(x, y, 25, 30, Math.random(), 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            });
-
-            // Tail
-            ctx.lineWidth = 10;
-            ctx.beginPath();
-            ctx.moveTo(cx + 140, cy + 100);
-            ctx.lineTo(cx + 200, cy + 180);
-            ctx.stroke();
-
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.ellipse(cx + 200, cy + 180, 20, 30, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.lineWidth = 6;
-            ctx.stroke();
-
-            // Eye
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx + 20, cy - 340, 12, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function drawCrocodile() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, 200, 80, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Head
-            ctx.beginPath();
-            ctx.ellipse(cx - 220, cy - 20, 80, 60, -0.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Snout
-            ctx.beginPath();
-            ctx.moveTo(cx - 280, cy - 40);
-            ctx.lineTo(cx - 380, cy - 30);
-            ctx.lineTo(cx - 380, cy + 10);
-            ctx.lineTo(cx - 280, cy);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Teeth
-            ctx.fillStyle = 'white';
-            for (let i = 0; i < 8; i++) {
-                const toothX = cx - 370 + i * 15;
-                ctx.beginPath();
-                ctx.moveTo(toothX, cy - 30);
-                ctx.lineTo(toothX - 5, cy - 15);
-                ctx.lineTo(toothX + 5, cy - 15);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(toothX, cy + 10);
-                ctx.lineTo(toothX - 5, cy - 5);
-                ctx.lineTo(toothX + 5, cy - 5);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-            }
-
-            // Legs
-            ctx.fillStyle = 'white';
-            const legs = [
-                [cx - 120, cy + 70],
-                [cx - 40, cy + 70],
-                [cx + 40, cy + 70],
-                [cx + 120, cy + 70]
-            ];
-            legs.forEach(([x, y]) => {
-                ctx.fillRect(x - 20, y, 40, 60);
-                ctx.strokeRect(x - 20, y, 40, 60);
-            });
-
-            // Tail
-            ctx.beginPath();
-            ctx.moveTo(cx + 200, cy);
-            ctx.quadraticCurveTo(cx + 320, cy - 60, cx + 400, cy - 40);
-            ctx.quadraticCurveTo(cx + 320, cy + 20, cx + 200, cy);
-            ctx.fill();
-            ctx.stroke();
-
-            // Scales on back
-            for (let i = 0; i < 8; i++) {
-                const scaleX = cx - 140 + i * 40;
-                ctx.beginPath();
-                ctx.moveTo(scaleX, cy - 80);
-                ctx.lineTo(scaleX - 15, cy - 50);
-                ctx.lineTo(scaleX + 15, cy - 50);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-            }
-
-            // Eye
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx - 240, cy - 35, 15, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function drawToucan() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 20, 100, 120, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Head
-            ctx.beginPath();
-            ctx.arc(cx - 20, cy - 80, 70, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Large beak
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.moveTo(cx + 30, cy - 100);
-            ctx.quadraticCurveTo(cx + 150, cy - 120, cx + 180, cy - 70);
-            ctx.quadraticCurveTo(cx + 150, cy - 20, cx + 30, cy - 40);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Beak detail
-            ctx.beginPath();
-            ctx.moveTo(cx + 30, cy - 70);
-            ctx.lineTo(cx + 180, cy - 70);
-            ctx.stroke();
-
-            ctx.fillStyle = 'white';
-
-            // Wings
-            ctx.beginPath();
-            ctx.ellipse(cx - 70, cy + 30, 40, 90, -0.4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 70, cy + 30, 40, 90, 0.4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Tail
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.ellipse(cx - 30 + i * 15, cy + 140, 15, 70, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-
-            // Legs
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(cx - 25, cy + 120);
-            ctx.lineTo(cx - 25, cy + 180);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(cx + 25, cy + 120);
-            ctx.lineTo(cx + 25, cy + 180);
-            ctx.stroke();
-
-            ctx.lineWidth = 6;
-
-            // Feet
-            for (let i = -1; i <= 1; i++) {
-                ctx.beginPath();
-                ctx.moveTo(cx - 25, cy + 180);
-                ctx.lineTo(cx - 25 + i * 15, cy + 210);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(cx + 25, cy + 180);
-                ctx.lineTo(cx + 25 + i * 15, cy + 210);
-                ctx.stroke();
-            }
-
-            // Eye
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx + 10, cy - 90, 12, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Eye ring
-            ctx.fillStyle = 'white';
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.arc(cx + 10, cy - 90, 25, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-
-        function drawFrog() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6;
-            ctx.fillStyle = 'white';
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + 30, 130, 110, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Head (merged with body)
-            ctx.beginPath();
-            ctx.ellipse(cx, cy - 50, 120, 80, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Eyes
-            ctx.beginPath();
-            ctx.ellipse(cx - 60, cy - 90, 45, 50, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 60, cy - 90, 45, 50, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Pupils
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(cx - 60, cy - 85, 20, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(cx + 60, cy - 85, 20, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = 'white';
-
-            // Mouth
-            ctx.beginPath();
-            ctx.arc(cx, cy - 20, 60, 0.1, Math.PI - 0.1);
-            ctx.stroke();
-
-            // Front legs
-            ctx.beginPath();
-            ctx.ellipse(cx - 110, cy + 80, 30, 60, -0.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 110, cy + 80, 30, 60, 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Back legs (folded)
-            ctx.beginPath();
-            ctx.ellipse(cx - 130, cy + 20, 50, 80, -0.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(cx + 130, cy + 20, 50, 80, 0.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Feet
-            for (let i = 0; i < 3; i++) {
-                ctx.beginPath();
-                ctx.arc(cx - 140 + i * 20, cy + 140, 15, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.arc(cx + 120 + i * 20, cy + 140, 15, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-
-            // Spots
-            const spots = [
-                [cx - 50, cy + 20], [cx, cy + 50], [cx + 50, cy + 20],
-                [cx - 70, cy - 30], [cx + 70, cy - 30]
-            ];
-            spots.forEach(([x, y]) => {
-                ctx.beginPath();
-                ctx.arc(x, y, 15, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            });
-        }
-
-        const templates = {
-            elephant: drawElephant,
-            lion: drawLion,
-            monkey: drawMonkey,
-            parrot: drawParrot,
-            snake: drawSnake,
-            tiger: drawTiger,
-            giraffe: drawGiraffe,
-            crocodile: drawCrocodile,
-            toucan: drawToucan,
-            frog: drawFrog
-        };
-
-        function clearCanvas() {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            templates[currentTemplate]();
-        }
-
-        clearCanvas();
-
-        // Apply transformation for pan and zoom
-        function applyTransform() {
-            const container = document.getElementById('canvas-container');
-            // Center the canvas first, then apply offset and scale
-            canvas.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) scale(${scale})`;
-        }
-
-        applyTransform();
-
-        // Color selection
-        document.querySelectorAll('.color-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentColor = btn.dataset.color;
-                isEraser = false;
-                document.getElementById('eraser-btn').classList.remove('active');
-            });
-        });
-
-        // Template selection
-        document.querySelectorAll('.template-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentTemplate = btn.dataset.template;
-                clearCanvas();
-                
-                // Show animal label
-                const label = document.createElement('div');
-                label.className = 'animal-label';
-                label.textContent = btn.textContent;
-                document.body.appendChild(label);
-                setTimeout(() => label.remove(), 2000);
-            });
-        });
-
-        // Brush size
-        document.getElementById('brush-size').addEventListener('input', (e) => {
-            brushSize = e.target.value;
-        });
-
-        // Eraser
-        document.getElementById('eraser-btn').addEventListener('click', () => {
-            isEraser = !isEraser;
-            document.getElementById('eraser-btn').classList.toggle('active');
-            if (isEraser) {
-                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            }
-        });
-
-        // Clear
-        document.getElementById('clear-btn').addEventListener('click', () => {
-            if (confirm('Clear all coloring?')) {
-                clearCanvas();
-            }
-        });
-
-        // Zoom controls
-        document.getElementById('zoom-in').addEventListener('click', () => {
-            scale = Math.min(scale * 1.2, 3);
-            applyTransform();
-            updateZoomInfo();
-        });
-
-        document.getElementById('zoom-out').addEventListener('click', () => {
-            scale = Math.max(scale * 0.8, 0.3);
-            applyTransform();
-            updateZoomInfo();
-        });
-
-        document.getElementById('reset-view').addEventListener('click', () => {
-            scale = 1;
-            offsetX = 0;
-            offsetY = 0;
-            applyTransform();
-            updateZoomInfo();
-        });
-
-        function updateZoomInfo() {
-            document.getElementById('zoom-info').textContent = Math.round(scale * 100) + '%';
-        }
-
-        // Drawing functions
-        function getCanvasCoordinates(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            
-            const x = (clientX - rect.left) / scale;
-            const y = (clientY - rect.top) / scale;
-            
-            return { x, y };
-        }
-
-        function startDrawing(e) {
-            if (e.button === 2 || e.ctrlKey) { // Right click or ctrl for panning
-                isPanning = true;
-                startPanX = (e.clientX || e.touches[0].clientX) - offsetX;
-                startPanY = (e.clientY || e.touches[0].clientY) - offsetY;
-                canvas.style.cursor = 'grabbing';
-            } else {
-                isDrawing = true;
-                const coords = getCanvasCoordinates(e);
-                ctx.beginPath();
-                ctx.moveTo(coords.x, coords.y);
-            }
-        }
-
-        function stopDrawing() {
-            isDrawing = false;
-            isPanning = false;
-            canvas.style.cursor = 'crosshair';
-            ctx.beginPath();
-        }
-
-        function draw(e) {
-            if (isPanning) {
-                offsetX = (e.clientX || e.touches[0].clientX) - startPanX;
-                offsetY = (e.clientY || e.touches[0].clientY) - startPanY;
-                applyTransform();
-                return;
-            }
-
-            if (!isDrawing) return;
-
-            const coords = getCanvasCoordinates(e);
-
-            ctx.lineWidth = brushSize;
-            ctx.strokeStyle = isEraser ? 'white' : currentColor;
-            ctx.globalCompositeOperation = 'source-over';
-
-            ctx.lineTo(coords.x, coords.y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(coords.x, coords.y);
-        }
-
-        // Mouse events
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-
-        // Touch events
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            startDrawing(e);
-        });
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            draw(e);
-        });
-        canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            stopDrawing();
-        });
-
-        // Prevent context menu
-        canvas.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-        });
-
-        // Zoom with mouse wheel
-        canvas.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-            scale = Math.max(0.3, Math.min(3, scale * zoomFactor));
-            applyTransform();
-            updateZoomInfo();
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            tempCtx.drawImage(canvas, 0, 0);
-
-            canvas.width = window.innerWidth * 2;
-            canvas.height = window.innerHeight * 2;
-
-            ctx.drawImage(tempCanvas, 0, 0);
-            applyTransform();
-        });
-    </script>
+<div class="jungle-bg" id="jungleBg"></div>
+
+<div id="canvas-container">
+  <canvas id="coloring-canvas"></canvas>
+</div>
+
+<div class="template-panel" id="templatePanel"></div>
+
+<div class="bottom-bar">
+  <div class="color-bar" id="colorBar"></div>
+  <div class="controls-row">
+    <button class="ctrl-btn" id="clearBtn">&#128260; Clear</button>
+    <button class="ctrl-btn" id="backBtn">Back to Menu</button>
+  </div>
+</div>
+
+<script>
+var canvas = document.getElementById('coloring-canvas');
+var ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth * 2;
+canvas.height = window.innerHeight * 2;
+
+var COLORS = [
+  '#FF6B6B','#FF1493','#FF6347','#FFA07A','#FFD700','#F7DC6F',
+  '#4ECDC4','#45B7D1','#20B2AA','#98D8C8','#52B788','#BB8FCE',
+  '#fff','#888','#333'
+];
+
+var currentColor = COLORS[0];
+var brushSize = 25;
+var isEraser = false;
+var currentTemplate = 'elephant';
+var scale = 1;
+var offsetX = 0, offsetY = 0;
+
+var activePointers = {};
+
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+
+function buildColorBar() {
+  var bar = document.getElementById('colorBar');
+  bar.innerHTML = '';
+  COLORS.forEach(function(c, i) {
+    var sw = document.createElement('div');
+    sw.className = 'color-swatch' + (c === currentColor && !isEraser ? ' active' : '');
+    sw.style.background = c;
+    if (c === '#fff') sw.style.border = '3px solid #ccc';
+    sw.dataset.color = c;
+    bar.appendChild(sw);
+  });
+
+  var div1 = document.createElement('div');
+  div1.className = 'bar-divider';
+  bar.appendChild(div1);
+
+  var slider = document.createElement('input');
+  slider.type = 'range';
+  slider.className = 'size-slider';
+  slider.min = 5; slider.max = 60; slider.value = brushSize;
+  slider.id = 'brushSlider';
+  bar.appendChild(slider);
+
+  var div2 = document.createElement('div');
+  div2.className = 'bar-divider';
+  bar.appendChild(div2);
+
+  var eraser = document.createElement('button');
+  eraser.className = 'tool-btn' + (isEraser ? ' active' : '');
+  eraser.textContent = '\uD83E\uDDFD';
+  eraser.id = 'eraserBtn';
+  bar.appendChild(eraser);
+}
+
+var templates = {
+  elephant: { emoji: '\uD83D\uDC18', draw: drawElephant },
+  lion: { emoji: '\uD83E\uDD81', draw: drawLion },
+  monkey: { emoji: '\uD83D\uDC35', draw: drawMonkey },
+  parrot: { emoji: '\uD83E\uDD9C', draw: drawParrot },
+  snake: { emoji: '\uD83D\uDC0D', draw: drawSnake },
+  tiger: { emoji: '\uD83D\uDC2F', draw: drawTiger },
+  giraffe: { emoji: '\uD83E\uDD92', draw: drawGiraffe },
+  frog: { emoji: '\uD83D\uDC38', draw: drawFrog }
+};
+
+function buildTemplatePanel() {
+  var panel = document.getElementById('templatePanel');
+  panel.innerHTML = '';
+  Object.keys(templates).forEach(function(key) {
+    var btn = document.createElement('button');
+    btn.className = 'tpl-btn' + (key === currentTemplate ? ' active' : '');
+    btn.textContent = templates[key].emoji;
+    btn.dataset.template = key;
+    panel.appendChild(btn);
+  });
+}
+
+function clearCanvas() {
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  templates[currentTemplate].draw();
+}
+
+function applyTransform() {
+  canvas.style.transform = 'translate(calc(-50% + ' + offsetX + 'px), calc(-50% + ' + offsetY + 'px)) scale(' + scale + ')';
+}
+
+function getCanvasCoords(cx, cy) {
+  var rect = canvas.getBoundingClientRect();
+  return { x: (cx - rect.left) / scale, y: (cy - rect.top) / scale };
+}
+
+function drawStroke(fromX, fromY, toX, toY, color, size) {
+  ctx.lineWidth = size;
+  ctx.strokeStyle = color;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.lineTo(toX, toY);
+  ctx.stroke();
+}
+
+function handlePointerDown(e) {
+  e.preventDefault();
+  var target = e.target;
+
+  if (target.classList && target.classList.contains('color-swatch')) {
+    currentColor = target.dataset.color;
+    isEraser = false;
+    document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active') });
+    target.classList.add('active');
+    var eb = document.getElementById('eraserBtn');
+    if (eb) eb.classList.remove('active');
+    return;
+  }
+  if (target.id === 'eraserBtn') {
+    isEraser = !isEraser;
+    target.classList.toggle('active');
+    if (isEraser) document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active') });
+    return;
+  }
+  if (target.classList && target.classList.contains('tpl-btn')) {
+    currentTemplate = target.dataset.template;
+    document.querySelectorAll('.tpl-btn').forEach(function(b) { b.classList.remove('active') });
+    target.classList.add('active');
+    clearCanvas();
+    var label = document.createElement('div');
+    label.className = 'animal-label';
+    label.textContent = templates[currentTemplate].emoji;
+    document.body.appendChild(label);
+    setTimeout(function() { label.remove() }, 1800);
+    return;
+  }
+
+  if (target !== canvas) return;
+
+  var coords = getCanvasCoords(e.clientX, e.clientY);
+  activePointers[e.pointerId] = { x: coords.x, y: coords.y, color: isEraser ? 'white' : currentColor };
+
+  var dot = document.getElementById('pdot-' + e.pointerId);
+  if (!dot) {
+    dot = document.createElement('div');
+    dot.className = 'pointer-dot';
+    dot.id = 'pdot-' + e.pointerId;
+    document.body.appendChild(dot);
+  }
+  dot.style.left = e.clientX + 'px';
+  dot.style.top = e.clientY + 'px';
+  dot.style.background = activePointers[e.pointerId].color;
+  dot.style.width = Math.min(brushSize, 30) + 'px';
+  dot.style.height = Math.min(brushSize, 30) + 'px';
+}
+
+function handlePointerMove(e) {
+  e.preventDefault();
+  if (!activePointers[e.pointerId]) return;
+
+  var prev = activePointers[e.pointerId];
+  var coords = getCanvasCoords(e.clientX, e.clientY);
+  drawStroke(prev.x, prev.y, coords.x, coords.y, prev.color, brushSize);
+  activePointers[e.pointerId].x = coords.x;
+  activePointers[e.pointerId].y = coords.y;
+
+  var dot = document.getElementById('pdot-' + e.pointerId);
+  if (dot) { dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px'; }
+}
+
+function handlePointerUp(e) {
+  delete activePointers[e.pointerId];
+  var dot = document.getElementById('pdot-' + e.pointerId);
+  if (dot) dot.remove();
+  ctx.beginPath();
+}
+
+document.addEventListener('pointerdown', handlePointerDown);
+document.addEventListener('pointermove', handlePointerMove);
+document.addEventListener('pointerup', handlePointerUp);
+document.addEventListener('pointercancel', handlePointerUp);
+
+document.getElementById('colorBar').addEventListener('input', function(e) {
+  if (e.target.id === 'brushSlider') brushSize = parseInt(e.target.value);
+});
+
+function addTouchBtn(id, fn) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) fn() });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); fn() });
+}
+
+addTouchBtn('clearBtn', function() { clearCanvas() });
+addTouchBtn('backBtn', function() { location.href = '../index.html' });
+
+var bg = document.getElementById('jungleBg');
+var bgEmojis = ['\uD83C\uDF3F', '\uD83C\uDF43', '\uD83C\uDF34', '\uD83C\uDF3A'];
+for (var i = 0; i < 15; i++) {
+  var leaf = document.createElement('div');
+  leaf.className = 'leaf';
+  leaf.textContent = bgEmojis[Math.floor(Math.random() * bgEmojis.length)];
+  leaf.style.left = Math.random() * 100 + '%';
+  leaf.style.top = Math.random() * 100 + '%';
+  leaf.style.animationDelay = Math.random() * 6 + 's';
+  bg.appendChild(leaf);
+}
+
+function drawElephant() {
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.ellipse(cx, cy + 50, 180, 150, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, cy - 120, 130, 120, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx - 150, cy - 120, 70, 100, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx + 150, cy - 120, 70, 100, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy - 60); ctx.quadraticCurveTo(cx - 50, cy + 50, cx - 40, cy + 150);
+  ctx.quadraticCurveTo(cx - 30, cy + 180, cx - 10, cy + 190); ctx.quadraticCurveTo(cx + 10, cy + 180, cx + 20, cy + 150);
+  ctx.quadraticCurveTo(cx + 30, cy + 50, cx, cy - 60); ctx.fill(); ctx.stroke();
+  for (var i = 0; i < 4; i++) { var lx = cx - 100 + i * 70; ctx.fillRect(lx - 25, cy + 150, 50, 120); ctx.strokeRect(lx - 25, cy + 150, 50, 120); }
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(cx - 50, cy - 140, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 50, cy - 140, 15, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawLion() {
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  for (var i = 0; i < 16; i++) { var a = (i / 16) * Math.PI * 2; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * 140, cy - 80 + Math.sin(a) * 140, 50, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  ctx.beginPath(); ctx.ellipse(cx, cy - 80, 110, 100, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, cy + 80, 140, 120, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  for (var i = 0; i < 4; i++) { var lx = cx - 90 + i * 60; ctx.fillRect(lx - 20, cy + 150, 40, 110); ctx.strokeRect(lx - 20, cy + 150, 40, 110); }
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(cx - 40, cy - 90, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 40, cy - 90, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx, cy - 50); ctx.lineTo(cx - 15, cy - 30); ctx.lineTo(cx + 15, cy - 30); ctx.closePath(); ctx.fill();
+}
+
+function drawMonkey() {
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.ellipse(cx, cy + 20, 120, 140, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy - 120, 100, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx - 90, cy - 120, 40, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx + 90, cy - 120, 40, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, cy - 100, 60, 70, 0, 0, Math.PI * 2); ctx.fillStyle = '#FFE5CC'; ctx.fill(); ctx.fillStyle = 'white'; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx - 130, cy + 50, 30, 100, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx + 130, cy + 50, 30, 100, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(cx - 30, cy - 110, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 30, cy - 110, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy - 90, 30, 0.2, Math.PI - 0.2); ctx.stroke();
+}
+
+function drawParrot() {
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.ellipse(cx, cy + 30, 100, 130, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy - 80, 80, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#FFD700';
+  ctx.beginPath(); ctx.moveTo(cx + 40, cy - 70); ctx.quadraticCurveTo(cx + 100, cy - 60, cx + 90, cy - 40); ctx.lineTo(cx + 50, cy - 50); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.ellipse(cx - 80, cy + 20, 50, 100, -0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx + 80, cy + 20, 50, 100, 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  for (var i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(cx - 40 + i * 20, cy + 160, 20, 80, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(cx + 20, cy - 90, 12, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawSnake() {
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.moveTo(cx, cy - 200);
+  for (var i = 0; i < 5; i++) { var y = cy - 200 + i * 70; ctx.bezierCurveTo(cx + 150, y + 20, cx + 150, y + 50, cx, y + 70); ctx.bezierCurveTo(cx - 150, y + 90, cx - 150, y + 120, cx, y + 140); }
+  ctx.lineWidth = 80; ctx.stroke(); ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.ellipse(cx, cy - 240, 70, 60, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(cx - 25, cy - 250, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 25, cy - 250, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#FF1493'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(cx, cy - 200); ctx.lineTo(cx - 10, cy - 160); ctx.moveTo(cx, cy - 200); ctx.lineTo(cx + 10, cy - 160); ctx.stroke();
+}
+
+function drawTiger() {
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.ellipse(cx, cy + 50, 160, 130, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, cy - 100, 120, 110, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  for (var i = 0; i < 4; i++) { var lx = cx - 100 + i * 70; ctx.fillRect(lx - 20, cy + 130, 40, 120); ctx.strokeRect(lx - 20, cy + 130, 40, 120); }
+  for (var i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(cx - 120, cy + 20 + i * 25); ctx.lineTo(cx + 120, cy + 20 + i * 25); ctx.lineWidth = 15; ctx.stroke(); ctx.lineWidth = 6; }
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(cx - 40, cy - 110, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 40, cy - 110, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx, cy - 70); ctx.lineTo(cx - 15, cy - 50); ctx.lineTo(cx + 15, cy - 50); ctx.closePath(); ctx.fill();
+}
+
+function drawGiraffe() {
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.ellipse(cx, cy + 100, 140, 120, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillRect(cx - 30, cy - 300, 60, 400); ctx.strokeRect(cx - 30, cy - 300, 60, 400);
+  ctx.beginPath(); ctx.ellipse(cx, cy - 330, 60, 50, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  for (var i = 0; i < 4; i++) { var lx = cx - 90 + i * 60; ctx.fillRect(lx - 15, cy + 180, 30, 150); ctx.strokeRect(lx - 15, cy + 180, 30, 150); }
+  var spots = [[cx - 80, cy + 80], [cx - 40, cy + 60], [cx, cy + 100], [cx + 40, cy + 70], [cx + 80, cy + 90], [cx - 20, cy - 100], [cx + 10, cy - 150]];
+  spots.forEach(function(s) { ctx.beginPath(); ctx.ellipse(s[0], s[1], 25, 30, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(cx + 20, cy - 340, 12, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawFrog() {
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.ellipse(cx, cy + 30, 130, 110, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, cy - 50, 120, 80, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx - 60, cy - 90, 45, 50, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx + 60, cy - 90, 45, 50, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(cx - 60, cy - 85, 20, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 60, cy - 85, 20, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.arc(cx, cy - 20, 60, 0.1, Math.PI - 0.1); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx - 110, cy + 80, 30, 60, -0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx + 110, cy + 80, 30, 60, 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx - 130, cy + 20, 50, 80, -0.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx + 130, cy + 20, 50, 80, 0.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+}
+
+buildColorBar();
+buildTemplatePanel();
+clearCanvas();
+applyTransform();
+
+canvas.addEventListener('wheel', function(e) {
+  e.preventDefault();
+  var zf = e.deltaY > 0 ? 0.9 : 1.1;
+  scale = Math.max(0.3, Math.min(3, scale * zf));
+  applyTransform();
+});
+
+window.addEventListener('resize', function() {
+  var tmp = document.createElement('canvas');
+  var tmpCtx = tmp.getContext('2d');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  tmpCtx.drawImage(canvas, 0, 0);
+  canvas.width = window.innerWidth * 2;
+  canvas.height = window.innerHeight * 2;
+  ctx.drawImage(tmp, 0, 0);
+  applyTransform();
+});
+</script>
 </body>
 </html>

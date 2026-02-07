@@ -41,6 +41,10 @@
         }
 
         .back-button {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
             padding: 1.5rem 3rem;
             font-size: 1.5rem;
             background: rgba(255, 255, 255, 0.2);
@@ -50,6 +54,7 @@
             cursor: pointer;
             transition: all 0.3s;
             backdrop-filter: blur(10px);
+            z-index: 1000;
         }
 
         .back-button:hover {

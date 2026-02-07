@@ -1,584 +1,475 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Goalkeeper Challenge</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ball Blocker Challenge</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  overflow:hidden;background:#1a472a;touch-action:none;
+}
+canvas{display:block;position:fixed;inset:0;z-index:0}
 
-        body {
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
-            touch-action: none;
-        }
+.hud{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);
+  display:flex;gap:12px;z-index:100;pointer-events:none;
+}
+.hud-box{
+  background:rgba(255,255,255,.95);padding:10px 20px;border-radius:14px;
+  box-shadow:0 6px 20px rgba(0,0,0,.15);text-align:center;min-width:80px;
+}
+.hud-label{font-size:11px;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:1px}
+.hud-val{font-size:28px;font-weight:700}
+.hud-saves{color:#4CAF50}
+.hud-missed{color:#F44336}
+.hud-combo{color:#FFB300}
+.hud-time{color:#1976D2}
 
-        #game-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            display: block;
-        }
+.combo-popup{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
+  font-size:56px;font-weight:900;color:#FFD700;
+  text-shadow:3px 3px 8px rgba(0,0,0,.4);
+  pointer-events:none;z-index:200;
+  animation:comboIn .8s ease forwards;
+}
+@keyframes comboIn{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:0}
+  40%{transform:translate(-50%,-50%) scale(1.3);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:0}
+}
 
-        .ui-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 100;
-        }
+.start-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:500;backdrop-filter:blur(6px);
+}
+.start-overlay.hidden{display:none}
+.start-title{font-size:clamp(36px,6vw,56px);font-weight:900;color:white;margin-bottom:12px;text-shadow:3px 3px 8px rgba(0,0,0,.5)}
+.start-sub{font-size:clamp(14px,2vw,20px);color:rgba(255,255,255,.7);margin-bottom:32px;text-align:center;max-width:400px;line-height:1.5}
+.start-btn{
+  padding:18px 50px;font-size:clamp(20px,3vw,28px);font-weight:700;
+  background:linear-gradient(135deg,#4CAF50,#2E7D32);color:white;
+  border:none;border-radius:60px;cursor:pointer;
+  box-shadow:0 8px 30px rgba(76,175,80,.4);
+  transition:all .3s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.start-btn:active{transform:scale(.95)}
 
-        .score-panel {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            display: flex;
-            gap: 40px;
-            font-size: 24px;
-            font-weight: bold;
-        }
+.game-over-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);
+  display:none;align-items:center;justify-content:center;
+  z-index:500;backdrop-filter:blur(6px);
+}
+.game-over-overlay.show{display:flex}
+.go-box{
+  background:white;padding:40px 60px;border-radius:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;
+}
+.go-box h2{font-size:42px;color:#F44336;margin-bottom:14px}
+.go-box p{font-size:20px;color:#666;margin-bottom:24px}
+.go-btn{
+  padding:14px 40px;font-size:20px;font-weight:700;
+  background:linear-gradient(135deg,#4CAF50,#2E7D32);color:white;
+  border:none;border-radius:50px;cursor:pointer;
+  transition:all .3s;margin:0 6px;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.go-btn:active{transform:scale(.93)}
+.go-btn.menu{background:linear-gradient(135deg,#42A5F5,#1976D2)}
 
-        .score-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
+.bottom-bar{
+  position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
+  z-index:100;pointer-events:auto;
+}
+.btn-back{
+  padding:10px 24px;font-size:14px;font-weight:600;
+  background:rgba(255,255,255,.9);color:#333;
+  border:none;border-radius:50px;cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,.15);
+  transition:all .3s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.btn-back:active{transform:scale(.93)}
 
-        .score-label {
-            font-size: 14px;
-            color: #666;
-            text-transform: uppercase;
-        }
-
-        .score-value {
-            font-size: 36px;
-        }
-
-        .saves {
-            color: #4CAF50;
-        }
-
-        .missed {
-            color: #F44336;
-        }
-
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 15px 30px;
-            background: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 18px;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s;
-            pointer-events: all;
-        }
-
-        .back-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 40px 60px;
-            border-radius: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            display: none;
-            pointer-events: all;
-        }
-
-        .game-over.show {
-            display: block;
-        }
-
-        .game-over h2 {
-            font-size: 48px;
-            color: #FF6B9D;
-            margin-bottom: 20px;
-        }
-
-        .game-over p {
-            font-size: 24px;
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .restart-button {
-            padding: 20px 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 24px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .restart-button:hover {
-            transform: scale(1.1);
-        }
-
-        .instructions {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 18px;
-            color: #666;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .combo {
-            position: absolute;
-            top: 150px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 48px;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            animation: comboAppear 0.5s;
-            display: none;
-        }
-
-        .combo.show {
-            display: block;
-        }
-
-        @keyframes comboAppear {
-            0% { transform: translateX(-50%) scale(0); }
-            50% { transform: translateX(-50%) scale(1.2); }
-            100% { transform: translateX(-50%) scale(1); }
-        }
-
-        @media (max-width: 768px) {
-            .score-panel {
-                padding: 15px 25px;
-                gap: 25px;
-                font-size: 18px;
-            }
-
-            .score-value {
-                font-size: 28px;
-            }
-
-            .instructions {
-                font-size: 16px;
-                padding: 12px 25px;
-            }
-        }
-    </style>
+.tap-ring{
+  position:fixed;pointer-events:none;z-index:150;
+  border:3px solid rgba(76,175,80,.7);border-radius:50%;
+  transform:translate(-50%,-50%) scale(0);
+  animation:tapRing .5s ease forwards;
+}
+@keyframes tapRing{
+  0%{width:0;height:0;opacity:1;transform:translate(-50%,-50%) scale(0)}
+  100%{width:80px;height:80px;opacity:0;transform:translate(-50%,-50%) scale(1)}
+}
+</style>
 </head>
 <body>
-    <canvas id="game-canvas"></canvas>
-
-    <div class="ui-overlay">
-        <button class="back-button" onclick="window.location.href='../index.html'">← Back</button>
-
-        <div class="score-panel">
-            <div class="score-item">
-                <div class="score-label">Saves</div>
-                <div class="score-value saves" id="saves">0</div>
-            </div>
-            <div class="score-item">
-                <div class="score-label">Missed</div>
-                <div class="score-value missed" id="missed">0</div>
-            </div>
-            <div class="score-item">
-                <div class="score-label">Combo</div>
-                <div class="score-value" style="color: #FFD700;" id="combo">0</div>
-            </div>
-        </div>
-
-        <div class="combo" id="combo-text">AMAZING!</div>
-
-        <div class="instructions">
-            Touch or Click to Block the Balls!
-        </div>
-
-        <div class="game-over" id="game-over">
-            <h2>Game Over!</h2>
-            <p id="final-score">Final Score: 0</p>
-            <button class="restart-button" onclick="restartGame()">Play Again</button>
-        </div>
-    </div>
-
-    <script>
-        const canvas = document.getElementById('game-canvas');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-        camera.position.set(0, 5, 15);
-        camera.lookAt(0, 5, 0);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(10, 20, 10);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.left = -20;
-        directionalLight.shadow.camera.right = 20;
-        directionalLight.shadow.camera.top = 20;
-        directionalLight.shadow.camera.bottom = -20;
-        scene.add(directionalLight);
-
-        const groundGeometry = new THREE.PlaneGeometry(50, 50);
-        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
-        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        const goalPostMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
-
-        const leftPost = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.15, 0.15, 10, 16),
-            goalPostMaterial
-        );
-        leftPost.position.set(-5, 5, -5);
-        leftPost.castShadow = true;
-        scene.add(leftPost);
-
-        const rightPost = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.15, 0.15, 10, 16),
-            goalPostMaterial
-        );
-        rightPost.position.set(5, 5, -5);
-        rightPost.castShadow = true;
-        scene.add(rightPost);
-
-        const topPost = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.15, 0.15, 10, 16),
-            goalPostMaterial
-        );
-        topPost.rotation.z = Math.PI / 2;
-        topPost.position.set(0, 10, -5);
-        topPost.castShadow = true;
-        scene.add(topPost);
-
-        const netGeometry = new THREE.PlaneGeometry(10, 10);
-        const netMaterial = new THREE.MeshStandardMaterial({
-            color: 0xCCCCCC,
-            transparent: true,
-            opacity: 0.3,
-            side: THREE.DoubleSide
-        });
-        const net = new THREE.Mesh(netGeometry, netMaterial);
-        net.position.set(0, 5, -5);
-        scene.add(net);
-
-        let saves = 0;
-        let missed = 0;
-        let combo = 0;
-        let balls = [];
-        let hands = [];
-        let gameActive = true;
-        let difficulty = 1;
-        let lastBallTime = 0;
-        let ballInterval = 2000;
-
-        function createBall() {
-            const ballGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-            const ballMaterial = new THREE.MeshStandardMaterial({
-                color: Math.random() > 0.5 ? 0xFF5722 : 0xFFFFFF,
-                emissive: 0x222222
-            });
-            const ball = new THREE.Mesh(ballGeometry, ballMaterial);
-
-            const startX = (Math.random() - 0.5) * 15;
-            const startY = 2 + Math.random() * 6;
-            const startZ = 20;
-
-            ball.position.set(startX, startY, startZ);
-            ball.castShadow = true;
-
-            const targetX = (Math.random() - 0.5) * 8;
-            const targetY = 2 + Math.random() * 6;
-
-            const speed = 0.15 + (difficulty * 0.02);
-
-            ball.userData = {
-                velocity: new THREE.Vector3(
-                    (targetX - startX) * 0.01,
-                    (targetY - startY) * 0.01,
-                    -speed
-                ),
-                active: true,
-                blocked: false
-            };
-
-            scene.add(ball);
-            balls.push(ball);
-        }
-
-        function createHand(x, y) {
-            const handGeometry = new THREE.SphereGeometry(1, 32, 32);
-            const handMaterial = new THREE.MeshStandardMaterial({
-                color: 0xFFEB3B,
-                transparent: true,
-                opacity: 0.8,
-                emissive: 0xFFC107
-            });
-            const hand = new THREE.Mesh(handGeometry, handMaterial);
-
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = ((x - rect.left) / rect.width) * 2 - 1;
-            const mouseY = -((y - rect.top) / rect.height) * 2 + 1;
-
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
-
-            const distance = 10;
-            const worldPos = raycaster.ray.origin.clone().add(raycaster.ray.direction.multiplyScalar(distance));
-
-            hand.position.copy(worldPos);
-            hand.userData = {
-                life: 20,
-                initialScale: 1
-            };
-
-            scene.add(hand);
-            hands.push(hand);
-
-            checkCollisions(hand);
-        }
-
-        function checkCollisions(hand) {
-            balls.forEach(ball => {
-                if (ball.userData.active && !ball.userData.blocked) {
-                    const distance = hand.position.distanceTo(ball.position);
-                    if (distance < 1.5) {
-                        ball.userData.blocked = true;
-                        saves++;
-                        combo++;
-
-                        document.getElementById('saves').textContent = saves;
-                        document.getElementById('combo').textContent = combo;
-
-                        if (combo > 2) {
-                            showCombo();
-                        }
-
-                        createParticles(ball.position);
-
-                        ball.userData.velocity.multiplyScalar(-0.5);
-                        ball.userData.velocity.y += 0.2;
-                    }
-                }
-            });
-        }
-
-        function createParticles(position) {
-            for (let i = 0; i < 20; i++) {
-                const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-                const particleMaterial = new THREE.MeshStandardMaterial({
-                    color: 0xFFD700,
-                    emissive: 0xFFA500
-                });
-                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-
-                particle.position.copy(position);
-                particle.userData = {
-                    velocity: new THREE.Vector3(
-                        (Math.random() - 0.5) * 0.3,
-                        Math.random() * 0.3,
-                        (Math.random() - 0.5) * 0.3
-                    ),
-                    life: 30
-                };
-
-                scene.add(particle);
-                balls.push(particle);
-            }
-        }
-
-        function showCombo() {
-            const comboText = document.getElementById('combo-text');
-            const messages = ['GREAT!', 'AMAZING!', 'FANTASTIC!', 'UNSTOPPABLE!'];
-            comboText.textContent = messages[Math.min(Math.floor(combo / 3), messages.length - 1)];
-            comboText.classList.add('show');
-
-            setTimeout(() => {
-                comboText.classList.remove('show');
-            }, 1000);
-        }
-
-        function updateGame() {
-            if (!gameActive) return;
-
-            const currentTime = Date.now();
-            if (currentTime - lastBallTime > ballInterval) {
-                createBall();
-                lastBallTime = currentTime;
-
-                if (saves > 0 && saves % 10 === 0) {
-                    difficulty++;
-                    ballInterval = Math.max(800, ballInterval - 200);
-                }
-            }
-
-            for (let i = balls.length - 1; i >= 0; i--) {
-                const ball = balls[i];
-
-                if (ball.userData.life !== undefined) {
-                    ball.userData.life--;
-                    ball.material.opacity = ball.userData.life / 30;
-                    ball.position.add(ball.userData.velocity);
-                    ball.userData.velocity.y -= 0.01;
-
-                    if (ball.userData.life <= 0) {
-                        scene.remove(ball);
-                        balls.splice(i, 1);
-                    }
-                    continue;
-                }
-
-                if (ball.userData.active) {
-                    ball.position.add(ball.userData.velocity);
-                    ball.rotation.x += 0.1;
-                    ball.rotation.y += 0.1;
-
-                    if (ball.position.z < -6 && !ball.userData.blocked) {
-                        ball.userData.active = false;
-                        missed++;
-                        combo = 0;
-
-                        document.getElementById('missed').textContent = missed;
-                        document.getElementById('combo').textContent = combo;
-
-                        if (missed >= 10) {
-                            endGame();
-                        }
-                    }
-
-                    if (ball.position.z < -10 || ball.position.y < -5) {
-                        scene.remove(ball);
-                        balls.splice(i, 1);
-                    }
-                }
-            }
-
-            for (let i = hands.length - 1; i >= 0; i--) {
-                const hand = hands[i];
-                hand.userData.life--;
-
-                const scale = hand.userData.initialScale * (1 + (20 - hand.userData.life) * 0.05);
-                hand.scale.set(scale, scale, scale);
-                hand.material.opacity = hand.userData.life / 20;
-
-                if (hand.userData.life <= 0) {
-                    scene.remove(hand);
-                    hands.splice(i, 1);
-                }
-            }
-        }
-
-        function endGame() {
-            gameActive = false;
-            document.getElementById('final-score').textContent = `Saves: ${saves} | Missed: ${missed}`;
-            document.getElementById('game-over').classList.add('show');
-        }
-
-        function restartGame() {
-            balls.forEach(ball => scene.remove(ball));
-            hands.forEach(hand => scene.remove(hand));
-            balls = [];
-            hands = [];
-
-            saves = 0;
-            missed = 0;
-            combo = 0;
-            difficulty = 1;
-            ballInterval = 2000;
-            gameActive = true;
-            lastBallTime = Date.now();
-
-            document.getElementById('saves').textContent = saves;
-            document.getElementById('missed').textContent = missed;
-            document.getElementById('combo').textContent = combo;
-            document.getElementById('game-over').classList.remove('show');
-        }
-
-        canvas.addEventListener('click', (e) => {
-            if (gameActive) {
-                createHand(e.clientX, e.clientY);
-            }
-        });
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (gameActive) {
-                for (let i = 0; i < e.touches.length; i++) {
-                    createHand(e.touches[i].clientX, e.touches[i].clientY);
-                }
-            }
-        });
-
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if (gameActive) {
-                for (let i = 0; i < e.touches.length; i++) {
-                    createHand(e.touches[i].clientX, e.touches[i].clientY);
-                }
-            }
-        });
-
-        function animate() {
-            requestAnimationFrame(animate);
-            updateGame();
-            renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        lastBallTime = Date.now();
-        animate();
-    </script>
+<canvas id="gameCanvas"></canvas>
+
+<div class="hud" id="hud" style="display:none">
+  <div class="hud-box">
+    <div class="hud-label">Saves</div>
+    <div class="hud-val hud-saves" id="savesVal">0</div>
+  </div>
+  <div class="hud-box">
+    <div class="hud-label">Missed</div>
+    <div class="hud-val hud-missed" id="missedVal">0</div>
+  </div>
+  <div class="hud-box">
+    <div class="hud-label">Combo</div>
+    <div class="hud-val hud-combo" id="comboVal">0</div>
+  </div>
+  <div class="hud-box">
+    <div class="hud-label">Time</div>
+    <div class="hud-val hud-time" id="timeVal">60</div>
+  </div>
+</div>
+
+<div class="start-overlay" id="startOverlay">
+  <div class="start-title">Ball Blocker</div>
+  <div class="start-sub">Tap the incoming balls before they reach the goal! Quick reflexes will save you!</div>
+  <button class="start-btn" id="startBtn">Start Now</button>
+</div>
+
+<div class="game-over-overlay" id="gameOverOverlay">
+  <div class="go-box">
+    <h2>Game Over!</h2>
+    <p id="goStats">Saves: 0 | Missed: 10</p>
+    <button class="go-btn" id="restartBtn">Play Again</button>
+    <button class="go-btn menu" id="goMenuBtn">Menu</button>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="btn-back" id="backBtn">Back to Menu</button>
+</div>
+
+<script>
+var cvs = document.getElementById('gameCanvas');
+var ctx = cvs.getContext('2d');
+var W, H;
+
+var saves = 0, missed = 0, combo = 0, timeLeft = 60;
+var gameActive = false, balls = [], particles = [];
+var difficulty = 1, spawnInterval = 1800;
+var lastSpawn = 0, clockTimer = null;
+var goalY, goalH;
+
+function resize() {
+  W = cvs.width = window.innerWidth;
+  H = cvs.height = window.innerHeight;
+  goalY = H * 0.75;
+  goalH = H * 0.12;
+}
+window.addEventListener('resize', resize);
+resize();
+
+var BALL_COLORS = ['#F44336','#E91E63','#FF9800','#FFEB3B','#4CAF50','#2196F3','#9C27B0'];
+
+function Ball() {
+  var side = Math.floor(Math.random() * 3);
+  if (side === 0) {
+    this.x = Math.random() * W;
+    this.y = -30;
+  } else if (side === 1) {
+    this.x = -30;
+    this.y = H * 0.1 + Math.random() * H * 0.4;
+  } else {
+    this.x = W + 30;
+    this.y = H * 0.1 + Math.random() * H * 0.4;
+  }
+  var targetX = W * 0.15 + Math.random() * W * 0.7;
+  var targetY = goalY + Math.random() * goalH;
+  var dx = targetX - this.x, dy = targetY - this.y;
+  var dist = Math.hypot(dx, dy);
+  var speed = 1.5 + difficulty * 0.3 + Math.random() * 0.8;
+  this.vx = (dx / dist) * speed;
+  this.vy = (dy / dist) * speed;
+  this.r = 18 + Math.random() * 10;
+  this.color = BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
+  this.rotation = 0;
+  this.rotSpeed = (Math.random() - 0.5) * 0.15;
+  this.alive = true;
+  this.blocked = false;
+  this.alpha = 1;
+}
+
+Ball.prototype.update = function() {
+  if (this.blocked) {
+    this.vy += 0.4;
+    this.alpha -= 0.04;
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.alpha <= 0) this.alive = false;
+  } else {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.y >= goalY + goalH * 0.5) {
+      this.alive = false;
+      missed++;
+      combo = 0;
+      document.getElementById('missedVal').textContent = missed;
+      document.getElementById('comboVal').textContent = combo;
+      spawnMissParticles(this.x, this.y);
+      if (missed >= 10) endGame();
+    }
+  }
+  this.rotation += this.rotSpeed;
+};
+
+Ball.prototype.draw = function() {
+  ctx.save();
+  ctx.globalAlpha = this.alpha;
+  ctx.translate(this.x, this.y);
+  ctx.rotate(this.rotation);
+
+  ctx.beginPath();
+  ctx.arc(0, 0, this.r, 0, Math.PI * 2);
+  ctx.fillStyle = this.color;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.2)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,255,255,.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(-this.r * 0.6, -this.r * 0.3); ctx.lineTo(this.r * 0.6, -this.r * 0.3); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-this.r * 0.4, this.r * 0.3); ctx.lineTo(this.r * 0.4, this.r * 0.3); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -this.r); ctx.lineTo(0, this.r); ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(-this.r * 0.25, -this.r * 0.25, this.r * 0.2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,.3)';
+  ctx.fill();
+
+  ctx.restore();
+};
+
+Ball.prototype.contains = function(px, py) {
+  return Math.hypot(px - this.x, py - this.y) < this.r + 20;
+};
+
+function Particle(x, y, color, vx, vy) {
+  this.x = x; this.y = y; this.color = color;
+  this.vx = vx; this.vy = vy;
+  this.r = 2 + Math.random() * 4;
+  this.alpha = 1;
+  this.gravity = 0.15;
+}
+Particle.prototype.update = function() {
+  this.vy += this.gravity; this.x += this.vx; this.y += this.vy; this.alpha -= 0.025;
+};
+Particle.prototype.draw = function() {
+  ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color;
+  ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+};
+Particle.prototype.isDead = function() { return this.alpha <= 0; };
+
+function spawnSaveParticles(x, y, color) {
+  for (var i = 0; i < 18; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 5;
+    particles.push(new Particle(x, y, color, Math.cos(a) * sp, Math.sin(a) * sp - 2));
+  }
+  for (var i = 0; i < 6; i++) {
+    var a2 = Math.random() * Math.PI * 2, sp2 = 3 + Math.random() * 3;
+    particles.push(new Particle(x, y, '#FFD700', Math.cos(a2) * sp2, Math.sin(a2) * sp2 - 3));
+  }
+}
+
+function spawnMissParticles(x, y) {
+  for (var i = 0; i < 10; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 1 + Math.random() * 3;
+    particles.push(new Particle(x, y, '#F44336', Math.cos(a) * sp, Math.sin(a) * sp));
+  }
+}
+
+function spawnTapRing(x, y) {
+  var ring = document.createElement('div');
+  ring.className = 'tap-ring';
+  ring.style.left = x + 'px';
+  ring.style.top = y + 'px';
+  document.body.appendChild(ring);
+  ring.addEventListener('animationend', function() { ring.remove(); });
+}
+
+function handleTap(x, y) {
+  if (!gameActive) return;
+  spawnTapRing(x, y);
+  var hit = false;
+  for (var i = 0; i < balls.length; i++) {
+    var b = balls[i];
+    if (!b.blocked && b.alive && b.contains(x, y)) {
+      b.blocked = true;
+      b.vx = (Math.random() - 0.5) * 8;
+      b.vy = -6 - Math.random() * 4;
+      saves++;
+      combo++;
+      hit = true;
+      spawnSaveParticles(b.x, b.y, b.color);
+      document.getElementById('savesVal').textContent = saves;
+      document.getElementById('comboVal').textContent = combo;
+      if (combo > 0 && combo % 3 === 0) showCombo();
+      playTapSound();
+      break;
+    }
+  }
+  if (!hit) { combo = 0; document.getElementById('comboVal').textContent = combo; }
+}
+
+function playTapSound() {
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = 'sine'; o.frequency.value = 600 + Math.random() * 200;
+    var now = ac.currentTime;
+    g.gain.setValueAtTime(0.15, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    o.start(now); o.stop(now + 0.15);
+  } catch (e) {}
+}
+
+function showCombo() {
+  var msgs = ['Nice!', 'Great!', 'Amazing!', 'Fantastic!', 'Unstoppable!'];
+  var el = document.createElement('div');
+  el.className = 'combo-popup';
+  el.textContent = msgs[Math.min(Math.floor(combo / 3) - 1, msgs.length - 1)] + ' ' + combo + 'x';
+  document.body.appendChild(el);
+  setTimeout(function() { el.remove(); }, 800);
+}
+
+function drawField() {
+  var skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.6);
+  skyGrad.addColorStop(0, '#87CEEB');
+  skyGrad.addColorStop(1, '#B8E6FF');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H * 0.6);
+
+  var fieldGrad = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  fieldGrad.addColorStop(0, '#4CAF50');
+  fieldGrad.addColorStop(0.4, '#388E3C');
+  fieldGrad.addColorStop(1, '#2E7D32');
+  ctx.fillStyle = fieldGrad;
+  ctx.fillRect(0, H * 0.55, W, H * 0.45);
+
+  for (var i = 0; i < 12; i++) {
+    var sx = (i / 12) * W;
+    ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.02)';
+    ctx.fillRect(sx, H * 0.55, W / 12, H * 0.45);
+  }
+
+  ctx.strokeStyle = 'rgba(255,255,255,.4)';
+  ctx.lineWidth = 3;
+  var gLeft = W * 0.15, gRight = W * 0.85, gTop = goalY, gBot = goalY + goalH;
+  ctx.strokeRect(gLeft, gTop, gRight - gLeft, goalH);
+
+  ctx.fillStyle = 'rgba(200,200,200,.12)';
+  ctx.fillRect(gLeft, gTop, gRight - gLeft, goalH);
+
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  ctx.lineWidth = 1;
+  var netSpacing = 15;
+  for (var nx = gLeft; nx <= gRight; nx += netSpacing) {
+    ctx.beginPath(); ctx.moveTo(nx, gTop); ctx.lineTo(nx, gBot); ctx.stroke();
+  }
+  for (var ny = gTop; ny <= gBot; ny += netSpacing) {
+    ctx.beginPath(); ctx.moveTo(gLeft, ny); ctx.lineTo(gRight, ny); ctx.stroke();
+  }
+
+  ctx.fillStyle = 'white';
+  ctx.fillRect(gLeft - 4, gTop, 4, goalH);
+  ctx.fillRect(gRight, gTop, 4, goalH);
+  ctx.fillRect(gLeft - 4, gTop - 4, gRight - gLeft + 8, 4);
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, W, H);
+  drawField();
+
+  if (gameActive) {
+    var now = Date.now();
+    if (now - lastSpawn > spawnInterval) {
+      balls.push(new Ball());
+      lastSpawn = now;
+      if (saves > 0 && saves % 8 === 0 && difficulty < 10) {
+        difficulty++;
+        spawnInterval = Math.max(600, spawnInterval - 120);
+      }
+    }
+  }
+
+  for (var i = balls.length - 1; i >= 0; i--) {
+    balls[i].update();
+    balls[i].draw();
+    if (!balls[i].alive) balls.splice(i, 1);
+  }
+  for (var i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].draw();
+    if (particles[i].isDead()) particles.splice(i, 1);
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('hud').style.display = 'flex';
+  gameActive = true;
+  lastSpawn = Date.now();
+  clockTimer = setInterval(function() {
+    if (!gameActive) { clearInterval(clockTimer); return; }
+    timeLeft--;
+    document.getElementById('timeVal').textContent = timeLeft;
+    if (timeLeft <= 0) { clearInterval(clockTimer); endGame(); }
+  }, 1000);
+}
+
+function endGame() {
+  gameActive = false;
+  if (clockTimer) clearInterval(clockTimer);
+  document.getElementById('goStats').textContent = 'Saves: ' + saves + ' | Missed: ' + missed;
+  document.getElementById('gameOverOverlay').classList.add('show');
+}
+
+function restartGame() {
+  saves = 0; missed = 0; combo = 0; timeLeft = 60;
+  difficulty = 1; spawnInterval = 1800;
+  balls.length = 0; particles.length = 0;
+  document.getElementById('savesVal').textContent = '0';
+  document.getElementById('missedVal').textContent = '0';
+  document.getElementById('comboVal').textContent = '0';
+  document.getElementById('timeVal').textContent = '60';
+  document.getElementById('gameOverOverlay').classList.remove('show');
+  gameActive = true;
+  lastSpawn = Date.now();
+  clockTimer = setInterval(function() {
+    if (!gameActive) { clearInterval(clockTimer); return; }
+    timeLeft--;
+    document.getElementById('timeVal').textContent = timeLeft;
+    if (timeLeft <= 0) { clearInterval(clockTimer); endGame(); }
+  }, 1000);
+}
+
+cvs.addEventListener('pointerdown', function(e) {
+  e.preventDefault();
+  handleTap(e.clientX, e.clientY);
+});
+
+function addTouchBtn(id, fn) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) fn(); });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); fn(); });
+}
+
+addTouchBtn('startBtn', startGame);
+addTouchBtn('restartBtn', restartGame);
+addTouchBtn('goMenuBtn', function() { location.href = '../index.html'; });
+addTouchBtn('backBtn', function() { location.href = '../index.html'; });
+
+gameLoop();
+</script>
 </body>
 </html>
