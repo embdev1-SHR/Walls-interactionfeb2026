@@ -70,6 +70,9 @@ function loadGame(gameName) {
             case 'hidden-animals':
                 window.location.href = 'games/hidden-animals.html';
                 break;
+            case 'room-sorter':
+                window.location.href = 'games/room-sorter.html';
+                break;
             default:
                 console.log('Game not found:', gameName);
                 mainMenu.style.display = 'block';

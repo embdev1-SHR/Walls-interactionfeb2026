@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Room Sorter - Tidy Up!</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:#ffecd2;
+  overflow:hidden;
+  -webkit-user-select:none;user-select:none;
+  touch-action:none;
+  width:100vw;height:100vh;
+}
+
+.game-area{position:relative;width:100vw;height:100vh;overflow:hidden}
+
+.rooms-row{
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;height:48%;
+}
+
+.room{
+  flex:1;position:relative;
+  border-top:6px solid #a0522d;
+  overflow:hidden;
+  transition:box-shadow .3s ease;
+}
+.room.highlight{box-shadow:inset 0 0 40px rgba(255,255,100,.5)}
+
+.room-bg{position:absolute;inset:0;z-index:0}
+
+.room-bedroom .room-bg{background:linear-gradient(180deg,#e8d5f5 0%,#d4b8e8 100%)}
+.room-kitchen .room-bg{background:linear-gradient(180deg,#fff8e1 0%,#ffe0b2 100%)}
+.room-living .room-bg{background:linear-gradient(180deg,#e0f2f1 0%,#b2dfdb 100%)}
+
+.room-label{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  font-size:clamp(16px,2.5vw,24px);font-weight:800;
+  padding:6px 20px;border-radius:20px;z-index:5;
+  white-space:nowrap;letter-spacing:1px;
+}
+.room-bedroom .room-label{background:#ce93d8;color:#4a148c}
+.room-kitchen .room-label{background:#ffb74d;color:#e65100}
+.room-living .room-label{background:#80cbc4;color:#004d40}
+
+.room-count{
+  position:absolute;bottom:8px;right:12px;
+  font-size:14px;font-weight:700;z-index:5;
+  color:rgba(0,0,0,.45);
+}
+
+.room-furniture{position:absolute;z-index:1;font-size:clamp(30px,4vw,50px);opacity:.25;pointer-events:none}
+
+.items-area{
+  position:absolute;top:0;left:0;right:0;
+  height:52%;
+  background:
+    repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(139,90,43,.08) 79px,rgba(139,90,43,.08) 80px),
+    repeating-linear-gradient(0deg,transparent,transparent 79px,rgba(139,90,43,.08) 79px,rgba(139,90,43,.08) 80px),
+    linear-gradient(180deg,#ffe8cc 0%,#fdd9a8 100%);
+  border-bottom:4px dashed #c8956c;
+}
+
+.items-label{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  font-size:18px;font-weight:700;color:#8d6e63;
+  background:rgba(255,255,255,.7);padding:5px 18px;border-radius:16px;
+  pointer-events:none;z-index:10;
+}
+
+.item{
+  position:absolute;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:grab;z-index:50;
+  transition:transform .15s ease,filter .15s ease;
+  will-change:transform;
+}
+.item.dragging{
+  z-index:200;cursor:grabbing;
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,.35));
+  transform:scale(1.18);
+  transition:none;
+}
+.item.placed{
+  z-index:30;cursor:default;
+  animation:popIn .4s ease;
+}
+.item.wrong{animation:shake .4s ease}
+.item-emoji{font-size:clamp(36px,5vw,56px);line-height:1}
+.item-name{
+  font-size:clamp(10px,1.4vw,13px);font-weight:700;
+  color:#5d4037;background:rgba(255,255,255,.85);
+  padding:2px 8px;border-radius:8px;white-space:nowrap;
+}
+.item.placed .item-name{color:#2e7d32;background:rgba(200,255,200,.9)}
+
+@keyframes popIn{
+  0%{transform:scale(0.4);opacity:.5}
+  60%{transform:scale(1.15)}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-12px)}
+  40%{transform:translateX(10px)}
+  60%{transform:translateX(-8px)}
+  80%{transform:translateX(5px)}
+}
+
+.hud{
+  position:absolute;top:12px;left:12px;right:12px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  z-index:300;pointer-events:none;
+}
+.hud>*{pointer-events:auto}
+
+.hud-box{
+  background:rgba(255,255,255,.92);
+  border:3px solid #c8956c;border-radius:16px;
+  padding:8px 16px;text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.12);
+}
+.hud-label{font-size:11px;font-weight:600;color:#8d6e63;text-transform:uppercase}
+.hud-val{font-size:clamp(22px,3vw,32px);font-weight:800;color:#5d4037}
+.hud-val.danger{color:#d32f2f;animation:pulse .5s ease infinite alternate}
+@keyframes pulse{to{transform:scale(1.08)}}
+
+.touch-badge{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,.88);border:2px solid #a1887f;
+  border-radius:12px;padding:5px 14px;font-size:12px;font-weight:700;color:#6d4c41;
+  z-index:300;opacity:0;transition:opacity .3s;
+}
+.touch-badge.visible{opacity:1}
+
+.btn-back{
+  position:absolute;bottom:calc(48% + 10px);left:12px;
+  padding:10px 22px;font-size:14px;font-weight:700;
+  background:rgba(255,255,255,.85);border:3px solid #a1887f;
+  color:#5d4037;border-radius:30px;cursor:pointer;z-index:300;
+  transition:all .3s;
+}
+.btn-back:hover{background:#fff;transform:scale(1.05)}
+
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);
+  display:none;justify-content:center;align-items:center;z-index:5000;
+}
+.overlay.show{display:flex}
+
+.overlay-box{
+  text-align:center;padding:clamp(24px,4vw,48px);
+  background:linear-gradient(135deg,#fff8e1,#ffe0b2);
+  border:6px solid #ffb74d;border-radius:28px;
+  max-width:500px;width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+  animation:boxBounce .5s ease;
+}
+@keyframes boxBounce{
+  0%{transform:scale(.5) rotate(-5deg);opacity:0}
+  60%{transform:scale(1.05) rotate(1deg)}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+.overlay-icon{font-size:64px;margin-bottom:12px}
+.overlay-title{font-size:clamp(28px,5vw,42px);font-weight:800;color:#e65100;margin-bottom:8px}
+.overlay-msg{font-size:clamp(16px,2.5vw,20px);color:#5d4037;margin-bottom:20px;line-height:1.5}
+.overlay-btn{
+  padding:14px 36px;font-size:18px;font-weight:700;
+  background:#ff9800;color:white;border:none;border-radius:50px;
+  cursor:pointer;transition:all .3s;margin:6px;
+  box-shadow:0 4px 12px rgba(255,152,0,.4);
+}
+.overlay-btn:hover{background:#f57c00;transform:scale(1.06)}
+.overlay-btn.secondary{background:#8d6e63;box-shadow:0 4px 12px rgba(141,110,99,.4)}
+.overlay-btn.secondary:hover{background:#6d4c41}
+
+.progress-wrap{
+  position:absolute;bottom:calc(48% + 10px);left:50%;transform:translateX(-50%);
+  width:clamp(200px,40vw,400px);z-index:300;text-align:center;
+}
+.progress-bar{
+  width:100%;height:14px;background:rgba(255,255,255,.6);
+  border:2px solid #a1887f;border-radius:10px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,#66bb6a,#43a047);
+  border-radius:10px;transition:width .35s ease;width:0;
+}
+.progress-text{font-size:12px;font-weight:700;color:#5d4037;margin-top:4px}
+
+@media(max-width:768px){
+  .rooms-row{height:42%}
+  .items-area{height:58%}
+  .btn-back{bottom:calc(42% + 10px)}
+  .progress-wrap{bottom:calc(42% + 10px)}
+}
+</style>
+</head>
+<body>
+<div class="game-area" id="gameArea">
+
+  <div class="items-area" id="itemsArea">
+    <div class="items-label">Drag items to the correct room!</div>
+  </div>
+
+  <div class="rooms-row" id="roomsRow">
+    <div class="room room-bedroom" data-room="bedroom">
+      <div class="room-bg"></div>
+      <div class="room-label">Bedroom</div>
+      <div class="room-count" id="count-bedroom">0/0</div>
+      <div class="room-furniture" style="bottom:10px;left:10%">\u{1F6CF}\u{FE0F}</div>
+      <div class="room-furniture" style="bottom:10px;right:10%">\u{1FA91}</div>
+    </div>
+    <div class="room room-kitchen" data-room="kitchen">
+      <div class="room-bg"></div>
+      <div class="room-label">Kitchen</div>
+      <div class="room-count" id="count-kitchen">0/0</div>
+      <div class="room-furniture" style="bottom:10px;left:8%">\u{1F9F1}</div>
+      <div class="room-furniture" style="bottom:10px;right:12%">\u{1F9F4}</div>
+    </div>
+    <div class="room room-living" data-room="living">
+      <div class="room-bg"></div>
+      <div class="room-label">Living Room</div>
+      <div class="room-count" id="count-living">0/0</div>
+      <div class="room-furniture" style="bottom:10px;left:12%">\u{1FA91}</div>
+      <div class="room-furniture" style="bottom:10px;right:8%">\u{1F4FA}</div>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-box">
+      <div class="hud-label">Score</div>
+      <div class="hud-val" id="scoreVal">0</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">Time Left</div>
+      <div class="hud-val" id="timerVal">1:30</div>
+    </div>
+  </div>
+
+  <div class="touch-badge" id="touchBadge">Touches: 0</div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 0 items sorted</div>
+  </div>
+
+  <button class="btn-back" onclick="location.href='../index.html'">Menu</button>
+</div>
+
+<div class="overlay" id="winOverlay">
+  <div class="overlay-box">
+    <div class="overlay-icon">\u{1F3E0}</div>
+    <div class="overlay-title" id="overlayTitle">All Tidy!</div>
+    <div class="overlay-msg" id="overlayMsg"></div>
+    <div>
+      <button class="overlay-btn" onclick="location.reload()">Play Again</button>
+      <button class="overlay-btn secondary" onclick="location.href='../index.html'">Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ITEMS = {
+  bedroom: [
+    { emoji: '\u{1F6CF}\u{FE0F}', name: 'Bed' },
+    { emoji: '\u{1FA91}', name: 'Chair' },
+    { emoji: '\u{1F4A1}', name: 'Lamp' },
+    { emoji: '\u{1F9F8}', name: 'Teddy Bear' },
+    { emoji: '\u{1F6CC}', name: 'Pillow' },
+    { emoji: '\u{23F0}', name: 'Alarm Clock' },
+    { emoji: '\u{1F4DA}', name: 'Books' },
+    { emoji: '\u{1FA9E}', name: 'Mirror' },
+    { emoji: '\u{1F455}', name: 'T-Shirt' },
+    { emoji: '\u{1F45F}', name: 'Sneakers' }
+  ],
+  kitchen: [
+    { emoji: '\u{1F373}', name: 'Frying Pan' },
+    { emoji: '\u{1F52A}', name: 'Knife' },
+    { emoji: '\u{1F944}', name: 'Spoon' },
+    { emoji: '\u{1F375}', name: 'Teacup' },
+    { emoji: '\u{1F372}', name: 'Cooking Pot' },
+    { emoji: '\u{1F9C1}', name: 'Cupcake' },
+    { emoji: '\u{1F34E}', name: 'Apple' },
+    { emoji: '\u{1F9C3}', name: 'Juice Box' },
+    { emoji: '\u{1F37D}\u{FE0F}', name: 'Plate' },
+    { emoji: '\u{1F9F4}', name: 'Soap Bottle' }
+  ],
+  living: [
+    { emoji: '\u{1F4FA}', name: 'Television' },
+    { emoji: '\u{1F6CB}\u{FE0F}', name: 'Sofa' },
+    { emoji: '\u{1F5BC}\u{FE0F}', name: 'Picture Frame' },
+    { emoji: '\u{1F56F}\u{FE0F}', name: 'Candle' },
+    { emoji: '\u{1F3B5}', name: 'Music Speaker' },
+    { emoji: '\u{1F4D6}', name: 'Magazine' },
+    { emoji: '\u{1FAB4}', name: 'House Plant' },
+    { emoji: '\u{1F9F9}', name: 'Broom' },
+    { emoji: '\u{231A}', name: 'Wall Clock' },
+    { emoji: '\u{1F9E9}', name: 'Puzzle' }
+  ]
+};
+
+const TOTAL_TIME = 90;
+let timeLeft = TOTAL_TIME;
+let timerInterval = null;
+let gameScore = 0;
+let totalItems = 0;
+let placedCount = 0;
+let gameOver = false;
+
+const itemsArea = document.getElementById('itemsArea');
+const gameArea = document.getElementById('gameArea');
+const rooms = document.querySelectorAll('.room');
+const touchBadge = document.getElementById('touchBadge');
+
+const activeDrags = new Map();
+let allItemEls = [];
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function initGame() {
+  const combined = [];
+  Object.entries(ITEMS).forEach(([room, list]) => {
+    list.forEach(it => combined.push({ ...it, room }));
+  });
+  shuffle(combined);
+  totalItems = combined.length;
+
+  const areaRect = itemsArea.getBoundingClientRect();
+  const cols = Math.ceil(Math.sqrt(totalItems * (areaRect.width / areaRect.height)));
+  const rows = Math.ceil(totalItems / cols);
+  const cellW = areaRect.width / cols;
+  const cellH = (areaRect.height - 50) / rows;
+
+  combined.forEach((it, i) => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.innerHTML = '<span class="item-emoji">' + it.emoji + '</span><span class="item-name">' + it.name + '</span>';
+    el.dataset.room = it.room;
+    el.dataset.placed = 'false';
+
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = col * cellW + cellW * 0.5 - 30 + (Math.random() - 0.5) * 20;
+    const y = 50 + row * cellH + cellH * 0.5 - 30 + (Math.random() - 0.5) * 20;
+
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.dataset.homeX = x;
+    el.dataset.homeY = y;
+
+    gameArea.appendChild(el);
+    allItemEls.push(el);
+  });
+
+  updateCounts();
+  updateProgress();
+  startTimer();
+}
+
+function updateCounts() {
+  ['bedroom', 'kitchen', 'living'].forEach(r => {
+    const total = ITEMS[r].length;
+    const placed = allItemEls.filter(el => el.dataset.room === r && el.dataset.placed === 'true').length;
+    document.getElementById('count-' + r).textContent = placed + '/' + total;
+  });
+}
+
+function updateProgress() {
+  const pct = totalItems > 0 ? (placedCount / totalItems) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = placedCount + ' / ' + totalItems + ' items sorted';
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) endGame(false);
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  const el = document.getElementById('timerVal');
+  el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  el.classList.toggle('danger', timeLeft <= 15);
+}
+
+function getRoomAtPoint(x, y) {
+  for (let i = 0; i < rooms.length; i++) {
+    const r = rooms[i].getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return rooms[i];
+  }
+  return null;
+}
+
+function tryPlace(el, dropX, dropY) {
+  const room = getRoomAtPoint(dropX, dropY);
+  if (!room) {
+    sendHome(el);
+    return;
+  }
+
+  const correctRoom = el.dataset.room;
+  const droppedRoom = room.dataset.room;
+
+  if (correctRoom === droppedRoom) {
+    el.dataset.placed = 'true';
+    el.classList.add('placed');
+    el.classList.remove('dragging');
+    placedCount++;
+    gameScore += 10;
+    document.getElementById('scoreVal').textContent = gameScore;
+    updateCounts();
+    updateProgress();
+    playSound(true);
+
+    const rr = room.getBoundingClientRect();
+    const nx = rr.left + 20 + Math.random() * (rr.width - 80);
+    const ny = rr.top + 50 + Math.random() * (rr.height - 100);
+    el.style.left = nx + 'px';
+    el.style.top = ny + 'px';
+
+    spawnStars(dropX, dropY);
+
+    if (placedCount >= totalItems) endGame(true);
+  } else {
+    el.classList.add('wrong');
+    playSound(false);
+    setTimeout(() => {
+      el.classList.remove('wrong');
+      sendHome(el);
+    }, 400);
+  }
+}
+
+function sendHome(el) {
+  el.classList.remove('dragging');
+  el.style.left = el.dataset.homeX + 'px';
+  el.style.top = el.dataset.homeY + 'px';
+}
+
+function spawnStars(x, y) {
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('div');
+    s.style.cssText =
+      'position:fixed;font-size:18px;pointer-events:none;z-index:9999;' +
+      'left:' + x + 'px;top:' + y + 'px;' +
+      'transition:all .6s ease-out;opacity:1;';
+    s.textContent = ['\u2B50', '\u2728', '\u{1F31F}'][i % 3];
+    document.body.appendChild(s);
+    const angle = (i / 8) * Math.PI * 2;
+    const dist = 40 + Math.random() * 50;
+    requestAnimationFrame(() => {
+      s.style.transform = 'translate(' + (Math.cos(angle) * dist) + 'px,' + (Math.sin(angle) * dist) + 'px) scale(0.3)';
+      s.style.opacity = '0';
+    });
+    setTimeout(() => s.remove(), 700);
+  }
+}
+
+function playSound(success) {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (success) {
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.frequency.value = f; o.type = 'sine';
+        const t = ac.currentTime + i * 0.07;
+        g.gain.setValueAtTime(0.18, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+        o.start(t); o.stop(t + 0.25);
+      });
+    } else {
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value = 180; o.type = 'sawtooth';
+      g.gain.setValueAtTime(0.15, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.3);
+      o.start(); o.stop(ac.currentTime + 0.3);
+    }
+  } catch (_) {}
+}
+
+function endGame(won) {
+  if (gameOver) return;
+  gameOver = true;
+  clearInterval(timerInterval);
+
+  const ov = document.getElementById('winOverlay');
+  const title = document.getElementById('overlayTitle');
+  const msg = document.getElementById('overlayMsg');
+
+  if (won) {
+    const elapsed = TOTAL_TIME - timeLeft;
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    title.textContent = 'All Tidy!';
+    msg.innerHTML = 'Score: ' + gameScore + '<br>Time: ' + m + ':' + (s < 10 ? '0' : '') + s + '<br>Great job sorting all the items!';
+  } else {
+    title.textContent = 'Time\'s Up!';
+    msg.innerHTML = 'Score: ' + gameScore + '<br>Items sorted: ' + placedCount + '/' + totalItems + '<br>Try again to beat the clock!';
+  }
+  ov.classList.add('show');
+}
+
+function getItemAt(x, y) {
+  for (let i = allItemEls.length - 1; i >= 0; i--) {
+    const el = allItemEls[i];
+    if (el.dataset.placed === 'true') continue;
+    const r = el.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return el;
+  }
+  return null;
+}
+
+function highlightRoom(x, y) {
+  rooms.forEach(r => r.classList.remove('highlight'));
+  const room = getRoomAtPoint(x, y);
+  if (room) room.classList.add('highlight');
+}
+
+gameArea.addEventListener('touchstart', e => {
+  if (gameOver) return;
+  e.preventDefault();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    const el = getItemAt(t.clientX, t.clientY);
+    if (!el) continue;
+    el.classList.add('dragging');
+    const r = el.getBoundingClientRect();
+    activeDrags.set(t.identifier, {
+      el,
+      offsetX: t.clientX - r.left - r.width / 2,
+      offsetY: t.clientY - r.top - r.height / 2
+    });
+    el.style.left = (t.clientX - r.width / 2) + 'px';
+    el.style.top = (t.clientY - r.height / 2) + 'px';
+  }
+  updateTouchBadge();
+}, { passive: false });
+
+gameArea.addEventListener('touchmove', e => {
+  if (gameOver) return;
+  e.preventDefault();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    const drag = activeDrags.get(t.identifier);
+    if (!drag) continue;
+    const el = drag.el;
+    const r = el.getBoundingClientRect();
+    el.style.left = (t.clientX - r.width / 2) + 'px';
+    el.style.top = (t.clientY - r.height / 2) + 'px';
+    highlightRoom(t.clientX, t.clientY);
+  }
+}, { passive: false });
+
+gameArea.addEventListener('touchend', e => {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    const drag = activeDrags.get(t.identifier);
+    if (!drag) { activeDrags.delete(t.identifier); continue; }
+    rooms.forEach(r => r.classList.remove('highlight'));
+    tryPlace(drag.el, t.clientX, t.clientY);
+    activeDrags.delete(t.identifier);
+  }
+  updateTouchBadge();
+});
+
+gameArea.addEventListener('touchcancel', e => {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    const drag = activeDrags.get(t.identifier);
+    if (drag) sendHome(drag.el);
+    activeDrags.delete(t.identifier);
+  }
+  rooms.forEach(r => r.classList.remove('highlight'));
+  updateTouchBadge();
+});
+
+function updateTouchBadge() {
+  const n = activeDrags.size;
+  touchBadge.textContent = 'Touches: ' + n;
+  touchBadge.classList.toggle('visible', n > 1);
+}
+
+let mouseDrag = null;
+
+gameArea.addEventListener('mousedown', e => {
+  if (gameOver || e.button !== 0) return;
+  const el = getItemAt(e.clientX, e.clientY);
+  if (!el) return;
+  el.classList.add('dragging');
+  const r = el.getBoundingClientRect();
+  mouseDrag = { el, offsetX: e.clientX - r.left - r.width / 2, offsetY: e.clientY - r.top - r.height / 2 };
+});
+
+window.addEventListener('mousemove', e => {
+  if (!mouseDrag) return;
+  const el = mouseDrag.el;
+  const r = el.getBoundingClientRect();
+  el.style.left = (e.clientX - r.width / 2) + 'px';
+  el.style.top = (e.clientY - r.height / 2) + 'px';
+  highlightRoom(e.clientX, e.clientY);
+});
+
+window.addEventListener('mouseup', e => {
+  if (!mouseDrag) return;
+  rooms.forEach(r => r.classList.remove('highlight'));
+  tryPlace(mouseDrag.el, e.clientX, e.clientY);
+  mouseDrag = null;
+});
+
+initGame();
+</script>
+</body>
+</html>
