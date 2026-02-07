@@ -101,6 +101,12 @@ body{
   touch-action:none;
 }
 .model-area:active{cursor:grabbing}
+model-viewer.animal-viewer{
+  width:100%;height:100%;
+  --poster-color:transparent;
+  background:rgba(0,0,0,.3);
+  touch-action:none;
+}
 .model-placeholder{
   perspective:250px;
   width:70px;height:70px;
@@ -225,7 +231,8 @@ var ANIMALS = [
       'Can run at 40 mph',
       'Babies are born with white spots for camouflage'
     ],
-    sound:{type:'bellow',freq:130,dur:0.9}
+    sound:{type:'bellow',freq:130,dur:0.9},
+    model:'../3dmodels/Deer.glb'
   },
   {
     name:'Red Fox', latin:'Vulpes vulpes', emoji:'\uD83E\uDD8A',
@@ -235,7 +242,8 @@ var ANIMALS = [
       'Use Earth\'s magnetic field to hunt',
       'Have over 40 different calls'
     ],
-    sound:{type:'bark',freq:800,dur:0.12}
+    sound:{type:'bark',freq:800,dur:0.12},
+    model:'../3dmodels/red_fox_standing_pose_realistic.glb'
   },
   {
     name:'Brown Bear', latin:'Ursus arctos', emoji:'\uD83D\uDC3B',
@@ -245,7 +253,8 @@ var ANIMALS = [
       'Sprint at 35 mph',
       'Hibernate for 5 to 7 months'
     ],
-    sound:{type:'growl',freq:75,dur:1.2}
+    sound:{type:'growl',freq:75,dur:1.2},
+    model:'../3dmodels/bear.glb'
   },
   {
     name:'Great Horned Owl', latin:'Bubo virginianus', emoji:'\uD83E\uDD89',
@@ -255,7 +264,8 @@ var ANIMALS = [
       'Fly in complete silence',
       'Grip strength is 300 PSI'
     ],
-    sound:{type:'hoot',freq:300,dur:0.4}
+    sound:{type:'hoot',freq:300,dur:0.4},
+    model:'../3dmodels/owl.glb'
   },
   {
     name:'Raccoon', latin:'Procyon lotor', emoji:'\uD83E\uDD9D',
@@ -265,7 +275,8 @@ var ANIMALS = [
       'Paws are like tiny human hands',
       'Wash food in water before eating'
     ],
-    sound:{type:'chitter',freq:600,dur:0.06}
+    sound:{type:'chitter',freq:600,dur:0.06},
+    model:'../3dmodels/racoon.glb'
   },
   {
     name:'Red Squirrel', latin:'Sciurus vulgaris', emoji:'\uD83D\uDC3F\uFE0F',
@@ -275,7 +286,8 @@ var ANIMALS = [
       'Leap 10x their body length',
       'Plant trees by forgetting buried nuts'
     ],
-    sound:{type:'chirp',freq:900,dur:0.15}
+    sound:{type:'chirp',freq:900,dur:0.15},
+    model:'../3dmodels/realistic_squirrel_3d_model.glb'
   },
   {
     name:'Beaver', latin:'Castor fiber', emoji:'\uD83E\uDDAB',
@@ -285,7 +297,8 @@ var ANIMALS = [
       'Hold breath for 15 minutes',
       'Teeth contain iron -- super strong!'
     ],
-    sound:{type:'slap',freq:200,dur:0.15}
+    sound:{type:'slap',freq:200,dur:0.15},
+    model:'../3dmodels/realistic_beaver__castor_3d_model.glb'
   },
   {
     name:'Grey Wolf', latin:'Canis lupus', emoji:'\uD83D\uDC3A',
@@ -295,7 +308,8 @@ var ANIMALS = [
       'Each howl is unique like a fingerprint',
       'Travel 50 miles in a single day'
     ],
-    sound:{type:'howl',freq:220,dur:2.0}
+    sound:{type:'howl',freq:220,dur:2.0},
+    model:'../3dmodels/wolf.glb'
   },
   {
     name:'Golden Eagle', latin:'Aquila chrysaetos', emoji:'\uD83E\uDD85',
@@ -305,7 +319,8 @@ var ANIMALS = [
       'Spot a rabbit from 3 km away',
       'Mate for life'
     ],
-    sound:{type:'screech',freq:1800,dur:0.6}
+    sound:{type:'screech',freq:1800,dur:0.6},
+    model:'../3dmodels/day_23_-_wild_eagle.glb'
   },
   {
     name:'Hedgehog', latin:'Erinaceus europaeus', emoji:'\uD83E\uDD94',
@@ -325,7 +340,8 @@ var ANIMALS = [
       'Lick their eyeballs to clean them',
       'Walk on ceilings'
     ],
-    sound:{type:'click',freq:1500,dur:0.04}
+    sound:{type:'click',freq:1500,dur:0.04},
+    model:'../3dmodels/gecko_thinker.glb'
   },
   {
     name:'European Hare', latin:'Lepus europaeus', emoji:'\uD83D\uDC07',
@@ -335,7 +351,41 @@ var ANIMALS = [
       'Jump 3 meters high from standing',
       'Nearly 360-degree vision'
     ],
-    sound:{type:'thump',freq:55,dur:0.12}
+    sound:{type:'thump',freq:55,dur:0.12},
+    model:'../3dmodels/rabbit.glb'
+  },
+  {
+    name:'Lion', latin:'Panthera leo', emoji:'\uD83E\uDD81',
+    desc:'Majestic kings of the savanna, known for powerful roars and social prides.',
+    facts:[
+      'Roars can be heard 8 km away!',
+      'Sleep up to 20 hours a day',
+      'Females do most of the hunting'
+    ],
+    sound:{type:'roar',freq:100,dur:1.5},
+    model:'../3dmodels/lion_lowpoly.glb'
+  },
+  {
+    name:'Tiger', latin:'Panthera tigris', emoji:'\uD83D\uDC2F',
+    desc:'The largest wild cat species, with unique stripe patterns like fingerprints.',
+    facts:[
+      'No two tigers have the same stripes!',
+      'Can leap over 9 meters forward',
+      'Excellent swimmers unlike most cats'
+    ],
+    sound:{type:'roar',freq:90,dur:1.3},
+    model:'../3dmodels/tiger.glb'
+  },
+  {
+    name:'Elephant', latin:'Loxodonta africana', emoji:'\uD83D\uDC18',
+    desc:'The largest land animals, with incredible memory and deep family bonds.',
+    facts:[
+      'Can recognize themselves in mirrors!',
+      'Communicate through ground vibrations',
+      'Herds are led by wise matriarchs'
+    ],
+    sound:{type:'trumpet',freq:350,dur:0.8},
+    model:'../3dmodels/elephant__gajah.glb'
   }
 ];
 
@@ -349,20 +399,31 @@ function buildCards() {
     var factsHtml = '';
     animal.facts.forEach(function(f) { factsHtml += '<li>' + f + '</li>'; });
 
-    card.innerHTML =
-      '<div class="model-area" data-idx="' + idx + '">' +
-        '<div class="model-placeholder">' +
-          '<div class="cube" data-cube="' + idx + '">' +
-            '<div class="cube-face">' + animal.emoji + '</div>' +
-            '<div class="cube-face">' + animal.emoji + '</div>' +
-            '<div class="cube-face">' + animal.emoji + '</div>' +
-            '<div class="cube-face">' + animal.emoji + '</div>' +
-            '<div class="cube-face">' + animal.emoji + '</div>' +
-            '<div class="cube-face">' + animal.emoji + '</div>' +
+    var modelHtml;
+    if (animal.model) {
+      modelHtml =
+        '<div class="model-area" data-idx="' + idx + '">' +
+          '<model-viewer class="animal-viewer" src="' + animal.model + '" auto-rotate camera-controls interaction-prompt="none" shadow-intensity="0.4" exposure="1.2" camera-orbit="0deg 75deg 2.5m"></model-viewer>' +
+          '<span class="model-badge">3D MODEL</span>' +
+        '</div>';
+    } else {
+      modelHtml =
+        '<div class="model-area" data-idx="' + idx + '">' +
+          '<div class="model-placeholder">' +
+            '<div class="cube" data-cube="' + idx + '">' +
+              '<div class="cube-face">' + animal.emoji + '</div>' +
+              '<div class="cube-face">' + animal.emoji + '</div>' +
+              '<div class="cube-face">' + animal.emoji + '</div>' +
+              '<div class="cube-face">' + animal.emoji + '</div>' +
+              '<div class="cube-face">' + animal.emoji + '</div>' +
+              '<div class="cube-face">' + animal.emoji + '</div>' +
+            '</div>' +
           '</div>' +
-        '</div>' +
-        '<span class="model-badge">DRAG TO ROTATE</span>' +
-      '</div>' +
+          '<span class="model-badge">DRAG TO ROTATE</span>' +
+        '</div>';
+    }
+
+    card.innerHTML = modelHtml +
       '<div class="card-body">' +
         '<div class="card-top">' +
           '<span class="card-emoji">' + animal.emoji + '</span>' +
@@ -612,8 +673,38 @@ function playAnimalSound(cfg, btn) {
         o.start(t); o.stop(t + cfg.dur);
       }
     }
+    else if (cfg.type === 'roar') {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(cfg.freq, now);
+      o.frequency.linearRampToValueAtTime(cfg.freq * 1.8, now + cfg.dur * 0.3);
+      o.frequency.linearRampToValueAtTime(cfg.freq * 0.6, now + cfg.dur);
+      var lfo = ac.createOscillator(), lfoG = ac.createGain();
+      lfo.connect(lfoG); lfoG.connect(o.frequency);
+      lfo.frequency.value = 6; lfoG.gain.value = 20; lfo.start(now);
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.18, now + 0.1);
+      g.gain.setValueAtTime(0.18, now + cfg.dur * 0.5);
+      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      o.start(now); o.stop(now + cfg.dur); lfo.stop(now + cfg.dur);
+    }
+    else if (cfg.type === 'trumpet') {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'square';
+      o.frequency.setValueAtTime(cfg.freq, now);
+      o.frequency.linearRampToValueAtTime(cfg.freq * 3, now + cfg.dur * 0.4);
+      o.frequency.setValueAtTime(cfg.freq * 2.5, now + cfg.dur * 0.6);
+      o.frequency.linearRampToValueAtTime(cfg.freq * 2, now + cfg.dur);
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.15, now + 0.05);
+      g.gain.setValueAtTime(0.15, now + cfg.dur * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      o.start(now); o.stop(now + cfg.dur);
+    }
 
-    var totalDur = cfg.type === 'howl' ? cfg.dur : cfg.type === 'bark' ? 0.6 : cfg.type === 'chitter' ? 0.8 : cfg.type === 'chirp' ? 0.8 : cfg.type === 'hoot' ? 1.1 : cfg.type === 'snuffle' ? 0.7 : cfg.type === 'click' ? 0.3 : cfg.type === 'thump' ? 0.6 : cfg.dur + 0.1;
+    var totalDur = cfg.type === 'howl' ? cfg.dur : cfg.type === 'bark' ? 0.6 : cfg.type === 'chitter' ? 0.8 : cfg.type === 'chirp' ? 0.8 : cfg.type === 'hoot' ? 1.1 : cfg.type === 'snuffle' ? 0.7 : cfg.type === 'click' ? 0.3 : cfg.type === 'thump' ? 0.6 : cfg.type === 'roar' ? cfg.dur : cfg.type === 'trumpet' ? cfg.dur : cfg.dur + 0.1;
     setTimeout(function() { btn.classList.remove('playing'); }, totalDur * 1000);
   } catch (e) {
     btn.classList.remove('playing');
