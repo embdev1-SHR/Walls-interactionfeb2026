@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Underwater Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;touch-action:none}
+
+#ocean{position:fixed;inset:0;transition:background 1.8s ease}
+.zone-reef #ocean{background:linear-gradient(180deg,#006994 0%,#004e71 20%,#003d5c 45%,#005577 70%,#003a55 100%)}
+.zone-open #ocean{background:linear-gradient(180deg,#003366 0%,#002244 25%,#001a33 55%,#001122 100%)}
+.zone-deep #ocean{background:linear-gradient(180deg,#0a0a2e 0%,#050520 25%,#020215 55%,#010108 100%)}
+
+.caustic-layer{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  opacity:.3;transition:opacity 1.8s;
+  background:
+    radial-gradient(ellipse 600px 300px at 20% 15%, rgba(100,210,255,.08), transparent),
+    radial-gradient(ellipse 400px 400px at 70% 25%, rgba(80,200,240,.06), transparent),
+    radial-gradient(ellipse 500px 250px at 45% 10%, rgba(120,220,255,.05), transparent);
+  animation:causticShift 12s ease-in-out infinite alternate;
+}
+.zone-deep .caustic-layer{opacity:.03}
+@keyframes causticShift{
+  0%{background-position:0 0, 0 0, 0 0}
+  100%{background-position:40px 20px, -30px 15px, 20px -10px}
+}
+
+#light-rays{position:fixed;top:-10%;left:0;right:0;height:65%;z-index:1;pointer-events:none;transition:opacity 1.8s}
+.zone-deep #light-rays{opacity:.05}
+.zone-open #light-rays{opacity:.18}
+.zone-reef #light-rays{opacity:.35}
+.ray{
+  position:absolute;top:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.03) 50%,transparent 100%);
+  transform-origin:top center;
+  animation:shimmer var(--dur,8s) ease-in-out infinite;
+}
+@keyframes shimmer{
+  0%,100%{opacity:.4;transform:rotate(var(--r,0deg)) scaleX(1)}
+  50%{opacity:.9;transform:rotate(var(--r,0deg)) scaleX(1.4)}
+}
+
+canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
+
+#coral-bed{
+  position:fixed;bottom:0;left:0;right:0;height:28vh;z-index:3;
+  pointer-events:none;overflow:hidden;transition:opacity 1.8s,transform 1.8s;
+}
+.zone-reef #coral-bed{opacity:1;transform:translateY(0)}
+.zone-open #coral-bed{opacity:.2;transform:translateY(40%)}
+.zone-deep #coral-bed{opacity:.03;transform:translateY(80%)}
+#coral-bed img{
+  width:100%;height:100%;object-fit:cover;object-position:top center;
+  filter:brightness(.55) saturate(1.3);
+  mask-image:linear-gradient(to bottom,transparent 0%,black 35%);
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 35%);
+}
+
+#creatures{position:fixed;inset:0;z-index:5}
+.creature{
+  position:absolute;cursor:pointer;
+  will-change:transform,left,top;
+  transition:filter .3s;
+}
+.creature:hover{filter:brightness(1.25) drop-shadow(0 0 24px rgba(100,200,255,.7))!important}
+.creature:active{filter:brightness(.9)!important}
+
+.creature-img{
+  width:100%;height:100%;border-radius:50%;object-fit:cover;
+  border:3px solid rgba(255,255,255,.25);
+  box-shadow:0 6px 28px rgba(0,0,0,.45),0 0 40px rgba(0,80,180,.15),inset 0 0 20px rgba(0,0,0,.1);
+  transition:border-color .3s,box-shadow .3s;
+}
+.creature:hover .creature-img{
+  border-color:rgba(255,255,255,.6);
+  box-shadow:0 8px 36px rgba(0,0,0,.5),0 0 50px rgba(100,200,255,.25);
+}
+
+.creature-name{
+  position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);
+  background:rgba(0,30,60,.85);backdrop-filter:blur(6px);
+  color:#fff;font-size:11px;font-weight:700;
+  padding:3px 12px;border-radius:20px;white-space:nowrap;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+  border:1px solid rgba(100,200,255,.25);
+}
+.creature:hover .creature-name{opacity:1}
+
+#info-panel{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,10,25,.88);backdrop-filter:blur(16px);
+  display:none;align-items:center;justify-content:center;
+}
+#info-panel.open{display:flex}
+
+.info-card{
+  background:linear-gradient(145deg,#071e36,#0c2d4d);
+  border-radius:24px;max-width:560px;width:92%;
+  overflow:hidden;
+  border:2px solid rgba(100,200,255,.15);
+  box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 80px rgba(0,100,200,.1);
+  animation:infoIn .45s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes infoIn{from{transform:scale(.7) translateY(50px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+.info-img{width:100%;height:260px;object-fit:cover;display:block;border-bottom:1px solid rgba(100,200,255,.1)}
+.info-body{padding:22px 26px 26px}
+.info-title{font-size:26px;font-weight:900;color:#64d2ff;margin-bottom:2px;text-shadow:0 2px 10px rgba(100,210,255,.25)}
+.info-latin{font-size:12px;color:rgba(255,255,255,.35);font-style:italic;margin-bottom:14px}
+.info-facts{list-style:none;padding:0}
+.info-facts li{
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);
+  color:rgba(255,255,255,.85);font-size:14px;font-weight:600;
+  line-height:1.5;display:flex;gap:10px;align-items:flex-start;
+}
+.info-facts li:last-child{border-bottom:none}
+.fact-ic{font-size:17px;flex-shrink:0;margin-top:1px}
+
+.info-close-btn{
+  display:block;width:100%;margin-top:18px;padding:13px;
+  background:linear-gradient(135deg,#0077b6,#0096c7);
+  color:white;border:none;border-radius:14px;
+  font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;
+  transition:background .3s,transform .2s;
+  box-shadow:0 4px 16px rgba(0,119,182,.3);
+}
+.info-close-btn:hover{background:linear-gradient(135deg,#0096c7,#00b4d8)}
+.info-close-btn:active{transform:scale(.96)}
+
+.ui-bar{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:100;
+  display:flex;gap:6px;
+  background:rgba(0,20,40,.75);backdrop-filter:blur(14px);
+  padding:8px 18px;border-radius:40px;
+  border:1px solid rgba(100,200,255,.15);
+  box-shadow:0 8px 36px rgba(0,0,0,.35);
+}
+.zone-tab{
+  padding:10px 22px;border-radius:30px;border:2px solid transparent;
+  cursor:pointer;font-size:13px;font-weight:800;font-family:inherit;
+  color:rgba(255,255,255,.6);background:transparent;transition:all .3s;
+}
+.zone-tab:hover{color:#fff;background:rgba(100,200,255,.1)}
+.zone-tab.active{
+  color:#64d2ff;background:rgba(100,210,255,.12);
+  border-color:rgba(100,210,255,.35);box-shadow:0 0 14px rgba(100,210,255,.12);
+}
+
+.back-link{
+  position:fixed;top:14px;left:14px;z-index:100;
+  padding:9px 20px;background:rgba(0,20,40,.65);backdrop-filter:blur(8px);
+  border:1px solid rgba(100,200,255,.15);border-radius:30px;
+  color:rgba(255,255,255,.75);font-size:13px;font-weight:800;
+  cursor:pointer;font-family:inherit;transition:all .3s;text-decoration:none;
+}
+.back-link:hover{background:rgba(0,40,80,.85);color:#fff;border-color:rgba(100,200,255,.35)}
+
+.hdr{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:100;
+  text-align:center;pointer-events:none;
+}
+.hdr h1{
+  font-size:clamp(20px,3.2vw,34px);font-weight:900;
+  color:rgba(255,255,255,.88);text-shadow:0 2px 14px rgba(0,80,180,.35);
+}
+.hdr p{font-size:clamp(11px,1.4vw,14px);font-weight:600;color:rgba(100,210,255,.6);margin-top:1px}
+
+.depth-dots{
+  position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:100;
+  display:flex;flex-direction:column;gap:8px;
+}
+.d-dot{
+  width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.15);
+  border:2px solid rgba(255,255,255,.25);transition:all .5s;cursor:pointer;
+}
+.d-dot.on{background:#64d2ff;border-color:#64d2ff;box-shadow:0 0 12px rgba(100,210,255,.5);transform:scale(1.3)}
+
+.floating-particle{
+  position:fixed;pointer-events:none;z-index:4;border-radius:50%;
+  background:rgba(180,220,255,.15);
+  animation:pFloat var(--t,10s) linear infinite;
+}
+@keyframes pFloat{
+  0%{transform:translateY(0) translateX(0) scale(1);opacity:.2}
+  50%{transform:translateY(calc(var(--dy,-300px)*.5)) translateX(var(--sx,15px)) scale(.8);opacity:.15}
+  100%{transform:translateY(var(--dy,-300px)) translateX(0) scale(.6);opacity:0}
+}
+
+.glow-orb{
+  position:fixed;pointer-events:none;z-index:4;border-radius:50%;
+  transition:opacity 1.8s;
+}
+.zone-reef .glow-orb{opacity:0}
+.zone-open .glow-orb{opacity:.3}
+.zone-deep .glow-orb{opacity:.8}
+</style>
+</head>
+<body class="zone-reef">
+
+<div id="ocean"></div>
+<div class="caustic-layer"></div>
+<div id="light-rays"></div>
+<canvas id="bubble-cv"></canvas>
+
+<div id="coral-bed">
+  <img src="https://images.pexels.com/photos/3100361/pexels-photo-3100361.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750" alt="coral reef floor">
+</div>
+
+<div id="creatures"></div>
+
+<div class="hdr">
+  <h1>Underwater Explorer</h1>
+  <p id="zone-desc">Coral Reef -- Tap any creature to learn about it!</p>
+</div>
+
+<a href="../index.html" class="back-link">&#x2190; Menu</a>
+
+<div class="depth-dots">
+  <div class="d-dot on" data-z="reef"></div>
+  <div class="d-dot" data-z="open"></div>
+  <div class="d-dot" data-z="deep"></div>
+</div>
+
+<nav class="ui-bar">
+  <button class="zone-tab active" data-z="reef">Coral Reef</button>
+  <button class="zone-tab" data-z="open">Open Ocean</button>
+  <button class="zone-tab" data-z="deep">Deep Sea</button>
+</nav>
+
+<div id="info-panel">
+  <div class="info-card">
+    <img class="info-img" id="ip-img" src="" alt="">
+    <div class="info-body">
+      <h2 class="info-title" id="ip-name"></h2>
+      <p class="info-latin" id="ip-latin"></p>
+      <ul class="info-facts" id="ip-facts"></ul>
+      <button class="info-close-btn" id="ip-close">Got it!</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+var W = window.innerWidth;
+var H = window.innerHeight;
+var zone = 'reef';
+var layer = document.getElementById('creatures');
+var alive = [];
+var raf;
+
+function px(id, w) {
+  return 'https://images.pexels.com/photos/' + id + '/pexels-photo-' + id + '.jpeg?auto=compress&cs=tinysrgb&w=' + (w || 400);
+}
+
+var ZONE_CFG = {
+  reef: { desc: 'Coral Reef -- Tap any creature to learn about it!', ids: ['clownfish','seaTurtle','morayEel','blueTang','starfish','seahorse'] },
+  open: { desc: 'Open Ocean -- Discover amazing sea animals!', ids: ['dolphin','mantaRay','whaleShark','swordfish','schoolFish','stingray'] },
+  deep: { desc: 'Deep Sea -- Explore the mysterious depths!', ids: ['moonJelly','octopus','lionsMane','giantSquid','blueJelly','deepCoral'] }
+};
+
+var DATA = {
+  clownfish: {
+    name:'Clownfish', latin:'Amphiprioninae',
+    img: px(3482719), photo: px(3482719, 600), sz: 78, spd: 1.8,
+    facts:[
+      {i:'\uD83C\uDFE0', t:'Lives safely inside stinging sea anemones that protect it from predators'},
+      {i:'\uD83D\uDC23', t:'All clownfish are born male -- the biggest one becomes female!'},
+      {i:'\u2B50', t:'Made famous as "Nemo" in the movie Finding Nemo'}
+    ]
+  },
+  seaTurtle: {
+    name:'Green Sea Turtle', latin:'Chelonia mydas',
+    img: px(847393), photo: px(847393, 600), sz: 110, spd: .75,
+    facts:[
+      {i:'\uD83C\uDF82', t:'Can live over 100 years -- older than your great-grandparents!'},
+      {i:'\uD83C\uDF0D', t:'Travels thousands of miles across entire oceans every year'},
+      {i:'\uD83D\uDCA8', t:'Must swim to the surface to breathe air, just like us'}
+    ]
+  },
+  morayEel: {
+    name:'Moray Eel', latin:'Muraenidae',
+    img: px(10999876), photo: px(10999876, 600), sz: 88, spd: .55,
+    facts:[
+      {i:'\uD83D\uDE2E', t:'Has a secret second set of jaws hiding inside its throat!'},
+      {i:'\uD83C\uDFE0', t:'Hides in dark holes and crevices in the coral reef'},
+      {i:'\uD83E\uDD1D', t:'Sometimes teams up with grouper fish to hunt together'}
+    ]
+  },
+  blueTang: {
+    name:'Blue Tang', latin:'Paracanthurus hepatus',
+    img: px(3181208), photo: px(3181208, 600), sz: 72, spd: 2.1,
+    facts:[
+      {i:'\uD83D\uDC99', t:'This stunning blue fish is also called a Regal Tang'},
+      {i:'\u2B50', t:'Famous as "Dory" from the movie Finding Dory!'},
+      {i:'\u26A0\uFE0F', t:'Has a razor-sharp spine near its tail for self-defense'}
+    ]
+  },
+  starfish: {
+    name:'Starfish', latin:'Asteroidea',
+    img: px(17693471), photo: px(17693471, 600), sz: 68, spd: .25,
+    facts:[
+      {i:'\uD83D\uDCAA', t:'Can regrow a lost arm -- some regrow their entire body from just one arm!'},
+      {i:'\uD83E\uDDE0', t:'Has no brain and no blood -- uses seawater instead of blood'},
+      {i:'\uD83D\uDC41\uFE0F', t:'Has a tiny eye at the tip of each arm that can sense light'}
+    ]
+  },
+  seahorse: {
+    name:'Seahorse', latin:'Hippocampus',
+    img: px(17652296), photo: px(17652296, 600), sz: 62, spd: .35,
+    facts:[
+      {i:'\uD83D\uDC68', t:'The father carries and gives birth to the babies, not the mother!'},
+      {i:'\uD83D\uDC40', t:'Each eye moves independently, like a chameleon'},
+      {i:'\uD83D\uDC95', t:'Pairs greet each other every morning with a special dance'}
+    ]
+  },
+  dolphin: {
+    name:'Bottlenose Dolphin', latin:'Tursiops truncatus',
+    img: px(4961025), photo: px(4961025, 600), sz: 120, spd: 2.4,
+    facts:[
+      {i:'\uD83E\uDDE0', t:'One of the smartest animals on Earth -- they have names for each other!'},
+      {i:'\uD83D\uDD0A', t:'Uses echolocation (sound waves) to find food in dark water'},
+      {i:'\uD83D\uDE34', t:'Sleeps with only half its brain -- one eye stays open!'}
+    ]
+  },
+  mantaRay: {
+    name:'Manta Ray', latin:'Mobula birostris',
+    img: px(668867), photo: px(668867, 600), sz: 130, spd: 1.1,
+    facts:[
+      {i:'\uD83D\uDCCF', t:'Can grow up to 23 feet wide -- wider than most cars!'},
+      {i:'\uD83E\uDDE0', t:'Has the largest brain of any fish and is extremely intelligent'},
+      {i:'\uD83E\uDD17', t:'Completely harmless to humans -- a gentle giant of the sea'}
+    ]
+  },
+  whaleShark: {
+    name:'Whale Shark', latin:'Rhincodon typus',
+    img: px(5967768), photo: px(5967768, 600), sz: 140, spd: .65,
+    facts:[
+      {i:'\uD83D\uDC33', t:'The biggest fish in the entire ocean -- up to 40 feet long!'},
+      {i:'\uD83C\uDF7D\uFE0F', t:'Despite its huge size, it only eats tiny plankton and small fish'},
+      {i:'\u2B50', t:'Each whale shark has a unique spot pattern, like human fingerprints'}
+    ]
+  },
+  swordfish: {
+    name:'Swordfish', latin:'Xiphias gladius',
+    img: px(17668217), photo: px(17668217, 600), sz: 100, spd: 2.8,
+    facts:[
+      {i:'\u2694\uFE0F', t:'Has a long flat bill shaped like a sword!'},
+      {i:'\uD83C\uDFC3', t:'One of the fastest fish in the ocean -- up to 60 mph!'},
+      {i:'\uD83C\uDF21\uFE0F', t:'Has special organs that heat its eyes and brain for better vision'}
+    ]
+  },
+  schoolFish: {
+    name:'Coral Reef Fish', latin:'Various species',
+    img: px(3181208), photo: px(3181208, 600), sz: 90, spd: 1.5,
+    facts:[
+      {i:'\uD83D\uDC1F', t:'Fish swim in schools for safety -- predators get confused by the group!'},
+      {i:'\uD83C\uDFA8', t:'Coral reef fish are some of the most colorful animals on Earth'},
+      {i:'\uD83C\uDF0D', t:'Coral reefs are home to over 25% of all ocean fish species'}
+    ]
+  },
+  stingray: {
+    name:'Stingray', latin:'Myliobatoidei',
+    img: px(2570524), photo: px(2570524, 600), sz: 105, spd: 1.3,
+    facts:[
+      {i:'\uD83D\uDC40', t:'Has eyes on top of its flat body and mouth underneath'},
+      {i:'\u26A1', t:'Can sense the electrical signals of animals hiding in sand'},
+      {i:'\uD83E\uDD88', t:'Related to sharks -- both have skeletons made of bendy cartilage'}
+    ]
+  },
+  moonJelly: {
+    name:'Moon Jellyfish', latin:'Aurelia aurita',
+    img: px(1683888), photo: px(1683888, 600), sz: 95, spd: .4,
+    facts:[
+      {i:'\uD83D\uDCA7', t:'Made of 95% water -- almost invisible in the ocean!'},
+      {i:'\uD83E\uDDE0', t:'Has no brain, no heart, and no blood at all'},
+      {i:'\u23F3', t:'Jellyfish have existed for over 500 million years -- before dinosaurs!'}
+    ]
+  },
+  octopus: {
+    name:'Giant Pacific Octopus', latin:'Enteroctopus dofleini',
+    img: px(3046629), photo: px(3046629, 600), sz: 108, spd: .9,
+    facts:[
+      {i:'\u2764\uFE0F', t:'Has THREE hearts and BLUE blood!'},
+      {i:'\uD83E\uDDE0', t:'Super smart -- can solve puzzles, open jars, and use tools'},
+      {i:'\uD83C\uDFA8', t:'Changes color and texture in milliseconds to camouflage'}
+    ]
+  },
+  lionsMane: {
+    name:'Lion\'s Mane Jellyfish', latin:'Cyanea capillata',
+    img: px(137610), photo: px(137610, 600), sz: 100, spd: .3,
+    facts:[
+      {i:'\uD83E\uDD81', t:'The largest jellyfish species in the entire world!'},
+      {i:'\uD83D\uDCCF', t:'Tentacles can stretch over 100 feet -- longer than a blue whale'},
+      {i:'\u2744\uFE0F', t:'Prefers cold arctic waters where it grows to enormous sizes'}
+    ]
+  },
+  giantSquid: {
+    name:'Giant Squid', latin:'Architeuthis dux',
+    img: px(60578), photo: px(60578, 600), sz: 115, spd: 1.2,
+    facts:[
+      {i:'\uD83D\uDC40', t:'Has the largest eyes of any animal -- the size of dinner plates!'},
+      {i:'\uD83D\uDCCF', t:'Can grow over 40 feet long -- longer than a school bus'},
+      {i:'\uD83D\uDD75\uFE0F', t:'So mysterious that a live one was only first filmed in 2004'}
+    ]
+  },
+  blueJelly: {
+    name:'Blue Jellyfish', latin:'Cyanea lamarckii',
+    img: px(9805882), photo: px(9805882, 600), sz: 80, spd: .35,
+    facts:[
+      {i:'\uD83D\uDD35', t:'Its beautiful blue glow helps it blend into the deep ocean'},
+      {i:'\uD83C\uDF0A', t:'Drifts with ocean currents -- an expert ocean traveler'},
+      {i:'\uD83D\uDCA1', t:'Some jellyfish are bioluminescent and glow in the dark!'}
+    ]
+  },
+  deepCoral: {
+    name:'Deep Sea Anemone', latin:'Actiniaria',
+    img: px(9718224), photo: px(9718224, 600), sz: 70, spd: .15,
+    facts:[
+      {i:'\uD83C\uDF3A', t:'Sea anemones look like flowers but are actually animals!'},
+      {i:'\uD83E\uDD1D', t:'Partners with clownfish -- they protect each other'},
+      {i:'\u23F3', t:'Some sea anemones can live for over 80 years'}
+    ]
+  }
+};
+
+function buildRays() {
+  var el = document.getElementById('light-rays');
+  for (var i = 0; i < 8; i++) {
+    var r = document.createElement('div');
+    r.className = 'ray';
+    r.style.left = (3 + Math.random() * 94) + '%';
+    r.style.width = (30 + Math.random() * 100) + 'px';
+    r.style.height = '120%';
+    r.style.setProperty('--r', (-18 + Math.random() * 36) + 'deg');
+    r.style.setProperty('--dur', (5 + Math.random() * 7) + 's');
+    r.style.animationDelay = (Math.random() * 8) + 's';
+    el.appendChild(r);
+  }
+}
+
+function buildParticles() {
+  for (var i = 0; i < 15; i++) {
+    var p = document.createElement('div');
+    p.className = 'floating-particle';
+    var sz = 3 + Math.random() * 8;
+    p.style.width = sz + 'px';
+    p.style.height = sz + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = (20 + Math.random() * 70) + '%';
+    p.style.setProperty('--t', (7 + Math.random() * 10) + 's');
+    p.style.setProperty('--dy', (-200 - Math.random() * 400) + 'px');
+    p.style.setProperty('--sx', (-20 + Math.random() * 40) + 'px');
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    document.body.appendChild(p);
+  }
+}
+
+function buildGlowOrbs() {
+  var colors = ['rgba(0,200,255,.06)','rgba(100,255,200,.04)','rgba(200,100,255,.05)','rgba(255,200,50,.03)'];
+  for (var i = 0; i < 6; i++) {
+    var o = document.createElement('div');
+    o.className = 'glow-orb';
+    var sz = 80 + Math.random() * 200;
+    o.style.width = sz + 'px';
+    o.style.height = sz + 'px';
+    o.style.borderRadius = '50%';
+    o.style.left = Math.random() * 90 + '%';
+    o.style.top = (10 + Math.random() * 70) + '%';
+    o.style.background = 'radial-gradient(circle,' + colors[i % colors.length] + ',transparent 70%)';
+    o.style.animation = 'pFloat ' + (12 + Math.random() * 8) + 's ease-in-out infinite alternate';
+    o.style.zIndex = '4';
+    document.body.appendChild(o);
+  }
+}
+
+var bCv = document.getElementById('bubble-cv');
+var bCtx = bCv.getContext('2d');
+var bubbles = [];
+
+function resizeBubbles() { bCv.width = window.innerWidth; bCv.height = window.innerHeight; }
+
+function addBubble() {
+  if (bubbles.length > 40) return;
+  bubbles.push({
+    x: Math.random() * W, y: H + 10,
+    r: 1.5 + Math.random() * 5,
+    v: .4 + Math.random() * 1.2,
+    w: Math.random() * Math.PI * 2,
+    ws: .008 + Math.random() * .025,
+    a: .12 + Math.random() * .2
+  });
+}
+
+function drawBubbles() {
+  bCtx.clearRect(0, 0, bCv.width, bCv.height);
+  bubbles = bubbles.filter(function(b) {
+    b.y -= b.v;
+    b.w += b.ws;
+    b.x += Math.sin(b.w) * .35;
+    if (b.y < -15) return false;
+    bCtx.beginPath();
+    bCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    bCtx.fillStyle = 'rgba(170,215,255,' + b.a + ')';
+    bCtx.fill();
+    bCtx.beginPath();
+    bCtx.arc(b.x - b.r * .28, b.y - b.r * .28, b.r * .18, 0, Math.PI * 2);
+    bCtx.fillStyle = 'rgba(255,255,255,' + (b.a + .08) + ')';
+    bCtx.fill();
+    return true;
+  });
+}
+
+function spawnCreatures() {
+  layer.innerHTML = '';
+  alive = [];
+  var ids = ZONE_CFG[zone].ids;
+  ids.forEach(function(id) {
+    var d = DATA[id];
+    if (!d) return;
+    var el = document.createElement('div');
+    el.className = 'creature';
+    el.style.width = d.sz + 'px';
+    el.style.height = d.sz + 'px';
+
+    var img = document.createElement('img');
+    img.className = 'creature-img';
+    img.src = d.img;
+    img.alt = d.name;
+    img.draggable = false;
+    el.appendChild(img);
+
+    var lbl = document.createElement('div');
+    lbl.className = 'creature-name';
+    lbl.textContent = d.name;
+    el.appendChild(lbl);
+
+    var pad = 70;
+    var sx = pad + Math.random() * (W - d.sz - pad * 2);
+    var sy = pad + Math.random() * (H - d.sz - pad * 2 - 140);
+
+    el.style.left = sx + 'px';
+    el.style.top = sy + 'px';
+
+    el.addEventListener('pointerdown', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openInfo(id);
+    });
+
+    layer.appendChild(el);
+
+    alive.push({
+      el: el, x: sx, y: sy,
+      vx: (Math.random() - .5) * d.spd * 2,
+      vy: (Math.random() - .5) * d.spd,
+      sz: d.sz, spd: d.spd,
+      ang: Math.random() * Math.PI * 2,
+      ts: .004 + Math.random() * .012,
+      wp: Math.random() * Math.PI * 2,
+      dp: .55 + Math.random() * .45
+    });
+  });
+}
+
+function tick() {
+  var mx = W - 40;
+  var my = H - 170;
+  alive.forEach(function(c) {
+    c.ang += (Math.random() - .5) * c.ts;
+    c.wp += .018;
+    c.vx += Math.cos(c.ang) * c.spd * .018;
+    c.vy += Math.sin(c.ang) * c.spd * .008 + Math.sin(c.wp) * .04;
+    var mag = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
+    if (mag > c.spd) { c.vx = (c.vx / mag) * c.spd; c.vy = (c.vy / mag) * c.spd; }
+    c.vx *= .996; c.vy *= .996;
+    c.x += c.vx; c.y += c.vy;
+
+    if (c.x < 30) { c.x = 30; c.vx = Math.abs(c.vx) * .7; c.ang = Math.random() * Math.PI - Math.PI / 2; }
+    if (c.x > mx - c.sz) { c.x = mx - c.sz; c.vx = -Math.abs(c.vx) * .7; c.ang = Math.PI + (Math.random() - .5) * Math.PI; }
+    if (c.y < 60) { c.y = 60; c.vy = Math.abs(c.vy) * .7; }
+    if (c.y > my - c.sz) { c.y = my - c.sz; c.vy = -Math.abs(c.vy) * .7; }
+
+    c.el.style.left = c.x + 'px';
+    c.el.style.top = c.y + 'px';
+    var dir = c.vx < 0 ? -1 : 1;
+    var bob = Math.sin(c.wp) * 4;
+    c.el.style.transform = 'scaleX(' + dir + ') translateY(' + bob + 'px)';
+    c.el.style.opacity = c.dp;
+  });
+}
+
+function openInfo(id) {
+  var d = DATA[id];
+  if (!d) return;
+  document.getElementById('ip-img').src = d.photo;
+  document.getElementById('ip-name').textContent = d.name;
+  document.getElementById('ip-latin').textContent = d.latin;
+  var ul = document.getElementById('ip-facts');
+  ul.innerHTML = '';
+  d.facts.forEach(function(f) {
+    var li = document.createElement('li');
+    var ic = document.createElement('span');
+    ic.className = 'fact-ic';
+    ic.textContent = f.i;
+    var tx = document.createElement('span');
+    tx.textContent = f.t;
+    li.appendChild(ic);
+    li.appendChild(tx);
+    ul.appendChild(li);
+  });
+  document.getElementById('info-panel').classList.add('open');
+  playPop();
+}
+
+function closeInfo() { document.getElementById('info-panel').classList.remove('open'); }
+
+document.getElementById('ip-close').addEventListener('click', closeInfo);
+document.getElementById('info-panel').addEventListener('click', function(e) { if (e.target === this) closeInfo(); });
+
+function switchZone(z) {
+  if (z === zone) return;
+  zone = z;
+  document.body.className = 'zone-' + z;
+  document.getElementById('zone-desc').textContent = ZONE_CFG[z].desc;
+  document.querySelectorAll('.zone-tab').forEach(function(t) { t.classList.toggle('active', t.dataset.z === z); });
+  document.querySelectorAll('.d-dot').forEach(function(d) { d.classList.toggle('on', d.dataset.z === z); });
+  layer.style.opacity = '0';
+  layer.style.transition = 'opacity .5s';
+  setTimeout(function() {
+    spawnCreatures();
+    layer.style.opacity = '1';
+  }, 500);
+}
+
+document.querySelectorAll('.zone-tab').forEach(function(b) { b.addEventListener('click', function() { switchZone(this.dataset.z); }); });
+document.querySelectorAll('.d-dot').forEach(function(b) { b.addEventListener('click', function() { switchZone(this.dataset.z); }); });
+
+function playPop() {
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.frequency.setValueAtTime(380, ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(760, ac.currentTime + .12);
+    o.type = 'sine';
+    g.gain.setValueAtTime(.12, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + .25);
+    o.start(); o.stop(ac.currentTime + .25);
+  } catch(e){}
+}
+
+function loop() {
+  tick();
+  drawBubbles();
+  if (Math.random() < .14) addBubble();
+  raf = requestAnimationFrame(loop);
+}
+
+function onResize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  resizeBubbles();
+}
+
+window.addEventListener('resize', onResize);
+
+buildRays();
+buildParticles();
+buildGlowOrbs();
+resizeBubbles();
+spawnCreatures();
+loop();
+
+})();
+</script>
+</body>
+</html>
