@@ -134,21 +134,4 @@ window.addEventListener('resize', () => {
     canvas.height = window.innerHeight;
 });
 
-setTimeout(() => {
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-            const mainMenu = document.getElementById('main-menu');
-            if (mainMenu) {
-                mainMenu.style.display = 'block';
-                setTimeout(() => {
-                    mainMenu.style.opacity = '1';
-                }, 50);
-            }
-        }, 500);
-    }
-}, 3000);
-
 animate();

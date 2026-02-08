@@ -1,309 +1,506 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Auticare Blue Room</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            margin: 0; padding: 0; overflow: hidden;
-            background: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            -webkit-user-select: none; user-select: none;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Interactive Wall Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;-webkit-user-select:none;user-select:none}
 
-        #loading-screen {
-            position: fixed; inset: 0; z-index: 1000;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: #000;
-            transition: opacity 1s ease-out;
-        }
-        #canvas-3d {
-            position: absolute; inset: 0; z-index: 0;
-        }
-        #particle-canvas {
-            position: absolute; inset: 0; z-index: 1;
-        }
-        .loading-text {
-            position: relative; z-index: 2;
-            font-size: clamp(32px, 5vw, 56px); font-weight: 800;
-            background: linear-gradient(135deg, #BAE1FF, #FFB3BA, #BAFFC9);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-            animation: loadPulse 2s ease-in-out infinite;
-        }
-        .loading-sub {
-            position: relative; z-index: 2;
-            font-size: clamp(12px, 1.8vw, 18px); font-weight: 600;
-            color: rgba(255,255,255,.4); margin-top: 8px;
-        }
-        @keyframes loadPulse {
-            0%,100% { opacity: .7; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.03); }
-        }
+#loading-screen{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:#000}
+#loading-screen canvas{width:100%;height:100%}
 
-        #main-menu {
-            position: fixed; inset: 0; z-index: 100;
-            display: none; opacity: 0;
-            transition: opacity 1s ease-in;
-            overflow-y: auto; overflow-x: hidden;
-        }
-        #menu-canvas {
-            position: fixed; inset: 0; z-index: 0;
-        }
+#main-menu{position:fixed;inset:0;display:none;flex-direction:column;z-index:40}
+#menu-canvas{position:fixed;inset:0;z-index:0;width:100%;height:100%}
+#bubble-canvas{position:fixed;inset:0;z-index:1;pointer-events:none}
 
-        .menu-content {
-            position: relative; z-index: 10;
-            max-width: 1200px; margin: 0 auto;
-            padding: clamp(32px, 5vh, 60px) clamp(16px, 3vw, 40px) 40px;
-        }
+.float-shape{position:fixed;z-index:2;pointer-events:none;opacity:.45}
+.float-star{animation:fStar var(--dur,8s) ease-in-out infinite}
+.float-planet{border-radius:50%;animation:fPlanet var(--dur,12s) ease-in-out infinite}
+.float-ring{border:3px solid;border-radius:50%;animation:fRing var(--dur,10s) linear infinite}
+.float-geo{animation:fGeo var(--dur,9s) ease-in-out infinite}
 
-        .menu-header {
-            text-align: center;
-            margin-bottom: clamp(24px, 4vh, 48px);
-        }
-        .menu-header h1 {
-            font-size: clamp(28px, 4.5vw, 52px); font-weight: 900;
-            color: #1a1a2e; letter-spacing: -1px;
-            text-shadow: 0 2px 8px rgba(0,0,0,.06);
-        }
-        .menu-header p {
-            font-size: clamp(12px, 1.5vw, 18px); font-weight: 600;
-            color: rgba(26,26,46,.4); margin-top: 4px;
-        }
+@keyframes fStar{
+  0%,100%{transform:translate(0,0) scale(1) rotate(0);opacity:.35}
+  25%{transform:translate(10px,-15px) scale(1.25) rotate(20deg);opacity:.65}
+  50%{transform:translate(-5px,-25px) scale(1) rotate(-10deg);opacity:.45}
+  75%{transform:translate(8px,-10px) scale(1.15) rotate(15deg);opacity:.55}
+}
+@keyframes fPlanet{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(12px,-18px) scale(1.06)}
+  66%{transform:translate(-8px,-10px) scale(.94)}
+}
+@keyframes fRing{
+  0%{transform:rotateX(65deg) rotateZ(0deg)}
+  100%{transform:rotateX(65deg) rotateZ(360deg)}
+}
+@keyframes fGeo{
+  0%,100%{transform:translate(0,0) rotate(0);opacity:.25}
+  50%{transform:translate(var(--dx,10px),var(--dy,-20px)) rotate(180deg);opacity:.45}
+}
 
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 20vw, 240px), 1fr));
-            gap: clamp(12px, 2vw, 20px);
-        }
+.menu-content{
+  position:relative;z-index:10;width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(12px,2vh,24px) clamp(24px,4vw,60px);
+}
 
-        .game-card {
-            background: white;
-            border-radius: 20px;
-            padding: clamp(20px, 3vh, 32px) clamp(14px, 1.5vw, 20px);
-            text-align: center;
-            cursor: pointer;
-            border: 2px solid rgba(0,0,0,.04);
-            box-shadow: 0 2px 12px rgba(0,0,0,.04);
-            transition: transform .35s cubic-bezier(.175,.885,.32,1.275), box-shadow .35s, border-color .35s;
-            position: relative;
-            overflow: hidden;
-        }
-        .game-card::before {
-            content: ''; position: absolute; inset: 0; border-radius: inherit;
-            background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, transparent 50%);
-            pointer-events: none;
-        }
-        .game-card:hover {
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: 0 12px 36px rgba(0,0,0,.1);
-            border-color: rgba(0,0,0,.08);
-        }
-        .game-card:active { transform: translateY(-2px) scale(.97); }
+.menu-title{
+  font-size:clamp(32px,5vw,60px);font-weight:900;
+  color:#2D3748;text-shadow:0 2px 8px rgba(0,0,0,.06);
+  letter-spacing:-1px;margin-bottom:2px;
+}
+.menu-subtitle{
+  font-size:clamp(13px,1.8vw,20px);font-weight:600;
+  color:#718096;margin-bottom:clamp(12px,2vh,28px);
+}
 
-        .card-icon {
-            font-size: clamp(40px, 5.5vw, 64px); line-height: 1;
-            margin-bottom: 10px;
-            filter: drop-shadow(0 3px 8px rgba(0,0,0,.1));
-            transition: transform .35s cubic-bezier(.175,.885,.32,1.275);
-        }
-        .game-card:hover .card-icon { transform: scale(1.12) rotate(-4deg); }
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:clamp(8px,1.2vw,18px);
+  width:100%;max-width:1500px;
+}
 
-        .card-name {
-            font-size: clamp(13px, 1.6vw, 17px); font-weight: 800;
-            color: #1a1a2e; margin-bottom: 3px;
-        }
-        .card-desc {
-            font-size: clamp(10px, 1.1vw, 12px); font-weight: 600;
-            color: rgba(26,26,46,.35);
-        }
+.game-card{
+  position:relative;
+  border-radius:clamp(22px,2.8vw,36px);
+  padding:clamp(14px,2vh,26px) clamp(10px,1vw,18px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:transform .35s cubic-bezier(.175,.885,.32,1.275),box-shadow .35s;
+  overflow:hidden;
+  border:2px solid rgba(255,255,255,.65);
+  box-shadow:0 4px 16px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.04);
+}
+.game-card::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 60%);
+  pointer-events:none;z-index:1;
+}
+.game-card:hover{
+  transform:translateY(-6px) scale(1.04);
+  box-shadow:0 14px 36px rgba(0,0,0,.10),0 4px 12px rgba(0,0,0,.06);
+}
+.game-card:active{transform:translateY(-2px) scale(.96)}
 
-        .card-accent {
-            position: absolute; bottom: -20px; right: -20px;
-            width: 80px; height: 80px; border-radius: 50%;
-            filter: blur(30px); opacity: .2; pointer-events: none;
-        }
+.card-icon{
+  font-size:clamp(34px,4.5vw,60px);line-height:1;margin-bottom:6px;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.08));
+  transition:transform .35s;
+}
+.game-card:hover .card-icon{transform:scale(1.18) rotate(-5deg)}
+.card-name{
+  font-size:clamp(10px,1.2vw,15px);font-weight:800;
+  color:#2D3748;text-align:center;line-height:1.2;
+  position:relative;z-index:2;
+}
 
-        .game-card.locked {
-            opacity: .4; pointer-events: none;
-        }
-        .game-card.locked::after {
-            content: '\uD83D\uDD12'; position: absolute; top: 8px; right: 10px; font-size: 14px;
-        }
+#center-button{
+  background:linear-gradient(135deg,#FF9A9A,#FFB347,#FFDD59);
+  border:3px solid rgba(255,255,255,.7);
+  box-shadow:0 8px 32px rgba(255,179,71,.25);
+  animation:pulseGlow 3s ease-in-out infinite;
+  cursor:pointer;
+  border-radius:clamp(22px,2.8vw,36px);
+}
+#center-button .card-icon{font-size:clamp(38px,5vw,68px)}
+#center-button .card-name{color:#7B341E;font-size:clamp(12px,1.4vw,17px)}
+@keyframes pulseGlow{
+  0%,100%{box-shadow:0 8px 32px rgba(255,179,71,.25)}
+  50%{box-shadow:0 8px 48px rgba(255,179,71,.45),0 0 24px rgba(255,221,89,.2)}
+}
 
-        #submenu-overlay {
-            position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,.5); backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none;
-            transition: opacity .35s;
-        }
-        #submenu-overlay.active { opacity: 1; pointer-events: all; }
+.card-canvas{background:linear-gradient(135deg,#FFE0E6,#FFB3C1)}
+.card-solar{background:linear-gradient(135deg,#D4EDFF,#A8D8F0)}
+.card-coloring{background:linear-gradient(135deg,#D4F5E9,#A8E6CF)}
+.card-particles{background:linear-gradient(135deg,#FFF0DB,#FFD9A8)}
+.card-goalkeeper{background:linear-gradient(135deg,#FFE5E0,#FFC8C0)}
+.card-fruit{background:linear-gradient(135deg,#FFE8CC,#FFD4A8)}
+.card-jungle{background:linear-gradient(135deg,#D5F0DB,#A8DFB3)}
+.card-skills{background:linear-gradient(135deg,#FFF8D6,#FFF0A8)}
+.card-learning{background:linear-gradient(135deg,#D4F0F0,#A8E0E0)}
 
-        .submenu-panel {
-            background: white; border-radius: 24px;
-            padding: 28px 24px; max-width: 420px; width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,.18);
-            transform: scale(.9); transition: transform .35s cubic-bezier(.175,.885,.32,1.275);
-        }
-        #submenu-overlay.active .submenu-panel { transform: scale(1); }
+.submenu-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
+  z-index:50;display:none;align-items:center;justify-content:center;
+}
+.submenu-overlay.active{display:flex}
+.submenu-box{
+  background:linear-gradient(135deg,#FFF8F0,#FFFFFF);
+  border-radius:28px;padding:32px;
+  box-shadow:0 24px 64px rgba(0,0,0,.2);
+  max-width:480px;width:90%;
+  border:2px solid rgba(0,0,0,.05);
+  animation:sPop .3s ease;
+}
+@keyframes sPop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.submenu-title{font-size:26px;font-weight:900;text-align:center;margin-bottom:20px;color:#2D3748}
+.submenu-options{display:flex;flex-direction:column;gap:12px}
+.submenu-option{
+  padding:16px;
+  background:linear-gradient(135deg,#F0F9FF,#E8F4FD);
+  border:2px solid #90CDF4;
+  border-radius:16px;text-align:center;
+  font-size:16px;font-weight:700;color:#2D3748;
+  cursor:pointer;transition:all .3s;
+}
+.submenu-option:hover{transform:scale(1.04);box-shadow:0 6px 20px rgba(144,205,244,.3);border-color:#63B3ED}
+.submenu-option:active{transform:scale(.97)}
+.submenu-close{
+  margin-top:16px;padding:12px 24px;
+  background:linear-gradient(135deg,#FEB2B2,#FC8181);
+  color:white;border:none;border-radius:14px;
+  cursor:pointer;font-weight:800;font-size:15px;
+  width:100%;transition:all .3s;
+  box-shadow:0 4px 12px rgba(252,129,129,.3);
+  font-family:inherit;
+}
+.submenu-close:hover{background:linear-gradient(135deg,#FC8181,#F56565);transform:scale(1.02)}
 
-        .submenu-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 18px;
-        }
-        #submenu-title { font-size: 22px; font-weight: 800; color: #1a1a2e; }
-        #submenu-close {
-            width: 36px; height: 36px; border-radius: 50%;
-            border: none; background: rgba(0,0,0,.05);
-            font-size: 18px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center;
-            transition: background .2s; color: #64748b;
-        }
-        #submenu-close:hover { background: rgba(0,0,0,.1); }
+@keyframes touchRingPop{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(2);opacity:0}
+}
+.pop-text{
+  position:fixed;pointer-events:none;z-index:200;
+  font-size:clamp(18px,2.5vw,28px);font-weight:900;
+  animation:popUp .8s ease-out forwards;
+}
+@keyframes popUp{
+  0%{transform:translate(-50%,0) scale(0);opacity:1}
+  50%{transform:translate(-50%,-30px) scale(1.2);opacity:1}
+  100%{transform:translate(-50%,-60px) scale(.8);opacity:0}
+}
 
-        #submenu-options { display: flex; flex-direction: column; gap: 8px; }
-        .submenu-option {
-            padding: 14px 18px; border-radius: 14px;
-            background: #f8fafc; border: 2px solid rgba(0,0,0,.04);
-            font-size: 15px; font-weight: 700; color: #334155;
-            cursor: pointer; transition: all .2s;
-            text-align: center;
-        }
-        .submenu-option:hover {
-            background: #eff6ff; border-color: rgba(59,130,246,.15);
-            transform: translateY(-2px);
-        }
-
-        @keyframes touchRingPop {
-            0% { transform: translate(-50%,-50%) scale(0); opacity: .6; }
-            100% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
-        }
-    </style>
+.card-stagger{opacity:0;transform:translateY(30px) scale(.9);transition:opacity .4s ease,transform .4s ease}
+.card-stagger.show{opacity:1;transform:translateY(0) scale(1)}
+</style>
 </head>
 <body>
 
 <div id="loading-screen">
-    <canvas id="canvas-3d"></canvas>
-    <canvas id="particle-canvas"></canvas>
-    <div class="loading-text">Auticare Blue Room</div>
-    <div class="loading-sub">Loading your adventure...</div>
+  <canvas id="particle-canvas"></canvas>
 </div>
 
 <div id="main-menu">
-    <canvas id="menu-canvas"></canvas>
-    <div class="menu-content">
-        <div class="menu-header">
-            <h1>Auticare Blue Room</h1>
-            <p>Tap a card to start exploring!</p>
-        </div>
+  <canvas id="menu-canvas"></canvas>
+  <canvas id="bubble-canvas"></canvas>
 
-        <div class="card-grid">
-            <div class="game-card" data-category="jungle">
-                <div class="card-accent" style="background:#4caf50"></div>
-                <div class="card-icon">&#x1F333;</div>
-                <div class="card-name">Jungle</div>
-                <div class="card-desc">Explore the wild</div>
-            </div>
+  <div id="floatingShapes"></div>
 
-            <div class="game-card" data-category="daily-skills">
-                <div class="card-accent" style="background:#ff9800"></div>
-                <div class="card-icon">&#x1F3E0;</div>
-                <div class="card-name">Daily Skills</div>
-                <div class="card-desc">Learn everyday tasks</div>
-            </div>
+  <div class="menu-content">
+    <h1 class="menu-title">Auticare Blue Room</h1>
+    <p class="menu-subtitle">Tap a card to start playing!</p>
 
-            <div class="game-card" data-category="learning">
-                <div class="card-accent" style="background:#2196f3"></div>
-                <div class="card-icon">&#x1F4DA;</div>
-                <div class="card-name">Learning</div>
-                <div class="card-desc">Maths &amp; Alphabets</div>
-            </div>
+    <div class="card-grid">
+      <div class="game-card card-canvas card-stagger" data-game="canvas">
+        <div class="card-icon">&#x1F3A8;</div>
+        <div class="card-name">Free Canvas</div>
+      </div>
+      <div class="game-card card-solar card-stagger" data-game="solar-system">
+        <div class="card-icon">&#x1FA90;</div>
+        <div class="card-name">Solar System</div>
+      </div>
+      <div class="game-card card-coloring card-stagger" data-game="coloring-book">
+        <div class="card-icon">&#x1F58D;&#xFE0F;</div>
+        <div class="card-name">Coloring Book</div>
+      </div>
+      <div class="game-card card-particles card-stagger" data-game="particle-playground">
+        <div class="card-icon">&#x2728;</div>
+        <div class="card-name">Particles</div>
+      </div>
+      <div class="game-card card-goalkeeper card-stagger" data-game="goalkeeper">
+        <div class="card-icon">&#x26BD;</div>
+        <div class="card-name">Goalkeeper</div>
+      </div>
 
-            <div class="game-card" data-game="underwater-explorer">
-                <div class="card-accent" style="background:#0097a7"></div>
-                <div class="card-icon">&#x1F30A;</div>
-                <div class="card-name">Underwater Explorer</div>
-                <div class="card-desc">Discover sea life</div>
-            </div>
-
-            <div class="game-card" data-game="canvas">
-                <div class="card-accent" style="background:#e91e63"></div>
-                <div class="card-icon">&#x1F58C;&#xFE0F;</div>
-                <div class="card-name">Free Canvas</div>
-                <div class="card-desc">Draw freely</div>
-            </div>
-
-            <div class="game-card" data-game="coloring-book">
-                <div class="card-accent" style="background:#10b981"></div>
-                <div class="card-icon">&#x1F58D;&#xFE0F;</div>
-                <div class="card-name">Coloring Book</div>
-                <div class="card-desc">Infinite canvas coloring</div>
-            </div>
-
-            <div class="game-card" data-game="solar-system">
-                <div class="card-accent" style="background:#1565c0"></div>
-                <div class="card-icon">&#x1FA90;</div>
-                <div class="card-name">Solar System</div>
-                <div class="card-desc">Explore the planets</div>
-            </div>
-
-            <div class="game-card" data-game="forest-animals">
-                <div class="card-accent" style="background:#689f38"></div>
-                <div class="card-icon">&#x1F98C;</div>
-                <div class="card-name">Forest Animals</div>
-                <div class="card-desc">Meet woodland friends</div>
-            </div>
-
-            <div class="game-card" data-game="particle-playground">
-                <div class="card-accent" style="background:#00bcd4"></div>
-                <div class="card-icon">&#x2728;</div>
-                <div class="card-name">Particle Playground</div>
-                <div class="card-desc">Play with particles</div>
-            </div>
-
-            <div class="game-card" data-game="goalkeeper">
-                <div class="card-accent" style="background:#f44336"></div>
-                <div class="card-icon">&#x26BD;</div>
-                <div class="card-name">Goalkeeper</div>
-                <div class="card-desc">Save the goals</div>
-            </div>
-
-            <div class="game-card" data-game="fruit-ninja">
-                <div class="card-accent" style="background:#ff5722"></div>
-                <div class="card-icon">&#x1F349;</div>
-                <div class="card-name">Fruit Ninja</div>
-                <div class="card-desc">Slice the fruit</div>
-            </div>
-
-            <div class="game-card" data-game="hidden-animals">
-                <div class="card-accent" style="background:#795548"></div>
-                <div class="card-icon">&#x1F50D;</div>
-                <div class="card-name">Hidden Animals</div>
-                <div class="card-desc">Find hidden creatures</div>
-            </div>
-        </div>
+      <div class="game-card card-fruit card-stagger" data-game="fruit-ninja">
+        <div class="card-icon">&#x1F349;</div>
+        <div class="card-name">Fruit Ninja</div>
+      </div>
+      <div class="game-card card-jungle card-stagger" data-category="jungle">
+        <div class="card-icon">&#x1F334;</div>
+        <div class="card-name">Jungle</div>
+      </div>
+      <div id="center-button" class="card-stagger">
+        <div class="card-icon">&#x1F680;</div>
+        <div class="card-name">Play Intro</div>
+      </div>
+      <div class="game-card card-skills card-stagger" data-category="daily-skills">
+        <div class="card-icon">&#x1F3E0;</div>
+        <div class="card-name">Daily Skills</div>
+      </div>
+      <div class="game-card card-learning card-stagger" data-category="learning">
+        <div class="card-icon">&#x1F4DA;</div>
+        <div class="card-name">Learning</div>
+      </div>
     </div>
+  </div>
 </div>
 
-<div id="submenu-overlay">
-    <div class="submenu-panel">
-        <div class="submenu-header">
-            <span id="submenu-title"></span>
-            <button id="submenu-close">&#x2715;</button>
-        </div>
-        <div id="submenu-options"></div>
-    </div>
+<div class="submenu-overlay" id="submenu-overlay">
+  <div class="submenu-box" id="submenu-box">
+    <h2 class="submenu-title" id="submenu-title">Category</h2>
+    <div class="submenu-options" id="submenu-options"></div>
+    <button class="submenu-close" id="submenu-close">Close</button>
+  </div>
 </div>
 
-<script src="js/loading-animation.js"></script>
-<script src="js/hyperdrive-animation.js"></script>
-<script src="js/menu-background.js"></script>
-<script src="js/game-loader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="./js/hyperdrive-animation.js"></script>
+<script src="./js/menu-background.js"></script>
+<script src="./js/game-loader.js"></script>
+
+<script>
+(function bubblePopper() {
+  var bc = document.getElementById('bubble-canvas');
+  var bx = bc.getContext('2d');
+  var bubbles = [];
+  var COLORS = ['#FFB3BA','#BAE1FF','#BAFFC9','#FFDEBA','#FFF9C4','#FEC8D8','#B2DFDB','#FFD4A8'];
+  var MAX = 18;
+  var running = false;
+
+  function resize() { bc.width = window.innerWidth; bc.height = window.innerHeight; }
+
+  function spawn() {
+    if (bubbles.length >= MAX) return;
+    bubbles.push({
+      x: Math.random() * bc.width,
+      y: bc.height + 30 + Math.random() * 60,
+      r: 18 + Math.random() * 38,
+      speed: 0.25 + Math.random() * 0.7,
+      wobble: Math.random() * Math.PI * 2,
+      ws: 0.008 + Math.random() * 0.02,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      alpha: 0.25 + Math.random() * 0.25,
+      popping: false, pp: 0, parts: []
+    });
+  }
+
+  function pop(b) {
+    b.popping = true;
+    b.pp = 0;
+    b.parts = [];
+    for (var i = 0; i < 8; i++) {
+      var a = (i / 8) * Math.PI * 2;
+      b.parts.push({ x:b.x, y:b.y, vx:Math.cos(a)*(2+Math.random()*3), vy:Math.sin(a)*(2+Math.random()*3), r:2+Math.random()*4, o:1 });
+    }
+    try {
+      var ac = new (window.AudioContext || window.webkitAudioContext)();
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value = 500 + Math.random() * 400;
+      o.type = 'sine';
+      g.gain.setValueAtTime(0.12, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.12);
+      o.start(); o.stop(ac.currentTime + 0.12);
+    } catch(e){}
+    var texts = ['POP!','YAY!','WOW!','FUN!','ZAP!','BOOM!'];
+    var el = document.createElement('div');
+    el.className = 'pop-text';
+    el.textContent = texts[Math.floor(Math.random() * texts.length)];
+    el.style.left = b.x + 'px';
+    el.style.top = b.y + 'px';
+    el.style.color = b.color;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', function() { el.remove(); });
+  }
+
+  function hitTest(px, py) {
+    for (var i = bubbles.length - 1; i >= 0; i--) {
+      var b = bubbles[i];
+      if (b.popping) continue;
+      if (Math.hypot(px - b.x, py - b.y) < b.r + 12) return i;
+    }
+    return -1;
+  }
+
+  function draw() {
+    if (!running) return;
+    bx.clearRect(0, 0, bc.width, bc.height);
+    bubbles = bubbles.filter(function(b) {
+      if (b.popping) {
+        b.pp += 0.04;
+        if (b.pp > 1) return false;
+        b.parts.forEach(function(p) {
+          p.x += p.vx; p.y += p.vy; p.o = 1 - b.pp;
+          bx.beginPath();
+          bx.arc(p.x, p.y, p.r * (1 - b.pp), 0, Math.PI * 2);
+          bx.globalAlpha = p.o * 0.6;
+          bx.fillStyle = b.color;
+          bx.fill();
+        });
+        bx.globalAlpha = 1;
+        return true;
+      }
+      b.y -= b.speed;
+      b.wobble += b.ws;
+      b.x += Math.sin(b.wobble) * 0.5;
+      if (b.y < -50) return false;
+      bx.beginPath();
+      bx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      bx.globalAlpha = b.alpha;
+      bx.fillStyle = b.color;
+      bx.fill();
+      bx.beginPath();
+      bx.arc(b.x - b.r * .25, b.y - b.r * .25, b.r * .25, 0, Math.PI * 2);
+      bx.globalAlpha = 0.35;
+      bx.fillStyle = 'white';
+      bx.fill();
+      bx.beginPath();
+      bx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      bx.globalAlpha = b.alpha * 0.4;
+      bx.strokeStyle = 'white';
+      bx.lineWidth = 1.5;
+      bx.stroke();
+      bx.globalAlpha = 1;
+      return true;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  function handlePop(x, y) {
+    var idx = hitTest(x, y);
+    if (idx >= 0) pop(bubbles[idx]);
+  }
+
+  document.addEventListener('click', function(e) { handlePop(e.clientX, e.clientY); });
+  document.addEventListener('touchstart', function(e) {
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      handlePop(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+    }
+  }, { passive: true });
+
+  window.addEventListener('resize', resize);
+
+  window._startBubbles = function() {
+    resize();
+    for (var i = 0; i < 7; i++) {
+      spawn();
+      bubbles[bubbles.length - 1].y = Math.random() * bc.height;
+    }
+    running = true;
+    draw();
+    setInterval(spawn, 900);
+  };
+})();
+
+(function floatingShapes() {
+  var container = document.getElementById('floatingShapes');
+  var shapes = [
+    {type:'star',ch:'\u2B50',sz:'clamp(18px,2.5vw,32px)',x:'4%',y:'12%',dur:'7s'},
+    {type:'star',ch:'\u2B50',sz:'clamp(13px,1.8vw,22px)',x:'90%',y:'20%',dur:'9s'},
+    {type:'star',ch:'\u2726',sz:'clamp(16px,2.2vw,28px)',x:'74%',y:'7%',dur:'6s'},
+    {type:'star',ch:'\u2B50',sz:'clamp(14px,1.6vw,22px)',x:'12%',y:'82%',dur:'8s'},
+    {type:'star',ch:'\u2726',sz:'clamp(11px,1.3vw,18px)',x:'93%',y:'78%',dur:'10s'},
+    {type:'star',ch:'\u2726',sz:'clamp(10px,1.2vw,16px)',x:'50%',y:'4%',dur:'7.5s'},
+    {type:'planet',col:'#FFB3BA',sz:'clamp(28px,3.5vw,48px)',x:'6%',y:'38%',dur:'14s'},
+    {type:'planet',col:'#BAE1FF',sz:'clamp(22px,2.8vw,38px)',x:'87%',y:'52%',dur:'11s'},
+    {type:'planet',col:'#BAFFC9',sz:'clamp(18px,2.2vw,30px)',x:'42%',y:'4%',dur:'13s'},
+    {type:'planet',col:'#FFDEBA',sz:'clamp(16px,2vw,26px)',x:'96%',y:'35%',dur:'12s'},
+    {type:'ring',col:'#FFD4A8',sz:'clamp(32px,4vw,52px)',x:'2%',y:'58%',dur:'15s'},
+    {type:'ring',col:'#B2DFDB',sz:'clamp(24px,3vw,40px)',x:'95%',y:'65%',dur:'12s'},
+    {type:'geo',ch:'\u25B3',sz:'clamp(18px,2.2vw,28px)',x:'18%',y:'5%',dur:'8s',dx:'15px',dy:'-20px'},
+    {type:'geo',ch:'\u25C7',sz:'clamp(16px,1.8vw,24px)',x:'80%',y:'88%',dur:'9s',dx:'-12px',dy:'-18px'},
+    {type:'geo',ch:'\u25CB',sz:'clamp(14px,1.6vw,22px)',x:'58%',y:'92%',dur:'7s',dx:'10px',dy:'-25px'}
+  ];
+
+  shapes.forEach(function(s) {
+    var el = document.createElement('div');
+    el.className = 'float-shape';
+    el.style.left = s.x;
+    el.style.top = s.y;
+    el.style.setProperty('--dur', s.dur);
+    el.style.animationDelay = (Math.random() * 5) + 's';
+    if (s.type === 'star') {
+      el.classList.add('float-star');
+      el.textContent = s.ch;
+      el.style.fontSize = s.sz;
+    } else if (s.type === 'planet') {
+      el.classList.add('float-planet');
+      el.style.width = s.sz;
+      el.style.height = s.sz;
+      el.style.background = 'radial-gradient(circle at 35% 35%, white, ' + s.col + ')';
+      el.style.boxShadow = '0 0 18px ' + s.col + '50';
+    } else if (s.type === 'ring') {
+      el.classList.add('float-ring');
+      el.style.width = s.sz;
+      el.style.height = s.sz;
+      el.style.borderColor = s.col;
+    } else if (s.type === 'geo') {
+      el.classList.add('float-geo');
+      el.textContent = s.ch;
+      el.style.fontSize = s.sz;
+      el.style.color = '#CBD5E0';
+      el.style.setProperty('--dx', s.dx);
+      el.style.setProperty('--dy', s.dy);
+    }
+    container.appendChild(el);
+  });
+})();
+
+(function cardTilt() {
+  var cards = document.querySelectorAll('.game-card, #center-button');
+  cards.forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var rect = this.getBoundingClientRect();
+      var x = (e.clientX - rect.left) / rect.width;
+      var y = (e.clientY - rect.top) / rect.height;
+      var ry = (x - 0.5) * 18;
+      var rx = (0.5 - y) * 18;
+      this.style.transform = 'perspective(600px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-6px) scale(1.04)';
+    });
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = '';
+    });
+  });
+})();
+
+(function centerBtn() {
+  var btn = document.getElementById('center-button');
+  btn.addEventListener('click', function(e) {
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+    location.href = 'intro.html';
+  });
+  btn.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    location.href = 'intro.html';
+  });
+})();
+
+window.addEventListener('load', function() {
+  var loading = document.getElementById('loading-screen');
+  var menu = document.getElementById('main-menu');
+
+  setTimeout(function() {
+    loading.style.display = 'none';
+    menu.style.display = 'flex';
+
+    if (window._startBubbles) window._startBubbles();
+
+    var staggerCards = document.querySelectorAll('.card-stagger');
+    staggerCards.forEach(function(card, i) {
+      setTimeout(function() {
+        card.classList.add('show');
+      }, 80 + i * 70);
+    });
+  }, 3000);
+});
+
+document.addEventListener('touchstart', function(event) {
+  for (var i = 0; i < event.changedTouches.length; i++) {
+    var t = event.changedTouches[i];
+    var ring = document.createElement('div');
+    ring.style.cssText = 'position:fixed;width:60px;height:60px;border:3px solid rgba(255,179,71,.5);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:touchRingPop .5s ease forwards;left:' + t.clientX + 'px;top:' + t.clientY + 'px;';
+    document.body.appendChild(ring);
+    ring.addEventListener('animationend', function() { this.remove(); });
+  }
+}, { passive: true });
+</script>
 
 </body>
 </html>
