@@ -17,15 +17,15 @@ canvas{position:absolute;inset:0;z-index:0}
 
 .animal-btn{
   position:absolute;z-index:30;
-  font-size:clamp(20px,3vw,32px);
+  font-size:clamp(32px,5vw,48px);
   cursor:pointer;line-height:1;
   transition:filter .5s ease,opacity .5s ease,transform .5s ease,font-size .5s ease;
-  filter:saturate(.1) brightness(.5) hue-rotate(60deg);
-  opacity:.2;
+  filter:saturate(.15) brightness(.55) hue-rotate(50deg);
+  opacity:.32;
 }
 .animal-btn:hover{
-  opacity:.35;
-  filter:saturate(.2) brightness(.6) hue-rotate(40deg);
+  opacity:.45;
+  filter:saturate(.25) brightness(.65) hue-rotate(30deg);
 }
 .animal-btn.found{
   font-size:clamp(64px,9vw,100px);
@@ -380,8 +380,8 @@ function placeAnimals() {
     var el = document.createElement('div');
     el.className = 'animal-btn';
     el.textContent = a.emoji;
-    el.style.left = (a.x - 16) + 'px';
-    el.style.top = (a.y - 16) + 'px';
+    el.style.left = (a.x - 24) + 'px';
+    el.style.top = (a.y - 24) + 'px';
     a.el = el;
     wrap.appendChild(el);
   });
