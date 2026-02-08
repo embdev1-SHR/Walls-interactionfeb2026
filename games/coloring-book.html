@@ -15,16 +15,14 @@ body{
 .leaf{position:absolute;opacity:.12;font-size:70px;animation:sway 6s ease-in-out infinite}
 @keyframes sway{0%,100%{transform:rotate(-5deg) translateX(0)}50%{transform:rotate(5deg) translateX(8px)}}
 
-#canvas-container{
-  position:fixed;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  z-index:1;
+#canvas-wrap{
+  position:fixed;z-index:1;
+  border-radius:12px;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);
+  overflow:hidden;
 }
-#coloring-canvas{
-  background:rgba(255,255,255,.96);
-  cursor:crosshair;position:absolute;
-  top:50%;left:50%;transform-origin:center center;
-}
+#paintCanvas{display:block;background:#fff;cursor:crosshair}
+#lineCanvas{position:absolute;top:0;left:0;pointer-events:none}
 
 .template-panel{
   position:fixed;right:12px;top:50%;transform:translateY(-50%);
@@ -55,7 +53,7 @@ body{
   background:linear-gradient(to top,rgba(0,0,0,.6),transparent);
 }
 .color-bar{
-  display:flex;gap:6px;align-items:center;
+  display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;
   padding:10px 18px;
   background:linear-gradient(135deg,#ff6b35,#f7931e);
   border-radius:50px;border:4px solid #fff;
@@ -90,13 +88,12 @@ body{
   border-radius:50%;cursor:pointer;font-size:20px;
   transition:all .2s;box-shadow:0 4px 10px rgba(0,0,0,.15);
   touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
 }
 .tool-btn:active{transform:scale(.9)}
-.tool-btn.active{background:#90EE90;box-shadow:inset 0 3px 8px rgba(0,0,0,.2)}
+.tool-btn.active{background:#90EE90;border-color:#4CAF50;box-shadow:inset 0 3px 8px rgba(0,0,0,.2)}
 
-.controls-row{
-  display:flex;gap:10px;align-items:center;
-}
+.controls-row{display:flex;gap:10px;align-items:center}
 .ctrl-btn{
   padding:8px 18px;background:rgba(255,255,255,.15);
   border:2px solid rgba(255,255,255,.3);border-radius:30px;
@@ -107,7 +104,7 @@ body{
 .ctrl-btn:active{transform:scale(.93)}
 
 .pointer-dot{
-  position:fixed;width:10px;height:10px;border-radius:50%;
+  position:fixed;border-radius:50%;
   pointer-events:none;z-index:999;
   transform:translate(-50%,-50%);
   border:2px solid rgba(255,255,255,.8);
@@ -130,8 +127,9 @@ body{
 <body>
 <div class="jungle-bg" id="jungleBg"></div>
 
-<div id="canvas-container">
-  <canvas id="coloring-canvas"></canvas>
+<div id="canvas-wrap">
+  <canvas id="paintCanvas"></canvas>
+  <canvas id="lineCanvas"></canvas>
 </div>
 
 <div class="template-panel" id="templatePanel"></div>
@@ -145,494 +143,500 @@ body{
 </div>
 
 <script>
-var canvas = document.getElementById('coloring-canvas');
-var ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth * 2;
-canvas.height = window.innerHeight * 2;
+(function(){
 
-var outlineCanvas = document.createElement('canvas');
-outlineCanvas.width = canvas.width;
-outlineCanvas.height = canvas.height;
-var outlineCtx = outlineCanvas.getContext('2d');
+var paintCanvas = document.getElementById('paintCanvas');
+var paintCtx = paintCanvas.getContext('2d', {willReadFrequently: true});
+var lineCanvas = document.getElementById('lineCanvas');
+var lineCtx = lineCanvas.getContext('2d');
+var wrap = document.getElementById('canvas-wrap');
+
+var renderCanvas = document.createElement('canvas');
+var renderCtx = renderCanvas.getContext('2d');
+
+var cW = 0, cH = 0;
+var outlineMask = null;
 
 var COLORS = [
   '#FF6B6B','#FF1493','#FF6347','#FFA07A','#FFD700','#F7DC6F',
   '#4ECDC4','#45B7D1','#20B2AA','#98D8C8','#52B788','#BB8FCE',
   '#fff','#888','#333'
 ];
-
 var currentColor = COLORS[0];
-var brushSize = 25;
-var isEraser = false;
+var brushSize = 22;
+var activeTool = 'brush';
 var currentTemplate = 'elephant';
-var scale = 1;
-var offsetX = 0, offsetY = 0;
-
 var activePointers = {};
 
-ctx.lineCap = 'round';
-ctx.lineJoin = 'round';
+var templates = {
+  elephant: {emoji:'\uD83D\uDC18', draw: drawElephant},
+  lion:     {emoji:'\uD83E\uDD81', draw: drawLion},
+  monkey:   {emoji:'\uD83D\uDC35', draw: drawMonkey},
+  parrot:   {emoji:'\uD83E\uDD9C', draw: drawParrot},
+  snake:    {emoji:'\uD83D\uDC0D', draw: drawSnake},
+  tiger:    {emoji:'\uD83D\uDC2F', draw: drawTiger},
+  giraffe:  {emoji:'\uD83E\uDD92', draw: drawGiraffe},
+  frog:     {emoji:'\uD83D\uDC38', draw: drawFrog}
+};
+
+function sizeCanvases() {
+  var W = window.innerWidth;
+  var H = window.innerHeight;
+  cW = Math.floor(W - 130);
+  cH = Math.floor(H - 150);
+  if (cW < 300) cW = 300;
+  if (cH < 300) cH = 300;
+
+  paintCanvas.width = cW;
+  paintCanvas.height = cH;
+  lineCanvas.width = cW;
+  lineCanvas.height = cH;
+  renderCanvas.width = cW;
+  renderCanvas.height = cH;
+
+  wrap.style.width = cW + 'px';
+  wrap.style.height = cH + 'px';
+  wrap.style.left = Math.floor((W - cW) / 2 - 35) + 'px';
+  wrap.style.top = Math.floor((H - cH - 140) / 2 + 10) + 'px';
+
+  paintCtx.lineCap = 'round';
+  paintCtx.lineJoin = 'round';
+}
+
+function buildOutlineMask() {
+  renderCtx.fillStyle = '#fff';
+  renderCtx.fillRect(0, 0, cW, cH);
+  templates[currentTemplate].draw(renderCtx, cW, cH);
+
+  var img = renderCtx.getImageData(0, 0, cW, cH);
+  var d = img.data;
+  outlineMask = new Uint8Array(cW * cH);
+  var lineData = new Uint8ClampedArray(d.length);
+
+  for (var i = 0; i < cW * cH; i++) {
+    var r = d[i*4], g = d[i*4+1], b = d[i*4+2];
+    var lum = r * 0.299 + g * 0.587 + b * 0.114;
+    if (lum < 180) {
+      outlineMask[i] = 1;
+      lineData[i*4]   = d[i*4];
+      lineData[i*4+1] = d[i*4+1];
+      lineData[i*4+2] = d[i*4+2];
+      lineData[i*4+3] = 255;
+    }
+  }
+
+  lineCtx.clearRect(0, 0, cW, cH);
+  lineCtx.putImageData(new ImageData(lineData, cW, cH), 0, 0);
+
+  paintCtx.fillStyle = '#fff';
+  paintCtx.fillRect(0, 0, cW, cH);
+}
+
+function hexToRgb(hex) {
+  var c = document.createElement('canvas');
+  c.width = 1; c.height = 1;
+  var x = c.getContext('2d');
+  x.fillStyle = hex;
+  x.fillRect(0, 0, 1, 1);
+  return x.getImageData(0, 0, 1, 1).data;
+}
+
+function floodFill(sx, sy, color) {
+  sx = Math.round(sx);
+  sy = Math.round(sy);
+  if (sx < 0 || sx >= cW || sy < 0 || sy >= cH) return;
+  if (outlineMask[sy * cW + sx]) return;
+
+  var imgData = paintCtx.getImageData(0, 0, cW, cH);
+  var data = imgData.data;
+  var startIdx = (sy * cW + sx) * 4;
+  var sr = data[startIdx], sg = data[startIdx+1], sb = data[startIdx+2];
+
+  var fc = hexToRgb(color);
+  var fr = fc[0], fg = fc[1], fb = fc[2];
+
+  if (Math.abs(sr-fr)<3 && Math.abs(sg-fg)<3 && Math.abs(sb-fb)<3) return;
+
+  var tol = 32;
+  var stack = [sx, sy];
+  var visited = new Uint8Array(cW * cH);
+  var count = 0;
+  var limit = cW * cH;
+
+  while (stack.length > 0 && count < limit) {
+    var y = stack.pop();
+    var x = stack.pop();
+    if (x < 0 || x >= cW || y < 0 || y >= cH) continue;
+    var vi = y * cW + x;
+    if (visited[vi] || outlineMask[vi]) continue;
+    var pi = vi * 4;
+    if (Math.abs(data[pi]-sr)>tol || Math.abs(data[pi+1]-sg)>tol || Math.abs(data[pi+2]-sb)>tol) continue;
+    visited[vi] = 1;
+    data[pi] = fr; data[pi+1] = fg; data[pi+2] = fb; data[pi+3] = 255;
+    count++;
+    stack.push(x+1, y, x-1, y, x, y+1, x, y-1);
+  }
+
+  paintCtx.putImageData(imgData, 0, 0);
+}
+
+function maskedBrushStroke(x1, y1, x2, y2, color, size) {
+  paintCtx.save();
+  paintCtx.lineWidth = size;
+  paintCtx.strokeStyle = color;
+  paintCtx.globalCompositeOperation = 'source-over';
+  paintCtx.beginPath();
+  paintCtx.moveTo(x1, y1);
+  paintCtx.lineTo(x2, y2);
+  paintCtx.stroke();
+  paintCtx.restore();
+
+  restoreOutlinePixels(
+    Math.max(0, Math.floor(Math.min(x1,x2) - size)),
+    Math.max(0, Math.floor(Math.min(y1,y2) - size)),
+    Math.min(cW, Math.ceil(Math.max(x1,x2) + size)),
+    Math.min(cH, Math.ceil(Math.max(y1,y2) + size))
+  );
+}
+
+function maskedBrushDot(cx, cy, color, size) {
+  paintCtx.save();
+  paintCtx.fillStyle = color;
+  paintCtx.beginPath();
+  paintCtx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+  paintCtx.fill();
+  paintCtx.restore();
+
+  var r = Math.ceil(size / 2) + 2;
+  restoreOutlinePixels(
+    Math.max(0, Math.floor(cx - r)),
+    Math.max(0, Math.floor(cy - r)),
+    Math.min(cW, Math.ceil(cx + r)),
+    Math.min(cH, Math.ceil(cy + r))
+  );
+}
+
+function restoreOutlinePixels(x0, y0, x1, y1) {
+  if (x1 <= x0 || y1 <= y0) return;
+  var w = x1 - x0;
+  var h = y1 - y0;
+  var region = paintCtx.getImageData(x0, y0, w, h);
+  var d = region.data;
+  var changed = false;
+
+  for (var row = 0; row < h; row++) {
+    for (var col = 0; col < w; col++) {
+      var gx = x0 + col;
+      var gy = y0 + row;
+      if (outlineMask[gy * cW + gx]) {
+        var pi = (row * w + col) * 4;
+        d[pi] = 255; d[pi+1] = 255; d[pi+2] = 255; d[pi+3] = 0;
+        changed = true;
+      }
+    }
+  }
+  if (changed) paintCtx.putImageData(region, x0, y0);
+}
+
+function getCoords(e) {
+  var rect = paintCanvas.getBoundingClientRect();
+  return {x: e.clientX - rect.left, y: e.clientY - rect.top};
+}
+
+function handleDown(e) {
+  e.preventDefault();
+  var tgt = e.target;
+
+  if (tgt.dataset && tgt.dataset.color !== undefined) {
+    currentColor = tgt.dataset.color;
+    refreshUI();
+    return;
+  }
+  if (tgt.dataset && tgt.dataset.tool !== undefined) {
+    activeTool = tgt.dataset.tool;
+    refreshUI();
+    return;
+  }
+  if (tgt.classList && tgt.classList.contains('tpl-btn')) {
+    currentTemplate = tgt.dataset.template;
+    buildOutlineMask();
+    refreshUI();
+    var lbl = document.createElement('div');
+    lbl.className = 'animal-label';
+    lbl.textContent = templates[currentTemplate].emoji;
+    document.body.appendChild(lbl);
+    setTimeout(function(){ lbl.remove(); }, 1800);
+    return;
+  }
+  if (tgt !== paintCanvas) return;
+
+  var c = getCoords(e);
+
+  if (activeTool === 'fill') {
+    floodFill(c.x, c.y, currentColor);
+    return;
+  }
+
+  var col = activeTool === 'eraser' ? '#FFFFFF' : currentColor;
+  activePointers[e.pointerId] = {x: c.x, y: c.y, color: col};
+  maskedBrushDot(c.x, c.y, col, brushSize);
+
+  var dot = document.createElement('div');
+  dot.className = 'pointer-dot';
+  dot.id = 'pdot-' + e.pointerId;
+  dot.style.left = e.clientX + 'px';
+  dot.style.top = e.clientY + 'px';
+  dot.style.background = col;
+  var sz = Math.min(brushSize, 30);
+  dot.style.width = sz + 'px';
+  dot.style.height = sz + 'px';
+  document.body.appendChild(dot);
+}
+
+function handleMove(e) {
+  e.preventDefault();
+  var p = activePointers[e.pointerId];
+  if (!p) return;
+  var c = getCoords(e);
+  maskedBrushStroke(p.x, p.y, c.x, c.y, p.color, brushSize);
+  p.x = c.x;
+  p.y = c.y;
+  var dot = document.getElementById('pdot-' + e.pointerId);
+  if (dot) { dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px'; }
+}
+
+function handleUp(e) {
+  delete activePointers[e.pointerId];
+  var dot = document.getElementById('pdot-' + e.pointerId);
+  if (dot) dot.remove();
+}
+
+document.addEventListener('pointerdown', handleDown);
+document.addEventListener('pointermove', handleMove);
+document.addEventListener('pointerup', handleUp);
+document.addEventListener('pointercancel', handleUp);
+
+function refreshUI() {
+  document.querySelectorAll('.color-swatch').forEach(function(s) {
+    s.classList.toggle('active', s.dataset.color === currentColor);
+  });
+  document.querySelectorAll('.tool-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tool === activeTool);
+  });
+  document.querySelectorAll('.tpl-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.template === currentTemplate);
+  });
+  paintCanvas.style.cursor = activeTool === 'fill' ? 'pointer' : 'crosshair';
+}
 
 function buildColorBar() {
   var bar = document.getElementById('colorBar');
   bar.innerHTML = '';
-  COLORS.forEach(function(c, i) {
+  COLORS.forEach(function(c) {
     var sw = document.createElement('div');
-    sw.className = 'color-swatch' + (c === currentColor && !isEraser ? ' active' : '');
+    sw.className = 'color-swatch';
     sw.style.background = c;
     if (c === '#fff') sw.style.border = '3px solid #ccc';
     sw.dataset.color = c;
     bar.appendChild(sw);
   });
 
-  var div1 = document.createElement('div');
-  div1.className = 'bar-divider';
-  bar.appendChild(div1);
+  var d1 = document.createElement('div'); d1.className = 'bar-divider'; bar.appendChild(d1);
 
   var slider = document.createElement('input');
-  slider.type = 'range';
-  slider.className = 'size-slider';
+  slider.type = 'range'; slider.className = 'size-slider';
   slider.min = 5; slider.max = 60; slider.value = brushSize;
-  slider.id = 'brushSlider';
+  slider.addEventListener('input', function(){ brushSize = parseInt(slider.value); });
   bar.appendChild(slider);
 
-  var div2 = document.createElement('div');
-  div2.className = 'bar-divider';
-  bar.appendChild(div2);
+  var d2 = document.createElement('div'); d2.className = 'bar-divider'; bar.appendChild(d2);
 
-  var eraser = document.createElement('button');
-  eraser.className = 'tool-btn' + (isEraser ? ' active' : '');
-  eraser.textContent = '\uD83E\uDDFD';
-  eraser.id = 'eraserBtn';
-  bar.appendChild(eraser);
+  [{id:'brush',icon:'\u270F\uFE0F'},{id:'fill',icon:'\uD83D\uDCA7'},{id:'eraser',icon:'\uD83E\uDDFD'}].forEach(function(t){
+    var btn = document.createElement('button');
+    btn.className = 'tool-btn';
+    btn.textContent = t.icon;
+    btn.dataset.tool = t.id;
+    bar.appendChild(btn);
+  });
 }
-
-var templates = {
-  elephant: { emoji: '\uD83D\uDC18', draw: drawElephant },
-  lion: { emoji: '\uD83E\uDD81', draw: drawLion },
-  monkey: { emoji: '\uD83D\uDC35', draw: drawMonkey },
-  parrot: { emoji: '\uD83E\uDD9C', draw: drawParrot },
-  snake: { emoji: '\uD83D\uDC0D', draw: drawSnake },
-  tiger: { emoji: '\uD83D\uDC2F', draw: drawTiger },
-  giraffe: { emoji: '\uD83E\uDD92', draw: drawGiraffe },
-  frog: { emoji: '\uD83D\uDC38', draw: drawFrog }
-};
 
 function buildTemplatePanel() {
   var panel = document.getElementById('templatePanel');
   panel.innerHTML = '';
   Object.keys(templates).forEach(function(key) {
     var btn = document.createElement('button');
-    btn.className = 'tpl-btn' + (key === currentTemplate ? ' active' : '');
+    btn.className = 'tpl-btn';
     btn.textContent = templates[key].emoji;
     btn.dataset.template = key;
     panel.appendChild(btn);
   });
 }
 
-function clearCanvas() {
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  templates[currentTemplate].draw();
-  outlineCanvas.width = canvas.width;
-  outlineCanvas.height = canvas.height;
-  outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
-  outlineCtx.drawImage(canvas, 0, 0);
-}
-
-function redrawOutlines() {
-  ctx.save();
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.drawImage(outlineCanvas, 0, 0);
-  ctx.restore();
-}
-
-function floodFill(startX, startY, fillColor) {
-  startX = Math.round(startX);
-  startY = Math.round(startY);
-  if (startX < 0 || startX >= canvas.width || startY < 0 || startY >= canvas.height) return;
-
-  var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  var data = imgData.data;
-  var w = canvas.width;
-  var idx = (startY * w + startX) * 4;
-  var sr = data[idx], sg = data[idx+1], sb = data[idx+2], sa = data[idx+3];
-
-  var tmp = document.createElement('canvas');
-  tmp.width = 1; tmp.height = 1;
-  var tmpCtx = tmp.getContext('2d');
-  tmpCtx.fillStyle = fillColor;
-  tmpCtx.fillRect(0, 0, 1, 1);
-  var fc = tmpCtx.getImageData(0, 0, 1, 1).data;
-  var fr = fc[0], fg = fc[1], fb = fc[2], fa = fc[3];
-
-  if (sr === fr && sg === fg && sb === fb && sa === fa) return;
-
-  var tolerance = 30;
-  function match(i) {
-    return Math.abs(data[i] - sr) <= tolerance &&
-           Math.abs(data[i+1] - sg) <= tolerance &&
-           Math.abs(data[i+2] - sb) <= tolerance &&
-           Math.abs(data[i+3] - sa) <= tolerance;
-  }
-
-  var h = canvas.height;
-  var visited = new Uint8Array(w * h);
-  var maxPixels = w * h * 0.5;
-  var filled = 0;
-
-  var stack = new Int32Array(w * h * 2);
-  var sPtr = 0;
-  stack[sPtr++] = startX;
-  stack[sPtr++] = startY;
-
-  while (sPtr > 0 && filled < maxPixels) {
-    var py = stack[--sPtr];
-    var px = stack[--sPtr];
-    if (px < 0 || px >= w || py < 0 || py >= h) continue;
-    var vi = py * w + px;
-    if (visited[vi]) continue;
-    var pi = vi * 4;
-    if (!match(pi)) continue;
-    visited[vi] = 1;
-    data[pi] = fr; data[pi+1] = fg; data[pi+2] = fb; data[pi+3] = fa;
-    filled++;
-    stack[sPtr++] = px + 1; stack[sPtr++] = py;
-    stack[sPtr++] = px - 1; stack[sPtr++] = py;
-    stack[sPtr++] = px; stack[sPtr++] = py + 1;
-    stack[sPtr++] = px; stack[sPtr++] = py - 1;
-  }
-
-  ctx.putImageData(imgData, 0, 0);
-  redrawOutlines();
-}
-
-function applyTransform() {
-  canvas.style.transform = 'translate(calc(-50% + ' + offsetX + 'px), calc(-50% + ' + offsetY + 'px)) scale(' + scale + ')';
-}
-
-function getCanvasCoords(cx, cy) {
-  var rect = canvas.getBoundingClientRect();
-  return { x: (cx - rect.left) / scale, y: (cy - rect.top) / scale };
-}
-
-function drawStroke(fromX, fromY, toX, toY, color, size) {
-  ctx.lineWidth = size;
-  ctx.strokeStyle = color;
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.beginPath();
-  ctx.moveTo(fromX, fromY);
-  ctx.lineTo(toX, toY);
-  ctx.stroke();
-  redrawOutlines();
-}
-
-function handlePointerDown(e) {
-  e.preventDefault();
-  var target = e.target;
-
-  if (target.classList && target.classList.contains('color-swatch')) {
-    currentColor = target.dataset.color;
-    isEraser = false;
-    document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active') });
-    target.classList.add('active');
-    var eb = document.getElementById('eraserBtn');
-    if (eb) eb.classList.remove('active');
-    return;
-  }
-  if (target.id === 'eraserBtn') {
-    isEraser = !isEraser;
-    target.classList.toggle('active');
-    if (isEraser) document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active') });
-    return;
-  }
-  if (target.classList && target.classList.contains('tpl-btn')) {
-    currentTemplate = target.dataset.template;
-    document.querySelectorAll('.tpl-btn').forEach(function(b) { b.classList.remove('active') });
-    target.classList.add('active');
-    clearCanvas();
-    var label = document.createElement('div');
-    label.className = 'animal-label';
-    label.textContent = templates[currentTemplate].emoji;
-    document.body.appendChild(label);
-    setTimeout(function() { label.remove() }, 1800);
-    return;
-  }
-
-  if (target !== canvas) return;
-
-  var coords = getCanvasCoords(e.clientX, e.clientY);
-
-  if (!isEraser) {
-    floodFill(Math.round(coords.x), Math.round(coords.y), currentColor);
-    return;
-  }
-
-  activePointers[e.pointerId] = { x: coords.x, y: coords.y, color: 'white' };
-
-  var dot = document.getElementById('pdot-' + e.pointerId);
-  if (!dot) {
-    dot = document.createElement('div');
-    dot.className = 'pointer-dot';
-    dot.id = 'pdot-' + e.pointerId;
-    document.body.appendChild(dot);
-  }
-  dot.style.left = e.clientX + 'px';
-  dot.style.top = e.clientY + 'px';
-  dot.style.background = activePointers[e.pointerId].color;
-  dot.style.width = Math.min(brushSize, 30) + 'px';
-  dot.style.height = Math.min(brushSize, 30) + 'px';
-}
-
-function handlePointerMove(e) {
-  e.preventDefault();
-  if (!activePointers[e.pointerId]) return;
-
-  var prev = activePointers[e.pointerId];
-  var coords = getCanvasCoords(e.clientX, e.clientY);
-  drawStroke(prev.x, prev.y, coords.x, coords.y, prev.color, brushSize);
-  activePointers[e.pointerId].x = coords.x;
-  activePointers[e.pointerId].y = coords.y;
-
-  var dot = document.getElementById('pdot-' + e.pointerId);
-  if (dot) { dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px'; }
-}
-
-function handlePointerUp(e) {
-  delete activePointers[e.pointerId];
-  var dot = document.getElementById('pdot-' + e.pointerId);
-  if (dot) dot.remove();
-  ctx.beginPath();
-}
-
-document.addEventListener('pointerdown', handlePointerDown);
-document.addEventListener('pointermove', handlePointerMove);
-document.addEventListener('pointerup', handlePointerUp);
-document.addEventListener('pointercancel', handlePointerUp);
-
-document.getElementById('colorBar').addEventListener('input', function(e) {
-  if (e.target.id === 'brushSlider') brushSize = parseInt(e.target.value);
-});
-
-function addTouchBtn(id, fn) {
+function addBtn(id, fn) {
   var el = document.getElementById(id);
   if (!el) return;
-  el.addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) fn() });
-  el.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); fn() });
+  el.addEventListener('click', function(e){ if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) fn(); });
+  el.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); fn(); });
 }
-
-addTouchBtn('clearBtn', function() { clearCanvas() });
-addTouchBtn('backBtn', function() { location.href = '../index.html' });
+addBtn('clearBtn', function(){ buildOutlineMask(); });
+addBtn('backBtn', function(){ location.href = '../index.html'; });
 
 var bg = document.getElementById('jungleBg');
-var bgEmojis = ['\uD83C\uDF3F', '\uD83C\uDF43', '\uD83C\uDF34', '\uD83C\uDF3A'];
-for (var i = 0; i < 15; i++) {
-  var leaf = document.createElement('div');
-  leaf.className = 'leaf';
-  leaf.textContent = bgEmojis[Math.floor(Math.random() * bgEmojis.length)];
-  leaf.style.left = Math.random() * 100 + '%';
-  leaf.style.top = Math.random() * 100 + '%';
-  leaf.style.animationDelay = Math.random() * 6 + 's';
-  bg.appendChild(leaf);
-}
-
-function drawElephant() {
-  var cx = canvas.width / 2, cy = canvas.height / 2;
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.ellipse(cx, cy + 50, 180, 150, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx, cy - 120, 130, 120, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx - 150, cy - 120, 70, 100, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx + 150, cy - 120, 70, 100, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx, cy - 60); ctx.quadraticCurveTo(cx - 50, cy + 50, cx - 40, cy + 150);
-  ctx.quadraticCurveTo(cx - 30, cy + 180, cx - 10, cy + 190); ctx.quadraticCurveTo(cx + 10, cy + 180, cx + 20, cy + 150);
-  ctx.quadraticCurveTo(cx + 30, cy + 50, cx, cy - 60); ctx.fill(); ctx.stroke();
-  for (var i = 0; i < 4; i++) { var lx = cx - 100 + i * 70; ctx.fillRect(lx - 25, cy + 150, 50, 120); ctx.strokeRect(lx - 25, cy + 150, 50, 120); }
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(cx - 50, cy - 140, 15, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 50, cy - 140, 15, 0, Math.PI * 2); ctx.fill();
-}
-
-function drawLion() {
-  var cx = canvas.width / 2, cy = canvas.height / 2;
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  for (var i = 0; i < 16; i++) { var a = (i / 16) * Math.PI * 2; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * 140, cy - 80 + Math.sin(a) * 140, 50, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-  ctx.beginPath(); ctx.ellipse(cx, cy - 80, 110, 100, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx, cy + 80, 140, 120, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  for (var i = 0; i < 4; i++) { var lx = cx - 90 + i * 60; ctx.fillRect(lx - 20, cy + 150, 40, 110); ctx.strokeRect(lx - 20, cy + 150, 40, 110); }
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(cx - 40, cy - 90, 15, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 40, cy - 90, 15, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(cx, cy - 50); ctx.lineTo(cx - 15, cy - 30); ctx.lineTo(cx + 15, cy - 30); ctx.closePath(); ctx.fill();
-}
-
-function drawMonkey() {
-  var cx = canvas.width / 2, cy = canvas.height / 2;
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.ellipse(cx, cy + 20, 120, 140, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy - 120, 100, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx - 90, cy - 120, 40, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx + 90, cy - 120, 40, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx, cy - 100, 60, 70, 0, 0, Math.PI * 2); ctx.fillStyle = '#FFE5CC'; ctx.fill(); ctx.fillStyle = 'white'; ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx - 130, cy + 50, 30, 100, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx + 130, cy + 50, 30, 100, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(cx - 30, cy - 110, 12, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 30, cy - 110, 12, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx, cy - 90, 30, 0.2, Math.PI - 0.2); ctx.stroke();
-}
-
-function drawParrot() {
-  var cx = canvas.width / 2, cy = canvas.height / 2;
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.ellipse(cx, cy + 30, 100, 130, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy - 80, 80, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#FFD700';
-  ctx.beginPath(); ctx.moveTo(cx + 40, cy - 70); ctx.quadraticCurveTo(cx + 100, cy - 60, cx + 90, cy - 40); ctx.lineTo(cx + 50, cy - 50); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.ellipse(cx - 80, cy + 20, 50, 100, -0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx + 80, cy + 20, 50, 100, 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  for (var i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(cx - 40 + i * 20, cy + 160, 20, 80, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(cx + 20, cy - 90, 12, 0, Math.PI * 2); ctx.fill();
-}
-
-function drawSnake() {
-  var cx = canvas.width / 2, cy = canvas.height / 2;
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-
-  var bodyW = 38;
-  var pts = [];
-  var segs = 80;
-  for (var i = 0; i <= segs; i++) {
-    var t = i / segs;
-    var y = cy - 180 + t * 480;
-    var x = cx + Math.sin(t * Math.PI * 3) * 140;
-    pts.push({x: x, y: y});
+['\uD83C\uDF3F','\uD83C\uDF43','\uD83C\uDF34','\uD83C\uDF3A'].forEach(function(em){
+  for (var i = 0; i < 4; i++) {
+    var leaf = document.createElement('div');
+    leaf.className = 'leaf';
+    leaf.textContent = em;
+    leaf.style.left = Math.random()*100+'%';
+    leaf.style.top = Math.random()*100+'%';
+    leaf.style.animationDelay = Math.random()*6+'s';
+    bg.appendChild(leaf);
   }
+});
 
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x - bodyW, pts[0].y);
-  for (var i = 1; i <= segs; i++) {
-    var dx = pts[i].x - pts[i-1].x;
-    var dy = pts[i].y - pts[i-1].y;
-    var len = Math.sqrt(dx*dx + dy*dy);
-    var nx = -dy / len * bodyW;
-    var ny = dx / len * bodyW;
-    ctx.lineTo(pts[i].x + nx, pts[i].y + ny);
-  }
-  var tailTip = pts[segs];
-  ctx.lineTo(tailTip.x, tailTip.y + 15);
-  for (var i = segs; i >= 0; i--) {
-    var dx = i > 0 ? pts[i].x - pts[i-1].x : pts[1].x - pts[0].x;
-    var dy = i > 0 ? pts[i].y - pts[i-1].y : pts[1].y - pts[0].y;
-    var len = Math.sqrt(dx*dx + dy*dy);
-    var nx = -dy / len * bodyW;
-    var ny = dx / len * bodyW;
-    ctx.lineTo(pts[i].x - nx, pts[i].y - ny);
-  }
-  ctx.closePath();
+function drawElephant(ctx, w, h) {
+  var cx = w/2, cy = h/2;
+  ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
+  ctx.beginPath(); ctx.ellipse(cx,cy+50,180,150,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx,cy-120,130,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx-150,cy-120,70,100,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx+150,cy-120,70,100,0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,cy-60);
+  ctx.quadraticCurveTo(cx-50,cy+50,cx-40,cy+150);
+  ctx.quadraticCurveTo(cx-30,cy+180,cx-10,cy+190);
+  ctx.quadraticCurveTo(cx+10,cy+180,cx+20,cy+150);
+  ctx.quadraticCurveTo(cx+30,cy+50,cx,cy-60);
   ctx.fill(); ctx.stroke();
-
-  for (var i = 8; i < segs - 5; i += 6) {
-    var p = pts[i];
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.moveTo(0, -12); ctx.lineTo(10, 0); ctx.lineTo(0, 12); ctx.lineTo(-10, 0);
-    ctx.closePath();
-    ctx.restore();
-    ctx.strokeStyle = '#333'; ctx.lineWidth = 3; ctx.stroke();
-  }
-
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  var headCx = pts[0].x, headCy = pts[0].y - 35;
-  ctx.beginPath(); ctx.ellipse(headCx, headCy, 55, 45, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(headCx - 20, headCy - 8, 10, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(headCx + 20, headCy - 8, 10, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.arc(headCx - 18, headCy - 10, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(headCx + 22, headCy - 10, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.arc(headCx, headCy + 10, 18, 0.2, Math.PI - 0.2); ctx.stroke();
-  ctx.strokeStyle = '#FF1493'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(headCx, headCy + 28); ctx.lineTo(headCx - 8, headCy + 42);
-  ctx.moveTo(headCx, headCy + 28); ctx.lineTo(headCx + 8, headCy + 42); ctx.stroke();
+  for(var i=0;i<4;i++){var lx=cx-100+i*70; ctx.fillRect(lx-25,cy+150,50,120); ctx.strokeRect(lx-25,cy+150,50,120);}
+  ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(cx-50,cy-140,15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+50,cy-140,15,0,Math.PI*2); ctx.fill();
 }
 
-function drawTiger() {
-  var cx = canvas.width / 2, cy = canvas.height / 2;
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.ellipse(cx, cy + 50, 160, 130, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx, cy - 100, 120, 110, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  for (var i = 0; i < 4; i++) { var lx = cx - 100 + i * 70; ctx.fillRect(lx - 20, cy + 130, 40, 120); ctx.strokeRect(lx - 20, cy + 130, 40, 120); }
-  for (var i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(cx - 120, cy + 20 + i * 25); ctx.lineTo(cx + 120, cy + 20 + i * 25); ctx.lineWidth = 15; ctx.stroke(); ctx.lineWidth = 6; }
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(cx - 40, cy - 110, 15, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 40, cy - 110, 15, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(cx, cy - 70); ctx.lineTo(cx - 15, cy - 50); ctx.lineTo(cx + 15, cy - 50); ctx.closePath(); ctx.fill();
+function drawLion(ctx, w, h) {
+  var cx=w/2, cy=h/2;
+  ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
+  for(var i=0;i<16;i++){var a=(i/16)*Math.PI*2; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*140,cy-80+Math.sin(a)*140,50,0,Math.PI*2); ctx.fill(); ctx.stroke();}
+  ctx.beginPath(); ctx.ellipse(cx,cy-80,110,100,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx,cy+80,140,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  for(var i=0;i<4;i++){var lx=cx-90+i*60; ctx.fillRect(lx-20,cy+150,40,110); ctx.strokeRect(lx-20,cy+150,40,110);}
+  ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(cx-40,cy-90,15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+40,cy-90,15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx,cy-50); ctx.lineTo(cx-15,cy-30); ctx.lineTo(cx+15,cy-30); ctx.closePath(); ctx.fill();
 }
 
-function drawGiraffe() {
-  var cx = canvas.width / 2, cy = canvas.height / 2;
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.ellipse(cx, cy + 100, 140, 120, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillRect(cx - 30, cy - 300, 60, 400); ctx.strokeRect(cx - 30, cy - 300, 60, 400);
-  ctx.beginPath(); ctx.ellipse(cx, cy - 330, 60, 50, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  for (var i = 0; i < 4; i++) { var lx = cx - 90 + i * 60; ctx.fillRect(lx - 15, cy + 180, 30, 150); ctx.strokeRect(lx - 15, cy + 180, 30, 150); }
-  var spots = [[cx - 80, cy + 80], [cx - 40, cy + 60], [cx, cy + 100], [cx + 40, cy + 70], [cx + 80, cy + 90], [cx - 20, cy - 100], [cx + 10, cy - 150]];
-  spots.forEach(function(s) { ctx.beginPath(); ctx.ellipse(s[0], s[1], 25, 30, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(cx + 20, cy - 340, 12, 0, Math.PI * 2); ctx.fill();
+function drawMonkey(ctx, w, h) {
+  var cx=w/2, cy=h/2;
+  ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
+  ctx.beginPath(); ctx.ellipse(cx,cy+20,120,140,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy-120,100,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx-90,cy-120,40,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx+90,cy-120,40,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx,cy-100,60,70,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx-130,cy+50,30,100,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx+130,cy+50,30,100,0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(cx-30,cy-110,12,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+30,cy-110,12,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy-90,30,0.2,Math.PI-0.2); ctx.stroke();
 }
 
-function drawFrog() {
-  var cx = canvas.width / 2, cy = canvas.height / 2;
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.ellipse(cx, cy + 30, 130, 110, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx, cy - 50, 120, 80, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx - 60, cy - 90, 45, 50, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx + 60, cy - 90, 45, 50, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(cx - 60, cy - 85, 20, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 60, cy - 85, 20, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.arc(cx, cy - 20, 60, 0.1, Math.PI - 0.1); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx - 110, cy + 80, 30, 60, -0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx + 110, cy + 80, 30, 60, 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx - 130, cy + 20, 50, 80, -0.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx + 130, cy + 20, 50, 80, 0.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+function drawParrot(ctx, w, h) {
+  var cx=w/2, cy=h/2;
+  ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
+  ctx.beginPath(); ctx.ellipse(cx,cy+30,100,130,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy-80,80,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+40,cy-70); ctx.quadraticCurveTo(cx+100,cy-60,cx+90,cy-40); ctx.lineTo(cx+50,cy-50); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx-80,cy+20,50,100,-0.5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx+80,cy+20,50,100,0.5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  for(var i=0;i<5;i++){ctx.beginPath(); ctx.ellipse(cx-40+i*20,cy+160,20,80,0,0,Math.PI*2); ctx.fill(); ctx.stroke();}
+  ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(cx+20,cy-90,12,0,Math.PI*2); ctx.fill();
 }
 
+function drawSnake(ctx, w, h) {
+  var cx=w/2, cy=h/2;
+  ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
+  var bodyW=38, pts=[], segs=80;
+  for(var i=0;i<=segs;i++){var t=i/segs; pts.push({x:cx+Math.sin(t*Math.PI*3)*140, y:cy-180+t*480});}
+  ctx.beginPath(); ctx.moveTo(pts[0].x-bodyW,pts[0].y);
+  for(var i=1;i<=segs;i++){var dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y,len=Math.sqrt(dx*dx+dy*dy); ctx.lineTo(pts[i].x+(-dy/len)*bodyW, pts[i].y+(dx/len)*bodyW);}
+  ctx.lineTo(pts[segs].x,pts[segs].y+15);
+  for(var i=segs;i>=0;i--){var dx=i>0?pts[i].x-pts[i-1].x:pts[1].x-pts[0].x, dy=i>0?pts[i].y-pts[i-1].y:pts[1].y-pts[0].y, len=Math.sqrt(dx*dx+dy*dy); ctx.lineTo(pts[i].x-(-dy/len)*bodyW, pts[i].y-(dx/len)*bodyW);}
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  for(var i=8;i<segs-5;i+=6){ctx.beginPath(); ctx.save(); ctx.translate(pts[i].x,pts[i].y); ctx.moveTo(0,-12); ctx.lineTo(10,0); ctx.lineTo(0,12); ctx.lineTo(-10,0); ctx.closePath(); ctx.restore(); ctx.lineWidth=3; ctx.stroke();}
+  ctx.lineWidth=5;
+  var hx=pts[0].x, hy=pts[0].y-35;
+  ctx.beginPath(); ctx.ellipse(hx,hy,55,45,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(hx-20,hy-8,10,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hx+20,hy-8,10,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white';
+  ctx.beginPath(); ctx.arc(hx-18,hy-10,3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hx+22,hy-10,3,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#333'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.arc(hx,hy+10,18,0.2,Math.PI-0.2); ctx.stroke();
+  ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(hx,hy+28); ctx.lineTo(hx-8,hy+42); ctx.moveTo(hx,hy+28); ctx.lineTo(hx+8,hy+42); ctx.stroke();
+}
+
+function drawTiger(ctx, w, h) {
+  var cx=w/2, cy=h/2;
+  ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
+  ctx.beginPath(); ctx.ellipse(cx,cy+50,160,130,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx,cy-100,120,110,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  for(var i=0;i<4;i++){var lx=cx-100+i*70; ctx.fillRect(lx-20,cy+130,40,120); ctx.strokeRect(lx-20,cy+130,40,120);}
+  ctx.lineWidth=8;
+  for(var i=0;i<6;i++){ctx.beginPath(); ctx.moveTo(cx-120,cy+20+i*25); ctx.lineTo(cx+120,cy+20+i*25); ctx.stroke();}
+  ctx.lineWidth=5; ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(cx-40,cy-110,15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+40,cy-110,15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx,cy-70); ctx.lineTo(cx-15,cy-50); ctx.lineTo(cx+15,cy-50); ctx.closePath(); ctx.fill();
+}
+
+function drawGiraffe(ctx, w, h) {
+  var cx=w/2, cy=h/2;
+  ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
+  ctx.beginPath(); ctx.ellipse(cx,cy+100,140,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillRect(cx-30,cy-300,60,400); ctx.strokeRect(cx-30,cy-300,60,400);
+  ctx.beginPath(); ctx.ellipse(cx,cy-330,60,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  for(var i=0;i<4;i++){var lx=cx-90+i*60; ctx.fillRect(lx-15,cy+180,30,150); ctx.strokeRect(lx-15,cy+180,30,150);}
+  [[cx-80,cy+80],[cx-40,cy+60],[cx,cy+100],[cx+40,cy+70],[cx+80,cy+90],[cx-20,cy-100],[cx+10,cy-150]].forEach(function(s){ctx.beginPath(); ctx.ellipse(s[0],s[1],25,30,0,0,Math.PI*2); ctx.fill(); ctx.stroke();});
+  ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(cx+20,cy-340,12,0,Math.PI*2); ctx.fill();
+}
+
+function drawFrog(ctx, w, h) {
+  var cx=w/2, cy=h/2;
+  ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
+  ctx.beginPath(); ctx.ellipse(cx,cy+30,130,110,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx,cy-50,120,80,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx-60,cy-90,45,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx+60,cy-90,45,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(cx-60,cy-85,20,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+60,cy-85,20,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white';
+  ctx.beginPath(); ctx.arc(cx,cy-20,60,0.1,Math.PI-0.1); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx-110,cy+80,30,60,-0.5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx+110,cy+80,30,60,0.5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx-130,cy+20,50,80,-0.8,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx+130,cy+20,50,80,0.8,0,Math.PI*2); ctx.fill(); ctx.stroke();
+}
+
+sizeCanvases();
 buildColorBar();
 buildTemplatePanel();
-clearCanvas();
-applyTransform();
-
-canvas.addEventListener('wheel', function(e) {
-  e.preventDefault();
-  var zf = e.deltaY > 0 ? 0.9 : 1.1;
-  scale = Math.max(0.3, Math.min(3, scale * zf));
-  applyTransform();
-});
+buildOutlineMask();
+refreshUI();
 
 window.addEventListener('resize', function() {
-  var tmp = document.createElement('canvas');
-  var tmpCtx = tmp.getContext('2d');
-  tmp.width = canvas.width; tmp.height = canvas.height;
-  tmpCtx.drawImage(canvas, 0, 0);
-  var tmpO = document.createElement('canvas');
-  var tmpOCtx = tmpO.getContext('2d');
-  tmpO.width = outlineCanvas.width; tmpO.height = outlineCanvas.height;
-  tmpOCtx.drawImage(outlineCanvas, 0, 0);
-  canvas.width = window.innerWidth * 2;
-  canvas.height = window.innerHeight * 2;
-  ctx.drawImage(tmp, 0, 0);
-  outlineCanvas.width = canvas.width;
-  outlineCanvas.height = canvas.height;
-  outlineCtx.drawImage(tmpO, 0, 0);
-  applyTransform();
+  sizeCanvases();
+  buildOutlineMask();
 });
+
+})();
 </script>
 </body>
 </html>
