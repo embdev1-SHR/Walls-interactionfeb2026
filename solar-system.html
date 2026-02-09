@@ -459,11 +459,15 @@
 <body>
     <div id="canvas-container"></div>
     
+    <audio id="solar-music" preload="auto" loop>
+        <source src="./assets/Audio/solarsystem.mp3" type="audio/mpeg">
+    </audio>
+    
     <div id="title">
         <h1>🌌 Solar System Explorer</h1>
     </div>
 
-    <button class="back-button" onclick="window.location.href='index.html'">← Back</button>
+    <button class="back-button" onclick="document.getElementById('solar-music').pause(); window.location.href='index.html'">← Back</button>
 
     <div id="planet-menu-toggle">
         <span id="menu-icon">▼</span>
@@ -552,93 +556,23 @@
         }
 
         function playAmbientSound() {
-            if (!audioContext) initAudio();
-            
-            if (!audioPlaying) {
-                // Create cinematic ambient soundscape
-                
-                // Deep bass drone
-                const bass = audioContext.createOscillator();
-                const bassGain = audioContext.createGain();
-                bass.type = 'sine';
-                bass.frequency.value = 55; // A1
-                bassGain.gain.value = 0.15;
-                bass.connect(bassGain);
-                bassGain.connect(audioContext.destination);
-                
-                // Mid pad
-                const mid = audioContext.createOscillator();
-                const midGain = audioContext.createGain();
-                mid.type = 'triangle';
-                mid.frequency.value = 110; // A2
-                midGain.gain.value = 0.08;
-                mid.connect(midGain);
-                midGain.connect(audioContext.destination);
-                
-                // High atmosphere
-                const high = audioContext.createOscillator();
-                const highGain = audioContext.createGain();
-                high.type = 'sine';
-                high.frequency.value = 220; // A3
-                highGain.gain.value = 0.05;
-                high.connect(highGain);
-                highGain.connect(audioContext.destination);
-                
-                // Subtle fifth harmony
-                const fifth = audioContext.createOscillator();
-                const fifthGain = audioContext.createGain();
-                fifth.type = 'sine';
-                fifth.frequency.value = 165; // E3
-                fifthGain.gain.value = 0.06;
-                fifth.connect(fifthGain);
-                fifthGain.connect(audioContext.destination);
-                
-                // LFO for breathing effect
-                const lfo = audioContext.createOscillator();
-                const lfoGain = audioContext.createGain();
-                lfo.type = 'sine';
-                lfo.frequency.value = 0.1;
-                lfoGain.gain.value = 10;
-                lfo.connect(lfoGain);
-                lfoGain.connect(bass.frequency);
-                lfoGain.connect(mid.frequency);
-                
-                // Slow tremolo for atmosphere
-                const tremolo = audioContext.createOscillator();
-                const tremoloGain = audioContext.createGain();
-                tremolo.type = 'sine';
-                tremolo.frequency.value = 0.3;
-                tremoloGain.gain.value = 0.02;
-                tremolo.connect(tremoloGain);
-                tremoloGain.connect(bassGain.gain);
-                tremoloGain.connect(highGain.gain);
-                
-                // Start all oscillators
-                bass.start();
-                mid.start();
-                high.start();
-                fifth.start();
-                lfo.start();
-                tremolo.start();
-                
-                oscillators = [bass, mid, high, fifth, lfo, tremolo];
-                gainNodes = [bassGain, midGain, highGain, fifthGain, lfoGain, tremoloGain];
-                
+            const solarMusic = document.getElementById('solar-music');
+            if (solarMusic) {
+                solarMusic.volume = 0.5;
+                solarMusic.play().catch(function(e) {
+                    console.log('Audio autoplay prevented:', e);
+                });
                 audioPlaying = true;
             }
         }
 
         function stopAmbientSound() {
-            if (audioPlaying && oscillators.length > 0) {
-                oscillators.forEach(osc => {
-                    try {
-                        osc.stop();
-                    } catch(e) {}
-                });
-                oscillators = [];
-                gainNodes = [];
-                audioPlaying = false;
+            const solarMusic = document.getElementById('solar-music');
+            if (solarMusic) {
+                solarMusic.pause();
+                solarMusic.currentTime = 0;
             }
+            audioPlaying = false;
         }
 
         // Lighting - Enhanced brightness
@@ -1908,11 +1842,19 @@
 
         // Controls
         document.getElementById('audio-toggle').addEventListener('click', () => {
+            const solarMusic = document.getElementById('solar-music');
             if (audioPlaying) {
-                stopAmbientSound();
+                if (solarMusic) solarMusic.pause();
+                audioPlaying = false;
                 document.getElementById('audio-toggle').textContent = '🔇';
             } else {
-                playAmbientSound();
+                if (solarMusic) {
+                    solarMusic.volume = 0.5;
+                    solarMusic.play().catch(function(e) {
+                        console.log('Audio autoplay prevented:', e);
+                    });
+                }
+                audioPlaying = true;
                 document.getElementById('audio-toggle').textContent = '🔊';
             }
         });
@@ -1933,6 +1875,13 @@
             } else {
                 document.exitFullscreen();
             }
+        });
+
+        // Auto-play music when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                playAmbientSound();
+            }, 500);
         });
 
         // Window resize

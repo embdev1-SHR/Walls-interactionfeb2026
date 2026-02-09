@@ -202,6 +202,10 @@ model-viewer.animal-viewer{
 </style>
 </head>
 <body>
+<audio id="forest-music" preload="auto" loop>
+  <source src="../assets/Audio/capaholiczsfx-forest-daytime-446356.mp3" type="audio/mpeg">
+</audio>
+
 <div class="scene" id="scene"></div>
 
 <div class="app">
@@ -217,6 +221,9 @@ model-viewer.animal-viewer{
   </div>
 
   <div class="footer">
+    <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:8px">
+      <button id="audioToggle" style="padding:6px 16px;font-size:13px;font-weight:600;background:rgba(129,199,132,.1);border:2px solid rgba(129,199,132,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s;backdrop-filter:blur(8px);width:fit-content">🔊 Music</button>
+    </div>
     <button class="btn-back" id="backBtn">Back to Menu</button>
   </div>
 </div>
@@ -528,7 +535,40 @@ function bindTouch(el, fn) {
 
 bindTouch(document.getElementById('prevBtn'), function() { scrollBy(-1); });
 bindTouch(document.getElementById('nextBtn'), function() { scrollBy(1); });
-bindTouch(document.getElementById('backBtn'), function() { location.href = '../index.html'; });
+
+var forestMusic = document.getElementById('forest-music');
+var audioToggle = document.getElementById('audioToggle');
+var musicPlaying = false;
+
+audioToggle.addEventListener('click', function() {
+  if (musicPlaying) {
+    forestMusic.pause();
+    musicPlaying = false;
+    audioToggle.textContent = '🔇 Music';
+  } else {
+    forestMusic.volume = 0.5;
+    forestMusic.play().catch(function(e) {
+      console.log('Audio autoplay prevented:', e);
+    });
+    musicPlaying = true;
+    audioToggle.textContent = '🔊 Music';
+  }
+});
+
+bindTouch(document.getElementById('backBtn'), function() { 
+  forestMusic.pause();
+  location.href = '../index.html'; 
+});
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    forestMusic.volume = 0.5;
+    forestMusic.play().catch(function(e) {
+      console.log('Audio autoplay prevented:', e);
+    });
+    musicPlaying = true;
+  }, 500);
+});
 
 document.addEventListener('click', function(e) {
   if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
