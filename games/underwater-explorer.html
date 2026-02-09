@@ -257,6 +257,10 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 </head>
 <body class="zone-reef">
 
+<audio id="underwater-explorer-music" preload="auto" loop>
+  <source src="../assets/Audio/freesound_community-night-cyprus-sea-53355.mp3" type="audio/mpeg">
+</audio>
+
 <div id="ocean"></div>
 <div class="caustic-layer"></div>
 <div id="light-rays"></div>
@@ -1274,6 +1278,23 @@ spawnCreatures();
 loop();
 
 })();
+</script>
+<script>
+  (function(){
+    var audio = document.getElementById('underwater-explorer-music');
+    if(!audio) return;
+    window.addEventListener('load', function(){ setTimeout(function(){ try{ audio.volume = 0.5; audio.play().catch(function(){}); }catch(e){} }, 500); });
+    function stopAudio(){ try{ audio.pause(); audio.currentTime = 0; }catch(e){} }
+    window.addEventListener('beforeunload', stopAudio);
+    window.addEventListener('pagehide', stopAudio);
+    document.addEventListener('click', function(e){
+      var t = e.target;
+      if(!t) return;
+      if(t.tagName === 'A' && t.getAttribute('href') && t.getAttribute('href').indexOf('index.html') !== -1) stopAudio();
+      if(t.id && (t.id.indexOf('menu')!==-1 || t.id.indexOf('back')!==-1)) stopAudio();
+      if(t.className && (t.className.indexOf('menu')!==-1 || t.className.indexOf('back')!==-1)) stopAudio();
+    }, true);
+  })();
 </script>
 </body>
 </html>

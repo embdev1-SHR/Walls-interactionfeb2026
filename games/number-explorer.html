@@ -42,6 +42,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </style>
 </head>
 <body>
+<audio id="number-explorer-music" preload="auto" loop>
+  <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+</audio>
 <div class="bg-particles" id="bgP"></div>
 
 <div class="app">
@@ -191,6 +194,14 @@ for (var i = 0; i < 30; i++) {
 }
 
 document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
+</script>
+<script>
+(function(){
+  var m = document.getElementById('number-explorer-music');
+  if(!m) return;
+  window.addEventListener('load', function(){ setTimeout(function(){ try{ m.volume=0.5; m.play().catch(function(){}); }catch(e){} },500); });
+  document.addEventListener('click', function(e){ var b = e.target.closest('.btn-back, .back-button, #backBtn, .goMenuBtn, #goMenuBtn'); if(b){ try{ m.pause(); m.currentTime=0; }catch(e){} } });
+})();
 </script>
 </body>
 </html>

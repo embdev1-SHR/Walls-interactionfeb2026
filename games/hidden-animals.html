@@ -175,6 +175,9 @@ canvas{position:absolute;inset:0;z-index:0}
 </style>
 </head>
 <body>
+<audio id="hidden-animals-music" preload="auto" loop>
+  <source src="../assets/Audio/capaholiczsfx-forest-daytime-446356.mp3" type="audio/mpeg">
+</audio>
 <div class="game-wrap" id="gameWrap">
   <canvas id="scene"></canvas>
   <canvas id="fgCanvas"></canvas>
@@ -732,6 +735,17 @@ placeAnimals();
 buildChecklist();
 startTimer();
 requestAnimationFrame(loop);
+</script>
+<script>
+  (function(){
+    var audio = document.getElementById('hidden-animals-music');
+    if(!audio) return;
+    window.addEventListener('load', function(){
+      setTimeout(function(){ try{ audio.volume = 0.5; audio.play().catch(function(){}); }catch(e){} }, 500);
+    });
+    var menu = document.getElementById('menuBtn');
+    if(menu){ menu.addEventListener('click', function(){ try{ audio.pause(); audio.currentTime = 0; }catch(e){} }); }
+  })();
 </script>
 </body>
 </html>

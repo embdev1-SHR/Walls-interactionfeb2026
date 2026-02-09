@@ -30,6 +30,9 @@ body{background:#1a0a0a;color:white;font-family:-apple-system,BlinkMacSystemFont
 </style>
 </head>
 <body>
+<audio id="arithmetica-multi-music" preload="auto" loop>
+  <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+</audio>
 <div class="setup" id="setup">
   <h1>Arithmetica</h1>
   <p>Choose number of players</p>
@@ -86,6 +89,16 @@ document.querySelectorAll('.p-btn').forEach(function(btn) {
 });
 document.getElementById('backBtn').addEventListener('click', function() { location.href = '../index.html'; });
 document.getElementById('backBtn').addEventListener('touchend', function(e) { e.preventDefault(); location.href = '../index.html'; });
+</script>
+<script>
+  (function(){
+    var audio = document.getElementById('arithmetica-multi-music');
+    if(!audio) return;
+    window.addEventListener('load', function(){ setTimeout(function(){ try{ audio.volume = 0.5; audio.play().catch(function(){}); }catch(e){} }, 500); });
+    function stop(){ try{ audio.pause(); audio.currentTime = 0; }catch(e){} }
+    document.addEventListener('click', function(e){ var t = e.target; if(!t) return; if(t.id === 'backBtn' || t.classList && t.classList.contains('game-back-btn')) stop(); }, true);
+    window.addEventListener('beforeunload', stop);
+  })();
 </script>
 </body>
 </html>

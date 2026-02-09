@@ -50,6 +50,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </style>
 </head>
 <body>
+<audio id="alphabet-explorer-music" preload="auto" loop>
+  <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+</audio>
 <div class="bg-particles" id="bgP"></div>
 
 <div class="app">
@@ -248,7 +251,10 @@ bindTouch(document.getElementById('nextBtn'), function() {
   var n = currentIdx < data.length - 1 ? currentIdx + 1 : 0;
   showLetter(n);
 });
-bindTouch(document.getElementById('btnBack'), function() { location.href = '../index.html'; });
+bindTouch(document.getElementById('btnBack'), function() { 
+  alphabetExplorerMusic.pause();
+  location.href = '../index.html'; 
+});
 
 buildList();
 showLetter(0);
@@ -267,6 +273,21 @@ for (var i = 0; i < 30; i++) {
   d.style.animationDelay=(Math.random()*5)+'s'; bgP.appendChild(d);
 }
 
+
+var alphabetExplorerMusic = document.getElementById('alphabet-explorer-music');
+var musicPlaying = false;
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    alphabetExplorerMusic.volume = 0.5;
+    alphabetExplorerMusic.play().catch(function(e) {
+      console.log('Audio autoplay prevented:', e);
+    });
+    musicPlaying = true;
+  }, 500);
+});
+
+var originalBackHandler = document.getElementById('btnBack').onclick;
 document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
 </script>
 </body>

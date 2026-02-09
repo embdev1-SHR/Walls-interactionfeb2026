@@ -30,6 +30,9 @@ body{background:#0a1628;color:white;font-family:-apple-system,BlinkMacSystemFont
 </style>
 </head>
 <body>
+<audio id="number-crunch-multi-music" preload="auto" loop>
+  <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+</audio>
 <div class="setup" id="setup">
   <h1>Number Crunch</h1>
   <p>Choose number of players</p>
@@ -86,6 +89,14 @@ document.querySelectorAll('.p-btn').forEach(function(btn) {
 });
 document.getElementById('backBtn').addEventListener('click', function() { location.href = '../index.html'; });
 document.getElementById('backBtn').addEventListener('touchend', function(e) { e.preventDefault(); location.href = '../index.html'; });
+</script>
+<script>
+(function(){
+  var m = document.getElementById('number-crunch-multi-music');
+  if(!m) return;
+  window.addEventListener('load', function(){ setTimeout(function(){ try{ m.volume=0.5; m.play().catch(function(){}); }catch(e){} },500); });
+  document.addEventListener('click', function(e){ var b = e.target.closest('.btn-back, .back-button, #backBtn, .goMenuBtn, #goMenuBtn'); if(b){ try{ m.pause(); m.currentTime=0; }catch(e){} } });
+})();
 </script>
 </body>
 </html>

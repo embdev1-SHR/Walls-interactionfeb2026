@@ -105,6 +105,9 @@ canvas{display:block;position:fixed;inset:0;z-index:0}
 </style>
 </head>
 <body>
+<audio id="goalkeeper-music" preload="auto" loop>
+  <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+</audio>
 <canvas id="gameCanvas"></canvas>
 
 <div class="hud" id="hud" style="display:none">
@@ -470,6 +473,14 @@ addTouchBtn('goMenuBtn', function() { location.href = '../index.html'; });
 addTouchBtn('backBtn', function() { location.href = '../index.html'; });
 
 gameLoop();
+</script>
+<script>
+(function(){
+  var m = document.getElementById('goalkeeper-music');
+  if(!m) return;
+  window.addEventListener('load', function(){ setTimeout(function(){ try{ m.volume=0.5; m.play().catch(function(){}); }catch(e){} },500); });
+  document.addEventListener('click', function(e){ var b = e.target.closest('.btn-back, .back-button, #backBtn, .goMenuBtn, #goMenuBtn'); if(b){ try{ m.pause(); m.currentTime=0; }catch(e){} } });
+})();
 </script>
 </body>
 </html>

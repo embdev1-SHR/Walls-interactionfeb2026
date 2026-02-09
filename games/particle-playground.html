@@ -230,6 +230,9 @@
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    <audio id="particle-playground-music" preload="auto" loop>
+        <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+    </audio>
 
     <div class="controls-panel" id="controlsPanel">
         <div class="controls-header" id="controlsHeader">
@@ -313,6 +316,16 @@
     <div class="info-text">Touch or click to change particle colors • Multi-touch supported</div>
     <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
 
+    <script>
+        var particleMusic = document.getElementById('particle-playground-music');
+        if (particleMusic) {
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    try { particleMusic.volume = 0.5; particleMusic.play().catch(function(){}); } catch(e) {}
+                }, 500);
+            });
+        }
+    </script>
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
@@ -723,6 +736,19 @@
         });
 
         animate();
+        
+            document.addEventListener('DOMContentLoaded', function() {
+                var backBtn = document.querySelector('.back-button');
+                var originalOnclick = backBtn && backBtn.onclick;
+                if (backBtn) {
+                    backBtn.onclick = function() {
+                        var music = document.getElementById('particle-playground-music');
+                        if (music) { try { music.pause(); music.currentTime = 0; } catch(e) {} }
+                        if (originalOnclick) originalOnclick.call(this);
+                        else window.location.href='../index.html';
+                    };
+                }
+            });
     </script>
 </body>
 </html>

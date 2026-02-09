@@ -76,6 +76,9 @@
     </style>
 </head>
 <body>
+<audio id="rhythm-dance-music" preload="auto" loop>
+    <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+</audio>
     <div class="container">
         <div class="icon">💃</div>
         <h1>Rhythm Dance</h1>
@@ -83,5 +86,13 @@
         <p class="placeholder-text" style="font-size: 1.5rem;">Dance and move to the beat with motion tracking</p>
         <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
     </div>
-</body>
+    <script>
+    (function(){
+      var m = document.getElementById('rhythm-dance-music');
+      if(!m) return;
+      window.addEventListener('load', function(){ setTimeout(function(){ try{ m.volume=0.5; m.play().catch(function(){}); }catch(e){} },500); });
+      document.addEventListener('click', function(e){ var b = e.target.closest('.btn-back, .back-button, #backBtn, .goMenuBtn, #goMenuBtn'); if(b){ try{ m.pause(); m.currentTime=0; }catch(e){} } });
+    })();
+    </script>
+    </body>
 </html>

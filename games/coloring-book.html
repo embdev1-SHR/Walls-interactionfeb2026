@@ -126,6 +126,9 @@ canvas#main-canvas{
 </style>
 </head>
 <body>
+<audio id="coloring-book-music" preload="auto" loop>
+  <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+</audio>
 
 <div id="canvas-container">
   <canvas id="main-canvas"></canvas>
@@ -716,7 +719,9 @@ document.querySelectorAll('.page-btn').forEach(function(btn) {
   });
 });
 
+var coloringBookMusic = document.getElementById('coloring-book-music');
 document.getElementById('backBtn').addEventListener('click', function() {
+  coloringBookMusic.pause();
   location.href = '../index.html';
 });
 

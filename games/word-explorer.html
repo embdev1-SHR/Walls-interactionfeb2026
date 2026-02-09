@@ -67,6 +67,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </style>
 </head>
 <body>
+<audio id="word-explorer-music" preload="auto" loop>
+  <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+</audio>
 <div class="bg-particles" id="bgP"></div>
 <div class="celebration" id="celebration"></div>
 
@@ -363,6 +366,16 @@ for (var i = 0; i < 30; i++) {
 }
 
 document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
+</script>
+<script>
+  (function(){
+    var audio = document.getElementById('word-explorer-music');
+    if(!audio) return;
+    window.addEventListener('load', function(){ setTimeout(function(){ audio.volume = 0.5; audio.play().catch(function(){}); }, 500); });
+    function stopMusic(){ try{ audio.pause(); audio.currentTime = 0; }catch(e){} }
+    var back = document.getElementById('btnBack'); if(back) back.addEventListener('click', stopMusic);
+    window.addEventListener('pagehide', stopMusic);
+  })();
 </script>
 </body>
 </html>
