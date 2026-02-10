@@ -17,7 +17,6 @@
         body {
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #0a2463 0%, #1e3c8b 30%, #2a5298 100%);
             color: white;
             height: 100vh;
             width: 100vw;
@@ -25,47 +24,18 @@
             touch-action: none;
         }
         
-        /* Underwater Environment */
-        .bubbles {
+        /* Canvas Background */
+        #canvas {
+            display: block;
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             z-index: 1;
-            pointer-events: none;
-        }
-        
-        .bubble {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            animation: floatUp 15s infinite linear;
-        }
-        
-        @keyframes floatUp {
-            0% {
-                transform: translateY(100vh) translateX(0);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.5;
-            }
-            90% {
-                opacity: 0.5;
-            }
-            100% {
-                transform: translateY(-100px) translateX(20px);
-                opacity: 0;
-            }
-        }
-        
-        .seaweed {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 150px;
-            background: linear-gradient(to top, rgba(0, 100, 0, 0.7), transparent);
-            z-index: 2;
-            pointer-events: none;
+            background: #373B44;
+            background: -webkit-linear-gradient(to bottom, #4286f4, #373B44);
+            background: linear-gradient(to bottom, #4286f4, #373B44);
         }
         
         /* Game UI */
@@ -120,16 +90,26 @@
         }
         
         .lives {
-            display: flex;
+            display: none;
             gap: 8px;
             align-items: center;
         }
-        
+
+        .lives.show {
+            display: flex;
+        }
+
         .heart {
             font-size: 32px;
             filter: drop-shadow(1px 1px 3px rgba(0, 0, 0, 0.5));
             transition: all 0.3s;
             color: #ff6b6b;
+            animation: heartBeat 0.5s ease-in-out;
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
         }
         
         /* Start Screen */
@@ -143,7 +123,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(10, 36, 99, 0.85);
+            background: rgba(55, 59, 68, 0.85);
             backdrop-filter: blur(5px);
             z-index: 200;
             pointer-events: auto;
@@ -272,14 +252,148 @@
             background: linear-gradient(135deg, #3498db, #2980b9);
         }
         
-        /* Game Area */
+        /* Interactive Fish Layer */
         .game-area {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
+            z-index: 20;
+            pointer-events: auto;
+        }
+        
+        /* Interactive Fish Styles */
+        .interactive-fish {
+            position: absolute;
+            cursor: pointer;
+            z-index: 25;
+            pointer-events: auto;
+            transition: transform 0.2s;
+            filter: drop-shadow(2px 2px 5px rgba(0, 0, 0, 0.3));
+        }
+        
+        .interactive-fish.caught {
+            animation: caughtAnimation 0.8s forwards;
+        }
+        
+        @keyframes caughtAnimation {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        
+        .fish-body {
+            width: 60px;
+            height: 30px;
+            border-radius: 50%;
+            position: relative;
+        }
+        
+        .fish-tail {
+            position: absolute;
+            width: 20px;
+            height: 30px;
+            top: 0;
+        }
+        
+        .fish-tail.right {
+            right: -15px;
+            border-top-right-radius: 100%;
+            border-bottom-right-radius: 100%;
+        }
+        
+        .fish-tail.left {
+            left: -15px;
+            border-top-left-radius: 100%;
+            border-bottom-left-radius: 100%;
+            transform: rotate(180deg);
+        }
+        
+        .fish-eye {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            top: 8px;
+        }
+        
+        .fish-eye.right {
+            right: 10px;
+        }
+        
+        .fish-eye.left {
+            left: 10px;
+        }
+        
+        .fish-eye::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: black;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+        }
+
+        /* Jellyfish Styles */
+        .jellyfish {
+            position: absolute;
+            cursor: pointer;
+            z-index: 25;
+            pointer-events: none;
+            filter: drop-shadow(2px 2px 8px rgba(255, 0, 100, 0.5));
+            animation: jellyfishFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes jellyfishFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .jellyfish-body {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 105, 180, 0.9), rgba(186, 85, 211, 0.7));
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            animation: jellyfishPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes jellyfishPulse {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.1); }
+        }
+
+        .jellyfish-tentacle {
+            position: absolute;
+            bottom: -20px;
+            width: 3px;
+            height: 20px;
+            background: linear-gradient(to bottom, rgba(255, 105, 180, 0.8), transparent);
+            border-radius: 50%;
+            animation: tentacleWave 1s ease-in-out infinite;
+        }
+
+        .jellyfish-tentacle:nth-child(1) { left: 10px; animation-delay: 0s; }
+        .jellyfish-tentacle:nth-child(2) { left: 20px; animation-delay: 0.1s; }
+        .jellyfish-tentacle:nth-child(3) { left: 30px; animation-delay: 0.2s; }
+        .jellyfish-tentacle:nth-child(4) { left: 40px; animation-delay: 0.3s; }
+
+        @keyframes tentacleWave {
+            0%, 100% { transform: rotate(0deg) scaleY(1); }
+            50% { transform: rotate(10deg) scaleY(1.2); }
+        }
+
+        .jellyfish.hit {
+            animation: jellyfishHit 0.5s forwards;
+        }
+
+        @keyframes jellyfishHit {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(0); opacity: 0; }
         }
         
         /* Catch Effect */
@@ -315,7 +429,7 @@
             color: #4fc3f7;
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
             pointer-events: none;
-            z-index: 20;
+            z-index: 30;
             animation: comboAnim 1s ease-out forwards;
         }
         
@@ -323,223 +437,6 @@
             0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
             40% { opacity: 1; transform: translate(-50%, -50%) scale(1.4); }
             100% { opacity: 0; transform: translate(-50%, -50%) scale(1) translateY(-80px); }
-        }
-        
-        /* Fish Styles - Based on provided CSS */
-        :root {
-            --coilSize: 14px;
-            --delayCount: 40ms;
-            --scaleMe: 1;
-            --scaleFlip: 1;
-            --posFlip: 0;
-        }
-        
-        .fish-container {
-            position: absolute;
-            cursor: pointer;
-            transition: transform 0.2s;
-            z-index: 10;
-            pointer-events: auto;
-            filter: drop-shadow(
-                calc(var(--coilSize) * 4) calc(var(--coilSize) / 3) 5px rgba(0, 0, 0, 0.3)
-            );
-        }
-        
-        .fish-container.caught {
-            animation: caughtAnimation 0.8s forwards;
-        }
-        
-        @keyframes caughtAnimation {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0); opacity: 0; }
-        }
-        
-        .fish {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .fish .koiCoil {
-            position: absolute;
-            width: var(--coilSize);
-            height: var(--coilSize);
-            background-color: orangered;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            margin-left: calc(var(--coilSize) / -2);
-            margin-top: calc(var(--coilSize) / -2);
-            transform: scale(var(--scaleMe), var(--scaleMe));
-            filter: contrast(200%);
-            offset-path: path(
-                "M11.7692 229.5C14.552 200.052 7.51901 171.858 -42.8757 170.644C-105.869 169.128 -131.294 76.612 -101.695 51.5872C-72.0955 26.5625 -24.6607 -50.7867 70.5883 51.5872C165.837 153.961 27.7073 131.211 33.0199 183.157C38.3326 235.102 90.3211 195.669 139.274 223.727C188.226 251.785 207.959 299.56 139.274 316.243C70.5883 332.926 41.3685 398.9 81.9726 419.754C122.577 440.608 222 478.524 222 419.754C222 372.738 222 242.432 222 183.157C219.091 129.948 175.78 30.8091 25.8099 59.9288C-161.652 96.3284 -30.3529 119.837 25.8099 141.07C81.9726 162.303 171.529 204.769 126.751 260.506C81.9726 316.243 101.326 362.501 139.274 373.496C177.222 384.492 170.012 464.495 70.5883 462.979C-28.835 461.462 -42.8757 393.015 -42.8757 373.496C-42.8757 238.288 11.7692 293 11.7692 240.506C11.7692 208.05 11.7692 237.336 11.7692 229.5Z"
-            );
-            animation: fishAnim 20000ms linear infinite;
-            box-shadow: calc(var(--coilSize) / -2) calc(var(--coilSize) / -10) 0 white
-                inset;
-        }
-        
-        .fish-container:nth-of-type(odd) .fish {
-            transform-origin: top center;
-            transform: scale(-1, 1);
-            filter: drop-shadow(
-                calc(var(--coilSize) * -4) calc(var(--coilSize) / 3) 5px rgba(0, 0, 0, 0.3)
-            );
-        }
-        
-        .fish-container:nth-of-type(odd) .koiCoil {
-            background-color: white;
-            box-shadow: calc(var(--coilSize) / -2) calc(var(--coilSize) / -10) 0 orangered
-                inset;
-        }
-        
-        .fish .koiCoil:nth-of-type(15),
-        .fish .koiCoil:nth-of-type(14) {
-            background-color: orangered;
-        }
-        
-        .fish-container:nth-of-type(odd) .koiCoil:nth-of-type(15),
-        .fish-container:nth-of-type(odd) .koiCoil:nth-of-type(14) {
-            background-color: white;
-        }
-        
-        .fish .koiCoil:nth-of-type(15)::after {
-            content: ":";
-            position: absolute;
-            color: black;
-            font-weight: 800;
-            text-align: center;
-            line-height: 60%;
-            font-size: calc(var(--coilSize) * 1.2);
-        }
-        
-        .fish .koiCoil:nth-of-type(1)::before {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 50%;
-            top: 25%;
-            left: -100%;
-            border-radius: var(--coilSize);
-            background-color: white;
-            transform-origin: center right;
-            animation: backFlip 200ms ease-in-out alternate infinite;
-        }
-        
-        .fish .koiCoil:nth-of-type(14) {
-            --scaleMe: 1.2;
-            animation-delay: calc(var(--delayCount) * 1);
-        }
-        
-        .fish .koiCoil:nth-of-type(13) {
-            --scaleMe: 1.35;
-            animation-delay: calc(var(--delayCount) * 2);
-        }
-        
-        .fish .koiCoil:nth-of-type(12) {
-            --scaleMe: 1.55;
-            animation-delay: calc(var(--delayCount) * 3);
-        }
-        
-        .fish .koiCoil:nth-of-type(11) {
-            --scaleMe: 1.75;
-            animation-delay: calc(var(--delayCount) * 4);
-        }
-        
-        .fish .koiCoil:nth-of-type(10) {
-            --scaleMe: 1.9;
-            animation-delay: calc(var(--delayCount) * 5);
-        }
-        
-        .fish .koiCoil:nth-of-type(9) {
-            --scaleMe: 2;
-            animation-delay: calc(var(--delayCount) * 6);
-        }
-        
-        .fish .koiCoil:nth-of-type(8) {
-            --scaleMe: 2;
-            animation-delay: calc(var(--delayCount) * 7);
-        }
-        
-        .fish .koiCoil:nth-of-type(7) {
-            --scaleMe: 2;
-            animation-delay: calc(var(--delayCount) * 8);
-        }
-        
-        .fish .koiCoil:nth-of-type(6) {
-            --scaleMe: 1.9;
-            animation-delay: calc(var(--delayCount) * 9);
-        }
-        
-        .fish .koiCoil:nth-of-type(5) {
-            --scaleMe: 1.75;
-            animation-delay: calc(var(--delayCount) * 10);
-        }
-        
-        .fish .koiCoil:nth-of-type(4) {
-            --scaleMe: 1.55;
-            animation-delay: calc(var(--delayCount) * 11);
-        }
-        
-        .fish .koiCoil:nth-of-type(3) {
-            --scaleMe: 1.35;
-            animation-delay: calc(var(--delayCount) * 12);
-        }
-        
-        .fish .koiCoil:nth-of-type(2) {
-            --scaleMe: 1.2;
-            animation-delay: calc(var(--delayCount) * 13);
-        }
-        
-        .fish .koiCoil:nth-of-type(1) {
-            animation-delay: calc(var(--delayCount) * 14);
-        }
-        
-        .fish .koiCoil:nth-of-type(12)::before,
-        .fish .koiCoil:nth-of-type(12)::after {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 20%;
-            top: -10%;
-            left: -100%;
-            border-radius: var(--coilSize);
-            background-color: white;
-            transform-origin: center right;
-            animation: sideFlip 500ms ease-in-out alternate infinite;
-        }
-        
-        .fish .koiCoil:nth-of-type(12)::after {
-            --scaleFlip: -1;
-            --posFlip: calc(var(--coilSize) * -1);
-        }
-        
-        @keyframes fishAnim {
-            0% {
-                offset-distance: 0%;
-            }
-            100% {
-                offset-distance: 100%;
-            }
-        }
-        
-        @keyframes backFlip {
-            0% {
-                transform: rotate(45deg);
-            }
-            100% {
-                transform: rotate(-45deg);
-            }
-        }
-        
-        @keyframes sideFlip {
-            0% {
-                transform: scale(1, var(--scaleFlip)) translateY(var(--posFlip))rotate(80deg);
-            }
-            100% {
-                transform: scale(1, var(--scaleFlip)) translateY(var(--posFlip))rotate(20deg);
-            }
         }
         
         /* Points Display */
@@ -565,56 +462,42 @@
             }
         }
         
-        /* Coral Reef Decorations */
-        .coral {
+        /* Bubble Effect */
+        .bubble-effect {
             position: absolute;
-            bottom: 0;
-            width: 60px;
-            height: 150px;
-            background: linear-gradient(to top, #ff6b6b, #ff8e53);
-            border-radius: 30px 30px 0 0;
-            z-index: 2;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
             pointer-events: none;
+            z-index: 10;
+            animation: bubblePop 0.6s ease-out forwards;
         }
         
-        .coral:nth-child(1) {
-            left: 10%;
-            height: 120px;
-            background: linear-gradient(to top, #ff6b6b, #ff8e53);
+        @keyframes bubblePop {
+            0% {
+                width: 10px;
+                height: 10px;
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                width: 100px;
+                height: 100px;
+                opacity: 0;
+                transform: scale(2);
+            }
         }
         
-        .coral:nth-child(2) {
-            left: 25%;
-            height: 180px;
-            background: linear-gradient(to top, #4fc3f7, #2196f3);
-            width: 40px;
-        }
-        
-        .coral:nth-child(3) {
-            right: 15%;
-            height: 140px;
-            background: linear-gradient(to top, #66bb6a, #43a047);
-            width: 50px;
-        }
-        
-        .coral:nth-child(4) {
-            right: 30%;
-            height: 100px;
-            background: linear-gradient(to top, #ba68c8, #ab47bc);
-            width: 35px;
-        }
-        
-        /* Treasure Chest */
+        /* Treasure */
         .treasure {
             position: absolute;
-            bottom: 0;
+            bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
             width: 100px;
             height: 60px;
             background: linear-gradient(to top, #ffd700, #ffab00);
             border-radius: 10px 10px 0 0;
-            z-index: 2;
+            z-index: 5;
             pointer-events: none;
             box-shadow: 0 -5px 15px rgba(255, 215, 0, 0.3);
         }
@@ -631,22 +514,19 @@
     </style>
 </head>
 <body>
-    <!-- Underwater Environment -->
-    <div class="bubbles" id="bubbles"></div>
-    <div class="seaweed"></div>
-    <div class="coral"></div>
-    <div class="coral"></div>
-    <div class="coral"></div>
-    <div class="coral"></div>
-    <div class="treasure"></div>
+    <!-- Canvas Background -->
+    <canvas id="canvas"></canvas>
     
-    <!-- Game Area -->
+    <!-- Game Area for Interactive Fish -->
     <div class="game-area" id="gameArea"></div>
+    
+    <!-- Treasure -->
+    <div class="treasure"></div>
     
     <!-- Start Screen -->
     <div class="start-screen" id="startScreen">
         <h1 class="start-title">🐠 Fish Catcher 🐠</h1>
-        <p class="start-subtitle">Catch as many colorful koi fish as you can in 60 seconds! Tap or click on fish to catch them. Each fish is worth points based on its color.</p>
+        <p class="start-subtitle">Catch as many colorful fish as you can in 60 seconds! Tap or click on fish to catch them. Each fish color is worth different points.</p>
         <button class="start-btn" id="startBtn">
             <i class="fas fa-play"></i> START GAME
         </button>
@@ -694,26 +574,413 @@
     </div>
 
     <script>
-        // Game variables
+        // Background Canvas Animation (Provided Code)
+        (function () {
+            'use strict';
+            window.addEventListener('load', function() {
+                var canvas = document.getElementById('canvas');
+
+                if (!canvas || !canvas.getContext) {
+                    return false;
+                }
+
+                /********************
+                  Random Number
+                ********************/
+
+                function rand(min, max) {
+                    return Math.floor(Math.random() * (max - min + 1) + min);
+                }
+
+                /********************
+                  Var
+                ********************/
+
+                // canvas 
+                var ctx = canvas.getContext('2d');
+                var X = canvas.width = window.innerWidth;
+                var Y = canvas.height = window.innerHeight;
+                var mouseX = null;
+                var mouseY = null;
+
+                /********************
+                  Animation
+                ********************/
+
+                window.requestAnimationFrame =
+                    window.requestAnimationFrame ||
+                    window.mozRequestAnimationFrame ||
+                    window.webkitRequestAnimationFrame ||
+                    window.msRequestAnimationFrame ||
+                    function(cb) {
+                        setTimeout(cb, 17);
+                    };
+
+                /********************
+                  Wave
+                ********************/
+                var waves = [];
+                 
+                function Wave(ctx, x, y, r) {
+                    this.ctx = ctx;
+                    this.init(x, y, r);
+                }
+
+                Wave.prototype.init = function(x, y, r) {
+                    this.x = x;
+                    this.y = y;
+                    this.r = r;
+                    this.l = rand(100, 150);
+                };
+                
+                Wave.prototype.draw = function() {
+                    ctx = this.ctx;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'rgb(149, 188, 249)';
+                    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, false);
+                    ctx.stroke();
+                    ctx.restore();
+                };
+
+                Wave.prototype.updateParams = function() {
+                    this.r += 1;
+                };
+
+                Wave.prototype.deleteWave = function(i) {
+                    if (this.r > this.l) {
+                        waves.splice(i, 1);
+                    }
+                };
+
+                Wave.prototype.render = function(i) {
+                    this.updateParams();
+                    this.deleteWave(i);
+                    this.draw();
+                };
+
+                /********************
+                  Fish
+                ********************/
+
+                var fishes = [];
+                var fishDir = [true, false];
+                var fishColors = ['255, 111, 147', '49, 194, 243', '255, 158, 0', '107, 136, 255'];
+
+                function Fish(ctx, x, y, r, d, c) {
+                    this.ctx = ctx;
+                    this.init(x, y, r, d, c);
+                }
+
+                Fish.prototype.init = function(x, y, r, d, c) {
+                    this.d = d;
+                    this.x = x;
+                    this.y = y;
+                    this.r = r;
+                    this.c = c;
+                    this.rad = this.a * Math.PI / 180;
+                    if (this.d === true) {
+                        this.v = {
+                            x: rand(1, 2) * 0.5,
+                            y: rand(-1, 1) * 0.5
+                        };
+                    } else {
+                        this.v = {
+                            x: rand(-2, -1) * 0.5,
+                            y: rand(-1, 1) * 0.5
+                        };
+                    }
+                };
+                
+                Fish.prototype.draw = function() {
+                    ctx = this.ctx;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.fillStyle = 'rgb(' + this.c + ')';
+                    ctx.scale(2, 1);
+                    ctx.arc(this.x / 2, this.y, this.r, 0, Math.PI * 2, false);
+                    ctx.fill();
+                    ctx.beginPath();
+                    if (this.d === true) {
+                        ctx.moveTo(this.x / 2 + this.r / 2, this.y);
+                        ctx.lineTo(this.x / 2 + this.r + this.r / 2, this.y + this.r / 2);
+                        ctx.lineTo(this.x / 2 + this.r + this.r / 2, this.y - this.r / 2);
+                    } else {
+                        ctx.moveTo(this.x / 2 - this.r / 2, this.y);
+                        ctx.lineTo(this.x / 2 - this.r - this.r / 2, this.y + this.r / 2);
+                        ctx.lineTo(this.x / 2 - this.r - this.r / 2, this.y - this.r / 2);
+                    }
+                    ctx.fill();
+                    ctx.restore();
+                };
+
+                Fish.prototype.updatePosition = function() {
+                    this.x -= this.v.x;
+                    this.y += this.v.y;
+                };
+
+                Fish.prototype.wrapPosition = function() {
+                    if (this.x + this.r + this.r > X) {
+                        this.v.x *= -1;
+                        this.d = true;
+                    }
+                    if (this.x - this.r - this.r < 0) {
+                        this.v.x *= -1;
+                        this.d = false;
+                    }
+                    if (this.y + this.r > Y) {
+                        this.v.y *= -1;
+                    }
+                    if (this.y - this.r < 0) {
+                        this.v.y *= -1;
+                    }
+                };
+
+                Fish.prototype.resize = function() {
+                    this.x = rand(0, X);
+                    this.y = rand(0, Y);
+                };
+
+                Fish.prototype.render = function() {
+                    this.updatePosition();
+                    this.wrapPosition();
+                    this.draw();
+                };
+
+                /********************
+                  Grass
+                ********************/
+                
+                // var
+                var grassNum = 200;
+                var grasses = [];
+
+                function Grass(ctx, x, y, w, t) {
+                    this.ctx = ctx;
+                    this.init(x, y, w, t);
+                }
+
+                Grass.prototype.init = function(x, y, w, t) {
+                    this.x = x;
+                    this.y = y;
+                    this.w = w;
+                    this.t = t;
+                    this.a = 0;
+                    this.rad = this.a * Math.PI / 180;
+                    this.c = '255, 255, 255';
+                    this.v = {
+                        x: Math.cos(this.rad),
+                        y: Math.sin(this.rad)
+                    };
+                    this.xt = this.x + this.w;
+                    this.yt = this.y - this.t;
+                    this.xb = this.x + this.w + this.w;
+                };
+                
+                Grass.prototype.updateParams = function() {
+                    this.a += Math.random();
+                    this.rad = this.a * Math.PI / 180;
+                    this.v.x = Math.cos(this.rad) * 0.3;
+                    this.v.y = Math.sin(this.rad) * 0.3;
+                };
+
+                Grass.prototype.updatePosition = function() {
+                    this.xt += this.v.x;
+                };
+                
+                Grass.prototype.draw = function() {
+                    ctx = this.ctx;
+                    ctx.save();
+                    ctx.fillStyle = 'rgb(86, 116, 25)';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.xt, this.yt);
+                    ctx.lineTo(this.xb, this.y);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                };
+
+                Grass.prototype.resize = function() {
+                    for (var i = 0; i < grassNum; i++) {
+                        grasses[i].init(rand(-10, X + 10), Y, rand(2.5, 5), rand(100, 200));
+                    }
+                };
+
+                Grass.prototype.render = function() {
+                    this.updateParams();
+                    this.updatePosition();
+                    this.draw();
+                };
+
+                for (var i = 0; i < grassNum; i++) {
+                    var grass = new Grass(ctx, rand(-10, X + 10), Y, rand(2.5, 5), rand(100, 200));
+                    grasses.push(grass);
+                }
+               
+                /********************
+                  Bubble
+                ********************/
+                
+                // var
+                var bubbleNum = 30;
+                var bubbles = [];
+
+                function Bubble(ctx, x, y, r) {
+                    this.ctx = ctx;
+                    this.init(x, y, r);
+                }
+
+                Bubble.prototype.init = function(x, y, r) {
+                    this.x = x;
+                    this.y = y;
+                    this.r = r;
+                    this.a = rand(1, 10);
+                    this.dist = rand(1, 10);
+                    this.rad = this.a * Math.PI / 180;
+                    this.c = '255, 255, 255';
+                    this.v = {
+                        x: Math.sin(this.rad),
+                        y: Math.cos(this.rad)
+                    };
+                };
+                
+                Bubble.prototype.updateParams = function() {
+                    this.a += 1;
+                    this.rad = this.a * Math.PI / 180;
+                    this.y -= 1;
+                };
+
+                Bubble.prototype.wrapPosition = function() {
+                    if (this.x - this.r > X) {
+                        this.x = 0;
+                    }
+                    if (this.x + this.r < 0) {
+                        this.x = X;
+                    }
+                    if (this.y - this.r > Y) {
+                        this.y = 0;
+                    }
+                    if (this.y + this.r < 0) {
+                        this.y = Y;
+                    }
+                };
+                
+                Bubble.prototype.draw = function() {
+                    ctx = this.ctx;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.globalAlpha = 0.3;
+                    ctx.fillStyle = 'rgb(255, 255, 255)';
+                    ctx.arc(Math.cos(this.rad) * this.dist + this.x, Math.sin(this.rad) * this.dist + this.y, this.r, Math.PI * 2, false);
+                    ctx.fill();
+                    ctx.closePath();
+                    ctx.restore();
+                };
+
+                Bubble.prototype.resize = function() {
+                    this.x = rand(0, X);
+                    this.y = rand(0, Y);
+                };
+
+                Bubble.prototype.render = function() {
+                    this.updateParams();
+                    this.wrapPosition();
+                    this.draw();
+                };
+
+                for (var i = 0; i < bubbleNum; i++) {
+                    var bubble = new Bubble(ctx, rand(0, X), rand(0, Y), rand(1, 10));
+                    bubbles.push(bubble);
+                }
+
+                /********************
+                  Render
+                ********************/
+                
+                function render(){
+                    ctx.clearRect(0, 0, X, Y);
+                    for (var i = 0; i < grasses.length; i++) {
+                        grasses[i].render();
+                    }
+                    for (var i = 0; i < bubbles.length; i++) {
+                        bubbles[i].render();
+                    }
+                    for (var i = 0; i < fishes.length; i++) {
+                        fishes[i].render();
+                    }
+                    for (var i = 0; i < waves.length; i++) {
+                        waves[i].render(i);
+                    }
+                    requestAnimationFrame(render);
+                }
+
+                render();
+
+                /********************
+                  Event
+                ********************/
+                
+                // resize
+                function onResize() {
+                    X = canvas.width = window.innerWidth;
+                    Y = canvas.height = window.innerHeight;
+                    for (var i = 0; i < grasses.length; i++) {
+                        grasses[i].resize();
+                    }
+                    for (var i = 0; i < bubbles.length; i++) {
+                        bubbles[i].resize();
+                    }
+                }
+
+                window.addEventListener('resize', function() {
+                    onResize();
+                });
+
+                // Add more initial background fish
+                for (var i = 0; i < 50; i++) {
+                    var fish = new Fish(ctx, rand(0, X), rand(0, Y), rand(5, 20), fishDir[rand(0, 1)], fishColors[rand(0, fishColors.length - 1)]);
+                    fishes.push(fish);
+                }
+
+                // Add fish on click for background effect
+                canvas.addEventListener('click', function(e) {
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                    var fish = new Fish(ctx, mouseX, mouseY, rand(5, 15), fishDir[rand(0, 1)], fishColors[rand(0, fishColors.length - 1)]);
+                    fishes.push(fish);
+                    var wave = new Wave(ctx, mouseX, mouseY, 0);
+                    waves.push(wave);
+                }, false);
+
+            });
+        })();
+
+        // Game Logic
         let score = 0;
         let lives = 3;
         let timeLeft = 60;
         let gameRunning = false;
         let gameStarted = false;
-        let fishes = [];
+        let interactiveFishes = [];
+        let jellyfishes = [];
         let combo = 0;
         let comboTimer = 0;
         let highScore = localStorage.getItem('fishHighScore') || 0;
         let spawnTimer = null;
         let clockTimer = null;
+        let jellyfishTimer = null;
+        let mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let livesShown = false;
         
-        // Fish colors and types
+        // Fish types and colors
         const fishTypes = [
-            { name: 'orange', color: 'orangered', points: 10, shadow: 'orangered' },
-            { name: 'white', color: 'white', points: 15, shadow: 'white' },
-            { name: 'gold', color: '#ffd700', points: 20, shadow: '#ffd700' },
-            { name: 'blue', color: '#4fc3f7', points: 12, shadow: '#4fc3f7' },
-            { name: 'purple', color: '#ba68c8', points: 18, shadow: '#ba68c8' }
+            { color: '#ff6f93', name: 'Pink', points: 10 },
+            { color: '#31c2f3', name: 'Blue', points: 15 },
+            { color: '#ff9e00', name: 'Orange', points: 20 },
+            { color: '#6b88ff', name: 'Purple', points: 12 },
+            { color: '#4fc3f7', name: 'Light Blue', points: 18 },
+            { color: '#ffd700', name: 'Gold', points: 25 }
         ];
         
         // DOM elements
@@ -729,89 +996,77 @@
         const playAgainBtn = document.getElementById('playAgainBtn');
         const menuBtn = document.getElementById('menuBtn');
         const catchEffect = document.getElementById('catchEffect');
-        const bubblesContainer = document.getElementById('bubbles');
         
         // Initialize high score display
         highScoreElement.textContent = `High Score: ${highScore}`;
-        
-        // Create bubbles
-        function createBubbles() {
-            for (let i = 0; i < 30; i++) {
-                setTimeout(() => {
-                    const bubble = document.createElement('div');
-                    bubble.className = 'bubble';
-                    const size = Math.random() * 30 + 10;
-                    bubble.style.width = `${size}px`;
-                    bubble.style.height = `${size}px`;
-                    bubble.style.left = `${Math.random() * 100}%`;
-                    bubble.style.animationDuration = `${Math.random() * 10 + 10}s`;
-                    bubble.style.animationDelay = `${Math.random() * 5}s`;
-                    bubblesContainer.appendChild(bubble);
-                    
-                    // Remove bubble after animation
-                    setTimeout(() => {
-                        if (bubble.parentNode) {
-                            bubble.remove();
-                        }
-                    }, 20000);
-                }, i * 500);
-            }
-        }
-        
-        // Start creating bubbles
-        createBubbles();
-        setInterval(createBubbles, 20000);
         
         // Start game function
         function startGame() {
             gameStarted = true;
             gameRunning = true;
-            
+
             // Hide start screen
             startScreen.style.display = 'none';
-            
+
             // Reset game variables
             score = 0;
             lives = 3;
             timeLeft = 60;
-            fishes = [];
+            interactiveFishes = [];
+            jellyfishes = [];
             combo = 0;
-            
+            livesShown = false;
+
+            // Hide lives initially
+            livesDisplay.parentElement.classList.remove('show');
+
             // Update UI
             updateScore();
             updateTimer();
             updateLives();
-            
-            // Start game timers
-            spawnTimer = setInterval(spawnFish, 1200);
+
+            // Start game timers - spawn fish more frequently
+            spawnTimer = setInterval(spawnInteractiveFish, 800);
             clockTimer = setInterval(updateGameClock, 1000);
-            
+            jellyfishTimer = setInterval(spawnJellyfish, 5000);
+
             // Create initial fish
-            for (let i = 0; i < 5; i++) {
-                setTimeout(() => spawnFish(), i * 500);
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => spawnInteractiveFish(), i * 300);
             }
+
+            // First jellyfish after 10 seconds
+            setTimeout(() => spawnJellyfish(), 10000);
         }
         
-        // Spawn a fish
-        function spawnFish() {
+        // Spawn an interactive fish
+        function spawnInteractiveFish() {
             if (!gameRunning) return;
             
             const fishContainer = document.createElement('div');
-            fishContainer.className = 'fish-container';
+            fishContainer.className = 'interactive-fish';
             
-            // Random position (spawn from edges)
-            const side = Math.floor(Math.random() * 3); // 0: left, 1: top, 2: right
+            // Random position
+            const side = Math.floor(Math.random() * 4); // 0: left, 1: top, 2: right, 3: bottom
             
             let x, y;
-            if (side === 0) { // Left side
-                x = -200;
-                y = Math.random() * (window.innerHeight - 200) + 100;
-            } else if (side === 1) { // Top
-                x = Math.random() * (window.innerWidth - 200) + 100;
-                y = -200;
-            } else { // Right side
-                x = window.innerWidth + 200;
-                y = Math.random() * (window.innerHeight - 200) + 100;
+            switch(side) {
+                case 0: // Left
+                    x = -60;
+                    y = Math.random() * (window.innerHeight - 100) + 50;
+                    break;
+                case 1: // Top
+                    x = Math.random() * (window.innerWidth - 100) + 50;
+                    y = -60;
+                    break;
+                case 2: // Right
+                    x = window.innerWidth + 60;
+                    y = Math.random() * (window.innerHeight - 100) + 50;
+                    break;
+                case 3: // Bottom
+                    x = Math.random() * (window.innerWidth - 100) + 50;
+                    y = window.innerHeight + 60;
+                    break;
             }
             
             fishContainer.style.left = `${x}px`;
@@ -823,21 +1078,15 @@
             
             // Random fish type
             const fishType = fishTypes[Math.floor(Math.random() * fishTypes.length)];
+            const direction = Math.random() > 0.5 ? 'right' : 'left';
             
             // Create fish HTML structure
             fishContainer.innerHTML = `
-                <div class="fish">
-                    ${Array(15).fill('<div class="koiCoil"></div>').join('')}
+                <div class="fish-body" style="background-color: ${fishType.color};">
+                    <div class="fish-tail ${direction}" style="background-color: ${fishType.color};"></div>
+                    <div class="fish-eye ${direction === 'right' ? 'right' : 'left'}"></div>
                 </div>
             `;
-            
-            // Apply fish color
-            const koiCoils = fishContainer.querySelectorAll('.koiCoil');
-            koiCoils.forEach(coil => {
-                if (coil.style.backgroundColor !== 'orangered' && coil.style.backgroundColor !== 'white') {
-                    coil.style.backgroundColor = fishType.color;
-                }
-            });
             
             // Add event listeners for catching
             fishContainer.addEventListener('click', catchFish);
@@ -846,12 +1095,14 @@
             // Add to game area
             gameArea.appendChild(fishContainer);
             
-            // Random movement pattern
-            const targetX = Math.random() * (window.innerWidth - 200) + 100;
-            const targetY = Math.random() * (window.innerHeight - 200) + 100;
-            const speed = Math.random() * 1.5 + 0.5;
+            // Random movement
+            const targetX = Math.random() * (window.innerWidth - 100) + 50;
+            const targetY = Math.random() * (window.innerHeight - 100) + 50;
+            const speed = Math.random() * 2 + 1;
+            const wobbleSpeed = Math.random() * 0.02 + 0.01;
+            const wobbleAmount = Math.random() * 30 + 20;
             
-            fishes.push({
+            interactiveFishes.push({
                 element: fishContainer,
                 x: x,
                 y: y,
@@ -859,10 +1110,10 @@
                 targetY: targetY,
                 speed: speed,
                 type: fishType,
-                direction: Math.random() > 0.5 ? 1 : -1,
+                direction: direction,
                 wobblePhase: Math.random() * Math.PI * 2,
-                wobbleSpeed: Math.random() * 0.02 + 0.01,
-                wobbleAmount: Math.random() * 30 + 20,
+                wobbleSpeed: wobbleSpeed,
+                wobbleAmount: wobbleAmount,
                 time: 0
             });
             
@@ -870,7 +1121,7 @@
             setTimeout(() => {
                 if (fishContainer.parentNode && gameRunning) {
                     fishContainer.remove();
-                    fishes = fishes.filter(f => f.element !== fishContainer);
+                    interactiveFishes = interactiveFishes.filter(f => f.element !== fishContainer);
                     
                     // Lose a life if fish escapes
                     if (lives > 0) {
@@ -882,7 +1133,7 @@
                         }
                     }
                 }
-            }, 20000);
+            }, 15000);
         }
         
         // Catch fish
@@ -893,7 +1144,7 @@
             event.stopPropagation();
             
             const fishElement = event.currentTarget;
-            const fish = fishes.find(f => f.element === fishElement);
+            const fish = interactiveFishes.find(f => f.element === fishElement);
             
             if (!fish) return;
             
@@ -911,8 +1162,20 @@
             const points = fish.type.points + (combo >= 3 ? combo * 3 : 0);
             score += points;
             
-            // Play pop sound
+            // Play bubble sound
             playBubbleSound();
+            
+            // Create bubble effect
+            const bubbleEffect = document.createElement('div');
+            bubbleEffect.className = 'bubble-effect';
+            bubbleEffect.style.left = `${clickX}px`;
+            bubbleEffect.style.top = `${clickY}px`;
+            bubbleEffect.style.backgroundColor = fish.type.color + '80'; // Add transparency
+            document.body.appendChild(bubbleEffect);
+            
+            setTimeout(() => {
+                bubbleEffect.remove();
+            }, 600);
             
             // Show points display
             const pointsDisplay = document.createElement('div');
@@ -940,11 +1203,8 @@
                 catchEffect.classList.remove('active');
             }, 500);
             
-            // Create bubble particles
-            createBubbleParticles(clickX, clickY, fish.type.color);
-            
             // Remove from arrays
-            fishes = fishes.filter(f => f.element !== fishElement);
+            interactiveFishes = interactiveFishes.filter(f => f.element !== fishElement);
             
             // Remove from DOM after animation
             setTimeout(() => {
@@ -954,61 +1214,207 @@
             }, 800);
         }
         
-        // Create bubble particles
-        function createBubbleParticles(x, y, color) {
-            for (let i = 0; i < 15; i++) {
-                const bubble = document.createElement('div');
-                bubble.className = 'bubble';
-                const size = Math.random() * 20 + 5;
-                bubble.style.width = `${size}px`;
-                bubble.style.height = `${size}px`;
-                bubble.style.left = `${x}px`;
-                bubble.style.top = `${y}px`;
-                bubble.style.backgroundColor = color;
-                bubble.style.animation = `floatUp ${Math.random() * 2 + 1}s ease-out forwards`;
-                bubble.style.position = 'fixed';
-                bubble.style.zIndex = '5';
-                document.body.appendChild(bubble);
-                
-                setTimeout(() => {
-                    if (bubble.parentNode) {
-                        bubble.remove();
-                    }
-                }, 2000);
-            }
-        }
-        
         // Play bubble sound effect
         function playBubbleSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-                
+
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-                
+
                 oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
                 oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.2);
-                
+
                 gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-                
+
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.2);
             } catch (e) {
                 console.log('Audio context not available');
             }
         }
+
+        // Play jellyfish sting sound
+        function playStingSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.log('Audio context not available');
+            }
+        }
+
+        // Play combo sound
+        function playComboSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const frequencies = [523, 659, 784];
+
+                frequencies.forEach((freq, i) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.value = freq;
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.1);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + i * 0.1 + 0.3);
+
+                    oscillator.start(audioContext.currentTime + i * 0.1);
+                    oscillator.stop(audioContext.currentTime + i * 0.1 + 0.3);
+                });
+            } catch (e) {
+                console.log('Audio context not available');
+            }
+        }
+
+        // Spawn jellyfish
+        function spawnJellyfish() {
+            if (!gameRunning) return;
+
+            const jellyfishContainer = document.createElement('div');
+            jellyfishContainer.className = 'jellyfish';
+
+            // Random position from edges
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+
+            switch(side) {
+                case 0: // Left
+                    x = -60;
+                    y = Math.random() * window.innerHeight;
+                    break;
+                case 1: // Top
+                    x = Math.random() * window.innerWidth;
+                    y = -60;
+                    break;
+                case 2: // Right
+                    x = window.innerWidth + 60;
+                    y = Math.random() * window.innerHeight;
+                    break;
+                case 3: // Bottom
+                    x = Math.random() * window.innerWidth;
+                    y = window.innerHeight + 60;
+                    break;
+            }
+
+            jellyfishContainer.style.left = `${x}px`;
+            jellyfishContainer.style.top = `${y}px`;
+
+            // Create jellyfish HTML structure
+            jellyfishContainer.innerHTML = `
+                <div class="jellyfish-body">
+                    <div class="jellyfish-tentacle"></div>
+                    <div class="jellyfish-tentacle"></div>
+                    <div class="jellyfish-tentacle"></div>
+                    <div class="jellyfish-tentacle"></div>
+                </div>
+            `;
+
+            gameArea.appendChild(jellyfishContainer);
+
+            const speed = 1.5 + Math.random() * 1;
+
+            jellyfishes.push({
+                element: jellyfishContainer,
+                x: x,
+                y: y,
+                speed: speed
+            });
+
+            // Remove jellyfish after timeout
+            setTimeout(() => {
+                if (jellyfishContainer.parentNode && gameRunning) {
+                    jellyfishContainer.remove();
+                    jellyfishes = jellyfishes.filter(j => j.element !== jellyfishContainer);
+                }
+            }, 20000);
+        }
+
+        // Check jellyfish collision
+        function checkJellyfishCollision() {
+            if (!gameRunning) return;
+
+            jellyfishes.forEach((jellyfish, index) => {
+                const dx = mousePosition.x - jellyfish.x;
+                const dy = mousePosition.y - jellyfish.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 50) {
+                    // Collision!
+                    jellyfish.element.classList.add('hit');
+                    playStingSound();
+
+                    // Show lives UI
+                    if (!livesShown) {
+                        livesDisplay.parentElement.classList.add('show');
+                        livesShown = true;
+                    }
+
+                    // Lose a life
+                    lives--;
+                    updateLives();
+
+                    // Create danger flash
+                    const flash = document.createElement('div');
+                    flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,0.3);pointer-events:none;z-index:500;animation:dangerFlash 0.5s';
+                    document.body.appendChild(flash);
+                    setTimeout(() => flash.remove(), 500);
+
+                    // Remove jellyfish
+                    setTimeout(() => {
+                        if (jellyfish.element.parentNode) {
+                            jellyfish.element.remove();
+                        }
+                    }, 500);
+
+                    jellyfishes.splice(index, 1);
+
+                    if (lives <= 0) {
+                        endGame();
+                    }
+                }
+            });
+        }
+
+        // Add danger flash animation
+        const dangerFlashStyle = document.createElement('style');
+        dangerFlashStyle.textContent = `
+            @keyframes dangerFlash {
+                0%, 100% { opacity: 0; }
+                50% { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(dangerFlashStyle);
         
         // Show combo display
         function showCombo(comboCount) {
+            playComboSound();
+
             const comboDisplay = document.createElement('div');
             comboDisplay.className = 'combo-display';
             comboDisplay.textContent = `${comboCount}x COMBO!`;
             comboDisplay.style.left = `${Math.random() * 60 + 20}%`;
             document.body.appendChild(comboDisplay);
-            
+
             setTimeout(() => {
                 comboDisplay.remove();
             }, 1000);
@@ -1065,7 +1471,7 @@
         // End game
         function endGame() {
             gameRunning = false;
-            
+
             // Clear timers
             if (spawnTimer) {
                 clearInterval(spawnTimer);
@@ -1075,18 +1481,30 @@
                 clearInterval(clockTimer);
                 clockTimer = null;
             }
-            
-            // Remove all fish
-            fishes.forEach(fish => {
+            if (jellyfishTimer) {
+                clearInterval(jellyfishTimer);
+                jellyfishTimer = null;
+            }
+
+            // Remove all interactive fish
+            interactiveFishes.forEach(fish => {
                 if (fish.element.parentNode) {
                     fish.element.remove();
                 }
             });
-            fishes = [];
-            
+            interactiveFishes = [];
+
+            // Remove all jellyfish
+            jellyfishes.forEach(jelly => {
+                if (jelly.element.parentNode) {
+                    jelly.element.remove();
+                }
+            });
+            jellyfishes = [];
+
             // Update final score
             finalScoreElement.textContent = score;
-            
+
             // Update high score if needed
             if (score > highScore) {
                 highScore = score;
@@ -1097,7 +1515,7 @@
                 highScoreElement.textContent = `High Score: ${highScore}`;
                 highScoreElement.style.color = '#4fc3f7';
             }
-            
+
             // Show game over screen
             gameOverScreen.classList.add('show');
         }
@@ -1110,7 +1528,47 @@
         
         // Return to menu
         function returnToMenu() {
-            window.location.href = '/index.html';
+            gameOverScreen.classList.remove('show');
+            startScreen.style.display = 'flex';
+
+            // Reset game state
+            gameRunning = false;
+            gameStarted = false;
+
+            // Clear timers
+            if (spawnTimer) {
+                clearInterval(spawnTimer);
+                spawnTimer = null;
+            }
+            if (clockTimer) {
+                clearInterval(clockTimer);
+                clockTimer = null;
+            }
+            if (jellyfishTimer) {
+                clearInterval(jellyfishTimer);
+                jellyfishTimer = null;
+            }
+
+            // Remove all interactive fish
+            interactiveFishes.forEach(fish => {
+                if (fish.element.parentNode) {
+                    fish.element.remove();
+                }
+            });
+            interactiveFishes = [];
+
+            // Remove all jellyfish
+            jellyfishes.forEach(jelly => {
+                if (jelly.element.parentNode) {
+                    jelly.element.remove();
+                }
+            });
+            jellyfishes = [];
+
+            // Reset timer display
+            timeLeft = 60;
+            updateTimer();
+            timerDisplay.style.color = '#ffd700';
         }
         
         // Fish movement animation
@@ -1119,51 +1577,96 @@
                 requestAnimationFrame(animateFish);
                 return;
             }
-            
-            fishes.forEach(fish => {
+
+            // Move interactive fish
+            interactiveFishes.forEach(fish => {
                 fish.time++;
                 fish.wobblePhase += fish.wobbleSpeed;
-                
+
                 // Update wobble offset
                 const wobbleX = Math.sin(fish.wobblePhase) * fish.wobbleAmount;
                 const wobbleY = Math.cos(fish.wobblePhase * 1.5) * (fish.wobbleAmount * 0.5);
-                
+
                 // Move toward target with wobble
                 const dx = fish.targetX - fish.x + wobbleX;
                 const dy = fish.targetY - fish.y + wobbleY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                
+
                 if (distance > 20) {
                     // Smooth movement with some randomness
                     const angle = Math.atan2(dy, dx);
                     const randomDeviation = (Math.random() - 0.5) * 0.2;
                     const actualAngle = angle + randomDeviation;
-                    
+
                     fish.x += Math.cos(actualAngle) * fish.speed;
                     fish.y += Math.sin(actualAngle) * fish.speed;
-                    
+
                     // Update fish position
                     fish.element.style.left = `${fish.x}px`;
                     fish.element.style.top = `${fish.y}px`;
-                    
-                    // Flip direction based on movement
-                    if (dx > 0 && fish.direction === -1) {
-                        fish.element.style.transform = `scale(${Math.abs(parseFloat(fish.element.style.transform.match(/scale\(([^)]+)\)/)?.[1] || 0.5))})`;
-                        fish.direction = 1;
-                    } else if (dx < 0 && fish.direction === 1) {
-                        fish.element.style.transform = `scale(${-Math.abs(parseFloat(fish.element.style.transform.match(/scale\(([^)]+)\)/)?.[1] || 0.5))})`;
-                        fish.direction = -1;
+
+                    // Update direction based on movement
+                    if (dx > 0 && fish.direction === 'left') {
+                        fish.direction = 'right';
+                        fish.element.querySelector('.fish-tail').className = 'fish-tail right';
+                        fish.element.querySelector('.fish-eye').className = 'fish-eye right';
+                    } else if (dx < 0 && fish.direction === 'right') {
+                        fish.direction = 'left';
+                        fish.element.querySelector('.fish-tail').className = 'fish-tail left';
+                        fish.element.querySelector('.fish-eye').className = 'fish-eye left';
                     }
                 } else {
                     // Set new random target
-                    fish.targetX = Math.random() * (window.innerWidth - 200) + 100;
-                    fish.targetY = Math.random() * (window.innerHeight - 200) + 100;
+                    fish.targetX = Math.random() * (window.innerWidth - 100) + 50;
+                    fish.targetY = Math.random() * (window.innerHeight - 100) + 50;
                 }
             });
-            
+
+            // Move jellyfish toward mouse position
+            jellyfishes.forEach(jellyfish => {
+                const dx = mousePosition.x - jellyfish.x;
+                const dy = mousePosition.y - jellyfish.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 5) {
+                    const angle = Math.atan2(dy, dx);
+                    jellyfish.x += Math.cos(angle) * jellyfish.speed;
+                    jellyfish.y += Math.sin(angle) * jellyfish.speed;
+
+                    jellyfish.element.style.left = `${jellyfish.x}px`;
+                    jellyfish.element.style.top = `${jellyfish.y}px`;
+                }
+            });
+
+            // Check jellyfish collisions
+            checkJellyfishCollision();
+
             requestAnimationFrame(animateFish);
         }
         
+        // Track mouse position for jellyfish chasing
+        document.addEventListener('mousemove', function(e) {
+            if (gameRunning) {
+                mousePosition.x = e.clientX;
+                mousePosition.y = e.clientY;
+            }
+        });
+
+        // Track touch position for jellyfish chasing
+        document.addEventListener('touchmove', function(e) {
+            if (gameRunning && e.touches.length > 0) {
+                mousePosition.x = e.touches[0].clientX;
+                mousePosition.y = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchstart', function(e) {
+            if (gameRunning && e.touches.length > 0) {
+                mousePosition.x = e.touches[0].clientX;
+                mousePosition.y = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
         // Event listeners
         startBtn.addEventListener('click', startGame);
         startBtn.addEventListener('touchstart', function(e) {
@@ -1186,12 +1689,12 @@
         // Handle window resize
         window.addEventListener('resize', function() {
             // Reposition fish if they go out of bounds
-            fishes.forEach(fish => {
+            interactiveFishes.forEach(fish => {
                 const rect = fish.element.getBoundingClientRect();
                 if (rect.right < -100 || rect.bottom < -100 || 
                     rect.left > window.innerWidth + 100 || rect.top > window.innerHeight + 100) {
-                    fish.x = Math.random() * (window.innerWidth - 200) + 100;
-                    fish.y = Math.random() * (window.innerHeight - 200) + 100;
+                    fish.x = Math.random() * (window.innerWidth - 100) + 50;
+                    fish.y = Math.random() * (window.innerHeight - 100) + 50;
                     fish.element.style.left = `${fish.x}px`;
                     fish.element.style.top = `${fish.y}px`;
                 }
@@ -1203,7 +1706,7 @@
             if (!gameRunning) return;
             
             // Prevent default to avoid scrolling
-            if (e.target.closest('.fish-container')) {
+            if (e.target.closest('.interactive-fish')) {
                 e.preventDefault();
             }
         }, { passive: false });

@@ -15,6 +15,7 @@ export default defineConfig({
         'arithmetica-multi': resolve(__dirname, 'games/arithmetica-multi.html'),
         'coloring-book': resolve(__dirname, 'games/coloring-book.html'),
         'creature-creator': resolve(__dirname, 'games/creature-creator.html'),
+        'fish-it': resolve(__dirname, 'games/fish-it.html'),
         'forest-animals': resolve(__dirname, 'games/forest-animals.html'),
         'fruit-math': resolve(__dirname, 'games/fruit-math.html'),
         'fruit-math-multi': resolve(__dirname, 'games/fruit-math-multi.html'),
