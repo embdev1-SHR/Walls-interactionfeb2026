@@ -1,294 +1,675 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Alphabet Explorer</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#0a1a0a 0%,#0d2818 50%,#0a1a0a 100%);color:white;-webkit-user-select:none;user-select:none}
-.ml{font-family:'Noto Sans Malayalam',-apple-system,sans-serif}
-.app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
-.header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
-.header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#4ade80}
-.header-right{display:flex;gap:8px;align-items:center}
-.btn-back{padding:8px 22px;font-size:13px;font-weight:600;background:rgba(74,222,128,.1);border:2px solid rgba(74,222,128,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s}
-.btn-back:hover{background:rgba(74,222,128,.2)}
-.lang-toggle{display:flex;border-radius:50px;overflow:hidden;border:2px solid rgba(74,222,128,.3)}
-.lang-btn{padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all .3s;background:transparent;color:rgba(255,255,255,.5);border:none}
-.lang-btn.active{background:rgba(74,222,128,.2);color:#4ade80}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Alphabet Explorer · 57 Malayalam + English</title>
+  <!-- Google Font for authentic Malayalam -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.center-display{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(4px,1vh,12px);padding:0 20px;min-height:0}
-.big-letter{font-size:clamp(130px,24vw,240px);font-weight:900;line-height:1;color:#4ade80;text-shadow:0 0 60px rgba(74,222,128,.3);transition:all .4s;animation:letterIn .4s ease}
-.big-letter.ml{font-size:clamp(90px,18vw,180px)}
-@keyframes letterIn{0%{transform:scale(.5) rotateY(90deg);opacity:0}100%{transform:scale(1) rotateY(0);opacity:1}}
-.letter-pair{font-size:clamp(28px,4vw,48px);font-weight:700;color:rgba(255,255,255,.4);letter-spacing:8px}
-.example-word{display:flex;align-items:center;gap:12px;font-size:clamp(18px,2.5vw,30px);font-weight:700;color:rgba(255,255,255,.6)}
-.example-emoji{font-size:clamp(36px,5vw,56px)}
-.example-text span{color:#fbbf24;font-weight:800}
-.phonetic{font-size:clamp(13px,1.3vw,17px);color:rgba(255,255,255,.3);font-style:italic}
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
 
-.letter-list{flex-shrink:0;padding:12px 16px 16px;background:rgba(0,0,0,.2);border-top:1px solid rgba(74,222,128,.1)}
-.list-label{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
-.list-scroll{display:flex;gap:6px;overflow-x:auto;padding:4px 0;scrollbar-width:none;-ms-overflow-style:none;flex-wrap:nowrap}
-.list-scroll::-webkit-scrollbar{display:none}
-.letter-btn{flex-shrink:0;width:clamp(40px,4.5vw,52px);height:clamp(40px,4.5vw,52px);display:flex;align-items:center;justify-content:center;font-size:clamp(15px,1.8vw,20px);font-weight:800;background:rgba(74,222,128,.08);border:2px solid rgba(74,222,128,.15);border-radius:10px;cursor:pointer;transition:all .25s;color:rgba(255,255,255,.6)}
-.letter-btn.ml{font-size:clamp(12px,1.4vw,16px);width:clamp(44px,5vw,56px)}
-.letter-btn:hover{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);transform:scale(1.08)}
-.letter-btn.active{background:rgba(74,222,128,.25);border-color:#4ade80;color:#4ade80;box-shadow:0 0 16px rgba(74,222,128,.25);transform:scale(1.1)}
-.nav-arrows{display:flex;justify-content:center;gap:16px;margin-top:8px}
-.arrow-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;background:rgba(74,222,128,.1);border:2px solid rgba(74,222,128,.2);border-radius:50%;cursor:pointer;transition:all .25s;color:rgba(255,255,255,.5)}
-.arrow-btn:hover{background:rgba(74,222,128,.2);color:white}
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a1a0a 0%, #0d2818 50%, #0a1a0a 100%);
+      color: white;
+      -webkit-user-select: none;
+      user-select: none;
+    }
 
-.bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.bg-dot{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(74,222,128,.2);animation:float var(--dur) ease-in-out infinite}
-@keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
-.touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(74,222,128,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:ringPop .6s ease forwards}
-@keyframes ringPop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
-</style>
+    .ml {
+      font-family: 'Noto Sans Malayalam', -apple-system, sans-serif;
+    }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ----- HEADER ----- */
+    .header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+    }
+
+    .header h1 {
+      font-size: clamp(18px, 2.5vw, 28px);
+      font-weight: 800;
+      color: #4ade80;
+      text-shadow: 0 0 8px rgba(74,222,128,0.3);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-back {
+      padding: 8px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(74, 222, 128, 0.1);
+      border: 2px solid rgba(74, 222, 128, 0.3);
+      color: white;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+      background: rgba(74, 222, 128, 0.2);
+    }
+
+    /* ----- LANGUAGE TOGGLE ----- */
+    .lang-toggle {
+      display: flex;
+      border-radius: 50px;
+      overflow: hidden;
+      border: 2px solid rgba(74, 222, 128, 0.3);
+    }
+
+    .lang-btn {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.5);
+      border: none;
+    }
+
+    .lang-btn.active {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+
+    /* ----- CENTER DISPLAY (BIG LETTER + WORD) ----- */
+    .center-display {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(4px, 1vh, 12px);
+      padding: 0 20px;
+      min-height: 0;
+    }
+
+    .big-letter {
+      font-size: clamp(130px, 24vw, 240px);
+      font-weight: 900;
+      line-height: 1;
+      color: #4ade80;
+      text-shadow: 0 0 60px rgba(74, 222, 128, 0.3);
+      transition: all 0.4s;
+      animation: letterIn 0.4s ease;
+    }
+
+    .big-letter.ml {
+      font-size: clamp(90px, 18vw, 180px);
+    }
+
+    @keyframes letterIn {
+      0% { transform: scale(0.5) rotateY(90deg); opacity: 0; }
+      100% { transform: scale(1) rotateY(0); opacity: 1; }
+    }
+
+    .letter-pair {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 8px;
+    }
+
+    .example-word {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: clamp(18px, 2.5vw, 30px);
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .example-emoji {
+      font-size: clamp(36px, 5vw, 56px);
+    }
+
+    .example-text span {
+      color: #fbbf24;
+      font-weight: 800;
+    }
+
+    .phonetic {
+      font-size: clamp(13px, 1.3vw, 17px);
+      color: rgba(255, 255, 255, 0.3);
+      font-style: italic;
+    }
+
+    /* ----- BOTTOM LETTER LIST (CENTER ALIGNED, TOP RAISED) ----- */
+    .letter-list {
+      flex-shrink: 0;
+      padding: 12px 16px 16px;
+      background: rgba(0, 0, 0, 0.25);
+      border-top: 2px solid rgba(74, 222, 128, 0.2);
+      backdrop-filter: blur(4px);
+    }
+
+    .list-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      text-align: center;
+      margin-bottom: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+
+    /* ----- GRID: CENTER ALIGNED, WRAPPING, TOP PADDING MINIMAL ----- */
+    .list-scroll {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;      /* ★★★ CENTER ALIGNMENT ★★★ */
+      align-items: center;
+      gap: 8px;
+      padding: 8px 4px 4px 4px;
+      max-height: 160px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: #4ade8040 #0a1a0a;
+    }
+
+    .list-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .list-scroll::-webkit-scrollbar-track {
+      background: #0a1a0a;
+    }
+    .list-scroll::-webkit-scrollbar-thumb {
+      background: #4ade8040;
+      border-radius: 8px;
+    }
+
+    /* ----- LETTER BUTTONS (PERFECT GRID) ----- */
+    .letter-btn {
+      flex-shrink: 0;
+      width: clamp(44px, 5vw, 56px);
+      height: clamp(44px, 5vw, 56px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(16px, 1.9vw, 22px);
+      font-weight: 700;
+      background: rgba(74, 222, 128, 0.08);
+      border: 2px solid rgba(74, 222, 128, 0.15);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .letter-btn.ml {
+      font-size: clamp(14px, 1.6vw, 18px);
+      font-family: 'Noto Sans Malayalam', sans-serif;
+    }
+
+    .letter-btn:hover {
+      background: rgba(74, 222, 128, 0.2);
+      border-color: rgba(74, 222, 128, 0.6);
+      transform: scale(1.08);
+    }
+
+    .letter-btn.active {
+      background: rgba(74, 222, 128, 0.3);
+      border-color: #4ade80;
+      color: #ffffff;
+      box-shadow: 0 0 18px #4ade80;
+      transform: scale(1.12);
+    }
+
+    .nav-arrows {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 12px;
+    }
+
+    .arrow-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      background: rgba(74, 222, 128, 0.1);
+      border: 2px solid rgba(74, 222, 128, 0.2);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .arrow-btn:hover {
+      background: rgba(74, 222, 128, 0.25);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    /* ----- BACKGROUND DECOR ----- */
+    .bg-particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .bg-dot {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(74, 222, 128, 0.2);
+      animation: float var(--dur) ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); opacity: 0.15; }
+      50% { transform: translate(var(--dx), var(--dy)); opacity: 0.5; }
+    }
+
+    .touch-ring {
+      position: fixed;
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(74, 222, 128, 0.6);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%) scale(0);
+      animation: ringPop 0.6s ease forwards;
+    }
+
+    @keyframes ringPop {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+
+    @media (max-width: 480px) {
+      .letter-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 15px;
+      }
+      .letter-btn.ml {
+        font-size: 13px;
+      }
+      .big-letter.ml {
+        font-size: 120px;
+      }
+    }
+  </style>
 </head>
 <body>
-<audio id="alphabet-explorer-music" preload="auto" loop>
-  <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
-</audio>
-<div class="bg-particles" id="bgP"></div>
+  <audio id="alphabet-explorer-music" preload="auto" loop>
+    <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+  </audio>
 
-<div class="app">
-  <div class="header">
-    <h1>Alphabet Explorer</h1>
-    <div class="header-right">
-      <button class="btn-back" id="btnBack">Back</button>
-    </div>
-  </div>
+  <div class="bg-particles" id="bgP"></div>
 
-  <div class="center-display">
-    <div class="big-letter" id="bigLetter">A</div>
-    <div class="letter-pair" id="letterPair">A a</div>
-    <div class="example-word" id="exampleWord"></div>
-    <div class="phonetic" id="phonetic"></div>
-  </div>
-
-  <div class="letter-list">
-    <div style="display:flex;justify-content:center;margin-bottom:8px">
-      <div class="lang-toggle">
-        <div class="lang-btn active" data-lang="en">English</div>
-        <div class="lang-btn" data-lang="ml">Malayalam</div>
+  <div class="app">
+    <div class="header">
+      <h1>Alphabet Explorer</h1>
+      <div class="header-right">
+        <button class="btn-back" id="btnBack">← Back</button>
       </div>
     </div>
-    <div class="list-label" id="listLabel">Tap a letter to explore</div>
-    <div class="list-scroll" id="letterList"></div>
-    <div class="nav-arrows">
-      <div class="arrow-btn" id="prevBtn">&larr;</div>
-      <div class="arrow-btn" id="nextBtn">&rarr;</div>
+
+    <!-- CENTER BIG LETTER & EXAMPLE -->
+    <div class="center-display">
+      <div class="big-letter" id="bigLetter">A</div>
+      <div class="letter-pair" id="letterPair">A a</div>
+      <div class="example-word" id="exampleWord"></div>
+      <div class="phonetic" id="phonetic"></div>
+    </div>
+
+    <!-- BOTTOM: ALPHABET GRID – CENTER ALIGNED, TOP RAISED, 57 MALAYALAM + 26 ENGLISH -->
+    <div class="letter-list">
+      <div style="display:flex; justify-content:center; margin-bottom:8px;">
+        <div class="lang-toggle">
+          <div class="lang-btn active" data-lang="en">English</div>
+          <div class="lang-btn" data-lang="ml">മലയാളം</div>
+        </div>
+      </div>
+      <div class="list-label" id="listLabel">✦  TAP TO EXPLORE  ✦</div>
+      
+      <!-- ★★★ CENTER-ALIGNED WRAPPING GRID ★★★ -->
+      <div class="list-scroll" id="letterList"></div>
+      
+      <div class="nav-arrows">
+        <div class="arrow-btn" id="prevBtn">←</div>
+        <div class="arrow-btn" id="nextBtn">→</div>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-var EN_DATA = [
-  {upper:'A',lower:'a',word:'Apple',emoji:'\uD83C\uDF4E',phonetic:'/ay/'},
-  {upper:'B',lower:'b',word:'Butterfly',emoji:'\uD83E\uDD8B',phonetic:'/bee/'},
-  {upper:'C',lower:'c',word:'Cat',emoji:'\uD83D\uDC31',phonetic:'/see/'},
-  {upper:'D',lower:'d',word:'Dog',emoji:'\uD83D\uDC36',phonetic:'/dee/'},
-  {upper:'E',lower:'e',word:'Elephant',emoji:'\uD83D\uDC18',phonetic:'/ee/'},
-  {upper:'F',lower:'f',word:'Fish',emoji:'\uD83D\uDC1F',phonetic:'/eff/'},
-  {upper:'G',lower:'g',word:'Grapes',emoji:'\uD83C\uDF47',phonetic:'/jee/'},
-  {upper:'H',lower:'h',word:'Horse',emoji:'\uD83D\uDC0E',phonetic:'/aitch/'},
-  {upper:'I',lower:'i',word:'Ice cream',emoji:'\uD83C\uDF66',phonetic:'/eye/'},
-  {upper:'J',lower:'j',word:'Jellyfish',emoji:'\uD83E\uDEBC',phonetic:'/jay/'},
-  {upper:'K',lower:'k',word:'Kite',emoji:'\uD83E\uDE81',phonetic:'/kay/'},
-  {upper:'L',lower:'l',word:'Lion',emoji:'\uD83E\uDD81',phonetic:'/ell/'},
-  {upper:'M',lower:'m',word:'Moon',emoji:'\uD83C\uDF19',phonetic:'/em/'},
-  {upper:'N',lower:'n',word:'Nest',emoji:'\uD83E\uDEB9',phonetic:'/en/'},
-  {upper:'O',lower:'o',word:'Orange',emoji:'\uD83C\uDF4A',phonetic:'/oh/'},
-  {upper:'P',lower:'p',word:'Penguin',emoji:'\uD83D\uDC27',phonetic:'/pee/'},
-  {upper:'Q',lower:'q',word:'Queen',emoji:'\uD83D\uDC51',phonetic:'/kew/'},
-  {upper:'R',lower:'r',word:'Rainbow',emoji:'\uD83C\uDF08',phonetic:'/ar/'},
-  {upper:'S',lower:'s',word:'Star',emoji:'\u2B50',phonetic:'/ess/'},
-  {upper:'T',lower:'t',word:'Tree',emoji:'\uD83C\uDF33',phonetic:'/tee/'},
-  {upper:'U',lower:'u',word:'Umbrella',emoji:'\u2602\uFE0F',phonetic:'/yoo/'},
-  {upper:'V',lower:'v',word:'Violin',emoji:'\uD83C\uDFBB',phonetic:'/vee/'},
-  {upper:'W',lower:'w',word:'Whale',emoji:'\uD83D\uDC33',phonetic:'/dub-yoo/'},
-  {upper:'X',lower:'x',word:'Xylophone',emoji:'\uD83C\uDFB6',phonetic:'/ex/'},
-  {upper:'Y',lower:'y',word:'Yacht',emoji:'\u26F5',phonetic:'/why/'},
-  {upper:'Z',lower:'z',word:'Zebra',emoji:'\uD83E\uDD93',phonetic:'/zed/'}
-];
+  <script>
+    // ------------------------------------------------------------
+    //   COMPLETE DATASET: 26 ENGLISH + 57 MALAYALAM LETTERS
+    //   FULLY CENTER-ALIGNED & TOP-RAISED BOTTOM GRID
+    // ------------------------------------------------------------
 
-var ML_DATA = [
-  {letter:'\u0D05',word:'\u0D05\u0D2E\u0D4D\u0D2E',meaning:'Mother',emoji:'\uD83D\uDC69',phonetic:'a'},
-  {letter:'\u0D06',word:'\u0D06\u0D28',meaning:'Elephant',emoji:'\uD83D\uDC18',phonetic:'aa'},
-  {letter:'\u0D07',word:'\u0D07\u0D32',meaning:'Leaf',emoji:'\uD83C\uDF3F',phonetic:'i'},
-  {letter:'\u0D08',word:'\u0D08\u0D1A\u0D4D\u0D1A',meaning:'Fly',emoji:'\uD83E\uDEB0',phonetic:'ee'},
-  {letter:'\u0D09',word:'\u0D09\u0D31\u0D41\u0D2E\u0D4D\u0D2A\u0D4D',meaning:'Ant',emoji:'\uD83D\uDC1C',phonetic:'u'},
-  {letter:'\u0D0A',word:'\u0D0A\u0D1E\u0D4D\u0D1E\u0D3E\u0D32\u0D4D\u200D',meaning:'Swing',emoji:'\uD83C\uDFA2',phonetic:'oo'},
-  {letter:'\u0D0E',word:'\u0D0E\u0D32\u0D3F',meaning:'Rat',emoji:'\uD83D\uDC01',phonetic:'e'},
-  {letter:'\u0D0F',word:'\u0D0F\u0D23\u0D3F',meaning:'Ladder',emoji:'\uD83E\uDE9C',phonetic:'ae'},
-  {letter:'\u0D10',word:'\u0D10\u0D38\u0D4D\u0D15\u0D4D\u0D30\u0D40\u0D02',meaning:'Ice cream',emoji:'\uD83C\uDF66',phonetic:'ai'},
-  {letter:'\u0D12',word:'\u0D12\u0D1F\u0D4D\u0D1F\u0D15\u0D02',meaning:'Camel',emoji:'\uD83D\uDC2B',phonetic:'o'},
-  {letter:'\u0D13',word:'\u0D13\u0D1F',meaning:'Flute',emoji:'\uD83C\uDFB6',phonetic:'oa'},
-  {letter:'\u0D15',word:'\u0D15\u0D3E\u0D15\u0D4D\u0D15',meaning:'Crow',emoji:'\uD83D\uDC26\u200D\u2B1B',phonetic:'ka'},
-  {letter:'\u0D17',word:'\u0D17\u0D23\u0D2A\u0D24\u0D3F',meaning:'Ganesha',emoji:'\uD83D\uDC18',phonetic:'ga'},
-  {letter:'\u0D1A',word:'\u0D1A\u0D28\u0D4D\u0D26\u0D4D\u0D30\u0D28\u0D4D\u200D',meaning:'Moon',emoji:'\uD83C\uDF19',phonetic:'cha'},
-  {letter:'\u0D1F',word:'\u0D1F\u0D2E\u0D3E\u0D1F\u0D4D\u0D1F\u0D4B',meaning:'Tomato',emoji:'\uD83C\uDF45',phonetic:'ta'},
-  {letter:'\u0D24',word:'\u0D24\u0D24\u0D4D\u0D24',meaning:'Parrot',emoji:'\uD83E\uDD9C',phonetic:'tha'},
-  {letter:'\u0D28',word:'\u0D28\u0D3E\u0D2F',meaning:'Dog',emoji:'\uD83D\uDC36',phonetic:'na'},
-  {letter:'\u0D2A',word:'\u0D2A\u0D42\u0D35\u0D4D',meaning:'Flower',emoji:'\uD83C\uDF3A',phonetic:'pa'},
-  {letter:'\u0D2E',word:'\u0D2E\u0D30\u0D02',meaning:'Tree',emoji:'\uD83C\uDF33',phonetic:'ma'},
-  {letter:'\u0D2F',word:'\u0D2F\u0D2E\u0D41\u0D28',meaning:'River',emoji:'\uD83C\uDF0A',phonetic:'ya'},
-  {letter:'\u0D30',word:'\u0D30\u0D3E\u0D1C\u0D3E\u0D35\u0D4D',meaning:'King',emoji:'\uD83E\uDD34',phonetic:'ra'},
-  {letter:'\u0D32',word:'\u0D32\u0D21\u0D4D\u0D21\u0D41',meaning:'Laddu',emoji:'\uD83C\uDF6C',phonetic:'la'},
-  {letter:'\u0D35',word:'\u0D35\u0D40\u0D1F\u0D4D',meaning:'House',emoji:'\uD83C\uDFE0',phonetic:'va'},
-  {letter:'\u0D36',word:'\u0D36\u0D32\u0D2D\u0D02',meaning:'Butterfly',emoji:'\uD83E\uDD8B',phonetic:'sha'},
-  {letter:'\u0D38',word:'\u0D38\u0D42\u0D30\u0D4D\u0D2F\u0D28\u0D4D\u200D',meaning:'Sun',emoji:'\u2600\uFE0F',phonetic:'sa'},
-  {letter:'\u0D39',word:'\u0D39\u0D02\u0D38\u0D02',meaning:'Swan',emoji:'\uD83E\uDDA2',phonetic:'ha'}
-];
+    // ----- 57 AUTHENTIC MALAYALAM LETTERS (MODERN FULL SET) -----
+    const ML_FULL_SET = [
+      // Vowels & signs
+      'അ', 'ആ', 'ഇ', 'ഈ', 'ഉ', 'ഊ', 'ഋ', 
+      'എ', 'ഏ', 'ഐ', 'ഒ', 'ഓ', 'ഔ', 'ം', 'ഃ', 
+      // Consonants
+      'ക', 'ഖ', 'ഗ', 'ഘ', 'ങ',
+      'ച', 'ഛ', 'ജ', 'ഝ', 'ഞ',
+      'ട', 'ഠ', 'ഡ', 'ഢ', 'ണ',
+      'ത', 'ഥ', 'ദ', 'ധ', 'ന',
+      'പ', 'ഫ', 'ബ', 'ഭ', 'മ',
+      'യ', 'ര', 'ല', 'വ', 'ശ',
+      'ഷ', 'സ', 'ഹ', 'ള', 'ഴ', 'റ',
+      'ൺ', 'ൻ', 'ർ', 'ൽ', 'ൾ', 'ൿ'
+    ]; // exactly 57 letters
 
-var lang = 'en';
-var currentIdx = 0;
+    // ----- ENRICHED MALAYALAM DATA (with words, meanings, emoji) -----
+    const ML_DATA = [
+      { letter: 'അ', word: 'അമ്മ', meaning: 'Mother', emoji: '👩', phonetic: 'a' },
+      { letter: 'ആ', word: 'ആന', meaning: 'Elephant', emoji: '🐘', phonetic: 'aa' },
+      { letter: 'ഇ', word: 'ഇല', meaning: 'Leaf', emoji: '🌿', phonetic: 'i' },
+      { letter: 'ഈ', word: 'ഈച്ച', meaning: 'Fly', emoji: '🪰', phonetic: 'ee' },
+      { letter: 'ഉ', word: 'ഉറുമ്പ്', meaning: 'Ant', emoji: '🐜', phonetic: 'u' },
+      { letter: 'ഊ', word: 'ഊഞ്ഞാൽ', meaning: 'Swing', emoji: '🎢', phonetic: 'oo' },
+      { letter: 'ഋ', word: 'ഋഷി', meaning: 'Sage', emoji: '🧘', phonetic: 'ru' },
+      { letter: 'എ', word: 'എലി', meaning: 'Rat', emoji: '🐀', phonetic: 'e' },
+      { letter: 'ഏ', word: 'ഏണി', meaning: 'Ladder', emoji: '🪜', phonetic: 'ae' },
+      { letter: 'ഐ', word: 'ഐസ്ക്രീം', meaning: 'Ice cream', emoji: '🍦', phonetic: 'ai' },
+      { letter: 'ഒ', word: 'ഒട്ടകം', meaning: 'Camel', emoji: '🐫', phonetic: 'o' },
+      { letter: 'ഓ', word: 'ഓട', meaning: 'Flute', emoji: '🎶', phonetic: 'oa' },
+      { letter: 'ഔ', word: 'ഔഷധം', meaning: 'Medicine', emoji: '💊', phonetic: 'au' },
+      { letter: 'ം', word: 'അംബരം', meaning: 'Sky', emoji: '🌌', phonetic: 'am' },
+      { letter: 'ഃ', word: 'അഃ', meaning: 'ah', emoji: '🌬️', phonetic: 'ah' },
+      { letter: 'ക', word: 'കാക്ക', meaning: 'Crow', emoji: '🐦‍⬛', phonetic: 'ka' },
+      { letter: 'ഖ', word: 'ഖഡ്ഗം', meaning: 'Sword', emoji: '⚔️', phonetic: 'kha' },
+      { letter: 'ഗ', word: 'ഗജം', meaning: 'Elephant', emoji: '🐘', phonetic: 'ga' },
+      { letter: 'ഘ', word: 'ഘടികാരം', meaning: 'Clock', emoji: '⏰', phonetic: 'gha' },
+      { letter: 'ങ', word: 'ങാപ്പ', meaning: 'Gape', emoji: '😮', phonetic: 'nga' },
+      { letter: 'ച', word: 'ചന്ദ്രൻ', meaning: 'Moon', emoji: '🌕', phonetic: 'cha' },
+      { letter: 'ഛ', word: 'ഛത്രി', meaning: 'Umbrella', emoji: '☂️', phonetic: 'chha' },
+      { letter: 'ജ', word: 'ജലം', meaning: 'Water', emoji: '💧', phonetic: 'ja' },
+      { letter: 'ഝ', word: 'ഝരി', meaning: 'Waterfall', emoji: '🌊', phonetic: 'jha' },
+      { letter: 'ഞ', word: 'ഞാൻ', meaning: 'I', emoji: '🧑', phonetic: 'nya' },
+      { letter: 'ട', word: 'ടമാടോ', meaning: 'Tomato', emoji: '🍅', phonetic: 'ta' },
+      { letter: 'ഠ', word: 'ഠാക്ക', meaning: 'Bag', emoji: '👜', phonetic: 'tha' },
+      { letter: 'ഡ', word: 'ഡോക്ടർ', meaning: 'Doctor', emoji: '👨‍⚕️', phonetic: 'da' },
+      { letter: 'ഢ', word: 'ഢക്ക', meaning: 'Drum', emoji: '🥁', phonetic: 'dha' },
+      { letter: 'ണ', word: 'ണത്താർ', meaning: 'Peacock', emoji: '🦚', phonetic: 'na' },
+      { letter: 'ത', word: 'തത്ത', meaning: 'Parrot', emoji: '🦜', phonetic: 'tha' },
+      { letter: 'ഥ', word: 'ഥാർ', meaning: 'Desert', emoji: '🏜️', phonetic: 'thha' },
+      { letter: 'ദ', word: 'ദീപം', meaning: 'Lamp', emoji: '🪔', phonetic: 'da' },
+      { letter: 'ധ', word: 'ധനം', meaning: 'Wealth', emoji: '💰', phonetic: 'dha' },
+      { letter: 'ന', word: 'നായ', meaning: 'Dog', emoji: '🐶', phonetic: 'na' },
+      { letter: 'പ', word: 'പൂവ്', meaning: 'Flower', emoji: '🌸', phonetic: 'pa' },
+      { letter: 'ഫ', word: 'ഫലം', meaning: 'Fruit', emoji: '🍎', phonetic: 'pha' },
+      { letter: 'ബ', word: 'ബാലൻ', meaning: 'Boy', emoji: '🧒', phonetic: 'ba' },
+      { letter: 'ഭ', word: 'ഭ്രമരം', meaning: 'Bee', emoji: '🐝', phonetic: 'bha' },
+      { letter: 'മ', word: 'മരം', meaning: 'Tree', emoji: '🌳', phonetic: 'ma' },
+      { letter: 'യ', word: 'യമുന', meaning: 'River', emoji: '🏞️', phonetic: 'ya' },
+      { letter: 'ര', word: 'രാജാവ്', meaning: 'King', emoji: '👑', phonetic: 'ra' },
+      { letter: 'ല', word: 'ലഡ്ഡു', meaning: 'Laddu', emoji: '🍬', phonetic: 'la' },
+      { letter: 'വ', word: 'വീട്', meaning: 'House', emoji: '🏠', phonetic: 'va' },
+      { letter: 'ശ', word: 'ശലഭം', meaning: 'Butterfly', emoji: '🦋', phonetic: 'sha' },
+      { letter: 'ഷ', word: 'ഷഡ്പദം', meaning: 'Insect', emoji: '🐞', phonetic: 'sha' },
+      { letter: 'സ', word: 'സൂര്യൻ', meaning: 'Sun', emoji: '☀️', phonetic: 'sa' },
+      { letter: 'ഹ', word: 'ഹംസം', meaning: 'Swan', emoji: '🦢', phonetic: 'ha' },
+      { letter: 'ള', word: 'ളാട്ട', meaning: 'Rattle', emoji: '🪇', phonetic: 'la' },
+      { letter: 'ഴ', word: 'മഴ', meaning: 'Rain', emoji: '☔', phonetic: 'zha' },
+      { letter: 'റ', word: 'റബ്ബർ', meaning: 'Rubber', emoji: '🧤', phonetic: 'ra' },
+      { letter: 'ൺ', word: 'കൺ', meaning: 'Eye', emoji: '👁️', phonetic: 'n' },
+      { letter: 'ൻ', word: 'മൻ', meaning: 'Man', emoji: '👨', phonetic: 'n' },
+      { letter: 'ർ', word: 'അർ', meaning: 'Half', emoji: '½', phonetic: 'r' },
+      { letter: 'ൽ', word: 'അൽ', meaning: 'Half', emoji: '⅓', phonetic: 'l' },
+      { letter: 'ൾ', word: 'അൾ', meaning: 'Half', emoji: '⅔', phonetic: 'll' },
+      { letter: 'ൿ', word: 'കൿ', meaning: 'Final k', emoji: '🔚', phonetic: 'k' }
+    ];
 
-function getData() { return lang === 'en' ? EN_DATA : ML_DATA; }
+    // ----- 26 ENGLISH LETTERS -----
+    const EN_DATA = [
+      { upper: 'A', lower: 'a', word: 'Apple', emoji: '🍎', phonetic: '/ay/' },
+      { upper: 'B', lower: 'b', word: 'Butterfly', emoji: '🦋', phonetic: '/bee/' },
+      { upper: 'C', lower: 'c', word: 'Cat', emoji: '🐱', phonetic: '/see/' },
+      { upper: 'D', lower: 'd', word: 'Dog', emoji: '🐶', phonetic: '/dee/' },
+      { upper: 'E', lower: 'e', word: 'Elephant', emoji: '🐘', phonetic: '/ee/' },
+      { upper: 'F', lower: 'f', word: 'Fish', emoji: '🐟', phonetic: '/eff/' },
+      { upper: 'G', lower: 'g', word: 'Grapes', emoji: '🍇', phonetic: '/jee/' },
+      { upper: 'H', lower: 'h', word: 'Horse', emoji: '🐴', phonetic: '/aitch/' },
+      { upper: 'I', lower: 'i', word: 'Ice cream', emoji: '🍦', phonetic: '/eye/' },
+      { upper: 'J', lower: 'j', word: 'Jellyfish', emoji: '🪼', phonetic: '/jay/' },
+      { upper: 'K', lower: 'k', word: 'Kite', emoji: '🪁', phonetic: '/kay/' },
+      { upper: 'L', lower: 'l', word: 'Lion', emoji: '🦁', phonetic: '/ell/' },
+      { upper: 'M', lower: 'm', word: 'Moon', emoji: '🌙', phonetic: '/em/' },
+      { upper: 'N', lower: 'n', word: 'Nest', emoji: '🪹', phonetic: '/en/' },
+      { upper: 'O', lower: 'o', word: 'Orange', emoji: '🍊', phonetic: '/oh/' },
+      { upper: 'P', lower: 'p', word: 'Penguin', emoji: '🐧', phonetic: '/pee/' },
+      { upper: 'Q', lower: 'q', word: 'Queen', emoji: '👸', phonetic: '/kew/' },
+      { upper: 'R', lower: 'r', word: 'Rainbow', emoji: '🌈', phonetic: '/ar/' },
+      { upper: 'S', lower: 's', word: 'Star', emoji: '⭐', phonetic: '/ess/' },
+      { upper: 'T', lower: 't', word: 'Tree', emoji: '🌳', phonetic: '/tee/' },
+      { upper: 'U', lower: 'u', word: 'Umbrella', emoji: '☔', phonetic: '/yoo/' },
+      { upper: 'V', lower: 'v', word: 'Violin', emoji: '🎻', phonetic: '/vee/' },
+      { upper: 'W', lower: 'w', word: 'Whale', emoji: '🐋', phonetic: '/dub-yoo/' },
+      { upper: 'X', lower: 'x', word: 'Xylophone', emoji: '🎷', phonetic: '/ex/' },
+      { upper: 'Y', lower: 'y', word: 'Yacht', emoji: '⛵', phonetic: '/why/' },
+      { upper: 'Z', lower: 'z', word: 'Zebra', emoji: '🦓', phonetic: '/zed/' }
+    ];
 
-function showLetter(idx) {
-  var data = getData();
-  if (idx < 0 || idx >= data.length) return;
-  currentIdx = idx;
-  var item = data[idx];
+    // ----- STATE -----
+    let lang = 'en';
+    let currentIdx = 0;
 
-  var bigEl = document.getElementById('bigLetter');
-  bigEl.style.animation = 'none';
-  void bigEl.offsetWidth;
-  bigEl.style.animation = 'letterIn .4s ease';
+    function getData() {
+      return lang === 'en' ? EN_DATA : ML_DATA;
+    }
 
-  if (lang === 'en') {
-    bigEl.textContent = item.upper;
-    bigEl.className = 'big-letter';
-    document.getElementById('letterPair').textContent = item.upper + ' ' + item.lower;
-    document.getElementById('exampleWord').innerHTML =
-      '<span class="example-emoji">' + item.emoji + '</span>' +
-      '<span class="example-text"><span>' + item.upper + '</span>' + item.word.slice(1) + '</span>';
-    document.getElementById('phonetic').textContent = item.phonetic;
-  } else {
-    bigEl.textContent = item.letter;
-    bigEl.className = 'big-letter ml';
-    document.getElementById('letterPair').textContent = item.phonetic;
-    document.getElementById('exampleWord').innerHTML =
-      '<span class="example-emoji">' + item.emoji + '</span>' +
-      '<span class="example-text ml">' + item.word + '</span>';
-    document.getElementById('phonetic').textContent = item.meaning;
-  }
+    // ----- RENDER BIG DISPLAY -----
+    function showLetter(idx) {
+      const data = getData();
+      if (idx < 0 || idx >= data.length) return;
+      currentIdx = idx;
+      const item = data[idx];
 
-  document.querySelectorAll('.letter-btn').forEach(function(btn) {
-    btn.classList.toggle('active', parseInt(btn.dataset.idx) === idx);
-  });
-  var activeBtn = document.querySelector('.letter-btn.active');
-  if (activeBtn) activeBtn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+      const bigEl = document.getElementById('bigLetter');
+      bigEl.style.animation = 'none';
+      void bigEl.offsetWidth;
+      bigEl.style.animation = 'letterIn .4s ease';
 
-  playTone(300 + idx * 15, 0.12);
-}
+      if (lang === 'en') {
+        bigEl.textContent = item.upper;
+        bigEl.className = 'big-letter';
+        document.getElementById('letterPair').textContent = `${item.upper} ${item.lower}`;
+        document.getElementById('exampleWord').innerHTML =
+          `<span class="example-emoji">${item.emoji}</span>
+           <span class="example-text"><span>${item.upper}</span>${item.word.slice(1)}</span>`;
+        document.getElementById('phonetic').textContent = item.phonetic;
+      } else {
+        bigEl.textContent = item.letter;
+        bigEl.className = 'big-letter ml';
+        document.getElementById('letterPair').textContent = item.phonetic;
+        document.getElementById('exampleWord').innerHTML =
+          `<span class="example-emoji">${item.emoji}</span>
+           <span class="example-text ml">${item.word}</span>`;
+        document.getElementById('phonetic').textContent = item.meaning;
+      }
 
-function buildList() {
-  var data = getData();
-  var container = document.getElementById('letterList');
-  container.innerHTML = '';
-  data.forEach(function(item, i) {
-    var btn = document.createElement('div');
-    var label = lang === 'en' ? item.upper : item.letter;
-    btn.className = 'letter-btn' + (lang === 'ml' ? ' ml' : '') + (i === currentIdx ? ' active' : '');
-    btn.dataset.idx = i;
-    btn.textContent = label;
-    container.appendChild(btn);
-  });
-}
+      // update active class on grid buttons
+      document.querySelectorAll('.letter-btn').forEach((btn) => {
+        btn.classList.toggle('active', parseInt(btn.dataset.idx) === idx);
+      });
 
-function switchLang(newLang) {
-  lang = newLang;
-  currentIdx = 0;
-  document.querySelectorAll('.lang-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.lang === lang); });
-  buildList();
-  showLetter(0);
-}
+      // gentle sound feedback
+      playTone(300 + idx * 15, 0.1);
+    }
 
-function playTone(freq, dur) {
-  try {
-    var ac = new (window.AudioContext || window.webkitAudioContext)();
-    var o = ac.createOscillator(), g = ac.createGain();
-    o.connect(g); g.connect(ac.destination);
-    o.type = 'sine'; o.frequency.value = freq;
-    g.gain.setValueAtTime(0.12, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
-    o.start(); o.stop(ac.currentTime + dur);
-  } catch(e) {}
-}
+    // ----- BUILD GRID (CENTER-ALIGNED, TOP-RAISED) -----
+    function buildList() {
+      const container = document.getElementById('letterList');
+      container.innerHTML = '';
+      
+      let displayArray;
+      if (lang === 'en') {
+        displayArray = EN_DATA.map((item, i) => ({ label: item.upper, idx: i }));
+      } else {
+        // use the FULL 57 Malayalam letters for grid
+        displayArray = ML_FULL_SET.map((letter, i) => ({ label: letter, idx: i }));
+      }
 
-function bindTouch(el, fn) {
-  el.addEventListener('click', function(e) { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; fn(); });
-  el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
-}
+      displayArray.forEach((item) => {
+        const btn = document.createElement('div');
+        btn.className = `letter-btn ${lang === 'ml' ? 'ml' : ''} ${item.idx === currentIdx ? 'active' : ''}`;
+        btn.dataset.idx = item.idx;
+        btn.textContent = item.label;
+        container.appendChild(btn);
+      });
+    }
 
-document.getElementById('letterList').addEventListener('click', function(e) {
-  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-  var btn = e.target.closest('.letter-btn');
-  if (btn) showLetter(parseInt(btn.dataset.idx));
-});
-document.getElementById('letterList').addEventListener('touchend', function(e) {
-  var btn = e.target.closest('.letter-btn');
-  if (btn) { e.preventDefault(); showLetter(parseInt(btn.dataset.idx)); }
-});
+    // ----- SWITCH LANGUAGE (preserve 57 ML letters) -----
+    function switchLang(newLang) {
+      lang = newLang;
+      currentIdx = 0;
+      document.querySelectorAll('.lang-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+      buildList();
+      showLetter(0);
+    }
 
-document.querySelectorAll('.lang-btn').forEach(function(btn) {
-  bindTouch(btn, function() { switchLang(btn.dataset.lang); });
-});
+    // ----- SIMPLE TONE (interactive feedback) -----
+    function playTone(freq, dur) {
+      try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, ac.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+        osc.start();
+        osc.stop(ac.currentTime + dur);
+      } catch(e) {}
+    }
 
-bindTouch(document.getElementById('prevBtn'), function() {
-  var data = getData();
-  var n = currentIdx > 0 ? currentIdx - 1 : data.length - 1;
-  showLetter(n);
-});
-bindTouch(document.getElementById('nextBtn'), function() {
-  var data = getData();
-  var n = currentIdx < data.length - 1 ? currentIdx + 1 : 0;
-  showLetter(n);
-});
-bindTouch(document.getElementById('btnBack'), function() { 
-  alphabetExplorerMusic.pause();
-  location.href = '../index.html'; 
-});
+    // ----- EVENT BINDING (touch + click) -----
+    function bindTouch(el, fn) {
+      el.addEventListener('click', (e) => { if (e.sourceCapabilities?.firesTouchEvents) return; fn(); });
+      el.addEventListener('touchend', (e) => { e.preventDefault(); fn(); });
+    }
 
-buildList();
-showLetter(0);
+    // ----- INIT & EVENT LISTENERS -----
+    window.addEventListener('DOMContentLoaded', () => {
+      buildList();
+      showLetter(0);
 
-if (new URLSearchParams(window.location.search).get('embed') === '1') {
-  document.getElementById('btnBack').style.display = 'none';
-}
+      // Language toggle
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        bindTouch(btn, () => switchLang(btn.dataset.lang));
+      });
 
-var bgP = document.getElementById('bgP');
-for (var i = 0; i < 30; i++) {
-  var d = document.createElement('div'); d.className = 'bg-dot';
-  d.style.left=(Math.random()*100)+'%'; d.style.top=(Math.random()*100)+'%';
-  d.style.setProperty('--dur',(4+Math.random()*6)+'s');
-  d.style.setProperty('--dx',((Math.random()-.5)*60)+'px');
-  d.style.setProperty('--dy',((Math.random()-.5)*60)+'px');
-  d.style.animationDelay=(Math.random()*5)+'s'; bgP.appendChild(d);
-}
+      // Letter grid click
+      document.getElementById('letterList').addEventListener('click', (e) => {
+        if (e.sourceCapabilities?.firesTouchEvents) return;
+        const btn = e.target.closest('.letter-btn');
+        if (btn) showLetter(parseInt(btn.dataset.idx));
+      });
+      document.getElementById('letterList').addEventListener('touchend', (e) => {
+        const btn = e.target.closest('.letter-btn');
+        if (btn) { e.preventDefault(); showLetter(parseInt(btn.dataset.idx)); }
+      });
 
+      // Navigation arrows
+      bindTouch(document.getElementById('prevBtn'), () => {
+        const data = getData();
+        const n = currentIdx > 0 ? currentIdx - 1 : data.length - 1;
+        showLetter(n);
+      });
+      bindTouch(document.getElementById('nextBtn'), () => {
+        const data = getData();
+        const n = currentIdx < data.length - 1 ? currentIdx + 1 : 0;
+        showLetter(n);
+      });
 
-var alphabetExplorerMusic = document.getElementById('alphabet-explorer-music');
-var musicPlaying = false;
+      // Back button
+      bindTouch(document.getElementById('btnBack'), () => {
+        document.getElementById('alphabet-explorer-music')?.pause();
+        location.href = '../index.html';
+      });
 
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    alphabetExplorerMusic.volume = 0.5;
-    alphabetExplorerMusic.play().catch(function(e) {
-      console.log('Audio autoplay prevented:', e);
+      // embed mode: hide back button
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        document.getElementById('btnBack').style.display = 'none';
+      }
+
+      // background particles
+      const bgP = document.getElementById('bgP');
+      for (let i = 0; i < 36; i++) {
+        const d = document.createElement('div');
+        d.className = 'bg-dot';
+        d.style.left = Math.random() * 100 + '%';
+        d.style.top = Math.random() * 100 + '%';
+        d.style.setProperty('--dur', (4 + Math.random() * 6) + 's');
+        d.style.setProperty('--dx', ((Math.random() - 0.5) * 70) + 'px');
+        d.style.setProperty('--dy', ((Math.random() - 0.5) * 70) + 'px');
+        d.style.animationDelay = (Math.random() * 5) + 's';
+        bgP.appendChild(d);
+      }
+
+      // music
+      const music = document.getElementById('alphabet-explorer-music');
+      if (music) {
+        music.volume = 0.45;
+        setTimeout(() => { music.play().catch(() => {}); }, 600);
+      }
     });
-    musicPlaying = true;
-  }, 500);
-});
 
-var originalBackHandler = document.getElementById('btnBack').onclick;
-document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
-</script>
+    // touch ripple effect
+    document.addEventListener('touchstart', (e) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const ring = document.createElement('div');
+        ring.className = 'touch-ring';
+        ring.style.left = t.clientX + 'px';
+        ring.style.top = t.clientY + 'px';
+        document.body.appendChild(ring);
+        ring.addEventListener('animationend', function() { this.remove(); });
+      }
+    }, { passive: true });
+
+  </script>
 </body>
 </html>
