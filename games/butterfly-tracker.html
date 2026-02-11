@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Butterfly Haven – Endless Flutter</title>
+    <title>Butterfly Haven – Center Score & Fast Flutter</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -55,44 +55,76 @@
             object-fit: cover;
         }
         
-        /* UI – only score, no timers/lives */
+        /* ===== UI – SCORE NOW AT TOP CENTER ===== */
         .game-ui {
             position: absolute;
-            top: 24px;
+            top: 30px;
             left: 0;
             width: 100%;
+            display: flex;
+            justify-content: center;
             pointer-events: none;
             z-index: 100;
         }
-        .stats {
-            display: flex;
-            justify-content: flex-start;
-            padding: 0 40px;
-        }
         .stat-item {
-            background: rgba(255, 248, 200, 0.4);
-            backdrop-filter: blur(12px);
-            padding: 16px 42px;
-            border-radius: 50px;
-            border: 2px solid rgba(255, 255, 150, 0.7);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            background: rgba(255, 248, 200, 0.5);
+            backdrop-filter: blur(16px);
+            padding: 18px 50px;
+            border-radius: 60px;
+            border: 3px solid rgba(255, 215, 0, 0.7);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
         }
         .stat-label {
-            font-size: 15px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 800;
             color: #2D5E2C;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
         }
         .stat-value {
-            font-size: 56px;
+            font-size: 64px;
             font-weight: 900;
             color: #FFE55C;
-            text-shadow: 4px 4px 0 #CC8B1F, 0 0 25px #FFD700;
+            text-shadow: 5px 5px 0 #B8731E, 0 0 35px #FFD700;
             line-height: 1;
         }
         
-        /* Start Screen – fresh day style */
+        /* ===== BACK BUTTON – LEFT SIDE, BELOW SCORE ===== */
+        .back-btn-container {
+            position: absolute;
+            top: 180px;  /* fixed below the score UI */
+            left: 30px;
+            z-index: 150;
+            pointer-events: auto;
+        }
+        .back-button {
+            background: rgba(255, 240, 150, 0.85);
+            backdrop-filter: blur(12px);
+            border: 3px solid white;
+            border-radius: 60px;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #2C5E2C;
+            font-size: 26px;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 2px;
+        }
+        .back-button i {
+            font-size: 32px;
+            color: #5F9F4F;
+        }
+        .back-button:active {
+            transform: scale(0.92);
+            background: rgba(255, 230, 100, 0.9);
+        }
+        
+        /* Start Screen */
         .start-screen {
             position: absolute;
             top: 0; left: 0;
@@ -101,7 +133,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(135, 206, 235, 0.75);
+            background: rgba(135, 206, 235, 0.8);
             backdrop-filter: blur(10px);
             z-index: 200;
             pointer-events: auto;
@@ -137,7 +169,6 @@
             display: flex;
             align-items: center;
             gap: 20px;
-            pointer-events: auto;
             border: 3px solid white;
         }
         @keyframes gentlePulse { 50% { transform: scale(1.06); } }
@@ -173,7 +204,6 @@
             border-radius: 50px;
             margin: 12px;
             cursor: pointer;
-            transition: 0.1s;
             border: 2px solid white;
         }
         .go-btn:active { transform: scale(0.92); }
@@ -248,14 +278,14 @@
             100% { transform: translate(-50%, -120%) scale(1.2); opacity: 0; }
         }
         
-        /* ----- BUTTERFLY STYLES (preserved & improved) ----- */
+        /* ----- BUTTERFLY STYLES ----- */
         .butterfly_container {
             position: absolute;
             cursor: pointer;
             pointer-events: auto;
             z-index: 60;
             will-change: transform, left, top;
-            transition: transform 0.05s; /* micro-smoothing */
+            transition: transform 0.05s;
         }
         .butterfly_container.caught {
             animation: vanish 0.6s forwards;
@@ -265,7 +295,7 @@
             100% { transform: scale(0); opacity: 0; }
         }
         
-        /* flapping & floating – refined, gentle */
+        /* flapping & floating */
         @keyframes gentleFloat {
             0%, 100% { transform: translate3d(0, 0, 0); }
             25% { transform: translate3d(0, 25px, 0); }
@@ -315,7 +345,7 @@
     </style>
 </head>
 <body>
-    <!-- DAY THEME only – static sunny environment -->
+    <!-- DAY THEME only -->
     <img src="https://i.postimg.cc/sXvPDVnC/4.png" alt="cloud" class="cloud" />
     <img src="https://i.postimg.cc/sXvPDVnC/4.png" alt="cloud" class="cloud" />
     <img src="https://i.postimg.cc/sXvPDVnC/4.png" alt="cloud" class="cloud" />
@@ -328,17 +358,22 @@
     <!-- START SCREEN -->
     <div class="start-screen" id="startScreen">
         <h1 class="start-title">🦋 BUTTERFLY HAVEN 🦋</h1>
-        <p class="start-subtitle">☀️ endless sunny meadow • 50+ fluttering friends ☀️</p>
+        <p class="start-subtitle">☀️ top & bottom spawn • faster flight • center score ☀️</p>
         <button class="start-btn" id="startBtn"><i class="fas fa-play"></i> BEGIN</button>
     </div>
     
-    <!-- SCORE UI (only score) -->
+    <!-- ===== SCORE UI – CENTERED AT TOP ===== -->
     <div class="game-ui">
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-label">CATCHED</div>
-                <div class="stat-value" id="scoreDisplay">0</div>
-            </div>
+        <div class="stat-item">
+            <div class="stat-label">🦋 CATCHED</div>
+            <div class="stat-value" id="scoreDisplay">0</div>
+        </div>
+    </div>
+    
+    <!-- ===== BACK BUTTON – LEFT SIDE, BELOW SCORE ===== -->
+    <div class="back-btn-container">
+        <div class="back-button" id="backButton">
+            <i class="fas fa-arrow-left"></i> BACK
         </div>
     </div>
     
@@ -372,7 +407,7 @@
         (function(){
             "use strict";
 
-            // ---- GAME STATE - NO TIMER, NO LIVES, NO NIGHT MODE ----
+            // ---- GAME STATE - NO TIMER, NO LIVES ----
             let score = 0;
             let gameRunning = false;
             let butterflies = [];
@@ -382,7 +417,7 @@
             let spawnInterval = null;
             let animationFrame = null;
             
-            // ---------- MULTI‑COLOR PALETTE (vivid) ----------
+            // ---------- MULTI‑COLOR PALETTE ----------
             const colorPalette = [
                 '#FF6B8B', '#A8FF78', '#78D6FF', '#FFB27F', '#D28AFF',
                 '#7AFFB3', '#FF88C2', '#6BC5FF', '#FFDE7A', '#FF9966',
@@ -410,11 +445,10 @@
             const playAgainBtn = document.getElementById('playAgainBtn');
             const menuBtn = document.getElementById('menuBtn');
             const catchEffect = document.getElementById('catchEffect');
+            const backButton = document.getElementById('backButton');
 
             // init highscore display
             highScoreEl.textContent = `High Score: ${highScore}`;
-
-            // ----- REMOVED ALL DAY/NIGHT TOGGLES – PERMANENT SUNNY -----
 
             // ----- GAME CORE -----
             function startGame() {
@@ -424,49 +458,52 @@
                 comboTimer = 0;
                 updateScore();
                 
-                // clear any remaining butterflies
                 butterflies.forEach(b => b.element?.remove());
                 butterflies = [];
                 
                 startScreen.style.display = 'none';
                 gameOverScreen.classList.remove('show');
                 
-                // SPAWN MANY BUTTERFLIES – high density
                 if (spawnInterval) clearInterval(spawnInterval);
-                spawnInterval = setInterval(spawnButterfly, 320); // fast spawn → lots of butterflies
+                // SPAWN FASTER for more density, but speed increased per butterfly
+                spawnInterval = setInterval(spawnButterfly, 280); 
                 
-                // initial burst: 18 butterflies instantly for rich meadow
-                for (let i = 0; i < 18; i++) {
-                    setTimeout(() => spawnButterfly(), i * 40);
+                // initial burst: 22 butterflies
+                for (let i = 0; i < 22; i++) {
+                    setTimeout(() => spawnButterfly(), i * 30);
                 }
             }
 
-            // ----- SPAWN BUTTERFLY – smooth movement, natural paths -----
+            // ----- SPAWN BUTTERFLY – ONLY FROM TOP AND BOTTOM edges, NO left/right -----
             function spawnButterfly() {
                 if (!gameRunning) return;
                 
                 const container = document.createElement('div');
                 container.className = 'butterfly_container';
                 
-                // start gently from edges
-                const side = Math.floor(Math.random() * 3);
+                // **** SPAWN FROM TOP (y < 0) OR BOTTOM (y > height) ****
+                const spawnTop = Math.random() < 0.5; // 50% top, 50% bottom
                 let x, y;
-                if (side === 0) { x = -60 - Math.random() * 40; y = Math.random() * window.innerHeight; }
-                else if (side === 1) { x = Math.random() * window.innerWidth; y = -60 - Math.random() * 40; }
-                else { x = window.innerWidth + 60 + Math.random() * 40; y = Math.random() * window.innerHeight; }
+                if (spawnTop) {
+                    x = Math.random() * window.innerWidth;      // anywhere horizontally
+                    y = -70 - Math.random() * 60;              // above screen
+                } else {
+                    x = Math.random() * window.innerWidth;
+                    y = window.innerHeight + 70 + Math.random() * 60; // below screen
+                }
                 
                 container.style.left = `${x}px`;
                 container.style.top = `${y}px`;
                 
                 // size variety
-                const scale = Math.random() * 0.7 + 0.6; // 0.6–1.3
+                const scale = Math.random() * 0.8 + 0.6; // 0.6–1.4
                 container.style.transform = `scale(${scale})`;
                 
-                // ----- MULTI COLOR APPLICATION (vivid, each wing different) -----
+                // ----- MULTI COLOR APPLICATION -----
                 const colors = getButterflyColors();
                 
                 container.innerHTML = `
-                    <var style="animation: gentleFloat ${9 + Math.random()*6}s infinite;">
+                    <var style="animation: gentleFloat ${8 + Math.random()*6}s infinite;">
                         <figure class="butterfly">
                             <svg class="wing left" viewBox="0 0 119.744 148.477">
                                 <use xlink:href="#shape-moth" class="wing-left-fill"></use>
@@ -483,7 +520,6 @@
                 
                 if (leftWing) {
                     leftWing.style.fill = colors[0] || '#FFA07A';
-                    // add extra color accent using 'color' property for gradient-like
                     leftWing.style.color = colors[1] || colors[0];
                 }
                 if (rightWing) {
@@ -491,19 +527,17 @@
                     rightWing.style.color = colors[2] || colors[0];
                 }
                 
-                // shimmer effect: subtle glow
                 const glowColor = colors[Math.floor(Math.random() * colors.length)];
                 container.style.filter = `drop-shadow(0 0 7px ${glowColor}80)`;
                 
-                // ----- MOVEMENT PARAMETERS – completely redesigned: smooth, floating, no crazy wobble -----
-                // target is a random point inside view
+                // ----- MOVEMENT: INCREASED SPEED (much faster) -----
+                // target inside view
                 const targetX = Math.random() * (window.innerWidth - 200) + 100;
                 const targetY = Math.random() * (window.innerHeight - 200) + 100;
                 
-                // gentle speed – much slower and natural
-                const baseSpeed = Math.random() * 0.9 + 0.5; // 0.5 - 1.4
+                // **** SPEED INCREASED **** base speed 1.6 - 2.8 (was 0.5-1.4)
+                const baseSpeed = Math.random() * 1.2 + 1.6; // faster!
                 
-                // store butterfly data
                 const butterfly = {
                     element: container,
                     x, y,
@@ -511,10 +545,10 @@
                     speed: baseSpeed,
                     angle: Math.atan2(targetY - y, targetX - x),
                     rotation: Math.random() * 360,
-                    rotationSpeed: (Math.random() - 0.5) * 1.2, // very slow rotation
+                    rotationSpeed: (Math.random() - 0.5) * 1.5, 
                     floatPhase: Math.random() * 100,
-                    floatSpeed: 0.02 + Math.random() * 0.03,
-                    floatAmount: 0.6 + Math.random() * 1.2, // subtle vertical drift
+                    floatSpeed: 0.025 + Math.random() * 0.04,
+                    floatAmount: 0.8 + Math.random() * 1.4,
                     time: 0,
                     colors: colors
                 };
@@ -525,13 +559,13 @@
                 gameArea.appendChild(container);
                 butterflies.push(butterfly);
                 
-                // butterflies live longer (35s) then fade – but we keep high count
+                // butterflies live 28 seconds then fade
                 setTimeout(() => {
                     if (container.parentNode && gameRunning) {
                         container.remove();
                         butterflies = butterflies.filter(b => b.element !== container);
                     }
-                }, 35000);
+                }, 28000);
             }
 
             // ----- CATCH -----
@@ -548,7 +582,6 @@
                 const cx = rect.left + rect.width/2;
                 const cy = rect.top + rect.height/2;
                 
-                // combo & points
                 combo++;
                 comboTimer = 55;
                 const bonus = (combo >= 3) ? combo * 3 : 0;
@@ -556,10 +589,8 @@
                 score += points;
                 updateScore();
                 
-                // vanish animation
                 el.classList.add('caught');
                 
-                // pop effect
                 const pop = document.createElement('div');
                 pop.className = 'pop-effect';
                 pop.style.left = `${cx}px`;
@@ -586,12 +617,11 @@
                 catchEffect.classList.add('active');
                 setTimeout(() => catchEffect.classList.remove('active'), 400);
                 
-                // remove from arrays
                 butterflies = butterflies.filter(b => b.element !== el);
                 setTimeout(() => el.remove(), 600);
             }
 
-            // ----- SMOOTH MOVEMENT – natural, gentle, NO CRAZY WOBBLE -----
+            // ----- SMOOTH MOVEMENT (faster speed already applied) -----
             function animateButterflies() {
                 if (!gameRunning) {
                     animationFrame = requestAnimationFrame(animateButterflies);
@@ -601,51 +631,43 @@
                 for (let b of butterflies) {
                     b.time++;
                     
-                    // ---- calm, elegant pathfinding ----
                     const dx = b.targetX - b.x;
                     const dy = b.targetY - b.y;
                     const dist = Math.hypot(dx, dy);
                     
-                    if (dist < 15) {
-                        // new random destination – within view
+                    if (dist < 20) {
                         b.targetX = Math.random() * (window.innerWidth - 240) + 120;
                         b.targetY = Math.random() * (window.innerHeight - 200) + 100;
                     }
                     
-                    // compute direction with slight randomness (very light)
                     const angleToTarget = Math.atan2(b.targetY - b.y, b.targetX - b.x);
-                    // add minimal wandering (1D noise) – but keep graceful
-                    const randomTurn = (Math.random() - 0.5) * 0.15;
+                    const randomTurn = (Math.random() - 0.5) * 0.18;
                     const moveAngle = angleToTarget + randomTurn;
                     
-                    // move smoothly
                     b.x += Math.cos(moveAngle) * b.speed;
                     b.y += Math.sin(moveAngle) * b.speed;
                     
-                    // gentle vertical floating (sinusoidal lift)
                     b.floatPhase += b.floatSpeed;
                     const floatOffset = Math.sin(b.floatPhase) * b.floatAmount;
-                    b.y += floatOffset * 0.15; // subtle bobbing
+                    b.y += floatOffset * 0.18;
                     
-                    // very slow rotation, barely noticeable – adds life
                     b.rotation += b.rotationSpeed;
                     if (b.rotation > 360) b.rotation -= 360;
                     if (b.rotation < 0) b.rotation += 360;
                     
-                    // edge soft respawn – if too far outside, reposition gently
+                    // edge respawn – but we keep mostly top/bottom spawn, 
+                    // if they go out left/right we push them back gently
                     if (b.x < -200) b.x = window.innerWidth + 50;
                     if (b.x > window.innerWidth + 200) b.x = -50;
                     if (b.y < -200) b.y = window.innerHeight + 50;
                     if (b.y > window.innerHeight + 200) b.y = -50;
                     
-                    // apply transform – clean, with tiny scale pulse for life
                     const pulse = 1 + Math.sin(b.time * 0.1) * 0.03;
                     b.element.style.left = `${b.x}px`;
                     b.element.style.top = `${b.y}px`;
                     b.element.style.transform = `translate(-50%, -50%) rotate(${b.rotation}deg) scale(${pulse})`;
                 }
                 
-                // combo timer decay
                 if (comboTimer > 0) {
                     comboTimer--;
                     if (comboTimer === 0) combo = 0;
@@ -656,6 +678,20 @@
 
             function updateScore() {
                 scoreDisplay.textContent = score;
+            }
+
+            // ----- BACK BUTTON FUNCTION – returns to main menu -----
+            function goBackToMenu() {
+                if (gameRunning) {
+                    gameRunning = false;
+                    if (spawnInterval) clearInterval(spawnInterval);
+                    butterflies.forEach(b => b.element?.remove());
+                    butterflies = [];
+                }
+                startScreen.style.display = 'flex';
+                gameOverScreen.classList.remove('show');
+                score = 0; combo = 0;
+                updateScore();
             }
 
             // ----- END / MENU -----
@@ -700,7 +736,11 @@
             menuBtn.addEventListener('click', returnToMenu);
             menuBtn.addEventListener('touchstart', (e) => { e.preventDefault(); returnToMenu(); });
 
-            // prevent page zoom on tap
+            // **** BACK BUTTON ****
+            backButton.addEventListener('click', goBackToMenu);
+            backButton.addEventListener('touchstart', (e) => { e.preventDefault(); goBackToMenu(); }, { passive: false });
+
+            // prevent page zoom
             document.addEventListener('touchstart', (e) => {
                 if (gameRunning && e.target.closest('.butterfly_container')) e.preventDefault();
             }, { passive: false });
