@@ -3,907 +3,851 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Jungle Coloring Wall · 3‑Player Infinite</title>
+<title>Jungle Wall · Separate Layers</title>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  user-select: none;
-  -webkit-user-select: none;
-}
-body {
-  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', cursive;
-  background: linear-gradient(145deg, #0a3c1e 0%, #1e5a2b 70%, #0f3b1a 100%);
-  overflow: hidden;
-  touch-action: none;
-  position: fixed;
-  width: 100%;
-  height: 100%;
-}
-/* jungle vibe */
-.jungle-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.2;
-}
-.leaf {
-  position: absolute;
-  font-size: 80px;
-  animation: sway 7s infinite alternate ease-in-out;
-}
-@keyframes sway {
-  0% { transform: rotate(-8deg) translateX(0); }
-  100% { transform: rotate(8deg) translateX(12px); }
-}
+  /* ----- RESET & GLOBAL ----- */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #1e3a1e; /* boundary color */
+  }
+  body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+    touch-action: none;
+  }
 
-/* ===== 3‑PANEL INFINITE CANVAS LAYOUT ===== */
-#canvas-rows {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  z-index: 5;
-  padding: 10px 10px 10px 10px;
-  gap: 8px;
-  pointer-events: none;
-}
-.canvas-row {
-  flex: 1;
-  display: flex;
-  gap: 8px;
-  min-height: 0;  /* flex overflow */
-  pointer-events: auto;
-}
-.canvas-panel {
-  flex: 1;
-  position: relative;
-  background: #dde8c0;
-  border-radius: 24px 24px 24px 8px;
-  box-shadow: inset 0 0 0 2px #fff8e7, inset 0 0 0 6px #5f8b4b, 0 12px 25px rgba(0,0,0,0.5);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(1px);
-}
-/* infinite panning wrapper — super large virtual canvas */
-.infinite-wrap {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;  /* we pan by transform, no scrollbars */
-  cursor: grab;
-  background: repeating-linear-gradient(45deg, #c8e6b5 0px, #c8e6b5 8px, #b0d495 8px, #b0d495 16px);
-  background-size: 32px 32px;
-}
-.infinite-wrap:active { cursor: grabbing; }
-.virtual-layer {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4096px;   /* huge playground */
-  height: 4096px;
-  background: #f4ffe0;
-  box-shadow: 0 0 0 2px rgba(255,215,0,0.3) inset;
-}
-.paint-layer {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4096px;
-  height: 4096px;
-  pointer-events: none;
-}
-.draw-canvas {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4096px;
-  height: 4096px;
-  pointer-events: none;
-}
-.line-canvas {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4096px;
-  height: 4096px;
-  pointer-events: none;
-}
-/* each panel gets a unique ID canvas set, pointer-events for drawing */
-.interaction-layer {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4096px;
-  height: 4096px;
-  opacity: 0;        /* transparent but captures touches */
-  pointer-events: auto;
-  touch-action: none;
-  z-index: 50;
-}
-/* pan indicator */
-.pan-hint {
-  position: absolute;
-  bottom: 8px;
-  right: 12px;
-  background: rgba(0,0,0,0.6);
-  color: #ffd966;
-  padding: 6px 14px;
-  border-radius: 50px;
-  font-size: 14px;
-  border: 2px solid #ffd700;
-  backdrop-filter: blur(4px);
-  pointer-events: none;
-  z-index: 100;
-  box-shadow: 0 4px 10px black;
-}
-/* ===== SIDE TOOLBARS — STACKED GRID ===== */
-.left-tools, .right-tools {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  z-index: 1000;
-  pointer-events: none;
-}
-.left-tools { left: 6px; }
-.right-tools { right: 6px; }
+  /* ----- DECORATIVE JUNGLE BG (purely cosmetic) ----- */
+  .jungle-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.15;
+    background: repeating-linear-gradient(45deg, 
+      #2a5a2a 0px, #2a5a2a 40px,
+      #3a6e3a 40px, #3a6e3a 80px);
+    background-size: 80px 80px;
+  }
+  .floating-leaf {
+    position: absolute;
+    font-size: 90px;
+    opacity: 0.2;
+    animation: floatLeaf 20s infinite linear;
+    pointer-events: none;
+  }
+  @keyframes floatLeaf {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(120px, -120px) rotate(180deg); }
+  }
 
-.tool-grid {
-  background: linear-gradient(145deg, #2d5e2b, #1f4a1d);
-  padding: 16px 8px;
-  border-radius: 48px;
-  border: 5px solid #ffe484;
-  box-shadow: 0 12px 30px black;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  pointer-events: auto;
-  max-height: 80vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.tool-grid::-webkit-scrollbar { width: 6px; }
-.tool-grid::-webkit-scrollbar-thumb { background: #ffd966; border-radius: 10px; }
+  /* ----- MODAL POPUP – CHOOSE PLAYERS (completely separate) ----- */
+  #playerModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 5, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+  .modal-card {
+    background: #2d6a2d;
+    padding: 40px 30px;
+    border-radius: 80px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    display: flex;
+    gap: 50px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .player-choice {
+    background: #fff0a0;
+    width: 220px;
+    height: 220px;
+    border-radius: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 12px 0 #5a3e1e;
+    cursor: pointer;
+  }
+  .player-choice:active {
+    transform: scale(0.9);
+    box-shadow: 0 6px 0 #5a3e1e;
+  }
+  .player-choice span { font-size: 70px; }
+  .player-choice p {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e3a1e;
+    text-shadow: 2px 2px 0 #ffd966;
+  }
+  .hidden-modal { display: none !important; }
 
-/* emoji animal buttons */
-.animal-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  padding: 6px 0;
-}
-.tpl-btn {
-  width: 64px;
-  height: 64px;
-  border: 4px solid #fff;
-  border-radius: 20px;
-  background: radial-gradient(circle at 30% 30%, #fffae6, #ffeab5);
-  font-size: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 0 #7b5f2e, 0 10px 20px black;
-  transition: 0.07s;
-  touch-action: manipulation;
-}
-.tpl-btn:active { transform: scale(0.85); box-shadow: 0 2px 0 #7b5f2e; }
-.tpl-btn.active { border-color: #ff3333; background: #fff9bf; box-shadow: 0 0 0 4px yellow; }
+  /* ----- CANVAS GRID – 3 EQUAL COLUMNS, SIMPLE 2px BOUNDARY ----- */
+  #canvas-grid {
+    position: fixed;
+    inset: 0;
+    display: none;  /* shown after modal */
+    grid-template-columns: 1fr 1fr 1fr;
+    background: #1e3a1e;  /* solid dark green – visible as boundary */
+    gap: 2px;            /* simple line – no shadow, no 3d */
+    padding: 0;
+    z-index: 10;
+  }
+  .grid-1 {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+  .grid-1 .canvas-panel:first-child {
+    grid-column: 1 / -1;
+  }
 
-/* color & brush tools */
-.color-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-}
-.color-swatch {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: 4px solid #fff3cd;
-  box-shadow: 0 6px 0 #423421, 0 8px 12px black;
-  transition: 0.07s;
-  flex-shrink: 0;
-}
-.color-swatch:active { transform: scale(0.85); }
-.color-swatch.active { border: 5px solid #ffdd44; box-shadow: 0 0 0 5px rgba(255,215,0,0.6); }
+  /* ----- EACH PANEL = ITS OWN LAYER, COMPLETELY ISOLATED ----- */
+  .canvas-panel {
+    position: relative;
+    background: #f5ffe0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    /* Each panel is an independent stacking context */
+    isolation: isolate;
+  }
 
-.size-slider {
-  width: 60px;
-  height: 10px;
-  background: #ffb347;
-  border-radius: 20px;
-  -webkit-appearance: none;
-  border: 3px solid white;
-  box-shadow: inset 0 2px 6px black;
-}
-.size-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 28px;
-  height: 28px;
-  background: white;
-  border-radius: 50%;
-  border: 3px solid #ffaa00;
-  box-shadow: 0 4px 6px black;
-  cursor: pointer;
-}
+  .canvas-holder {
+    flex: 1;
+    position: relative;
+    background: transparent;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+  }
 
-.tool-btn {
-  width: 58px;
-  height: 58px;
-  background: #ffe28c;
-  border: 5px solid white;
-  border-radius: 40%;
-  font-size: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 7px 0 #936f3c, 0 10px 20px black;
-  transition: 0.07s;
-}
-.tool-btn:active { transform: scale(0.8); box-shadow: 0 2px 0 #936f3c; }
-.tool-btn.active { background: #b5ff9b; border-color: #00c851; }
+  /* canvas elements – each layer owns its drawing */
+  .draw-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+    /* each canvas is its own layer */
+    isolation: isolate;
+  }
+  .line-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    isolation: isolate;
+  }
 
-/* small utility buttons stacked below */
-.util-stack {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.ctrl-btn {
-  padding: 12px 0;
-  background: #3f2b1a;
-  border: 4px solid #ffb882;
-  border-radius: 36px;
-  color: white;
-  font-weight: bold;
-  font-size: 15px;
-  text-align: center;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 6px 0 #4d3a1f;
-  transition: 0.05s;
-  touch-action: manipulation;
-  width: 70px;
-}
-.ctrl-btn:active { transform: translateY(6px); box-shadow: none; }
+  /* ----- TOOLBAR – INSIDE EACH LAYER, TOTALLY INDEPENDENT ----- */
+  .inside-toolbar {
+    background: #3a6e3a;
+    padding: 8px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-top: 2px solid #2b4a2b;
+    box-shadow: none;
+    min-height: 64px;
+    /* toolbar belongs to its layer */
+    isolation: isolate;
+  }
 
-/* pointer dot (multiplayer) */
-.pointer-dot {
-  position: fixed;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  border: 2px solid rgba(255,255,255,0.9);
-  filter: drop-shadow(0 0 6px black);
-}
-/* animal label splash */
-.animal-label {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 80px;
-  color: #fffbe3;
-  text-shadow: 6px 6px 0 #3d5a2e;
-  pointer-events: none;
-  z-index: 9999;
-  animation: pop 1.5s ease-out forwards;
-}
-@keyframes pop {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
-  40% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-}
+  /* TOOL STYLES – flat, no shared state */
+  .inside-toolbar .color-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #ffffffcc;
+    box-shadow: none;
+    flex-shrink: 0;
+  }
+  .inside-toolbar .tpl-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 26px;
+    background: #fffae6;
+    border: 2px solid white;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+  .inside-toolbar .tool-btn {
+    width: 38px;
+    height: 38px;
+    background: white;
+    border: 2px solid white;
+    border-radius: 30%;
+    font-size: 20px;
+    box-shadow: none;
+  }
+  .inside-toolbar .size-slider {
+    width: 70px;
+    height: 6px;
+    background: #ffb347;
+    border-radius: 6px;
+    border: 1px solid white;
+  }
+  .inside-toolbar .ctrl-btn {
+    padding: 6px 10px;
+    background: #3d2e1a;
+    border: 2px solid #ffc085;
+    border-radius: 30px;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    box-shadow: none;
+  }
+  .inside-toolbar .bar-divider {
+    width: 2px;
+    height: 26px;
+    background: rgba(255,255,200,0.4);
+    margin: 0 2px;
+  }
 
-/* make canvas-wrap disappear – we use new structure */
-#legacy-canvas-wrap { display: none; }
+  /* no headers – clean layers */
+  .panel-header { display: none; }
+
+  /* pointer dot – belongs to global UI, not canvas layers */
+  .pointer-dot {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    border: 2px solid white;
+    filter: drop-shadow(0 0 2px black);
+  }
+  .animal-label {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 90px;
+    color: #FFD700;
+    text-shadow: 4px 4px 0 #2a4a1a;
+    pointer-events: none;
+    z-index: 10001;
+    animation: popFade 1.6s ease-out forwards;
+  }
+  @keyframes popFade {
+    0% { opacity:0; transform:translate(-50%,-50%) scale(0.2); }
+    30% { opacity:1; transform:translate(-50%,-50%) scale(1.2); }
+    100% { opacity:0; transform:translate(-50%,-60%) scale(0.8); }
+  }
 </style>
 </head>
 <body>
+  <div class="jungle-bg" id="jungleBg"></div>
 
-<div class="jungle-bg" id="jungleBg"></div>
+  <!-- PLAYER POPUP – SEPARATE LAYER CHOICE -->
+  <div id="playerModal">
+    <div class="modal-card">
+      <div id="choose1" class="player-choice">
+        <span>👤</span>
+        <p>1 Player</p>
+      </div>
+      <div id="choose3" class="player-choice">
+        <span>👥</span>
+        <p>3 Players</p>
+      </div>
+    </div>
+  </div>
 
-<!-- THREE-PLAYER INFINITE CANVAS ROWS -->
-<div id="canvas-rows">
-  <div class="canvas-row">
+  <!-- CANVAS GRID – EACH PANEL = INDEPENDENT LAYER -->
+  <div id="canvas-grid" class="grid-3">
+    <!-- LAYER 1 – Player 1 – completely separate state -->
     <div id="panel1" class="canvas-panel">
-      <div id="inf1" class="infinite-wrap">
-        <div class="virtual-layer" style="background: #f0ffe0;"></div>
-        <canvas id="paintCanvas1" class="draw-canvas" width="4096" height="4096"></canvas>
-        <canvas id="lineCanvas1" class="line-canvas" width="4096" height="4096"></canvas>
-        <div id="interact1" class="interaction-layer"></div>
-        <div class="pan-hint">🖐️ pan</div>
+      <div class="canvas-holder" id="holder1">
+        <canvas id="paintCanvas1" class="draw-canvas"></canvas>
+        <canvas id="lineCanvas1" class="line-canvas"></canvas>
       </div>
+      <div id="toolbar1" class="inside-toolbar"></div>
     </div>
+    <!-- LAYER 2 – Player 2 – independent memory, tools, canvas -->
     <div id="panel2" class="canvas-panel">
-      <div id="inf2" class="infinite-wrap">
-        <div class="virtual-layer" style="background: #f0ffe0;"></div>
-        <canvas id="paintCanvas2" class="draw-canvas" width="4096" height="4096"></canvas>
-        <canvas id="lineCanvas2" class="line-canvas" width="4096" height="4096"></canvas>
-        <div id="interact2" class="interaction-layer"></div>
-        <div class="pan-hint">🖐️ pan</div>
+      <div class="canvas-holder" id="holder2">
+        <canvas id="paintCanvas2" class="draw-canvas"></canvas>
+        <canvas id="lineCanvas2" class="line-canvas"></canvas>
       </div>
+      <div id="toolbar2" class="inside-toolbar"></div>
     </div>
-  </div>
-  <div class="canvas-row">
+    <!-- LAYER 3 – Player 3 – no cross-layer contamination -->
     <div id="panel3" class="canvas-panel">
-      <div id="inf3" class="infinite-wrap">
-        <div class="virtual-layer" style="background: #f0ffe0;"></div>
-        <canvas id="paintCanvas3" class="draw-canvas" width="4096" height="4096"></canvas>
-        <canvas id="lineCanvas3" class="line-canvas" width="4096" height="4096"></canvas>
-        <div id="interact3" class="interaction-layer"></div>
-        <div class="pan-hint">🖐️ pan</div>
+      <div class="canvas-holder" id="holder3">
+        <canvas id="paintCanvas3" class="draw-canvas"></canvas>
+        <canvas id="lineCanvas3" class="line-canvas"></canvas>
       </div>
-    </div>
-    <!-- extra panel to keep symmetry? but 3 panels total: top row 2, bottom row 1 centered? better: two rows: row1: 2 panels, row2: 1 panel but center -->
-    <div style="flex:1; visibility: hidden;"></div> <!-- dummy for 3-panel layout: row2 has 2 slots, hide one -->
-  </div>
-</div>
-
-<!-- ===== SIDE TOOLBARS – STACKED GRID ===== -->
-<div class="left-tools">
-  <div class="tool-grid">
-    <div class="animal-grid" id="templatePanelLeft"></div>
-  </div>
-  <div class="tool-grid" style="padding: 14px 6px;">
-    <div class="color-stack" id="colorBarLeft"></div>
-  </div>
-</div>
-
-<div class="right-tools">
-  <div class="tool-grid" style="padding: 18px 6px;">
-    <div style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
-      <div id="brushToolsRight"></div>
-      <div class="util-stack">
-        <button class="ctrl-btn" id="clearBtn">🧽 Clear</button>
-        <button class="ctrl-btn" id="backBtn">↩️ Menu</button>
-      </div>
+      <div id="toolbar3" class="inside-toolbar"></div>
     </div>
   </div>
-</div>
 
 <script>
-(function(){
-// ------------------------------------------------------------
-//    INFINITE 3‑PANEL JUNGLE COLORING — MULTI‑TOUCH, MASKS, ANIMALS
-// ------------------------------------------------------------
-const COLORS = ['#FF6B6B','#FF1493','#FF6347','#FFA07A','#FFD700','#F7DC6F','#4ECDC4','#45B7D1','#20B2AA','#98D8C8','#52B788','#BB8FCE','#fff','#888','#333'];
-let currentColor = COLORS[0];
-let brushSize = 26;
-let activeTool = 'brush';  // brush, fill, eraser
-let currentTemplate = 'elephant';
+  (function() {
+    // ----------------------------------------------------------------
+    //   🎨 COMPLETELY SEPARATE LAYERS – EACH PLAYER OWNS ITS OWN:
+    //   - currentColor, brushSize, activeTool, currentTemplate
+    //   - masks, canvas state, undo history (via buildMasks)
+    //   - tool UI is per panel, events update only that layer's state
+    // ----------------------------------------------------------------
+    
+    // ------ MASTER COLOR PALETTE (only used to populate swatches) -----
+    const MASTER_COLORS = [
+      '#FF6B6B','#FF1493','#FF6347','#FFA07A','#FFD700','#F7DC6F',
+      '#4ECDC4','#45B7D1','#20B2AA','#98D8C8','#52B788','#BB8FCE',
+      '#fff','#888','#333'
+    ];
 
-const templates = {
-  elephant: {emoji:'🐘', draw: drawElephant},
-  lion:     {emoji:'🦁', draw: drawLion},
-  monkey:   {emoji:'🐵', draw: drawMonkey},
-  parrot:   {emoji:'🦜', draw: drawParrot},
-  snake:    {emoji:'🐍', draw: drawSnake},
-  tiger:    {emoji:'🐯', draw: drawTiger},
-  giraffe:  {emoji:'🦒', draw: drawGiraffe},
-  frog:     {emoji:'🐸', draw: drawFrog}
-};
-
-// ---- panel management ----
-const PANEL_IDS = ['panel1', 'panel2', 'panel3'];
-const PAINT_CANVAS = ['paintCanvas1', 'paintCanvas2', 'paintCanvas3'];
-const LINE_CANVAS = ['lineCanvas1', 'lineCanvas2', 'lineCanvas3'];
-const INTERACT = ['interact1', 'interact2', 'interact3'];
-const INF_WRAP = ['inf1', 'inf2', 'inf3'];
-
-// each panel has its own drawing states, masks, viewport offset
-let panels = {};
-
-function initPanels() {
-  PANEL_IDS.forEach((pid, idx) => {
-    let paintCanvas = document.getElementById(PAINT_CANVAS[idx]);
-    let lineCanvas = document.getElementById(LINE_CANVAS[idx]);
-    let interactDiv = document.getElementById(INTERACT[idx]);
-    let wrap = document.getElementById(INF_WRAP[idx]);
-
-    if (!paintCanvas || !lineCanvas) return;
-
-    let paintCtx = paintCanvas.getContext('2d', {willReadFrequently: true});
-    let lineCtx = lineCanvas.getContext('2d');
-
-    // virtual canvas size fixed 4096x4096
-    const VW = 4096, VH = 4096;
-
-    // masks
-    let outlineMask = new Uint8Array(VW * VH);
-    let paintableMask = new Uint8Array(VW * VH);
-
-    // view transform
-    let viewX = 1600, viewY = 1200; // centered start
-    let isDragging = false, dragStartX, dragStartY, startViewX, startViewY;
-
-    // store in panels object
-    panels[pid] = {
-      paintCanvas, paintCtx, lineCanvas, lineCtx, interactDiv, wrap,
-      VW, VH, outlineMask, paintableMask, viewX, viewY,
-      activePointers: {},  // pointerId -> {x, y, color}
+    // ------ TEMPLATE LIBRARY (shared, but drawing is per layer) -----
+    const TEMPLATES = {
+      elephant: {emoji:'🐘', draw: drawElephant},
+      lion:     {emoji:'🦁', draw: drawLion},
+      monkey:   {emoji:'🐵', draw: drawMonkey},
+      parrot:   {emoji:'🦜', draw: drawParrot},
+      snake:    {emoji:'🐍', draw: drawSnake},
+      tiger:    {emoji:'🐯', draw: drawTiger},
+      giraffe:  {emoji:'🦒', draw: drawGiraffe},
+      frog:     {emoji:'🐸', draw: drawFrog}
     };
 
-    // initialize background
-    paintCtx.fillStyle = '#f4ffe0';
-    paintCtx.fillRect(0,0,VW,VH);
+    // ------ PER‑LAYER STATE – EACH PANEL GETS ITS OWN COPY -----
+    // This is the key to "each layer acts like separate layer"
+    const panelState = {};
 
-    // draw initial animal (elephant) on this panel
-    buildMasksForPanel(pid, currentTemplate);
-    applyViewTransform(pid);
+    // Panel IDs
+    const PANEL_IDS = ['panel1', 'panel2', 'panel3'];
+    const PAINT_IDS = ['paintCanvas1', 'paintCanvas2', 'paintCanvas3'];
+    const LINE_IDS = ['lineCanvas1', 'lineCanvas2', 'lineCanvas3'];
+    const TOOLBAR_IDS = ['toolbar1', 'toolbar2', 'toolbar3'];
+    const HOLDER_IDS = ['holder1', 'holder2', 'holder3'];
 
-    // ---- pan interaction ----
-    const setView = (x, y) => {
-      panels[pid].viewX = Math.min(Math.max(x, 0), VW - wrap.clientWidth);
-      panels[pid].viewY = Math.min(Math.max(y, 0), VH - wrap.clientHeight);
-      applyViewTransform(pid);
-    };
+    // ----- INDEPENDENT STATE INITIALIZER -----
+    function createInitialLayerState() {
+      return {
+        currentColor: MASTER_COLORS[0],
+        brushSize: 26,
+        activeTool: 'brush',
+        currentTemplate: 'elephant',
+        // Each layer has its own masks, contexts, etc. – stored in panels object
+      };
+    }
 
-    wrap.addEventListener('pointerdown', (e) => {
-      if (e.target === wrap || e.target.classList.contains('virtual-layer') || e.target.classList.contains('pan-hint')) {
-        e.preventDefault();
-        isDragging = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        startViewX = panels[pid].viewX;
-        startViewY = panels[pid].viewY;
-        wrap.setPointerCapture(e.pointerId);
+    // ----- PANELS OBJECT (holds canvas contexts and masks per layer) -----
+    let panels = {};
+
+    // ----- HELPER: hexToRgb (pure) -----
+    function hexToRgb(hex) {
+      let c = document.createElement('canvas').getContext('2d');
+      c.fillStyle = hex;
+      c.fillRect(0,0,1,1);
+      return c.getImageData(0,0,1,1).data;
+    }
+
+    // ----- DILATE (mask operation, per layer) -----
+    function dilateMask(mask, w, h, iter) {
+      let cur = new Uint8Array(mask);
+      for (let it=0; it<iter; it++) {
+        let nxt = new Uint8Array(w*h);
+        for (let y=0; y<h; y++) for (let x=0; x<w; x++) {
+          let i = y*w + x;
+          if (cur[i]) { nxt[i]=1; continue; }
+          if (x>0 && cur[i-1]) nxt[i]=1;
+          else if (x<w-1 && cur[i+1]) nxt[i]=1;
+          else if (y>0 && cur[i-w]) nxt[i]=1;
+          else if (y<h-1 && cur[i+w]) nxt[i]=1;
+        }
+        cur = nxt;
       }
-    });
-    wrap.addEventListener('pointermove', (e) => {
-      if (isDragging) {
-        e.preventDefault();
-        let dx = e.clientX - dragStartX;
-        let dy = e.clientY - dragStartY;
-        let newX = startViewX - dx;
-        let newY = startViewY - dy;
-        setView(newX, newY);
+      return cur;
+    }
+
+    // ----- BUILD MASKS – PER LAYER, using that layer's template -----
+    function buildMasksForPanel(panelId, templateKey) {
+      let p = panels[panelId];
+      if (!p) return;
+      let { paintCtx, lineCtx, width, height } = p;
+
+      paintCtx.fillStyle = '#fff';
+      paintCtx.fillRect(0, 0, width, height);
+
+      let off = document.createElement('canvas');
+      off.width = width; off.height = height;
+      let offCtx = off.getContext('2d');
+      offCtx.fillStyle = '#fff';
+      offCtx.fillRect(0,0,width,height);
+      TEMPLATES[templateKey].draw(offCtx, width, height);
+
+      let img = offCtx.getImageData(0,0,width,height);
+      let d = img.data;
+      let outlineMask = new Uint8Array(width*height);
+      for (let i=0; i<width*height; i++) {
+        let lum = d[i*4]*0.299 + d[i*4+1]*0.587 + d[i*4+2]*0.114;
+        if (lum < 180) outlineMask[i] = 1;
       }
-    });
-    wrap.addEventListener('pointerup', (e) => { isDragging = false; wrap.releasePointerCapture(e.pointerId); });
-    wrap.addEventListener('pointercancel', (e) => { isDragging = false; });
 
-    // ----- drawing logic: listen to interaction layer (invisible)-----
-    interactDiv.style.width = VW + 'px';
-    interactDiv.style.height = VH + 'px';
-
-    interactDiv.addEventListener('pointerdown', (e) => handleDrawingStart(e, pid, idx));
-    interactDiv.addEventListener('pointermove', (e) => handleDrawingMove(e, pid, idx));
-    interactDiv.addEventListener('pointerup', (e) => handleDrawingEnd(e, pid, idx));
-    interactDiv.addEventListener('pointercancel', (e) => handleDrawingEnd(e, pid, idx));
-  });
-}
-
-// ---- apply translate to all canvas layers ----
-function applyViewTransform(panelId) {
-  let p = panels[panelId];
-  if (!p) return;
-  let tx = `translate(${-p.viewX}px, ${-p.viewY}px)`;
-  p.paintCanvas.style.transform = tx;
-  p.lineCanvas.style.transform = tx;
-  p.interactDiv.style.transform = tx;
-}
-
-// ---- convert event coordinates to virtual canvas space ----
-function getVirtualCoords(e, panelId) {
-  let p = panels[panelId];
-  if (!p) return {x:0, y:0};
-  let rect = p.interactDiv.getBoundingClientRect();  // interact div covers whole virtual but transformed
-  let scaleX = p.VW / rect.width;   // virtual size / displayed size
-  let scaleY = p.VH / rect.height;
-  let offsetX = (e.clientX - rect.left) * scaleX + p.viewX;
-  let offsetY = (e.clientY - rect.top) * scaleY + p.viewY;
-  return {x: Math.round(offsetX), y: Math.round(offsetY)};
-}
-
-// ----- MASK & ANIMAL DRAWING (similar to original but per panel) -----
-function buildMasksForPanel(panelId, templateKey) {
-  let p = panels[panelId];
-  if (!p) return;
-  let { paintCtx, lineCtx, VW, VH } = p;
-
-  // render animal on a temp canvas
-  let off = document.createElement('canvas');
-  off.width = VW; off.height = VH;
-  let offCtx = off.getContext('2d');
-  offCtx.fillStyle = '#fff';
-  offCtx.fillRect(0,0,VW,VH);
-  // call the template drawer (scaled to huge canvas)
-  templates[templateKey].draw(offCtx, VW, VH);
-
-  let img = offCtx.getImageData(0,0,VW,VH);
-  let d = img.data;
-  let outlineMask = new Uint8Array(VW * VH);
-  for (let i=0; i<VW*VH; i++) {
-    let lum = d[i*4]*0.299 + d[i*4+1]*0.587 + d[i*4+2]*0.114;
-    if (lum < 180) outlineMask[i] = 1;
-  }
-
-  // dilate
-  function dilate(mask, iter) {
-    let cur = new Uint8Array(mask);
-    for (let it=0; it<iter; it++) {
-      let nxt = new Uint8Array(VW*VH);
-      for (let y=0; y<VH; y++) for (let x=0; x<VW; x++) {
-        let i = y*VW + x;
-        if (cur[i]) { nxt[i]=1; continue; }
-        if (x>0 && cur[i-1]) nxt[i]=1;
-        else if (x<VW-1 && cur[i+1]) nxt[i]=1;
-        else if (y>0 && cur[i-VW]) nxt[i]=1;
-        else if (y<VH-1 && cur[i+VW]) nxt[i]=1;
+      let dilated = dilateMask(outlineMask, width, height, 3);
+      let exterior = new Uint8Array(width*height);
+      let stack = [];
+      for (let x=0; x<width; x++) {
+        if (!dilated[x]) { exterior[x]=1; stack.push(x,0); }
+        let bi = (height-1)*width + x;
+        if (!dilated[bi]) { exterior[bi]=1; stack.push(x,height-1); }
       }
-      cur = nxt;
+      for (let y=1; y<height-1; y++) {
+        let li = y*width;
+        if (!dilated[li]) { exterior[li]=1; stack.push(0,y); }
+        let ri = y*width + width-1;
+        if (!dilated[ri]) { exterior[ri]=1; stack.push(width-1,y); }
+      }
+      while (stack.length) {
+        let sy = stack.pop(), sx = stack.pop();
+        let idx = sy*width + sx;
+        if (sx+1<width && !exterior[idx+1] && !dilated[idx+1]) { exterior[idx+1]=1; stack.push(sx+1,sy); }
+        if (sx-1>=0 && !exterior[idx-1] && !dilated[idx-1]) { exterior[idx-1]=1; stack.push(sx-1,sy); }
+        if (sy+1<height && !exterior[idx+width] && !dilated[idx+width]) { exterior[idx+width]=1; stack.push(sx,sy+1); }
+        if (sy-1>=0 && !exterior[idx-width] && !dilated[idx-width]) { exterior[idx-width]=1; stack.push(sx,sy-1); }
+      }
+
+      let paintableMask = new Uint8Array(width*height);
+      for (let i=0; i<width*height; i++) {
+        if (!outlineMask[i] && !exterior[i]) paintableMask[i] = 1;
+      }
+
+      // line canvas
+      let lineData = new Uint8ClampedArray(width*height*4);
+      for (let i=0; i<width*height; i++) {
+        if (outlineMask[i]) {
+          lineData[i*4] = d[i*4];
+          lineData[i*4+1] = d[i*4+1];
+          lineData[i*4+2] = d[i*4+2];
+          lineData[i*4+3] = 255;
+        }
+      }
+      lineCtx.clearRect(0,0,width,height);
+      lineCtx.putImageData(new ImageData(lineData, width, height), 0,0);
+
+      // paint background
+      let pImg = paintCtx.getImageData(0,0,width,height);
+      let pd = pImg.data;
+      for (let i=0; i<width*height; i++) {
+        if (exterior[i] || outlineMask[i]) {
+          pd[i*4] = 210; pd[i*4+1]=220; pd[i*4+2]=200; pd[i*4+3]=255;
+        } else {
+          pd[i*4]=255; pd[i*4+1]=255; pd[i*4+2]=255; pd[i*4+3]=255;
+        }
+      }
+      paintCtx.putImageData(pImg, 0,0);
+      p.outlineMask = outlineMask;
+      p.paintableMask = paintableMask;
     }
-    return cur;
-  }
-  let dilated = dilate(outlineMask, 3);
 
-  // flood exterior
-  let exterior = new Uint8Array(VW*VH);
-  let stack = [];
-  for (let x=0; x<VW; x++) {
-    if (!dilated[x]) { exterior[x]=1; stack.push(x,0); }
-    let bi = (VH-1)*VW + x;
-    if (!dilated[bi]) { exterior[bi]=1; stack.push(x, VH-1); }
-  }
-  for (let y=1; y<VH-1; y++) {
-    let li = y*VW;
-    if (!dilated[li]) { exterior[li]=1; stack.push(0, y); }
-    let ri = y*VW + VW-1;
-    if (!dilated[ri]) { exterior[ri]=1; stack.push(VW-1, y); }
-  }
-  while (stack.length) {
-    let sy = stack.pop();
-    let sx = stack.pop();
-    let idx = sy*VW + sx;
-    // 4 directions
-    if (sx+1 < VW && !exterior[idx+1] && !dilated[idx+1]) { exterior[idx+1]=1; stack.push(sx+1, sy); }
-    if (sx-1 >=0 && !exterior[idx-1] && !dilated[idx-1]) { exterior[idx-1]=1; stack.push(sx-1, sy); }
-    if (sy+1 < VH && !exterior[idx+VW] && !dilated[idx+VW]) { exterior[idx+VW]=1; stack.push(sx, sy+1); }
-    if (sy-1 >=0 && !exterior[idx-VW] && !dilated[idx-VW]) { exterior[idx-VW]=1; stack.push(sx, sy-1); }
-  }
-
-  let paintableMask = new Uint8Array(VW*VH);
-  for (let i=0; i<VW*VH; i++) {
-    if (!outlineMask[i] && !exterior[i]) paintableMask[i] = 1;
-  }
-
-  // draw line art
-  let lineData = new Uint8ClampedArray(VW*VH*4);
-  for (let i=0; i<VW*VH; i++) {
-    if (outlineMask[i]) {
-      lineData[i*4] = d[i*4];
-      lineData[i*4+1] = d[i*4+1];
-      lineData[i*4+2] = d[i*4+2];
-      lineData[i*4+3] = 255;
+    // ----- CONSTRAIN PAINT (per layer) -----
+    function constrainPaint(pid, x0, y0, x1, y1) {
+      let p = panels[pid];
+      if (!p) return;
+      let { paintCtx, paintableMask, width, height } = p;
+      let ix0 = Math.max(0, Math.floor(x0)), iy0 = Math.max(0, Math.floor(y0));
+      let ix1 = Math.min(width, Math.ceil(x1)), iy1 = Math.min(height, Math.ceil(y1));
+      if (ix1<=ix0 || iy1<=iy0) return;
+      let reg = paintCtx.getImageData(ix0, iy0, ix1-ix0, iy1-iy0);
+      let d = reg.data, changed = false;
+      for (let row=0; row<iy1-iy0; row++) {
+        for (let col=0; col<ix1-ix0; col++) {
+          let gx = ix0+col, gy = iy0+row;
+          let mi = gy * width + gx;
+          if (!paintableMask[mi]) {
+            let pi = (row*(ix1-ix0) + col)*4;
+            d[pi] = 210; d[pi+1]=220; d[pi+2]=200; d[pi+3]=255;
+            changed = true;
+          }
+        }
+      }
+      if (changed) paintCtx.putImageData(reg, ix0, iy0);
     }
-  }
-  lineCtx.clearRect(0,0,VW,VH);
-  lineCtx.putImageData(new ImageData(lineData, VW, VH), 0,0);
 
-  // reset paint layer: fill exterior with light green, interior white
-  let pImg = paintCtx.getImageData(0,0,VW,VH);
-  let pd = pImg.data;
-  for (let i=0; i<VW*VH; i++) {
-    if (exterior[i] || outlineMask[i]) {
-      pd[i*4] = 210; pd[i*4+1]=225; pd[i*4+2]=190; pd[i*4+3]=255;
-    } else {
-      pd[i*4]=255; pd[i*4+1]=255; pd[i*4+2]=255; pd[i*4+3]=255;
+    // ----- BRUSH STROKE (per layer, uses layer's own state) -----
+    function brushStroke(pid, x1,y1,x2,y2,color,size) {
+      let p = panels[pid];
+      if (!p) return;
+      let ctx = p.paintCtx;
+      ctx.save();
+      ctx.lineWidth = size;
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x1,y1);
+      ctx.lineTo(x2,y2);
+      ctx.stroke();
+      ctx.restore();
+      let pad = Math.ceil(size/2)+2;
+      constrainPaint(pid, Math.min(x1,x2)-pad, Math.min(y1,y2)-pad, Math.max(x1,x2)+pad, Math.max(y1,y2)+pad);
     }
-  }
-  paintCtx.putImageData(pImg, 0,0);
 
-  p.outlineMask = outlineMask;
-  p.paintableMask = paintableMask;
-}
+    function brushDot(pid, cx,cy,color,size) {
+      let p = panels[pid];
+      if (!p) return;
+      let ctx = p.paintCtx;
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx,cy,size/2,0,2*Math.PI);
+      ctx.fill();
+      ctx.restore();
+      let pad = Math.ceil(size/2)+2;
+      constrainPaint(pid, cx-pad, cy-pad, cx+pad, cy+pad);
+    }
 
-// ---- drawing functions (brush, fill, constrain) per panel ----
-function constrainPaintRegion(pid, x0, y0, w, h) {
-  let p = panels[pid];
-  if (!p) return;
-  let { paintCtx, paintableMask, VW, VH } = p;
-  let ix0 = Math.max(0, Math.floor(x0)), iy0 = Math.max(0, Math.floor(y0));
-  let ix1 = Math.min(VW, Math.ceil(x0+w)), iy1 = Math.min(VH, Math.ceil(y0+h));
-  if (ix1 <= ix0 || iy1 <= iy0) return;
-  let reg = paintCtx.getImageData(ix0, iy0, ix1-ix0, iy1-iy0);
-  let d = reg.data, changed = false;
-  for (let row=0; row<iy1-iy0; row++) {
-    for (let col=0; col<ix1-ix0; col++) {
-      let gx = ix0+col, gy = iy0+row;
-      let mi = gy * VW + gx;
-      if (!paintableMask[mi]) {
-        let pi = (row * (ix1-ix0) + col) * 4;
-        d[pi] = 210; d[pi+1]=225; d[pi+2]=190; d[pi+3]=255;
-        changed = true;
+    function floodFill(pid, sx,sy,color) {
+      let p = panels[pid];
+      if (!p) return;
+      let { paintCtx, paintableMask, width, height } = p;
+      sx = Math.round(sx); sy = Math.round(sy);
+      if (sx<0||sx>=width||sy<0||sy>=height) return;
+      if (!paintableMask[sy*width+sx]) return;
+      let img = paintCtx.getImageData(0,0,width,height);
+      let data = img.data;
+      let si = (sy*width+sx)*4;
+      let sr=data[si], sg=data[si+1], sb=data[si+2];
+      let fc = hexToRgb(color);
+      let fr=fc[0], fg=fc[1], fb=fc[2];
+      if (Math.abs(sr-fr)<3 && Math.abs(sg-fg)<3 && Math.abs(sb-fb)<3) return;
+      let visited = new Uint8Array(width*height);
+      let stack = [sx,sy];
+      while(stack.length) {
+        let y = stack.pop(), x = stack.pop();
+        if (x<0||x>=width||y<0||y>=height) continue;
+        let vi = y*width + x;
+        if (visited[vi] || !paintableMask[vi]) continue;
+        let pi = vi*4;
+        if (Math.abs(data[pi]-sr)>32||Math.abs(data[pi+1]-sg)>32||Math.abs(data[pi+2]-sb)>32) continue;
+        visited[vi]=1;
+        data[pi]=fr; data[pi+1]=fg; data[pi+2]=fb; data[pi+3]=255;
+        stack.push(x+1,y, x-1,y, x,y+1, x,y-1);
+      }
+      paintCtx.putImageData(img,0,0);
+    }
+
+    // ----- INIT EACH PANEL – creates independent layer with its own state -----
+    function initPanels() {
+      PANEL_IDS.forEach((pid, idx) => {
+        // Skip if already initialized? We'll rebuild fresh.
+        let canvas = document.getElementById(PAINT_IDS[idx]);
+        let lineCanvas = document.getElementById(LINE_IDS[idx]);
+        let holder = document.getElementById(HOLDER_IDS[idx]);
+        if (!canvas || !holder) return;
+
+        let w = holder.clientWidth || 600;
+        let h = holder.clientHeight || 500;
+        canvas.width = w; canvas.height = h;
+        lineCanvas.width = w; lineCanvas.height = h;
+
+        let paintCtx = canvas.getContext('2d', {willReadFrequently: true});
+        let lineCtx = lineCanvas.getContext('2d');
+
+        // Each panel gets its own state object (stored in panelState)
+        if (!panelState[pid]) {
+          panelState[pid] = createInitialLayerState();
+        }
+
+        panels[pid] = {
+          canvas, paintCtx, lineCanvas, lineCtx,
+          width: w, height: h,
+          activePointers: {}
+        };
+
+        // Build masks using this layer's current template
+        buildMasksForPanel(pid, panelState[pid].currentTemplate);
+
+        // ----- EVENT LISTENERS – use layer's own state -----
+        function getCoords(e) {
+          let rect = canvas.getBoundingClientRect();
+          let scaleX = canvas.width / rect.width;
+          let scaleY = canvas.height / rect.height;
+          return {
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY
+          };
+        }
+
+        function handleDown(e) {
+          e.preventDefault();
+          let state = panelState[pid];
+          let c = getCoords(e);
+          
+          if (state.activeTool === 'fill') {
+            floodFill(pid, c.x, c.y, state.currentColor);
+            return;
+          }
+          let color = (state.activeTool === 'eraser') ? '#FFFFFF' : state.currentColor;
+          panels[pid].activePointers[e.pointerId] = {x: c.x, y: c.y, color: color};
+          brushDot(pid, c.x, c.y, color, state.brushSize);
+
+          let dot = document.createElement('div');
+          dot.className = 'pointer-dot';
+          dot.id = `dot-${pid}-${e.pointerId}`;
+          dot.style.left = e.clientX+'px';
+          dot.style.top = e.clientY+'px';
+          dot.style.background = color;
+          dot.style.width = dot.style.height = Math.min(state.brushSize, 36)+'px';
+          document.body.appendChild(dot);
+        }
+
+        function handleMove(e) {
+          e.preventDefault();
+          let ptr = panels[pid].activePointers[e.pointerId];
+          if (!ptr) return;
+          let c = getCoords(e);
+          let state = panelState[pid];
+          brushStroke(pid, ptr.x, ptr.y, c.x, c.y, ptr.color, state.brushSize);
+          ptr.x = c.x; ptr.y = c.y;
+          let dot = document.getElementById(`dot-${pid}-${e.pointerId}`);
+          if (dot) { dot.style.left = e.clientX+'px'; dot.style.top = e.clientY+'px'; }
+        }
+
+        function handleUp(e) {
+          delete panels[pid].activePointers[e.pointerId];
+          let dot = document.getElementById(`dot-${pid}-${e.pointerId}`);
+          if (dot) dot.remove();
+        }
+
+        // Remove old listeners to avoid duplication
+        canvas.removeEventListener('pointerdown', handleDown);
+        canvas.removeEventListener('pointermove', handleMove);
+        canvas.removeEventListener('pointerup', handleUp);
+        canvas.removeEventListener('pointercancel', handleUp);
+        
+        canvas.addEventListener('pointerdown', handleDown);
+        canvas.addEventListener('pointermove', handleMove);
+        canvas.addEventListener('pointerup', handleUp);
+        canvas.addEventListener('pointercancel', handleUp);
+      });
+    }
+
+    // ----- BUILD TOOLBAR – EACH LAYER GETS ITS OWN UI, BOUND TO ITS OWN STATE -----
+    function buildPanelToolbars() {
+      PANEL_IDS.forEach((pid, idx) => {
+        let toolbar = document.getElementById(TOOLBAR_IDS[idx]);
+        if (!toolbar) return;
+        toolbar.innerHTML = '';
+
+        // Each toolbar uses the layer's state, not global variables
+        let state = panelState[pid];
+        if (!state) {
+          panelState[pid] = createInitialLayerState();
+          state = panelState[pid];
+        }
+
+        // ---- Color swatches (each swatch updates ONLY this layer's currentColor) ----
+        MASTER_COLORS.forEach(c => {
+          let sw = document.createElement('div');
+          sw.className = 'color-swatch';
+          sw.style.background = c;
+          if (c === '#fff') sw.style.border = '2px solid #ccc';
+          sw.dataset.color = c;
+          sw.addEventListener('click', () => { 
+            state.currentColor = c; 
+            refreshLayerUI(pid); 
+          });
+          toolbar.appendChild(sw);
+        });
+
+        let div1 = document.createElement('div'); div1.className = 'bar-divider'; toolbar.appendChild(div1);
+
+        // ---- Animal templates (updates ONLY this layer's template) ----
+        let tmplKeys = Object.keys(TEMPLATES).slice(0,6);
+        tmplKeys.forEach(key => {
+          let btn = document.createElement('button');
+          btn.className = 'tpl-btn';
+          btn.textContent = TEMPLATES[key].emoji;
+          btn.dataset.template = key;
+          btn.addEventListener('click', () => {
+            state.currentTemplate = key;
+            buildMasksForPanel(pid, state.currentTemplate);
+            refreshLayerUI(pid);
+            let lbl = document.createElement('div');
+            lbl.className = 'animal-label';
+            lbl.textContent = TEMPLATES[key].emoji;
+            document.body.appendChild(lbl);
+            setTimeout(()=>lbl.remove(), 1600);
+          });
+          toolbar.appendChild(btn);
+        });
+
+        let div2 = document.createElement('div'); div2.className = 'bar-divider'; toolbar.appendChild(div2);
+
+        // ---- Brush size slider (affects only this layer) ----
+        let slider = document.createElement('input');
+        slider.type = 'range'; slider.className = 'size-slider';
+        slider.min = 5; slider.max = 60; slider.value = state.brushSize;
+        slider.addEventListener('input', (e) => { state.brushSize = parseInt(e.target.value); });
+        toolbar.appendChild(slider);
+
+        let div3 = document.createElement('div'); div3.className = 'bar-divider'; toolbar.appendChild(div3);
+
+        // ---- Tools: brush, fill, eraser (each toggles this layer's activeTool) ----
+        let brushBtn = document.createElement('button');
+        brushBtn.className = 'tool-btn'; brushBtn.dataset.tool = 'brush'; brushBtn.textContent = '✏️';
+        brushBtn.addEventListener('click', () => { state.activeTool = 'brush'; refreshLayerUI(pid); });
+        toolbar.appendChild(brushBtn);
+
+        let fillBtn = document.createElement('button');
+        fillBtn.className = 'tool-btn'; fillBtn.dataset.tool = 'fill'; fillBtn.textContent = '💧';
+        fillBtn.addEventListener('click', () => { state.activeTool = 'fill'; refreshLayerUI(pid); });
+        toolbar.appendChild(fillBtn);
+
+        let eraserBtn = document.createElement('button');
+        eraserBtn.className = 'tool-btn'; eraserBtn.dataset.tool = 'eraser'; eraserBtn.textContent = '🧽';
+        eraserBtn.addEventListener('click', () => { state.activeTool = 'eraser'; refreshLayerUI(pid); });
+        toolbar.appendChild(eraserBtn);
+
+        let div4 = document.createElement('div'); div4.className = 'bar-divider'; toolbar.appendChild(div4);
+
+        // ---- Clear (resets only this layer) ----
+        let clearBtn = document.createElement('button');
+        clearBtn.className = 'ctrl-btn'; clearBtn.textContent = '🧹Clear';
+        clearBtn.addEventListener('click', () => { 
+          buildMasksForPanel(pid, state.currentTemplate); 
+        });
+        toolbar.appendChild(clearBtn);
+
+        // ---- Back (global, but kept per toolbar) ----
+        let backBtn = document.createElement('button');
+        backBtn.className = 'ctrl-btn'; backBtn.textContent = '🔙Menu';
+        backBtn.addEventListener('click', () => { location.href = '../index.html'; });
+        toolbar.appendChild(backBtn);
+
+        // Initial active highlight
+        refreshLayerUI(pid);
+      });
+    }
+
+    // ----- Refresh UI for a specific layer (only that panel's toolbar) -----
+    function refreshLayerUI(pid) {
+      let state = panelState[pid];
+      if (!state) return;
+      
+      // Target only elements inside this panel's toolbar
+      let panel = document.getElementById(pid);
+      if (!panel) return;
+      
+      panel.querySelectorAll('.color-swatch').forEach(s => {
+        s.classList.toggle('active', s.dataset.color === state.currentColor);
+      });
+      panel.querySelectorAll('.tool-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tool === state.activeTool);
+      });
+      panel.querySelectorAll('.tpl-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.template === state.currentTemplate);
+      });
+    }
+
+    // ----- JUNGLE BACKGROUND (cosmetic, shared) -----
+    function buildJungle() {
+      let bg = document.getElementById('jungleBg');
+      for (let i=0; i<24; i++) {
+        let leaf = document.createElement('div');
+        leaf.className = 'floating-leaf';
+        leaf.textContent = ['🌿','🍃','🌴','🍀','🌱'][Math.floor(Math.random()*5)];
+        leaf.style.left = Math.random()*100 + '%';
+        leaf.style.top = Math.random()*100 + '%';
+        leaf.style.animationDelay = Math.random()*10 + 's';
+        leaf.style.animationDuration = (15 + Math.random()*20) + 's';
+        bg.appendChild(leaf);
       }
     }
-  }
-  if (changed) paintCtx.putImageData(reg, ix0, iy0);
-}
 
-function brushStrokeOnPanel(pid, x1, y1, x2, y2, color, size) {
-  let p = panels[pid];
-  if (!p) return;
-  let ctx = p.paintCtx;
-  ctx.save();
-  ctx.lineWidth = size;
-  ctx.strokeStyle = color;
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.stroke();
-  ctx.restore();
-  let pad = size/2+4;
-  constrainPaintRegion(pid, Math.min(x1,x2)-pad, Math.min(y1,y2)-pad, Math.abs(x2-x1)+pad*2, Math.abs(y2-y1)+pad*2);
-}
-function brushDotOnPanel(pid, cx, cy, color, size) {
-  let p = panels[pid];
-  if (!p) return;
-  let ctx = p.paintCtx;
-  ctx.save();
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(cx, cy, size/2, 0, 2*Math.PI);
-  ctx.fill();
-  ctx.restore();
-  constrainPaintRegion(pid, cx-size/2-2, cy-size/2-2, size+4, size+4);
-}
-function floodFillOnPanel(pid, sx, sy, color) {
-  let p = panels[pid];
-  if (!p) return;
-  let { paintCtx, paintableMask, VW, VH } = p;
-  sx = Math.round(sx); sy = Math.round(sy);
-  if (sx<0||sx>=VW||sy<0||sy>=VH) return;
-  if (!paintableMask[sy*VW+sx]) return;
-  let img = paintCtx.getImageData(0,0,VW,VH);
-  let data = img.data, si = (sy*VW+sx)*4;
-  let sr=data[si], sg=data[si+1], sb=data[si+2];
-  let fc = hexToRgb(color), fr=fc[0], fg=fc[1], fb=fc[2];
-  if (Math.abs(sr-fr)<3 && Math.abs(sg-fg)<3 && Math.abs(sb-fb)<3) return;
-  let visited = new Uint8Array(VW*VH);
-  let stack = [sx,sy];
-  while(stack.length) {
-    let y = stack.pop(), x = stack.pop();
-    if (x<0||x>=VW||y<0||y>=VH) continue;
-    let vi = y*VW + x;
-    if (visited[vi] || !paintableMask[vi]) continue;
-    let pi = vi*4;
-    if (Math.abs(data[pi]-sr)>32 || Math.abs(data[pi+1]-sg)>32 || Math.abs(data[pi+2]-sb)>32) continue;
-    visited[vi]=1;
-    data[pi]=fr; data[pi+1]=fg; data[pi+2]=fb; data[pi+3]=255;
-    stack.push(x+1,y, x-1,y, x,y+1, x,y-1);
-  }
-  paintCtx.putImageData(img,0,0);
-}
+    // ----- MODAL: CHOOSE 1 OR 3 PLAYERS (then init layers) -----
+    function setupModal() {
+      const modal = document.getElementById('playerModal');
+      const grid = document.getElementById('canvas-grid');
+      const choose1 = document.getElementById('choose1');
+      const choose3 = document.getElementById('choose3');
 
-// ---- drawing event handlers (multi-touch per panel) ----
-function handleDrawingStart(e, pid, idx) {
-  e.preventDefault();
-  let p = panels[pid];
-  if (!p) return;
-  let c = getVirtualCoords(e, pid);
-  let colorForTool = (activeTool === 'eraser') ? '#ffffff' : currentColor;
+      function startGame(playerCount) {
+        modal.classList.add('hidden-modal');
+        grid.style.display = 'grid';
+        
+        if (playerCount === 1) {
+          grid.className = 'grid-1';
+          document.getElementById('panel2').style.display = 'none';
+          document.getElementById('panel3').style.display = 'none';
+        } else {
+          grid.className = 'grid-3';
+          document.getElementById('panel2').style.display = 'flex';
+          document.getElementById('panel3').style.display = 'flex';
+        }
 
-  p.activePointers[e.pointerId] = {x: c.x, y: c.y, color: colorForTool};
+        // Fresh state for each layer
+        PANEL_IDS.forEach(pid => {
+          panelState[pid] = createInitialLayerState();
+        });
 
-  if (activeTool === 'fill') {
-    floodFillOnPanel(pid, c.x, c.y, currentColor);
-    delete p.activePointers[e.pointerId];
-    return;
-  }
-  brushDotOnPanel(pid, c.x, c.y, colorForTool, brushSize);
+        initPanels();
+        buildPanelToolbars();
 
-  // pointer dot
-  let dot = document.createElement('div');
-  dot.className = 'pointer-dot';
-  dot.id = `dot-${pid}-${e.pointerId}`;
-  dot.style.left = e.clientX + 'px';
-  dot.style.top = e.clientY + 'px';
-  dot.style.background = colorForTool;
-  dot.style.width = Math.min(brushSize, 36) + 'px';
-  dot.style.height = Math.min(brushSize, 36) + 'px';
-  document.body.appendChild(dot);
-}
+        window.addEventListener('resize', function() {
+          PANEL_IDS.forEach(pid => {
+            let p = panels[pid];
+            if (p) {
+              let idx = PANEL_IDS.indexOf(pid);
+              let holder = document.getElementById(HOLDER_IDS[idx]);
+              if (holder && holder.clientWidth > 0) {
+                let newW = holder.clientWidth;
+                let newH = holder.clientHeight;
+                p.canvas.width = newW;
+                p.canvas.height = newH;
+                p.lineCanvas.width = newW;
+                p.lineCanvas.height = newH;
+                p.width = newW;
+                p.height = newH;
+                let state = panelState[pid];
+                if (state) {
+                  buildMasksForPanel(pid, state.currentTemplate);
+                }
+              }
+            }
+          });
+        });
+      }
 
-function handleDrawingMove(e, pid) {
-  e.preventDefault();
-  let p = panels[pid];
-  if (!p) return;
-  let ptr = p.activePointers[e.pointerId];
-  if (!ptr) return;
-  let c = getVirtualCoords(e, pid);
-  brushStrokeOnPanel(pid, ptr.x, ptr.y, c.x, c.y, ptr.color, brushSize);
-  ptr.x = c.x; ptr.y = c.y;
-
-  let dot = document.getElementById(`dot-${pid}-${e.pointerId}`);
-  if (dot) { dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px'; }
-}
-
-function handleDrawingEnd(e, pid) {
-  let p = panels[pid];
-  if (p && p.activePointers[e.pointerId]) delete p.activePointers[e.pointerId];
-  let dot = document.getElementById(`dot-${pid}-${e.pointerId}`);
-  if (dot) dot.remove();
-}
-
-// ---- shared utilities ----
-function hexToRgb(hex) {
-  let c = document.createElement('canvas').getContext('2d');
-  c.fillStyle = hex; c.fillRect(0,0,1,1);
-  return c.getImageData(0,0,1,1).data;
-}
-
-// ---- UI BUILDERS (SIDE GRIDS) ----
-function buildSideTools() {
-  let leftAnimal = document.getElementById('templatePanelLeft');
-  leftAnimal.innerHTML = '';
-  Object.keys(templates).forEach(key => {
-    let btn = document.createElement('button');
-    btn.className = 'tpl-btn';
-    btn.textContent = templates[key].emoji;
-    btn.dataset.template = key;
-    btn.addEventListener('click', (e) => {
-      currentTemplate = key;
-      // rebuild masks for all 3 panels
-      PANEL_IDS.forEach(pid => buildMasksForPanel(pid, currentTemplate));
-      refreshUI();
-      let lbl = document.createElement('div');
-      lbl.className = 'animal-label';
-      lbl.textContent = templates[key].emoji;
-      document.body.appendChild(lbl);
-      setTimeout(()=>lbl.remove(),1600);
-    });
-    leftAnimal.appendChild(btn);
-  });
-
-  // color bar left
-  let colorDiv = document.getElementById('colorBarLeft');
-  colorDiv.innerHTML = '';
-  COLORS.forEach(c => {
-    let sw = document.createElement('div');
-    sw.className = 'color-swatch';
-    sw.style.background = c;
-    sw.dataset.color = c;
-    sw.addEventListener('click', () => { currentColor = c; refreshUI(); });
-    colorDiv.appendChild(sw);
-  });
-  // brush size slider
-  let slider = document.createElement('input');
-  slider.type = 'range'; slider.className = 'size-slider';
-  slider.min = 8; slider.max = 70; slider.value = brushSize;
-  slider.addEventListener('input', (e) => { brushSize = parseInt(e.target.value); });
-  colorDiv.appendChild(slider);
-
-  // brush tools right
-  let rightToolsDiv = document.getElementById('brushToolsRight');
-  rightToolsDiv.style.display = 'flex';
-  rightToolsDiv.style.flexDirection = 'column';
-  rightToolsDiv.style.gap = '16px';
-  rightToolsDiv.style.alignItems = 'center';
-  let tools = [
-    {id:'brush', icon:'✏️'},{id:'fill', icon:'💧'},{id:'eraser', icon:'🧽'}
-  ];
-  tools.forEach(t => {
-    let btn = document.createElement('button');
-    btn.className = 'tool-btn';
-    btn.textContent = t.icon;
-    btn.dataset.tool = t.id;
-    btn.addEventListener('click', () => { activeTool = t.id; refreshUI(); });
-    rightToolsDiv.appendChild(btn);
-  });
-}
-
-function refreshUI() {
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === currentColor));
-  document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === activeTool));
-  document.querySelectorAll('.tpl-btn').forEach(b => b.classList.toggle('active', b.dataset.template === currentTemplate));
-}
-
-// ---- background jungle ----
-function buildJungle() {
-  let bg = document.getElementById('jungleBg');
-  ['🌿','🍃','🌴','🌱','🍀'].forEach(em => {
-    for (let i=0;i<6;i++) {
-      let leaf = document.createElement('div');
-      leaf.className = 'leaf';
-      leaf.textContent = em;
-      leaf.style.left = Math.random()*100+'%';
-      leaf.style.top = Math.random()*100+'%';
-      leaf.style.animationDelay = Math.random()*8+'s';
-      bg.appendChild(leaf);
+      choose1.addEventListener('click', () => startGame(1));
+      choose3.addEventListener('click', () => startGame(3));
     }
-  });
-}
 
-// ---- animal drawing primitives (scaled for 4096) ----
-function drawElephant(ctx,w,h) { /* same logic, but coordinates scaled */ 
-  let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=12; ctx.fillStyle='white';
-  ctx.beginPath(); ctx.ellipse(cx,cy+250,450,400,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx,cy-250,380,340,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx-350,cy-200,180,250,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx+350,cy-200,180,250,0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx,cy-130); ctx.quadraticCurveTo(cx-100,cy+100,cx-80,cy+400); ctx.quadraticCurveTo(cx,cy+500,cx+80,cy+400); ctx.quadraticCurveTo(cx+100,cy+100,cx,cy-130); ctx.fill(); ctx.stroke();
-  for(let i=0;i<4;i++){let lx=cx-250+i*170; ctx.fillRect(lx-50,cy+400,100,250); ctx.strokeRect(lx-50,cy+400,100,250);}
-  ctx.fillStyle='#333';
-  ctx.beginPath(); ctx.arc(cx-150,cy-350,40,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx+150,cy-350,40,0,Math.PI*2); ctx.fill();
-}
-function drawLion(ctx,w,h){ let cx=w/2,cy=h/2; /* simplified */ 
-  ctx.strokeStyle='#333'; ctx.lineWidth=12; ctx.fillStyle='white';
-  for(let i=0;i<16;i++){let a=(i/16)*Math.PI*2; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*400,cy-200+Math.sin(a)*400,100,0,2*Math.PI); ctx.fill(); ctx.stroke();}
-  ctx.beginPath(); ctx.ellipse(cx,cy-200,280,260,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx,cy+200,360,300,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  for(let i=0;i<4;i++){let lx=cx-250+i*170; ctx.fillRect(lx-40,cy+380,80,220); ctx.strokeRect(lx-40,cy+380,80,220);}
-  ctx.fillStyle='#333'; ctx.arc(cx-100,cy-270,30,0,2*Math.PI); ctx.fill(); ctx.arc(cx+100,cy-270,30,0,2*Math.PI); ctx.fill(); ctx.moveTo(cx,cy-150); ctx.lineTo(cx-40,cy-100); ctx.lineTo(cx+40,cy-100); ctx.closePath(); ctx.fill();
-}
-function drawMonkey(ctx,w,h){/* quick impl */ let cx=w/2,cy=h/2;
-  ctx.strokeStyle='#333'; ctx.lineWidth=12; ctx.fillStyle='white';
-  ctx.beginPath(); ctx.ellipse(cx,cy+80,300,320,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx,cy-300,250,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.arc(cx-180,cy-300,90,0,2*Math.PI); ctx.fill(); ctx.stroke(); ctx.arc(cx+180,cy-300,90,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#333'; ctx.arc(cx-70,cy-300,25,0,2*Math.PI); ctx.fill(); ctx.arc(cx+70,cy-300,25,0,2*Math.PI); ctx.fill();
-}
-function drawParrot(ctx,w,h){ let cx=w/2,cy=h/2;
-  ctx.strokeStyle='#333'; ctx.lineWidth=12; ctx.fillStyle='white';
-  ctx.beginPath(); ctx.ellipse(cx,cy+70,240,280,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.arc(cx,cy-200,180,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#333'; ctx.arc(cx+60,cy-220,25,0,2*Math.PI); ctx.fill();
-}
-function drawSnake(ctx,w,h){/* big snake */ let cx=w/2,cy=h/2;
-  ctx.strokeStyle='#333'; ctx.lineWidth=12; ctx.fillStyle='white';
-  let pts=[]; for(let i=0;i<=80;i++){let t=i/80; pts.push({x:cx+Math.sin(t*Math.PI*3)*350, y:cy-350+t*800});}
-  ctx.beginPath(); ctx.moveTo(pts[0].x-50,pts[0].y); for(let i=1;i<=80;i++) ctx.lineTo(pts[i].x-40,pts[i].y+10); ctx.fill(); ctx.stroke(); 
-}
-function drawTiger(ctx,w,h){/* tiger */ let cx=w/2,cy=h/2;
-  ctx.strokeStyle='#333'; ctx.lineWidth=12; ctx.fillStyle='white';
-  ctx.ellipse(cx,cy+100,400,340,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.ellipse(cx,cy-240,300,270,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#333'; ctx.arc(cx-100,cy-270,35,0,2*Math.PI); ctx.fill(); ctx.arc(cx+100,cy-270,35,0,2*Math.PI); ctx.fill();
-}
-function drawGiraffe(ctx,w,h){/* giraffe */ let cx=w/2,cy=h/2;
-  ctx.strokeStyle='#333'; ctx.lineWidth=14; ctx.fillStyle='white';
-  ctx.ellipse(cx,cy+250,350,300,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillRect(cx-70,cy-550,140,800); ctx.strokeRect(cx-70,cy-550,140,800);
-  ctx.ellipse(cx,cy-620,120,100,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#333'; ctx.arc(cx+30,cy-640,25,0,2*Math.PI); ctx.fill();
-}
-function drawFrog(ctx,w,h){/* frog */ let cx=w/2,cy=h/2;
-  ctx.strokeStyle='#333'; ctx.lineWidth=12; ctx.fillStyle='white';
-  ctx.ellipse(cx,cy+80,320,260,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.ellipse(cx,cy-180,300,200,0,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#333'; ctx.arc(cx-120,cy-190,50,0,2*Math.PI); ctx.fill(); ctx.arc(cx+120,cy-190,50,0,2*Math.PI); ctx.fill();
-}
+    // ----- DRAWING FUNCTIONS (unchanged from original, but called per layer) -----
+    function drawElephant(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+50,180,150,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy-120,130,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-150,cy-120,70,100,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+150,cy-120,70,100,0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx,cy-60); ctx.quadraticCurveTo(cx-50,cy+50,cx-40,cy+150); ctx.quadraticCurveTo(cx-30,cy+180,cx-10,cy+190); ctx.quadraticCurveTo(cx+10,cy+180,cx+20,cy+150); ctx.quadraticCurveTo(cx+30,cy+50,cx,cy-60); ctx.fill(); ctx.stroke(); for(var i=0;i<4;i++){var lx=cx-100+i*70; ctx.fillRect(lx-25,cy+150,50,120); ctx.strokeRect(lx-25,cy+150,50,120);} ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-50,cy-140,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+50,cy-140,15,0,Math.PI*2); ctx.fill(); }
+    function drawLion(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; for(var i=0;i<16;i++){var a=(i/16)*Math.PI*2; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*140,cy-80+Math.sin(a)*140,50,0,Math.PI*2); ctx.fill(); ctx.stroke();} ctx.beginPath(); ctx.ellipse(cx,cy-80,110,100,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy+80,140,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); for(var i=0;i<4;i++){var lx=cx-90+i*60; ctx.fillRect(lx-20,cy+150,40,110); ctx.strokeRect(lx-20,cy+150,40,110);} ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-40,cy-90,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+40,cy-90,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx,cy-50); ctx.lineTo(cx-15,cy-30); ctx.lineTo(cx+15,cy-30); ctx.closePath(); ctx.fill(); }
+    function drawMonkey(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+20,120,140,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(cx,cy-120,100,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(cx-90,cy-120,40,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(cx+90,cy-120,40,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy-100,60,70,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-130,cy+50,30,100,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+130,cy+50,30,100,0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-30,cy-110,12,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+30,cy-110,12,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx,cy-90,30,0.2,Math.PI-0.2); ctx.stroke(); }
+    function drawParrot(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+30,100,130,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(cx,cy-80,80,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+40,cy-70); ctx.quadraticCurveTo(cx+100,cy-60,cx+90,cy-40); ctx.lineTo(cx+50,cy-50); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-80,cy+20,50,100,-0.5,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+80,cy+20,50,100,0.5,0,Math.PI*2); ctx.fill(); ctx.stroke(); for(var i=0;i<5;i++){ctx.beginPath(); ctx.ellipse(cx-40+i*20,cy+160,20,80,0,0,Math.PI*2); ctx.fill(); ctx.stroke();} ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx+20,cy-90,12,0,Math.PI*2); ctx.fill(); }
+    function drawSnake(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; var bodyW=38, pts=[], segs=80; for(var i=0;i<=segs;i++){var t=i/segs; pts.push({x:cx+Math.sin(t*Math.PI*3)*140, y:cy-180+t*480});} ctx.beginPath(); ctx.moveTo(pts[0].x-bodyW,pts[0].y); for(var i=1;i<=segs;i++){var dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y,len=Math.sqrt(dx*dx+dy*dy); ctx.lineTo(pts[i].x+(-dy/len)*bodyW, pts[i].y+(dx/len)*bodyW);} ctx.lineTo(pts[segs].x,pts[segs].y+15); for(var i=segs;i>=0;i--){var dx=i>0?pts[i].x-pts[i-1].x:pts[1].x-pts[0].x, dy=i>0?pts[i].y-pts[i-1].y:pts[1].y-pts[0].y, len=Math.sqrt(dx*dx+dy*dy); ctx.lineTo(pts[i].x-(-dy/len)*bodyW, pts[i].y-(dx/len)*bodyW);} ctx.closePath(); ctx.fill(); ctx.stroke(); for(var i=8;i<segs-5;i+=6){ctx.beginPath(); ctx.save(); ctx.translate(pts[i].x,pts[i].y); ctx.moveTo(0,-12); ctx.lineTo(10,0); ctx.lineTo(0,12); ctx.lineTo(-10,0); ctx.closePath(); ctx.restore(); ctx.lineWidth=3; ctx.stroke();} ctx.lineWidth=5; var hx=pts[0].x, hy=pts[0].y-35; ctx.beginPath(); ctx.ellipse(hx,hy,55,45,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(hx-20,hy-8,10,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(hx+20,hy-8,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(hx-18,hy-10,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(hx+22,hy-10,3,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#333'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(hx,hy+10,18,0.2,Math.PI-0.2); ctx.stroke(); ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(hx,hy+28); ctx.lineTo(hx-8,hy+42); ctx.moveTo(hx,hy+28); ctx.lineTo(hx+8,hy+42); ctx.stroke(); }
+    function drawTiger(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+50,160,130,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy-100,120,110,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); for(var i=0;i<4;i++){var lx=cx-100+i*70; ctx.fillRect(lx-20,cy+130,40,120); ctx.strokeRect(lx-20,cy+130,40,120);} ctx.lineWidth=8; for(var i=0;i<6;i++){ctx.beginPath(); ctx.moveTo(cx-120,cy+20+i*25); ctx.lineTo(cx+120,cy+20+i*25); ctx.stroke();} ctx.lineWidth=5; ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-40,cy-110,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+40,cy-110,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx,cy-70); ctx.lineTo(cx-15,cy-50); ctx.lineTo(cx+15,cy-50); ctx.closePath(); ctx.fill(); }
+    function drawGiraffe(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+100,140,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillRect(cx-30,cy-300,60,400); ctx.strokeRect(cx-30,cy-300,60,400); ctx.beginPath(); ctx.ellipse(cx,cy-330,60,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); for(var i=0;i<4;i++){var lx=cx-90+i*60; ctx.fillRect(lx-15,cy+180,30,150); ctx.strokeRect(lx-15,cy+180,30,150);} [[cx-80,cy+80],[cx-40,cy+60],[cx,cy+100],[cx+40,cy+70],[cx+80,cy+90],[cx-20,cy-100],[cx+10,cy-150]].forEach(function(s){ctx.beginPath(); ctx.ellipse(s[0],s[1],25,30,0,0,Math.PI*2); ctx.fill(); ctx.stroke();}); ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx+20,cy-340,12,0,Math.PI*2); ctx.fill(); }
+    function drawFrog(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+30,130,110,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy-50,120,80,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-60,cy-90,45,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+60,cy-90,45,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-60,cy-85,20,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+60,cy-85,20,0,Math.PI*2); ctx.fill(); ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(cx,cy-20,60,0.1,Math.PI-0.1); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-110,cy+80,30,60,-0.5,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+110,cy+80,30,60,0.5,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-130,cy+20,50,80,-0.8,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+130,cy+20,50,80,0.8,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
 
-// ---- init ----
-initPanels();
-buildSideTools();
-buildJungle();
-refreshUI();
-
-document.getElementById('clearBtn').addEventListener('click', ()=>{
-  PANEL_IDS.forEach(pid => buildMasksForPanel(pid, currentTemplate));
-});
-document.getElementById('backBtn').addEventListener('click', ()=>{
-  alert('🌳 back to jungle menu (demo)');
-});
-
-window.addEventListener('resize', ()=>{
-  PANEL_IDS.forEach(pid => { if(panels[pid]) applyViewTransform(pid); });
-});
-
-})();
+    // ----- START -----
+    buildJungle();
+    setupModal();
+  })();
 </script>
 </body>
 </html>
