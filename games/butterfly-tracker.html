@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Butterfly Catcher - Interactive Wall</title>
+    <title>Butterfly Haven – Endless Flutter</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -17,7 +17,8 @@
         body {
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #0a3d2a 0%, #1a5c3e 30%, #2a7d52 100%);
+            /* PERMANENT DAY THEME – bright & cheerful */
+            background: linear-gradient(180deg, #87CEEB 0%, #B0E57C 40%, #5F9F4F 100%);
             color: white;
             height: 100vh;
             width: 100vw;
@@ -25,40 +26,22 @@
             touch-action: none;
         }
         
-        /* Environment Elements */
+        /* Environment – sunny meadow */
         .cloud {
             position: absolute;
-            opacity: 0.8;
+            opacity: 0.75;
             z-index: 1;
+            filter: drop-shadow(0 10px 15px rgba(255,255,255,0.3));
+            animation: floatCloud 90s infinite alternate;
         }
-        
-        .cloud:nth-child(1) {
-            top: 15%;
-            left: 5%;
-            width: 150px;
-            animation: floatCloud 60s infinite linear;
-        }
-        
-        .cloud:nth-child(2) {
-            top: 25%;
-            right: 8%;
-            width: 200px;
-            animation: floatCloud 80s infinite linear reverse;
-        }
-        
-        .cloud:nth-child(3) {
-            top: 10%;
-            left: 40%;
-            width: 180px;
-            animation: floatCloud 70s infinite linear;
-        }
+        .cloud:nth-child(1) { top: 12%; left: 2%; width: 190px; animation-duration: 110s; }
+        .cloud:nth-child(2) { top: 22%; right: 5%; width: 230px; animation-duration: 130s; }
+        .cloud:nth-child(3) { top: 8%; left: 45%; width: 200px; animation-duration: 100s; }
+        .cloud:nth-child(4) { top: 40%; left: 15%; width: 160px; opacity: 0.5; }
         
         @keyframes floatCloud {
             0% { transform: translateX(0) translateY(0); }
-            25% { transform: translateX(20px) translateY(5px); }
-            50% { transform: translateX(0) translateY(10px); }
-            75% { transform: translateX(-20px) translateY(5px); }
-            100% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(50px) translateY(20px); }
         }
         
         .lake {
@@ -68,1247 +51,671 @@
             width: 100%;
             height: 200px;
             z-index: 2;
-            filter: brightness(0.9) contrast(1.1);
+            filter: brightness(1.15) saturate(1.2);
+            object-fit: cover;
         }
         
-        .column-of-circles {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 3;
-        }
-        
-        .column-of-circles img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .column-of-circles img:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 40px rgba(255, 255, 255, 0.5);
-        }
-        
-        /* Mode Toggle Buttons */
-        .btn {
-            position: absolute;
-            bottom: 30px;
-            z-index: 100;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-        }
-        
-        .btn-day {
-            left: 30px;
-            background: rgba(255, 255, 255, 0.15);
-        }
-        
-        .btn-night {
-            left: 180px;
-            background: rgba(0, 0, 0, 0.3);
-        }
-        
-        .btn input {
-            display: none;
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-        
-        /* Game UI */
+        /* UI – only score, no timers/lives */
         .game-ui {
             position: absolute;
-            top: 0;
+            top: 24px;
             left: 0;
             width: 100%;
-            height: 100%;
             pointer-events: none;
-            z-index: 50;
+            z-index: 100;
         }
-        
-        .ui-top {
-            width: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-        
         .stats {
             display: flex;
-            justify-content: space-between;
-            padding: 20px 40px;
+            justify-content: flex-start;
+            padding: 0 40px;
         }
-        
         .stat-item {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(8px);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            min-width: 180px;
+            background: rgba(255, 248, 200, 0.4);
+            backdrop-filter: blur(12px);
+            padding: 16px 42px;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 150, 0.7);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
         }
-        
         .stat-label {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
-            color: rgba(255, 255, 255, 0.6);
+            color: #2D5E2C;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 3px;
         }
-        
         .stat-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: #a8ff78;
-            text-shadow: 0 0 10px rgba(168, 255, 120, 0.5);
+            font-size: 56px;
+            font-weight: 900;
+            color: #FFE55C;
+            text-shadow: 4px 4px 0 #CC8B1F, 0 0 25px #FFD700;
+            line-height: 1;
         }
         
-        .timer {
-            color: #ffd700;
-        }
-        
-        .lives {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        .heart {
-            font-size: 32px;
-            filter: drop-shadow(1px 1px 3px rgba(0, 0, 0, 0.5));
-            transition: all 0.3s;
-            color: #ff6b6b;
-        }
-        
-        /* Start Screen */
+        /* Start Screen – fresh day style */
         .start-screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(10, 61, 42, 0.85);
-            backdrop-filter: blur(5px);
+            background: rgba(135, 206, 235, 0.75);
+            backdrop-filter: blur(10px);
             z-index: 200;
             pointer-events: auto;
         }
-        
         .start-title {
-            font-size: 72px;
+            font-size: 80px;
             font-weight: 900;
-            color: #a8ff78;
-            text-shadow: 0 0 20px rgba(168, 255, 120, 0.7);
-            margin-bottom: 30px;
-            text-align: center;
+            color: #FFF9C4;
+            text-shadow: 6px 6px 0 #6B8E23, 0 0 40px #FFD700;
+            margin-bottom: 20px;
         }
-        
         .start-subtitle {
-            font-size: 24px;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 28px;
+            color: #1F4F2B;
+            background: rgba(255,255,220,0.7);
+            padding: 20px 40px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
             margin-bottom: 60px;
-            text-align: center;
-            max-width: 800px;
-            line-height: 1.5;
+            font-weight: 600;
         }
-        
         .start-btn {
-            padding: 25px 80px;
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #a8ff78, #56ab2f);
-            color: #0a3d2a;
+            padding: 24px 90px;
+            font-size: 40px;
+            font-weight: 800;
+            background: linear-gradient(145deg, #FFE55C, #FFB347);
+            color: #2D5E2C;
             border: none;
-            border-radius: 50px;
+            border-radius: 80px;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            pointer-events: auto;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: gentlePulse 2.5s infinite;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
+            pointer-events: auto;
+            border: 3px solid white;
         }
+        @keyframes gentlePulse { 50% { transform: scale(1.06); } }
         
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .start-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .instructions {
-            position: absolute;
-            bottom: 100px;
-            width: 100%;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 18px;
-            pointer-events: none;
-        }
-        
-        /* Game Over Screen */
+        /* Game Over */
         .game-over {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.92);
-            padding: 50px 70px;
-            border-radius: 24px;
+            background: rgba(255, 245, 200, 0.95);
+            backdrop-filter: blur(16px);
+            padding: 60px 80px;
+            border-radius: 60px;
             text-align: center;
-            border: 4px solid #a8ff78;
-            box-shadow: 0 0 40px rgba(168, 255, 120, 0.4);
+            border: 6px solid #FFD700;
+            box-shadow: 0 0 70px #FFB347;
             display: none;
             z-index: 300;
-            pointer-events: auto;
             width: 90%;
-            max-width: 700px;
+            max-width: 750px;
         }
-        
-        .game-over.show {
-            display: block;
-        }
-        
-        .game-over h1 {
-            font-size: 52px;
-            color: #ff6b6b;
-            margin-bottom: 16px;
-        }
-        
-        .final-score {
-            font-size: 40px;
-            color: #a8ff78;
-            margin: 16px 0;
-        }
-        
-        .high-score {
-            font-size: 28px;
-            color: #ffd700;
-            margin-bottom: 30px;
-        }
-        
+        .game-over.show { display: block; }
+        .game-over h1 { font-size: 58px; color: #C45A2C; }
+        .final-score { font-size: 56px; color: #3F7841; margin: 15px 0; }
+        .high-score { font-size: 34px; color: #B8860B; }
         .go-btn {
-            margin-top: 20px;
-            padding: 18px 50px;
-            font-size: 22px;
+            padding: 18px 48px;
+            font-size: 28px;
             font-weight: 700;
-            background: linear-gradient(135deg, #a8ff78, #56ab2f);
-            color: #0a3d2a;
+            background: linear-gradient(145deg, #FFE484, #FFAA33);
+            color: #2C5E2C;
             border: none;
             border-radius: 50px;
+            margin: 12px;
             cursor: pointer;
-            transition: all 0.3s;
-            pointer-events: auto;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
+            transition: 0.1s;
+            border: 2px solid white;
         }
+        .go-btn:active { transform: scale(0.92); }
         
-        .go-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .go-btn + .go-btn {
-            margin-left: 12px;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-        }
-        
-        /* Game Area */
+        /* Game area */
         .game-area {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 15;
         }
         
-        /* Catch Effect */
+        /* Visual pop */
         .catch-effect {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
             z-index: 150;
             display: none;
         }
-        
         .catch-effect.active {
             display: block;
-            animation: catchFlash 0.5s ease-out forwards;
+            animation: sunFlash 0.5s;
         }
+        @keyframes sunFlash { 0% { background: rgba(255, 235, 120, 0.3); } }
         
-        @keyframes catchFlash {
-            0% { background: rgba(168, 255, 120, 0.2); }
-            100% { background: rgba(168, 255, 120, 0); }
-        }
-        
-        /* Combo Display */
         .combo-display {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 35%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 72px;
+            font-size: 85px;
             font-weight: 900;
-            color: #a8ff78;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+            color: #FFF0A0;
+            text-shadow: 5px 5px 0 #B87333, 0 0 35px gold;
             pointer-events: none;
-            z-index: 20;
-            animation: comboAnim 1s ease-out forwards;
+            z-index: 80;
+            animation: comboRise 1.2s forwards;
         }
-        
-        @keyframes comboAnim {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            40% { opacity: 1; transform: translate(-50%, -50%) scale(1.4); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1) translateY(-80px); }
-        }
-        
-        @keyframes popExplosion {
-            0% {
-                width: 20px;
-                height: 20px;
-                opacity: 1;
-                transform: scale(1);
-            }
-            100% {
-                width: 200px;
-                height: 200px;
-                opacity: 0;
-                transform: scale(3);
-            }
+        @keyframes comboRise {
+            0% { opacity: 0; transform: translate(-50%, -30%) scale(0.3); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            100% { opacity: 0; transform: translate(-50%, -120%) scale(0.8); }
         }
         
         .pop-effect {
             position: absolute;
-            border: 3px solid #a8ff78;
+            border: 5px solid #FFE873;
             border-radius: 50%;
             pointer-events: none;
-            z-index: 100;
-            animation: popExplosion 0.6s ease-out forwards;
+            z-index: 120;
+            animation: popRing 0.65s forwards;
+            box-shadow: 0 0 25px gold;
+        }
+        @keyframes popRing {
+            0% { width: 15px; height: 15px; opacity: 1; }
+            100% { width: 220px; height: 220px; opacity: 0; }
         }
         
         .points-display {
             position: absolute;
-            font-size: 32px;
+            font-size: 44px;
             font-weight: 900;
-            color: #a8ff78;
-            text-shadow: 0 0 10px rgba(168, 255, 120, 0.8);
+            color: #FFE484;
+            text-shadow: 3px 3px 0 #B45F1B, 0 0 30px #FFB347;
             pointer-events: none;
-            z-index: 100;
-            animation: pointsFloat 1s ease-out forwards;
+            z-index: 110;
+            animation: floatPoints 1s forwards;
+        }
+        @keyframes floatPoints {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+            100% { transform: translate(-50%, -120%) scale(1.2); opacity: 0; }
         }
         
-        @keyframes pointsFloat {
-            0% {
-                opacity: 1;
-                transform: translate(-50%, -50%) translateY(0) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(-50%, -50%) translateY(-80px) scale(0.8);
-            }
-        }
-        
-        /* Butterfly Styles */
+        /* ----- BUTTERFLY STYLES (preserved & improved) ----- */
         .butterfly_container {
             position: absolute;
             cursor: pointer;
-            transition: transform 0.2s;
-            z-index: 10;
             pointer-events: auto;
+            z-index: 60;
+            will-change: transform, left, top;
+            transition: transform 0.05s; /* micro-smoothing */
         }
-        
         .butterfly_container.caught {
-            animation: caughtAnimation 0.8s forwards;
+            animation: vanish 0.6s forwards;
         }
-        
-        @keyframes caughtAnimation {
+        @keyframes vanish {
             0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(0); opacity: 0; }
         }
         
-        /* Butterfly Animation CSS from original code */
-        @keyframes rotating {
-            0% {
-                -webkit-transform: rotate3d(0, 0, 0, 0deg);
-                -moz-transform: rotate3d(0, 0, 0, 0deg);
-                -ms-transform: rotate3d(0, 0, 0, 0deg);
-                -o-transform: rotate3d(0, 0, 0, 0deg);
-                transform: rotate3d(0, 0, 0, 0deg);
-            }
-            100% {
-                -webkit-transform: rotate3d(0, 1, 0, 720deg);
-                -moz-transform: rotate3d(0, 1, 0, 720deg);
-                -ms-transform: rotate3d(0, 1, 0, 720deg);
-                -o-transform: rotate3d(0, 1, 0, 720deg);
-                transform: rotate3d(0, 1, 0, 720deg);
-            }
+        /* flapping & floating – refined, gentle */
+        @keyframes gentleFloat {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            25% { transform: translate3d(0, 25px, 0); }
+            75% { transform: translate3d(0, -15px, 0); }
         }
         
-        @keyframes rotatingY {
-            100% {
-                -webkit-transform: rotateY(-360deg);
-                -moz-transform: rotateY(-360deg);
-                -ms-transform: rotateY(-360deg);
-                -o-transform: rotateY(-360deg);
-                transform: rotateY(-360deg);
-            }
+        @keyframes leftWingBeat {
+            0%, 100% { transform: translate3d(0,0,0) scaleX(1) rotate3d(0,1,0, 40deg); }
+            50% { transform: translate3d(0,0,0) scaleX(1) rotate3d(0,1,0, -40deg); }
         }
-        
-        @keyframes fluttering {
-            0%,
-            25%,
-            50%,
-            75%,
-            100% {
-                -webkit-transform: translate3d(0, 0, 0);
-                -moz-transform: translate3d(0, 0, 0);
-                -ms-transform: translate3d(0, 0, 0);
-                -o-transform: translate3d(0, 0, 0);
-                transform: translate3d(0, 0, 0);
-            }
-            10%,
-            60% {
-                -webkit-transform: translate3d(0, 150px, 0);
-                -moz-transform: translate3d(0, 150px, 0);
-                -ms-transform: translate3d(0, 150px, 0);
-                -o-transform: translate3d(0, 150px, 0);
-                transform: translate3d(0, 150px, 0);
-            }
-            30%,
-            80% {
-                -webkit-transform: translate3d(0, 50px, 0);
-                -moz-transform: translate3d(0, 50px, 0);
-                -ms-transform: translate3d(0, 50px, 0);
-                -o-transform: translate3d(0, 50px, 0);
-                transform: translate3d(0, 50px, 0);
-            }
-        }
-        
-        @keyframes left-wing-flap {
-            0% {
-                -webkit-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-                -moz-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-                -ms-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-                -o-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-                transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-            }
-            50% {
-                -webkit-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
-                -moz-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
-                -ms-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
-                -o-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
-                transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
-            }
-            100% {
-                -webkit-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-                -moz-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-                -ms-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-                -o-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-                transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
-            }
-        }
-        
-        @keyframes right-wing-flap {
-            0% {
-                -webkit-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-                -moz-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-                -ms-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-                -o-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-                transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-            }
-            50% {
-                -webkit-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
-                -moz-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
-                -ms-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
-                -o-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
-                transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
-            }
-            100% {
-                -webkit-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-                -moz-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-                -ms-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-                -o-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-                transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
-            }
+        @keyframes rightWingBeat {
+            0%, 100% { transform: translate3d(0,0,0) scaleX(-1) rotate3d(0,1,0, 40deg); }
+            50% { transform: translate3d(0,0,0) scaleX(-1) rotate3d(0,1,0, -40deg); }
         }
         
         .butterfly_container var {
             position: absolute;
-            left: 0%;
-            top: 50%;
-            width: 100px;
-            height: 100px;
-            margin-left: -50px;
-            margin-top: -50px;
-            -webkit-transform-style: preserve-3d;
-            -moz-transform-style: preserve-3d;
-            -ms-transform-style: preserve-3d;
-            -o-transform-style: preserve-3d;
+            left: 50%; top: 50%;
+            width: 100px; height: 100px;
+            margin-left: -50px; margin-top: -50px;
             transform-style: preserve-3d;
-        }
-        
-        .butterfly_container var.rotate3d {
-            -webkit-transform: rotate3d(1, 0.5, 0, 50deg);
-            -moz-transform: rotate3d(1, 0.5, 0, 50deg);
-            -ms-transform: rotate3d(1, 0.5, 0, 50deg);
-            -o-transform: rotate3d(1, 0.5, 0, 50deg);
-            transform: rotate3d(1, 0.5, 0, 50deg);
-        }
-        
-        .butterfly_container var.translate3d {
-            -webkit-animation: fluttering 10s ease-in-out infinite;
-            -moz-animation: fluttering 10s ease-in-out infinite;
-            -ms-animation: fluttering 10s ease-in-out infinite;
-            -o-animation: fluttering 10s ease-in-out infinite;
-            animation: fluttering 10s ease-in-out infinite;
+            animation: gentleFloat 8s ease-in-out infinite;
         }
         
         .butterfly_container figure.butterfly {
             position: absolute;
-            left: 50%;
-            top: 50%;
-            width: 100px;
-            height: 100px;
-            margin-left: -50px;
-            margin-top: -50px;
-            -webkit-transform-style: preserve-3d;
-            -moz-transform-style: preserve-3d;
-            -ms-transform-style: preserve-3d;
-            -o-transform-style: preserve-3d;
+            width: 100px; height: 100px;
             transform-style: preserve-3d;
-            -webkit-transform-origin: 50% 50%;
-            -moz-transform-origin: 50% 50%;
-            -ms-transform-origin: 50% 50%;
-            -o-transform-origin: 50% 50%;
-            transform-origin: 50% 50%;
         }
         
-        .butterfly_container figure.butterfly .wing {
+        .butterfly_container .wing {
             position: absolute;
-            width: 50px;
-            height: 100px;
-            -webkit-transform-style: preserve-3d;
-            -moz-transform-style: preserve-3d;
-            -ms-transform-style: preserve-3d;
-            -o-transform-style: preserve-3d;
-            transform-style: preserve-3d;
-            -webkit-transform-origin: 50% 50%;
-            -moz-transform-origin: 50% 50%;
-            -ms-transform-origin: 50% 50%;
-            -o-transform-origin: 50% 50%;
-            transform-origin: 50% 50%;
-            -webkit-transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
-            -moz-transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
-            -ms-transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
-            -o-transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
-            transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
-        }
-        
-        .butterfly_container figure.butterfly .wing.right {
-            -webkit-transform-origin: 50px 50px;
-            -moz-transform-origin: 50px 50px;
-            -ms-transform-origin: 50px 50px;
-            -o-transform-origin: 50px 50px;
-            transform-origin: 50px 50px;
-            -webkit-transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
-            -moz-transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
-            -ms-transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
-            -o-transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
-            transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
-            -webkit-animation: right-wing-flap 1s ease-in-out infinite;
-            -moz-animation: right-wing-flap 1s ease-in-out infinite;
-            -ms-animation: right-wing-flap 1s ease-in-out infinite;
-            -o-animation: right-wing-flap 1s ease-in-out infinite;
-            animation: right-wing-flap 1s ease-in-out infinite;
-            filter: FlipH;
-            -ms-filter: "FlipH";
-        }
-        
-        .butterfly_container figure.butterfly .wing.left {
-            -webkit-transform-origin: 50px 50px;
-            -moz-transform-origin: 50px 50px;
-            -ms-transform-origin: 50px 50px;
-            -o-transform-origin: 50px 50px;
-            transform-origin: 50px 50px;
-            -webkit-animation: left-wing-flap 1s ease-in-out infinite;
-            -moz-animation: left-wing-flap 1s ease-in-out infinite;
-            -ms-animation: left-wing-flap 1s ease-in-out infinite;
-            -o-animation: left-wing-flap 1s ease-in-out infinite;
-            animation: left-wing-flap 1s ease-in-out infinite;
-        }
-        
-        .butterfly_container figure.butterfly .wing use {
-            display: block;
-            -webkit-transform-style: preserve-3d;
-            -moz-transform-style: preserve-3d;
-            -ms-transform-style: preserve-3d;
-            -o-transform-style: preserve-3d;
+            width: 50px; height: 100px;
             transform-style: preserve-3d;
         }
-        
-        .svg-defs {
-            position: absolute;
-            height: 0;
-            width: 0;
+        .butterfly_container .wing.left {
+            transform-origin: 50px 50px;
+            animation: leftWingBeat 0.9s ease-in-out infinite;
         }
+        .butterfly_container .wing.right {
+            transform-origin: 50px 50px;
+            transform: scaleX(-1);
+            animation: rightWingBeat 0.9s ease-in-out infinite;
+        }
+        
+        .svg-defs { position: absolute; width: 0; height: 0; }
     </style>
 </head>
 <body>
-    <!-- Environment -->
+    <!-- DAY THEME only – static sunny environment -->
     <img src="https://i.postimg.cc/sXvPDVnC/4.png" alt="cloud" class="cloud" />
     <img src="https://i.postimg.cc/sXvPDVnC/4.png" alt="cloud" class="cloud" />
     <img src="https://i.postimg.cc/sXvPDVnC/4.png" alt="cloud" class="cloud" />
-    <img src="https://i.postimg.cc/sXvPDVTc/1.png" alt="forest" class="lake" />
-    <div class="column-of-circles">
-      <img src="https://i.postimg.cc/bJs0NzmK/3.png" alt="moon" id="moonBtn" />
-      <img src="https://i.postimg.cc/76f1YxKj/2.png" alt="sun" id="sunBtn" />
-    </div>
-    <label class="btn btn-day">
-      Day
-      <input type="radio" name="mode" class="day" id="dayMode" />
-    </label>
-    <label class="btn btn-night">
-      Night
-      <input type="radio" name="mode" class="night" id="nightMode" checked />
-    </label>
+    <img src="https://i.postimg.cc/sXvPDVnC/4.png" alt="cloud" class="cloud" />
+    <img src="https://i.postimg.cc/sXvPDVTc/1.png" alt="meadow" class="lake" />
     
-    <!-- Game Area -->
+    <!-- GAME AREA -->
     <div class="game-area" id="gameArea"></div>
     
-    <!-- Start Screen -->
+    <!-- START SCREEN -->
     <div class="start-screen" id="startScreen">
-        <h1 class="start-title">🦋 Butterfly Catcher 🦋</h1>
-        <p class="start-subtitle">Catch as many colorful butterflies as you can in 60 seconds! Tap or click on butterflies to catch them. Each butterfly is worth 10 points.</p>
-        <button class="start-btn" id="startBtn">
-            <i class="fas fa-play"></i> START GAME
-        </button>
-        <div class="instructions">
-            <p></p>
-        </div>
+        <h1 class="start-title">🦋 BUTTERFLY HAVEN 🦋</h1>
+        <p class="start-subtitle">☀️ endless sunny meadow • 50+ fluttering friends ☀️</p>
+        <button class="start-btn" id="startBtn"><i class="fas fa-play"></i> BEGIN</button>
     </div>
     
-    <!-- Game UI -->
+    <!-- SCORE UI (only score) -->
     <div class="game-ui">
-        <div class="ui-top">
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-label">Score</div>
-                    <div class="stat-value" id="scoreDisplay">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Time</div>
-                    <div class="stat-value timer" id="timerDisplay">60</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Lives</div>
-                    <div class="lives" id="livesDisplay">
-                        <span class="heart">❤️</span>
-                        <span class="heart">❤️</span>
-                        <span class="heart">❤️</span>
-                    </div>
-                </div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">CATCHED</div>
+                <div class="stat-value" id="scoreDisplay">0</div>
             </div>
         </div>
     </div>
     
-    <!-- Catch Effect -->
+    <!-- Effects -->
     <div class="catch-effect" id="catchEffect"></div>
     
-    <!-- Game Over Screen -->
+    <!-- GAME OVER -->
     <div class="game-over" id="gameOver">
-        <h1>GAME OVER!</h1>
+        <h1>✨ BUTTERFLY DANCE ✨</h1>
         <div class="final-score">Score: <span id="finalScore">0</span></div>
         <div class="high-score" id="highScore">High Score: 0</div>
         <div>
-            <button class="go-btn" id="playAgainBtn">Play Again</button>
-            <button class="go-btn" id="menuBtn">Main Menu</button>
+            <button class="go-btn" id="playAgainBtn">Play again</button>
+            <button class="go-btn" id="menuBtn">Menu</button>
         </div>
     </div>
     
-    <!-- SVG Definitions -->
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve" xmlns:xml="http://www.w3.org/XML/1998/namespace" class="svg-defs">
+    <!-- SVG wing shape -->
+    <svg class="svg-defs">
         <defs>    
             <g id="shape-moth">
-                <path id="main" style="fill:#1cb1f2;" d="M2.457,32.759c6.752,15.757,12.862,9.004,19.615,31.513
+                <path style="fill:currentColor;" d="M2.457,32.759c6.752,15.757,12.862,9.004,19.615,31.513
                      c4.96,16.533,12.703,21.434,25.763,19.562c-8.291,5.666-11.245,14.512-2.29,30.097c10.611,18.467,29.262,32.338,38.587,34.268
                      s19.615-6.431,21.866-18.328c2.251-11.898,3.216-13.185,11.255-50.485V66.202v-8.039c0,0-44.054-38.266-73.637-42.767
                      C14.033,10.894-4.296,17.003,2.457,32.759z"/>
-                <!-- Additional SVG paths from original code would go here -->
             </g>
         </defs>
     </svg>
 
     <script>
-        // Game variables
-        let score = 0;
-        let lives = 3;
-        let timeLeft = 60;
-        let gameRunning = false;
-        let gameStarted = false;
-        let butterflies = [];
-        let combo = 0;
-        let comboTimer = 0;
-        let highScore = localStorage.getItem('butterflyHighScore') || 0;
-        let spawnTimer = null;
-        let clockTimer = null;
-        let lastTime = Date.now();
-        
-        // Color palette for butterflies - expanded with more vibrant colors
-        const butterflyColors = [
-            '#a8ff78', '#78ffd6', '#78c4ff', '#ff78a8', '#ffb378',
-            '#d678ff', '#ff7878', '#78ff8a', '#fff678', '#78ffef',
-            '#ff78ff', '#78ffb3', '#ffd678', '#c478ff', '#78a8ff',
-            '#ff6b9d', '#c678ff', '#6bffff', '#ffb347', '#00ff88',
-            '#ff1493', '#00ced1', '#ff69b4', '#32cd32', '#ffa500'
-        ];
-        
-        // DOM elements
-        const gameArea = document.getElementById('gameArea');
-        const startScreen = document.getElementById('startScreen');
-        const startBtn = document.getElementById('startBtn');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const timerDisplay = document.getElementById('timerDisplay');
-        const livesDisplay = document.getElementById('livesDisplay');
-        const gameOverScreen = document.getElementById('gameOver');
-        const finalScoreElement = document.getElementById('finalScore');
-        const highScoreElement = document.getElementById('highScore');
-        const playAgainBtn = document.getElementById('playAgainBtn');
-        const menuBtn = document.getElementById('menuBtn');
-        const catchEffect = document.getElementById('catchEffect');
-        const dayMode = document.getElementById('dayMode');
-        const nightMode = document.getElementById('nightMode');
-        const moonBtn = document.getElementById('moonBtn');
-        const sunBtn = document.getElementById('sunBtn');
-        
-        // Initialize high score display
-        highScoreElement.textContent = `High Score: ${highScore}`;
-        
-        // Mode toggle functionality
-        dayMode.addEventListener('change', function() {
-            if (this.checked) {
-                document.body.style.background = 'linear-gradient(180deg, #87ceeb 0%, #98fb98 30%, #32cd32 100%)';
-                document.querySelector('.lake').style.filter = 'brightness(1.2) contrast(1.1)';
+        (function(){
+            "use strict";
+
+            // ---- GAME STATE - NO TIMER, NO LIVES, NO NIGHT MODE ----
+            let score = 0;
+            let gameRunning = false;
+            let butterflies = [];
+            let combo = 0;
+            let comboTimer = 0;
+            let highScore = localStorage.getItem('butterflyHighScore') || 0;
+            let spawnInterval = null;
+            let animationFrame = null;
+            
+            // ---------- MULTI‑COLOR PALETTE (vivid) ----------
+            const colorPalette = [
+                '#FF6B8B', '#A8FF78', '#78D6FF', '#FFB27F', '#D28AFF',
+                '#7AFFB3', '#FF88C2', '#6BC5FF', '#FFDE7A', '#FF9966',
+                '#C27EFF', '#7FFFD4', '#FF96C0', '#C1FF72', '#FFB347',
+                '#FF6EC7', '#00E5E5', '#FFA07A', '#DA70D6', '#FFD570',
+                '#FF8C69', '#B0E57C', '#FFA54B', '#CD96CD', '#FFB38B',
+                '#97F0B0', '#FFAAAA', '#BFFF00', '#FF7F82', '#E0B0FF'
+            ];
+            
+            // each butterfly gets 2-5 random colors
+            function getButterflyColors() {
+                const count = Math.floor(Math.random() * 4) + 2; // 2-5 colors
+                const shuffled = [...colorPalette].sort(() => Math.random() - 0.5);
+                return shuffled.slice(0, count);
             }
-        });
-        
-        nightMode.addEventListener('change', function() {
-            if (this.checked) {
-                document.body.style.background = 'linear-gradient(180deg, #0a3d2a 0%, #1a5c3e 30%, #2a7d52 100%)';
-                document.querySelector('.lake').style.filter = 'brightness(0.9) contrast(1.1)';
+
+            // ---------- DOM ----------
+            const gameArea = document.getElementById('gameArea');
+            const startScreen = document.getElementById('startScreen');
+            const startBtn = document.getElementById('startBtn');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const gameOverScreen = document.getElementById('gameOver');
+            const finalScoreEl = document.getElementById('finalScore');
+            const highScoreEl = document.getElementById('highScore');
+            const playAgainBtn = document.getElementById('playAgainBtn');
+            const menuBtn = document.getElementById('menuBtn');
+            const catchEffect = document.getElementById('catchEffect');
+
+            // init highscore display
+            highScoreEl.textContent = `High Score: ${highScore}`;
+
+            // ----- REMOVED ALL DAY/NIGHT TOGGLES – PERMANENT SUNNY -----
+
+            // ----- GAME CORE -----
+            function startGame() {
+                gameRunning = true;
+                score = 0;
+                combo = 0;
+                comboTimer = 0;
+                updateScore();
+                
+                // clear any remaining butterflies
+                butterflies.forEach(b => b.element?.remove());
+                butterflies = [];
+                
+                startScreen.style.display = 'none';
+                gameOverScreen.classList.remove('show');
+                
+                // SPAWN MANY BUTTERFLIES – high density
+                if (spawnInterval) clearInterval(spawnInterval);
+                spawnInterval = setInterval(spawnButterfly, 320); // fast spawn → lots of butterflies
+                
+                // initial burst: 18 butterflies instantly for rich meadow
+                for (let i = 0; i < 18; i++) {
+                    setTimeout(() => spawnButterfly(), i * 40);
+                }
             }
-        });
-        
-        moonBtn.addEventListener('click', function() {
-            nightMode.checked = true;
-            nightMode.dispatchEvent(new Event('change'));
-        });
-        
-        sunBtn.addEventListener('click', function() {
-            dayMode.checked = true;
-            dayMode.dispatchEvent(new Event('change'));
-        });
-        
-        // Start game function
-        function startGame() {
-            gameStarted = true;
-            gameRunning = true;
-            lastTime = Date.now();
-            
-            // Hide start screen
-            startScreen.style.display = 'none';
-            
-            // Reset game variables
-            score = 0;
-            lives = 3;
-            timeLeft = 60;
-            butterflies = [];
-            combo = 0;
-            
-            // Update UI
-            updateScore();
-            updateTimer();
-            updateLives();
-            
-            // Start game timers - FIXED: 1000ms = 1 second
-            spawnTimer = setInterval(spawnButterfly, 800); // Spawn every 0.8 seconds
-            clockTimer = setInterval(updateGameClock, 1000); // Update every 1 second
-            
-            // Create initial butterflies
-            for (let i = 0; i < 6; i++) {
-                setTimeout(() => spawnButterfly(), i * 300);
-            }
-        }
-        
-        // Spawn a butterfly
-        function spawnButterfly() {
-            if (!gameRunning) return;
-            
-            const butterflyContainer = document.createElement('div');
-            butterflyContainer.className = 'butterfly_container';
-            
-            // Random position (spawn from edges for 3-wall projection)
-            const side = Math.floor(Math.random() * 3); // 0: left, 1: top, 2: right
-            
-            let x, y;
-            if (side === 0) { // Left wall
-                x = -100;
-                y = Math.random() * window.innerHeight;
-            } else if (side === 1) { // Top wall
-                x = Math.random() * window.innerWidth;
-                y = -100;
-            } else { // Right wall
-                x = window.innerWidth + 100;
-                y = Math.random() * window.innerHeight;
-            }
-            
-            butterflyContainer.style.left = `${x}px`;
-            butterflyContainer.style.top = `${y}px`;
-            
-            // Random size
-            const size = Math.random() * 0.7 + 0.6;
-            butterflyContainer.style.transform = `scale(${size})`;
-            
-            // Random color
-            const color = butterflyColors[Math.floor(Math.random() * butterflyColors.length)];
-            
-            // Create butterfly HTML structure
-            butterflyContainer.innerHTML = `
-                <var class="rotate3d translate3d">
-                    <figure class="butterfly">
-                        <svg class="wing left" viewBox="0 0 119.744 148.477">
-                            <use class="left" xlink:href="#shape-moth"></use>
-                        </svg> 
-                        <svg class="wing right" viewBox="0 0 119.744 148.477">
-                            <use class="left" xlink:href="#shape-moth"></use>
-                        </svg> 
-                    </figure>
-                </var>
-            `;
-            
-            // Apply random color
-            const useElements = butterflyContainer.querySelectorAll('use');
-            useElements.forEach(use => {
-                use.style.fill = color;
-            });
-            
-            // Add event listeners for catching
-            butterflyContainer.addEventListener('click', catchButterfly);
-            butterflyContainer.addEventListener('touchstart', catchButterfly, { passive: true });
-            
-            // Add to game area
-            gameArea.appendChild(butterflyContainer);
-            butterflies.push({
-                element: butterflyContainer,
-                x: x,
-                y: y,
-                targetX: Math.random() * (window.innerWidth - 200) + 100,
-                targetY: Math.random() * (window.innerHeight - 200) + 100,
-                speed: Math.random() * 2 + 1,
-                color: color,
-                rotation: Math.random() * 360,
-                rotationSpeed: Math.random() * 6 - 3,
-                wobbleOffsetX: 0,
-                wobbleOffsetY: 0,
-                wobblePhaseX: Math.random() * Math.PI * 2,
-                wobblePhaseY: Math.random() * Math.PI * 2,
-                wobbleSpeedX: Math.random() * 0.04 + 0.02,
-                wobbleSpeedY: Math.random() * 0.04 + 0.02,
-                wobbleAmount: Math.random() * 60 + 40,
-                distortionFactor: Math.random() * 0.3 + 0.1,
-                time: 0
-            });
-            
-            // Remove butterfly after some time if not caught
-            setTimeout(() => {
-                if (butterflyContainer.parentNode && gameRunning) {
-                    butterflyContainer.remove();
-                    butterflies = butterflies.filter(b => b.element !== butterflyContainer);
-                    
-                    // Lose a life if butterfly escapes
-                    if (lives > 0) {
-                        lives--;
-                        updateLives();
-                        
-                        if (lives <= 0) {
-                            endGame();
-                        }
+
+            // ----- SPAWN BUTTERFLY – smooth movement, natural paths -----
+            function spawnButterfly() {
+                if (!gameRunning) return;
+                
+                const container = document.createElement('div');
+                container.className = 'butterfly_container';
+                
+                // start gently from edges
+                const side = Math.floor(Math.random() * 3);
+                let x, y;
+                if (side === 0) { x = -60 - Math.random() * 40; y = Math.random() * window.innerHeight; }
+                else if (side === 1) { x = Math.random() * window.innerWidth; y = -60 - Math.random() * 40; }
+                else { x = window.innerWidth + 60 + Math.random() * 40; y = Math.random() * window.innerHeight; }
+                
+                container.style.left = `${x}px`;
+                container.style.top = `${y}px`;
+                
+                // size variety
+                const scale = Math.random() * 0.7 + 0.6; // 0.6–1.3
+                container.style.transform = `scale(${scale})`;
+                
+                // ----- MULTI COLOR APPLICATION (vivid, each wing different) -----
+                const colors = getButterflyColors();
+                
+                container.innerHTML = `
+                    <var style="animation: gentleFloat ${9 + Math.random()*6}s infinite;">
+                        <figure class="butterfly">
+                            <svg class="wing left" viewBox="0 0 119.744 148.477">
+                                <use xlink:href="#shape-moth" class="wing-left-fill"></use>
+                            </svg> 
+                            <svg class="wing right" viewBox="0 0 119.744 148.477">
+                                <use xlink:href="#shape-moth" class="wing-right-fill"></use>
+                            </svg> 
+                        </figure>
+                    </var>
+                `;
+                
+                const leftWing = container.querySelector('.wing-left-fill');
+                const rightWing = container.querySelector('.wing-right-fill');
+                
+                if (leftWing) {
+                    leftWing.style.fill = colors[0] || '#FFA07A';
+                    // add extra color accent using 'color' property for gradient-like
+                    leftWing.style.color = colors[1] || colors[0];
+                }
+                if (rightWing) {
+                    rightWing.style.fill = colors[1] || colors[0] || '#FFB27F';
+                    rightWing.style.color = colors[2] || colors[0];
+                }
+                
+                // shimmer effect: subtle glow
+                const glowColor = colors[Math.floor(Math.random() * colors.length)];
+                container.style.filter = `drop-shadow(0 0 7px ${glowColor}80)`;
+                
+                // ----- MOVEMENT PARAMETERS – completely redesigned: smooth, floating, no crazy wobble -----
+                // target is a random point inside view
+                const targetX = Math.random() * (window.innerWidth - 200) + 100;
+                const targetY = Math.random() * (window.innerHeight - 200) + 100;
+                
+                // gentle speed – much slower and natural
+                const baseSpeed = Math.random() * 0.9 + 0.5; // 0.5 - 1.4
+                
+                // store butterfly data
+                const butterfly = {
+                    element: container,
+                    x, y,
+                    targetX, targetY,
+                    speed: baseSpeed,
+                    angle: Math.atan2(targetY - y, targetX - x),
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 1.2, // very slow rotation
+                    floatPhase: Math.random() * 100,
+                    floatSpeed: 0.02 + Math.random() * 0.03,
+                    floatAmount: 0.6 + Math.random() * 1.2, // subtle vertical drift
+                    time: 0,
+                    colors: colors
+                };
+                
+                container.addEventListener('click', catchButterfly);
+                container.addEventListener('touchstart', catchButterfly, { passive: false });
+                
+                gameArea.appendChild(container);
+                butterflies.push(butterfly);
+                
+                // butterflies live longer (35s) then fade – but we keep high count
+                setTimeout(() => {
+                    if (container.parentNode && gameRunning) {
+                        container.remove();
+                        butterflies = butterflies.filter(b => b.element !== container);
                     }
-                }
-            }, 15000);
-        }
-        
-        // Catch butterfly
-        function catchButterfly(event) {
-            if (!gameRunning) return;
-            
-            event.preventDefault();
-            event.stopPropagation();
-            
-            const butterflyElement = event.currentTarget;
-            const butterfly = butterflies.find(b => b.element === butterflyElement);
-            
-            if (!butterfly) return;
-            
-            // Get click position
-            const rect = butterflyElement.getBoundingClientRect();
-            const clickX = rect.left + rect.width / 2;
-            const clickY = rect.top + rect.height / 2;
-            
-            // Add caught animation
-            butterflyElement.classList.add('caught');
-            
-            // Update score with combo
-            combo++;
-            comboTimer = 60;
-            const points = 10 + (combo >= 3 ? combo * 2 : 0);
-            score += points;
-            
-            // Play pop sound
-            playPopSound();
-            
-            // Show pop effect
-            const popEffect = document.createElement('div');
-            popEffect.className = 'pop-effect';
-            popEffect.style.left = `${clickX}px`;
-            popEffect.style.top = `${clickY}px`;
-            document.body.appendChild(popEffect);
-            
-            setTimeout(() => {
-                popEffect.remove();
-            }, 600);
-            
-            // Show points display
-            const pointsDisplay = document.createElement('div');
-            pointsDisplay.className = 'points-display';
-            pointsDisplay.textContent = `+${points}`;
-            pointsDisplay.style.left = `${clickX}px`;
-            pointsDisplay.style.top = `${clickY}px`;
-            document.body.appendChild(pointsDisplay);
-            
-            setTimeout(() => {
-                pointsDisplay.remove();
-            }, 1000);
-            
-            // Show combo if applicable
-            if (combo >= 3) {
-                showCombo(combo);
+                }, 35000);
             }
-            
-            // Update UI
-            updateScore();
-            
-            // Show catch effect
-            catchEffect.classList.add('active');
-            setTimeout(() => {
-                catchEffect.classList.remove('active');
-            }, 500);
-            
-            // Remove from arrays
-            butterflies = butterflies.filter(b => b.element !== butterflyElement);
-            
-            // Remove from DOM after animation
-            setTimeout(() => {
-                if (butterflyElement.parentNode) {
-                    butterflyElement.remove();
-                }
-            }, 800);
-        }
-        
-        // Show combo display
-        function showCombo(comboCount) {
-            const comboDisplay = document.createElement('div');
-            comboDisplay.className = 'combo-display';
-            comboDisplay.textContent = `${comboCount}x COMBO!`;
-            comboDisplay.style.left = `${Math.random() * 60 + 20}%`;
-            document.body.appendChild(comboDisplay);
-            
-            setTimeout(() => {
-                comboDisplay.remove();
-            }, 1000);
-        }
-        
-        // Play pop sound effect
-        function playPopSound() {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.1);
-            } catch (e) {
-                console.log('Audio context not available');
-            }
-        }
-        
-        // FIXED: Update game clock - properly counts down from 60 seconds
-        function updateGameClock() {
-            if (!gameRunning) {
-                clearInterval(clockTimer);
-                return;
-            }
-            
-            // This should decrement by 1 every second (1000ms)
-            timeLeft--;
-            updateTimer();
-            
-            // Change color when time is low
-            if (timeLeft <= 10) {
-                timerDisplay.style.color = '#ff6b6b';
-            }
-            
-            // End game when time is up
-            if (timeLeft <= 0) {
-                timeLeft = 0;
-                updateTimer();
-                endGame();
-            }
-            
-            // Update combo timer
-            if (comboTimer > 0) {
-                comboTimer--;
-                if (comboTimer === 0) {
-                    combo = 0;
-                }
-            }
-        }
-        
-        // Update score display
-        function updateScore() {
-            scoreDisplay.textContent = score;
-        }
-        
-        // Update timer display
-        function updateTimer() {
-            timerDisplay.textContent = timeLeft;
-        }
-        
-        // Update lives display
-        function updateLives() {
-            livesDisplay.innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                const heart = document.createElement('span');
-                heart.className = 'heart';
-                heart.textContent = i < lives ? '❤️' : '🤍';
-                livesDisplay.appendChild(heart);
-            }
-        }
-        
-        // End game
-        function endGame() {
-            gameRunning = false;
-            
-            // Clear timers
-            if (spawnTimer) {
-                clearInterval(spawnTimer);
-                spawnTimer = null;
-            }
-            if (clockTimer) {
-                clearInterval(clockTimer);
-                clockTimer = null;
-            }
-            
-            // Remove all butterflies
-            butterflies.forEach(butterfly => {
-                if (butterfly.element.parentNode) {
-                    butterfly.element.remove();
-                }
-            });
-            butterflies = [];
-            
-            // Update final score
-            finalScoreElement.textContent = score;
-            
-            // Update high score if needed
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('butterflyHighScore', highScore);
-                highScoreElement.innerHTML = `<i class="fas fa-trophy"></i> New High Score: ${highScore}`;
-                highScoreElement.style.color = '#ffd700';
-            } else {
-                highScoreElement.textContent = `High Score: ${highScore}`;
-                highScoreElement.style.color = '#a8ff78';
-            }
-            
-            // Show game over screen
-            gameOverScreen.classList.add('show');
-        }
-        
-        // Restart game
-        function restartGame() {
-            gameOverScreen.classList.remove('show');
-            startGame();
-        }
-        
-        // Return to menu
-        function returnToMenu() {
-            gameOverScreen.classList.remove('show');
-            startScreen.style.display = 'flex';
-            
-            // Reset game state
-            gameRunning = false;
-            gameStarted = false;
-            
-            // Clear timers
-            if (spawnTimer) {
-                clearInterval(spawnTimer);
-                spawnTimer = null;
-            }
-            if (clockTimer) {
-                clearInterval(clockTimer);
-                clockTimer = null;
-            }
-            
-            // Remove all butterflies
-            butterflies.forEach(butterfly => {
-                if (butterfly.element.parentNode) {
-                    butterfly.element.remove();
-                }
-            });
-            butterflies = [];
-            
-            // Reset timer display
-            timeLeft = 60;
-            updateTimer();
-            timerDisplay.style.color = '#ffd700';
-        }
-        
-        // Butterfly movement animation
-        function animateButterflies() {
-            if (!gameRunning) {
-                requestAnimationFrame(animateButterflies);
-                return;
-            }
-            
-            butterflies.forEach(butterfly => {
-                butterfly.time++;
-                
-                // Update rotation
-                butterfly.rotation += butterfly.rotationSpeed;
-                if (butterfly.rotation > 360) butterfly.rotation -= 360;
-                if (butterfly.rotation < 0) butterfly.rotation += 360;
-                
-                // Calculate wobble effect for chaotic movement
-                butterfly.wobblePhaseX += butterfly.wobbleSpeedX;
-                butterfly.wobblePhaseY += butterfly.wobbleSpeedY;
-                
-                butterfly.wobbleOffsetX = Math.sin(butterfly.wobblePhaseX) * butterfly.wobbleAmount * butterfly.distortionFactor;
-                butterfly.wobbleOffsetY = Math.cos(butterfly.wobblePhaseY) * butterfly.wobbleAmount * butterfly.distortionFactor;
-                
-                // Move toward target with wobble
-                const dx = butterfly.targetX - butterfly.x + butterfly.wobbleOffsetX;
-                const dy = butterfly.targetY - butterfly.y + butterfly.wobbleOffsetY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance > 10) {
-                    // Add some randomness to movement direction
-                    const angle = Math.atan2(dy, dx);
-                    const randomDeviation = (Math.random() - 0.5) * 0.3;
-                    const actualAngle = angle + randomDeviation;
-                    
-                    butterfly.x += Math.cos(actualAngle) * butterfly.speed;
-                    butterfly.y += Math.sin(actualAngle) * butterfly.speed;
-                } else {
-                    // Set new random target
-                    butterfly.targetX = Math.random() * (window.innerWidth - 200) + 100;
-                    butterfly.targetY = Math.random() * (window.innerHeight - 200) + 100;
-                    butterfly.rotationSpeed = Math.random() * 6 - 3;
-                }
-                
-                // Apply transform with rotation and scale distortion
-                const scaleDistortion = 1 + Math.sin(butterfly.time * 0.05) * 0.15;
-                butterfly.element.style.left = `${butterfly.x}px`;
-                butterfly.element.style.top = `${butterfly.y}px`;
-                butterfly.element.style.transform = `translate(-50%, -50%) rotate(${butterfly.rotation}deg) scale(${scaleDistortion})`;
-            });
-            
-            requestAnimationFrame(animateButterflies);
-        }
-        
-        // Event listeners
-        startBtn.addEventListener('click', startGame);
-        startBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            startGame();
-        }, { passive: false });
-        
-        playAgainBtn.addEventListener('click', restartGame);
-        playAgainBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            restartGame();
-        }, { passive: false });
-        
-        menuBtn.addEventListener('click', returnToMenu);
-        menuBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            returnToMenu();
-        }, { passive: false });
-        
-        // Handle window resize for 3-wall projection
-        window.addEventListener('resize', function() {
-            // Reposition butterflies if they go out of bounds
-            butterflies.forEach(butterfly => {
-                const rect = butterfly.element.getBoundingClientRect();
-                if (rect.right < -50 || rect.bottom < -50 || 
-                    rect.left > window.innerWidth + 50 || rect.top > window.innerHeight + 50) {
-                    butterfly.x = Math.random() * (window.innerWidth - 200) + 100;
-                    butterfly.y = Math.random() * (window.innerHeight - 200) + 100;
-                    butterfly.element.style.left = `${butterfly.x}px`;
-                    butterfly.element.style.top = `${butterfly.y}px`;
-                }
-            });
-        });
-        
-        // Multi-touch support
-        document.addEventListener('touchstart', function(e) {
-            if (!gameRunning) return;
-            
-            // Prevent default to avoid scrolling
-            if (e.target.closest('.butterfly_container')) {
+
+            // ----- CATCH -----
+            function catchButterfly(e) {
+                if (!gameRunning) return;
                 e.preventDefault();
+                e.stopPropagation();
+                
+                const el = e.currentTarget;
+                const butterfly = butterflies.find(b => b.element === el);
+                if (!butterfly) return;
+                
+                const rect = el.getBoundingClientRect();
+                const cx = rect.left + rect.width/2;
+                const cy = rect.top + rect.height/2;
+                
+                // combo & points
+                combo++;
+                comboTimer = 55;
+                const bonus = (combo >= 3) ? combo * 3 : 0;
+                const points = 10 + bonus;
+                score += points;
+                updateScore();
+                
+                // vanish animation
+                el.classList.add('caught');
+                
+                // pop effect
+                const pop = document.createElement('div');
+                pop.className = 'pop-effect';
+                pop.style.left = `${cx}px`;
+                pop.style.top = `${cy}px`;
+                document.body.appendChild(pop);
+                setTimeout(() => pop.remove(), 650);
+                
+                const pts = document.createElement('div');
+                pts.className = 'points-display';
+                pts.textContent = `+${points}`;
+                pts.style.left = `${cx}px`;
+                pts.style.top = `${cy}px`;
+                document.body.appendChild(pts);
+                setTimeout(() => pts.remove(), 1000);
+                
+                if (combo >= 3) {
+                    const comboDiv = document.createElement('div');
+                    comboDiv.className = 'combo-display';
+                    comboDiv.textContent = `${combo}x COMBO!`;
+                    document.body.appendChild(comboDiv);
+                    setTimeout(() => comboDiv.remove(), 1200);
+                }
+                
+                catchEffect.classList.add('active');
+                setTimeout(() => catchEffect.classList.remove('active'), 400);
+                
+                // remove from arrays
+                butterflies = butterflies.filter(b => b.element !== el);
+                setTimeout(() => el.remove(), 600);
             }
-        }, { passive: false });
-        
-        // Initialize animation loop
-        animateButterflies();
+
+            // ----- SMOOTH MOVEMENT – natural, gentle, NO CRAZY WOBBLE -----
+            function animateButterflies() {
+                if (!gameRunning) {
+                    animationFrame = requestAnimationFrame(animateButterflies);
+                    return;
+                }
+                
+                for (let b of butterflies) {
+                    b.time++;
+                    
+                    // ---- calm, elegant pathfinding ----
+                    const dx = b.targetX - b.x;
+                    const dy = b.targetY - b.y;
+                    const dist = Math.hypot(dx, dy);
+                    
+                    if (dist < 15) {
+                        // new random destination – within view
+                        b.targetX = Math.random() * (window.innerWidth - 240) + 120;
+                        b.targetY = Math.random() * (window.innerHeight - 200) + 100;
+                    }
+                    
+                    // compute direction with slight randomness (very light)
+                    const angleToTarget = Math.atan2(b.targetY - b.y, b.targetX - b.x);
+                    // add minimal wandering (1D noise) – but keep graceful
+                    const randomTurn = (Math.random() - 0.5) * 0.15;
+                    const moveAngle = angleToTarget + randomTurn;
+                    
+                    // move smoothly
+                    b.x += Math.cos(moveAngle) * b.speed;
+                    b.y += Math.sin(moveAngle) * b.speed;
+                    
+                    // gentle vertical floating (sinusoidal lift)
+                    b.floatPhase += b.floatSpeed;
+                    const floatOffset = Math.sin(b.floatPhase) * b.floatAmount;
+                    b.y += floatOffset * 0.15; // subtle bobbing
+                    
+                    // very slow rotation, barely noticeable – adds life
+                    b.rotation += b.rotationSpeed;
+                    if (b.rotation > 360) b.rotation -= 360;
+                    if (b.rotation < 0) b.rotation += 360;
+                    
+                    // edge soft respawn – if too far outside, reposition gently
+                    if (b.x < -200) b.x = window.innerWidth + 50;
+                    if (b.x > window.innerWidth + 200) b.x = -50;
+                    if (b.y < -200) b.y = window.innerHeight + 50;
+                    if (b.y > window.innerHeight + 200) b.y = -50;
+                    
+                    // apply transform – clean, with tiny scale pulse for life
+                    const pulse = 1 + Math.sin(b.time * 0.1) * 0.03;
+                    b.element.style.left = `${b.x}px`;
+                    b.element.style.top = `${b.y}px`;
+                    b.element.style.transform = `translate(-50%, -50%) rotate(${b.rotation}deg) scale(${pulse})`;
+                }
+                
+                // combo timer decay
+                if (comboTimer > 0) {
+                    comboTimer--;
+                    if (comboTimer === 0) combo = 0;
+                }
+                
+                animationFrame = requestAnimationFrame(animateButterflies);
+            }
+
+            function updateScore() {
+                scoreDisplay.textContent = score;
+            }
+
+            // ----- END / MENU -----
+            function endGame() {
+                gameRunning = false;
+                if (spawnInterval) clearInterval(spawnInterval);
+                
+                finalScoreEl.textContent = score;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('butterflyHighScore', highScore);
+                    highScoreEl.innerHTML = `🏆 NEW HIGH: ${highScore}`;
+                } else {
+                    highScoreEl.textContent = `High Score: ${highScore}`;
+                }
+                gameOverScreen.classList.add('show');
+            }
+
+            function returnToMenu() {
+                gameRunning = false;
+                if (spawnInterval) clearInterval(spawnInterval);
+                butterflies.forEach(b => b.element?.remove());
+                butterflies = [];
+                startScreen.style.display = 'flex';
+                gameOverScreen.classList.remove('show');
+                score = 0; combo = 0;
+                updateScore();
+            }
+
+            function restartGame() {
+                gameOverScreen.classList.remove('show');
+                startGame();
+            }
+
+            // ----- EVENT LISTENERS -----
+            startBtn.addEventListener('click', startGame);
+            startBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startGame(); }, { passive: false });
+            
+            playAgainBtn.addEventListener('click', restartGame);
+            playAgainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); restartGame(); });
+            
+            menuBtn.addEventListener('click', returnToMenu);
+            menuBtn.addEventListener('touchstart', (e) => { e.preventDefault(); returnToMenu(); });
+
+            // prevent page zoom on tap
+            document.addEventListener('touchstart', (e) => {
+                if (gameRunning && e.target.closest('.butterfly_container')) e.preventDefault();
+            }, { passive: false });
+
+            // resize adjustment
+            window.addEventListener('resize', () => {
+                butterflies.forEach(b => {
+                    if (b.x > window.innerWidth + 100) b.x = window.innerWidth - 150;
+                    if (b.y > window.innerHeight + 100) b.y = window.innerHeight - 150;
+                });
+            });
+
+            // start animation
+            animateButterflies();
+        })();
     </script>
 </body>
 </html>
