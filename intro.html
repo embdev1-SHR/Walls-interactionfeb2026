@@ -319,7 +319,7 @@
         <path d="M 65 60 L 88 78 L 93 72 L 70 50 Z" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="2"/>
     </svg>
 
-    <div class="instruction-text" id="instructionText">Swipe across the ribbon to cut!</div>
+    <div class="instruction-text" id="instructionText">Click on the ribbon to cut it!</div>
 
     <div class="kerala-container" id="keralaContainer">
         <div class="halo-ring"></div>
@@ -336,8 +336,8 @@
     <div id="text3" class="intro-text">Bigger</div>
     <div id="text4" class="intro-text">Brighter</div>
     <div id="logo" class="logo-container">
-        <img id="intro-logo" src="./assets/images/Auticare_logo_Embright%20(1).png" alt="Auticare Logo" style="width:280px;height:auto;border-radius:18px;box-shadow:0 20px 80px rgba(102,126,234,0.6)">
-    </div>
+        <div class="logo-placeholder">AUTICARE</div>
+        </div>
 
     <button id="startButton">GET STARTED</button>
 
@@ -513,15 +513,17 @@
                 this.oldX = this.x;
                 this.oldY = this.y;
 
-                const damping = 0.998;
-                const gravity = 0.6;
+                // Increased damping and lower gravity to reduce stretchiness
+                const damping = 0.9998; 
+                const gravity = 0.15;    
 
                 this.x += vx * damping;
                 this.y += vy * damping + gravity;
 
-                if (this.y > physicsCanvas.height + 100) {
-                    return;
-                }
+                // Boundary resistance to keep rope taut
+                if (this.x < 30) this.x = 30;
+                if (this.x > physicsCanvas.width - 30) this.x = physicsCanvas.width - 30;
+                if (this.y > physicsCanvas.height * 0.7) this.y = physicsCanvas.height * 0.7;
             }
         }
 
@@ -531,6 +533,7 @@
                 this.p2 = p2;
                 this.length = length;
                 this.active = true;
+                // Stiffness factor - more iterations needed for better stiffness
             }
 
             solve() {
@@ -543,6 +546,7 @@
                 if (dist < 0.1) return;
 
                 const diff = (this.length - dist) / dist;
+                // Use full correction for maximum stiffness (no relaxation)
                 const offsetX = dx * diff * 0.5;
                 const offsetY = dy * diff * 0.5;
 
@@ -565,8 +569,7 @@
         const physicsObjects = [];
         let animatingPhysics = false;
         let ribbonCut = false;
-        let mouseTrail = [];
-        let isDrawing = false;
+        let isHoveringRibbon = false;
 
         function animate() {
             requestAnimationFrame(animate);
@@ -584,7 +587,8 @@
             physicsCtx.clearRect(0, 0, physicsCanvas.width, physicsCanvas.height);
 
             if (ropeCreated) {
-                for (let i = 0; i < 5; i++) {
+                // More iterations for extreme stiffness
+                for (let i = 0; i < 15; i++) { 
                     ropeSegments.forEach(seg => seg.update());
                     ropeConstraints.forEach(con => con.solve());
                 }
@@ -672,16 +676,16 @@
 
         function createRibbon() {
             const centerX = physicsCanvas.width / 2;
-            const centerY = physicsCanvas.height / 2;
-            const ropeLength = Math.min(400, physicsCanvas.width * 0.4);
-            const numSegments = 40;
+            const centerY = physicsCanvas.height / 2 - 50; // Slightly higher for better click access
+            const ropeLength = Math.min(500, physicsCanvas.width * 0.45);
+            const numSegments = 35; // More segments for a smoother but still stiff curve
             const segmentLength = ropeLength / numSegments;
 
             const startX = centerX - ropeLength / 2;
 
             for (let i = 0; i <= numSegments; i++) {
                 const x = startX + i * segmentLength;
-                const y = centerY;
+                const y = centerY + Math.sin(i * 0.3) * 5; // Slight wave for natural look but still stiff
                 const fixed = (i === 0 || i === numSegments);
                 ropeSegments.push(new RopeSegment(x, y, fixed));
             }
@@ -706,17 +710,21 @@
                     closestIndex = i;
                 }
             }
-
-            return closestIndex;
+            // Only return if close enough to the rope
+            if (minDist < 45) {
+                return closestIndex;
+            }
+            return -1;
         }
 
         function cutRibbon(cutX, cutY) {
             const cutIndex = findClosestSegment(cutX, cutY);
-            if (cutIndex === -1) return;
+            if (cutIndex === -1) return false;
 
             const cutSegment = ropeSegments[cutIndex];
 
-            for (let i = cutIndex - 2; i <= cutIndex + 2; i++) {
+            // Deactivate constraints around the cut point
+            for (let i = cutIndex - 3; i <= cutIndex + 2; i++) {
                 if (i >= 0 && i < ropeConstraints.length) {
                     ropeConstraints[i].active = false;
                 }
@@ -731,6 +739,7 @@
             }
 
             animatingPhysics = true;
+            return true;
         }
 
         function showElement(element, delay, isLast = false) {
@@ -748,36 +757,14 @@
 
         function checkRopeIntersection(x, y) {
             if (ribbonCut || ropeSegments.length === 0) return null;
-
-            for (let i = 0; i < ropeSegments.length; i++) {
-                const seg = ropeSegments[i];
-                const dist = Math.sqrt((seg.x - x) ** 2 + (seg.y - y) ** 2);
-
-                if (dist < 30) {
-                    return { x: seg.x, y: seg.y };
-                }
+            const idx = findClosestSegment(x, y);
+            if (idx !== -1) {
+                return { x: ropeSegments[idx].x, y: ropeSegments[idx].y };
             }
-
             return null;
         }
 
-        function detectStrike() {
-            if (mouseTrail.length < 2) return false;
-
-            const recent = mouseTrail.slice(-10);
-            if (recent.length < 5) return false;
-
-            let totalDistance = 0;
-            for (let i = 1; i < recent.length; i++) {
-                const dx = recent[i].x - recent[i - 1].x;
-                const dy = recent[i].y - recent[i - 1].y;
-                totalDistance += Math.sqrt(dx * dx + dy * dy);
-            }
-
-            const avgSpeed = totalDistance / recent.length;
-            return avgSpeed > 15;
-        }
-
+        // -------- CLICK TO CUT (removed swipe/strike logic) --------
         function handlePointerMove(e) {
             if (ribbonCut) return;
 
@@ -790,36 +777,50 @@
             const canvasX = x * scaleX;
             const canvasY = y * scaleY;
 
+            // Move scissors to pointer
             scissors.style.left = `${canvasX}px`;
             scissors.style.top = `${canvasY}px`;
             scissors.style.transform = 'translate(-50%, -50%)';
 
-            if (isDrawing) {
-                mouseTrail.push({ x: canvasX, y: canvasY, time: Date.now() });
-                if (mouseTrail.length > 20) mouseTrail.shift();
-
+            // Check if hovering over ribbon -> give cutting animation hint
+            const intersection = checkRopeIntersection(canvasX, canvasY);
+            if (intersection) {
                 scissors.classList.add('cutting');
-
-                const intersection = checkRopeIntersection(canvasX, canvasY);
-                if (intersection && detectStrike()) {
-                    ribbonCut = true;
-                    scissors.classList.remove('cutting');
-                    cutRibbon(intersection.x, intersection.y);
-                    continueSequence();
-                }
+                isHoveringRibbon = true;
+            } else {
+                scissors.classList.remove('cutting');
+                isHoveringRibbon = false;
             }
         }
 
         function handlePointerDown(e) {
             if (ribbonCut) return;
-            isDrawing = true;
-            mouseTrail = [];
+            
+            // Prevent default to avoid page drag on click/touch
+            e.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+            const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const canvasX = x * scaleX;
+            const canvasY = y * scaleY;
+
+            const intersection = checkRopeIntersection(canvasX, canvasY);
+            // CUT ON SINGLE CLICK/TAP
+            if (intersection) {
+                ribbonCut = true;
+                scissors.classList.remove('cutting');
+                if (cutRibbon(intersection.x, intersection.y)) {
+                    continueSequence();
+                }
+            }
         }
 
         function handlePointerUp() {
-            isDrawing = false;
-            mouseTrail = [];
-            scissors.classList.remove('cutting');
+            // No trailing effect needed for click cut
         }
 
         function continueSequence() {
@@ -880,13 +881,15 @@
                 document.body.classList.add('interactive-mode');
             }, 800);
 
+            // Add event listeners for click/tap only
             canvas.addEventListener('mousedown', handlePointerDown);
             canvas.addEventListener('mousemove', handlePointerMove);
+            // We don't need mouseup for cutting, but keep for cleanup
             canvas.addEventListener('mouseup', handlePointerUp);
             canvas.addEventListener('mouseleave', handlePointerUp);
 
-            canvas.addEventListener('touchstart', handlePointerDown);
-            canvas.addEventListener('touchmove', handlePointerMove);
+            canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
+            canvas.addEventListener('touchmove', handlePointerMove, { passive: false });
             canvas.addEventListener('touchend', handlePointerUp);
             canvas.addEventListener('touchcancel', handlePointerUp);
         }
@@ -903,6 +906,14 @@
             canvas.height = window.innerHeight;
             physicsCanvas.width = window.innerWidth;
             physicsCanvas.height = window.innerHeight;
+            
+            // Recreate rope on resize for better responsiveness
+            if (!ribbonCut) {
+                ropeSegments.length = 0;
+                ropeConstraints.length = 0;
+                ropeCreated = false;
+                createRibbon();
+            }
         });
     </script>
 </body>

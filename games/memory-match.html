@@ -3,1453 +3,1979 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>City Detective - Evidence Hunt</title>
+<title>Detective Wall - Interactive Investigation</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  background:#0a1f14;overflow:hidden;color:white;
-  -webkit-user-select:none;user-select:none;touch-action:none;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* MENU STYLES */
-.menu-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.92);
-  display:flex;justify-content:center;align-items:center;z-index:3000;
-  animation:fadeIn .5s ease;
-}
-.menu-box{
-  text-align:center;padding:30px 40px;
-  background:rgba(15,30,45,.98);backdrop-filter:blur(25px);
-  border:3px solid rgba(59,130,246,.5);border-radius:24px;
-  max-width:500px;width:90%;max-height:90vh;overflow-y:auto;
-  animation:menuIn .6s ease;
-}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes menuIn{from{transform:translateY(30px) scale(.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
-
-.menu-title{
-  font-size:42px;color:#3b82f6;margin-bottom:8px;
-  text-shadow:0 2px 8px rgba(0,0,0,.3);
-}
-.menu-subtitle{
-  font-size:16px;color:rgba(255,255,255,.7);margin-bottom:30px;
-}
-.game-grid{
-  display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-  gap:20px;margin-bottom:30px;
-}
-.game-option{
-  background:rgba(20,35,50,.8);border-radius:18px;
-  padding:25px 20px;cursor:pointer;transition:all .3s;
-  border:2px solid rgba(59,130,246,.3);
-  display:flex;flex-direction:column;align-items:center;
-}
-.game-option:hover{
-  transform:translateY(-5px);background:rgba(25,45,65,.9);
-  border-color:rgba(59,130,246,.6);box-shadow:0 10px 25px rgba(0,0,0,.3);
-}
-.game-option.selected{
-  background:rgba(30,55,80,.95);border-color:#3b82f6;
-  box-shadow:0 0 0 3px rgba(59,130,246,.2),0 8px 20px rgba(0,0,0,.4);
-}
-.game-emoji{
-  font-size:48px;margin-bottom:15px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));
-}
-.game-name{
-  font-size:20px;font-weight:700;color:white;margin-bottom:8px;
-}
-.game-desc{
-  font-size:13px;color:rgba(255,255,255,.6);text-align:center;line-height:1.4;
-}
-.menu-btn{
-  padding:14px 36px;font-size:17px;font-weight:600;
-  background:rgba(59,130,246,.2);border:2px solid rgba(59,130,246,.6);
-  color:white;border-radius:50px;cursor:pointer;transition:all .3s;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-  margin:0 8px;min-width:140px;
-}
-.menu-btn:hover{
-  background:rgba(59,130,246,.35);transform:scale(1.05);
-}
-.menu-btn:active{transform:scale(.95)}
-.menu-btn.primary{background:rgba(16,185,129,.3);border-color:#10b981;}
-.menu-btn.primary:hover{background:rgba(16,185,129,.4);}
-.btn-group{display:flex;justify-content:center;gap:12px;margin-top:10px;}
-
-/* GAME STYLES */
-.game-wrap{position:relative;width:100vw;height:100vh;overflow:hidden;display:none;}
-.game-wrap.active{display:block;}
-canvas{position:absolute;inset:0;z-index:0}
-#fgCanvas{z-index:40;pointer-events:none}
-
-.clue-btn{
-  position:absolute;z-index:30;
-  font-size:clamp(32px,5vw,48px);
-  cursor:pointer;line-height:1;
-  transition:filter .5s ease,opacity .5s ease,transform .5s ease,font-size .5s ease;
-  filter:saturate(.15) brightness(.55) hue-rotate(50deg);
-  opacity:.32;
-}
-.clue-btn:hover{
-  opacity:.45;
-  filter:saturate(.25) brightness(.65) hue-rotate(30deg);
-}
-.clue-btn.found{
-  font-size:clamp(64px,9vw,100px);
-  filter:saturate(1) brightness(1) drop-shadow(0 4px 16px rgba(255,255,255,.6));
-  opacity:1;cursor:default;
-  animation:cluePop .5s ease;
-  z-index:45;
-}
-@keyframes cluePop{
-  0%{transform:scale(.3);opacity:0}
-  50%{transform:scale(1.4)}
-  100%{transform:scale(1);opacity:1}
+body {
+  font-family: 'Courier New', monospace;
+  background: #1a1a2e;
+  overflow: hidden;
+  color: #fff;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.info-popup{
-  position:absolute;z-index:200;
-  background:rgba(15,30,45,.94);backdrop-filter:blur(14px);
-  border:2px solid rgba(59,130,246,.6);border-radius:16px;
-  padding:12px 18px;min-width:180px;max-width:260px;
-  pointer-events:none;
-  animation:popupIn .4s ease;
-  transform:translateX(-50%);
-}
-@keyframes popupIn{
-  0%{transform:translateX(-50%) scale(.5) translateY(10px);opacity:0}
-  100%{transform:translateX(-50%) scale(1) translateY(0);opacity:1}
-}
-.popup-emoji{font-size:32px;text-align:center;display:block;margin-bottom:4px}
-.popup-name{font-size:16px;font-weight:700;color:#3b82f6;text-align:center;margin-bottom:4px}
-.popup-desc{font-size:12px;color:rgba(255,255,255,.7);text-align:center;line-height:1.4}
-
-.hud{
-  position:absolute;top:12px;left:50%;transform:translateX(-50%);
-  display:flex;gap:10px;z-index:100;pointer-events:none;
-}
-.hud-box{
-  background:rgba(15,30,45,.92);backdrop-filter:blur(12px);
-  border:2px solid rgba(59,130,246,.4);border-radius:12px;
-  padding:8px 16px;pointer-events:auto;text-align:center;min-width:80px;
-}
-.hud-label{font-size:10px;color:rgba(255,255,255,.5);margin-bottom:1px;text-transform:uppercase;letter-spacing:.5px}
-.hud-value{font-size:clamp(24px,3.5vw,34px);font-weight:700;color:#3b82f6}
-
-.checklist{
-  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
-  background:rgba(15,30,45,.92);backdrop-filter:blur(12px);
-  border:2px solid rgba(59,130,246,.4);border-radius:14px;
-  padding:8px 14px;z-index:100;
-  display:flex;align-items:center;gap:8px;
-  max-width:calc(100vw - 240px);
-  overflow-x:auto;
-}
-.checklist::-webkit-scrollbar{height:3px}
-.checklist::-webkit-scrollbar-thumb{background:rgba(59,130,246,.3);border-radius:3px}
-.cl-item{
-  display:flex;align-items:center;gap:5px;
-  padding:5px 8px;flex-shrink:0;
-  background:rgba(255,255,255,.04);border-radius:8px;
-  transition:all .35s ease;
-  border:1px solid transparent;
-}
-.cl-item.found{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.4)}
-.cl-emoji{font-size:20px;filter:grayscale(1) brightness(.5);transition:all .35s;flex-shrink:0}
-.cl-item.found .cl-emoji{filter:none;animation:iconPop .5s ease}
-@keyframes iconPop{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
-.cl-name{font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap}
-.cl-item.found .cl-name{color:white;font-weight:600}
-
-.btn-corner{
-  position:absolute;bottom:12px;z-index:100;
-  padding:10px 22px;font-size:14px;font-weight:600;border-radius:50px;
-  cursor:pointer;transition:all .3s;backdrop-filter:blur(10px);border:2px solid;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-}
-.btn-corner:hover{transform:scale(1.05)}
-.btn-corner:active{transform:scale(.95)}
-.btn-hint{left:14px;background:rgba(255,193,7,.15);border-color:rgba(255,193,7,.4);color:white}
-.btn-hint:hover{background:rgba(255,193,7,.25)}
-.btn-hint:disabled{opacity:.35;cursor:not-allowed;transform:none}
-.btn-menu{right:14px;background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.35);color:white}
-.btn-menu:hover{background:rgba(59,130,246,.22)}
-
-.overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.88);
-  display:none;justify-content:center;align-items:center;z-index:2000;
-}
-.overlay.show{display:flex}
-.overlay-box{
-  text-align:center;padding:36px;
-  background:rgba(15,30,45,.96);backdrop-filter:blur(20px);
-  border:3px solid rgba(59,130,246,.6);border-radius:22px;
-  max-width:440px;animation:boxIn .4s ease;
-}
-@keyframes boxIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
-.overlay-title{font-size:38px;color:#3b82f6;margin-bottom:12px}
-.overlay-msg{font-size:20px;margin-bottom:18px}
-.overlay-stats{font-size:15px;color:rgba(255,255,255,.7);margin-bottom:22px;line-height:1.8}
-.overlay-btn{
-  padding:12px 32px;font-size:16px;font-weight:600;
-  background:rgba(59,130,246,.2);border:2px solid rgba(59,130,246,.6);
-  color:white;border-radius:50px;cursor:pointer;transition:all .3s;margin:5px;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-}
-.overlay-btn:hover{background:rgba(59,130,246,.35);transform:scale(1.05)}
-.overlay-btn:active{transform:scale(.95)}
-
-.ripple{
-  position:absolute;
-  border:3px solid rgba(59,130,246,.7);border-radius:50%;
-  pointer-events:none;z-index:60;
-  animation:rippleOut .7s ease-out forwards;
-}
-@keyframes rippleOut{0%{width:0;height:0;opacity:1}100%{width:120px;height:120px;opacity:0}}
-
-.found-burst{
-  position:absolute;pointer-events:none;z-index:70;font-size:18px;
-  animation:burstOut .8s ease-out forwards;
-}
-@keyframes burstOut{
-  0%{transform:translate(0,0) scale(1);opacity:1}
-  100%{transform:translate(var(--bx),var(--by)) scale(.3);opacity:0}
+/* VERTICAL MENU */
+.vertical-menu {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(180deg, #16213e 0%, #0f1419 100%);
+  border-right: 3px solid #e94560;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 4px 0 20px rgba(233, 69, 96, 0.3);
 }
 
-.hint-ring{
-  position:absolute;pointer-events:none;z-index:55;
-  border:3px dashed rgba(255,193,7,.8);border-radius:50%;
-  animation:hintPulse 3s ease-out forwards;
-}
-@keyframes hintPulse{
-  0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
-  20%{opacity:1;transform:translate(-50%,-50%) scale(1)}
-  80%{opacity:.8;transform:translate(-50%,-50%) scale(1.05)}
-  100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}
+.vertical-menu.hidden {
+  transform: translateX(-280px);
 }
 
-.touch-ring{
-  position:fixed;width:50px;height:50px;
-  border:3px solid rgba(59,130,246,.5);border-radius:50%;
-  pointer-events:none;z-index:9999;
-  transform:translate(-50%,-50%) scale(0);
-  animation:ringPop .5s ease forwards;
-}
-@keyframes ringPop{
-  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
-  100%{transform:translate(-50%,-50%) scale(2);opacity:0}
+.menu-header {
+  padding: 25px 20px;
+  background: rgba(233, 69, 96, 0.1);
+  border-bottom: 2px solid #e94560;
+  text-align: center;
 }
 
-.case-file{
-  position:absolute;top:12px;right:12px;z-index:100;
-  background:rgba(15,30,45,.92);backdrop-filter:blur(12px);
-  border:2px solid rgba(59,130,246,.4);border-radius:12px;
-  padding:8px 16px;pointer-events:auto;
-  font-size:12px;color:rgba(255,255,255,.8);
-  max-width:200px;
+.menu-logo {
+  font-size: 48px;
+  margin-bottom: 10px;
+  animation: float 3s ease-in-out infinite;
 }
-.case-title{
-  color:#3b82f6;font-weight:bold;margin-bottom:4px;
-  text-transform:uppercase;letter-spacing:1px;
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
-.case-desc{
-  font-size:11px;line-height:1.3;
+
+.menu-title {
+  font-size: 20px;
+  color: #e94560;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+}
+
+.menu-subtitle {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.menu-cases {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px;
+}
+
+.menu-cases::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu-cases::-webkit-scrollbar-thumb {
+  background: #e94560;
+  border-radius: 3px;
+}
+
+.case-card {
+  background: rgba(22, 33, 62, 0.6);
+  border: 2px solid #533a71;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.case-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(233, 69, 96, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.case-card:hover::before {
+  left: 100%;
+}
+
+.case-card:hover {
+  border-color: #e94560;
+  transform: translateX(3px);
+  box-shadow: 0 3px 10px rgba(233, 69, 96, 0.3);
+}
+
+.case-card.active {
+  background: rgba(233, 69, 96, 0.2);
+  border-color: #e94560;
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.4);
+}
+
+.case-number {
+  font-size: 9px;
+  color: #e94560;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.case-name {
+  font-size: 13px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.case-difficulty {
+  font-size: 10px;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.difficulty-stars {
+  color: #ffd700;
+  font-size: 10px;
+}
+
+.menu-footer {
+  padding: 15px;
+  border-top: 2px solid #533a71;
+  background: rgba(15, 20, 25, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.back-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #e94560 0%, #c93a50 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+}
+
+.back-btn.global-back {
+  background: linear-gradient(135deg, #533a71 0%, #3a2757 100%);
+  box-shadow: 0 4px 15px rgba(83, 58, 113, 0.3);
+}
+
+.back-btn.global-back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(83, 58, 113, 0.5);
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(233, 69, 96, 0.5);
+}
+
+.back-btn:active {
+  transform: translateY(0);
+}
+
+.menu-toggle {
+  position: fixed;
+  left: 290px;
+  top: 20px;
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #e94560 0%, #c93a50 100%);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.5);
+}
+
+.menu-toggle:hover {
+  transform: scale(1.1) rotate(180deg);
+}
+
+.menu-toggle.menu-hidden {
+  left: 10px;
+}
+
+/* DETECTIVE GUIDE */
+.detective-guide {
+  position: fixed;
+  bottom: 100px;
+  left: 320px;
+  z-index: 900;
+  transition: all 0.4s ease;
+}
+
+.detective-guide.menu-hidden {
+  left: 40px;
+}
+
+.detective-avatar {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 45px;
+  border: 3px solid #fff;
+  box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+  cursor: pointer;
+  animation: bounce 2s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.detective-avatar::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  background: #e94560;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+.chat-bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-15px);
+  background: linear-gradient(135deg, #16213e 0%, #0f1419 100%);
+  border: 2px solid #e94560;
+  border-radius: 15px;
+  padding: 15px 20px;
+  max-width: 280px;
+  min-width: 200px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.chat-bubble.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-25px);
+}
+
+.chat-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #e94560;
+}
+
+.chat-text {
+  font-size: 13px;
+  color: #fff;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.chat-hint {
+  font-size: 11px;
+  color: #ffd700;
+  font-style: italic;
+}
+
+/* GAME CANVAS */
+.game-container {
+  position: fixed;
+  left: 280px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: #0f1419;
+  transition: left 0.4s ease;
+  display: none;
+}
+
+.game-container.active {
+  display: block;
+}
+
+.game-container.menu-hidden {
+  left: 0;
+}
+
+.investigation-wall {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.03) 2px, rgba(255,255,255,.03) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,.03) 2px, rgba(255,255,255,.03) 4px),
+    radial-gradient(circle at 30% 50%, rgba(233, 69, 96, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 50%, rgba(83, 58, 113, 0.1) 0%, transparent 50%),
+    #1a1a2e;
+  overflow: hidden;
+}
+
+/* STRING CONNECTIONS */
+.string-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* EVIDENCE ITEMS */
+.evidence-item {
+  position: absolute;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.evidence-item.locked {
+  opacity: 0.3;
+  filter: grayscale(100%);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.evidence-item.found {
+  animation: foundPulse 0.6s ease;
+}
+
+@keyframes foundPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+.evidence-item:not(.locked):hover {
+  transform: scale(1.2) rotate(5deg);
+  filter: drop-shadow(0 0 15px rgba(233, 69, 96, 0.8));
+}
+
+.evidence-photo {
+  width: 120px;
+  height: 120px;
+  background: rgba(22, 33, 62, 0.9);
+  border: 3px solid #533a71;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60px;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  transform: rotate(-3deg);
+}
+
+.evidence-photo::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.evidence-label {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(233, 69, 96, 0.9);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.evidence-item.locked .evidence-photo {
+  border-color: #444;
+  background: rgba(30, 30, 40, 0.8);
+}
+
+.evidence-item.locked .evidence-label {
+  background: rgba(100, 100, 100, 0.9);
+}
+
+.evidence-item.wrong {
+  animation: wrongShake 0.5s ease;
+}
+
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.evidence-item.wrong .evidence-photo {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.2);
+}
+
+.evidence-item.wrong .evidence-label {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+.wrong-x {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 60px;
+  color: #dc2626;
+  font-weight: bold;
+  animation: wrongPop 0.5s ease;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes wrongPop {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.3) rotate(180deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 1; }
+}
+
+.evidence-item.found .evidence-photo {
+  border-color: #ffd700;
+  background: rgba(83, 58, 113, 0.9);
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+}
+
+.evidence-item.wrong {
+  animation: wrongShake 0.5s ease;
+}
+
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.evidence-item.wrong .evidence-photo {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.2);
+}
+
+.evidence-item.wrong .evidence-label {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+.wrong-x {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 60px;
+  color: #dc2626;
+  font-weight: bold;
+  animation: wrongPop 0.5s ease;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes wrongPop {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.3) rotate(180deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 1; }
+}
+
+.evidence-popup.wrong {
+  border-color: #dc2626;
+}
+
+.evidence-popup.wrong .popup-title {
+  color: #dc2626;
+}
+
+.evidence-popup.wrong .popup-clue {
+  background: rgba(220, 38, 38, 0.1);
+  border-left-color: #dc2626;
+}
+
+.lock-icon {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 30px;
+  height: 30px;
+  background: #e94560;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* EVIDENCE DETAIL POPUP */
+.evidence-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: linear-gradient(135deg, #16213e 0%, #0f1419 100%);
+  border: 3px solid #e94560;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 450px;
+  width: 90%;
+  z-index: 2000;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+  transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.evidence-popup.show {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.popup-emoji {
+  font-size: 80px;
+  text-align: center;
+  margin-bottom: 15px;
+  animation: popRotate 0.6s ease;
+}
+
+@keyframes popRotate {
+  0% { transform: rotate(0deg) scale(0); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.popup-title {
+  font-size: 24px;
+  color: #e94560;
+  text-align: center;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.popup-description {
+  font-size: 14px;
+  color: #ccc;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.popup-clue {
+  background: rgba(233, 69, 96, 0.1);
+  border-left: 3px solid #ffd700;
+  padding: 12px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.popup-clue-title {
+  font-size: 12px;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.popup-clue-text {
+  font-size: 13px;
+  color: #fff;
+  font-style: italic;
+}
+
+.popup-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #e94560 0%, #c93a50 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.popup-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(233, 69, 96, 0.5);
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.popup-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* PROGRESS HUD */
+.progress-hud {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #16213e 0%, #0f1419 100%);
+  border: 2px solid #e94560;
+  border-radius: 15px;
+  padding: 15px 20px;
+  z-index: 800;
+  min-width: 200px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+}
+
+.hud-title {
+  font-size: 11px;
+  color: #e94560;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.hud-progress {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.progress-dot {
+  width: 18px;
+  height: 18px;
+  background: rgba(100, 100, 100, 0.3);
+  border: 2px solid #533a71;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.progress-dot.found {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border-color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+  animation: dotPulse 0.6s ease;
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+}
+
+.hud-stats {
+  font-size: 13px;
+  color: #ccc;
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-value {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+/* VICTORY SCREEN */
+.victory-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.victory-screen.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.victory-content {
+  text-align: center;
+  max-width: 500px;
+  padding: 40px;
+  background: linear-gradient(135deg, #16213e 0%, #0f1419 100%);
+  border: 3px solid #ffd700;
+  border-radius: 20px;
+  box-shadow: 0 10px 50px rgba(255, 215, 0, 0.3);
+  animation: victoryPop 0.6s ease;
+}
+
+@keyframes victoryPop {
+  0% { transform: scale(0) rotate(-180deg); }
+  50% { transform: scale(1.1) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.victory-emoji {
+  font-size: 100px;
+  margin-bottom: 20px;
+  animation: victoryFloat 2s ease-in-out infinite;
+}
+
+@keyframes victoryFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.victory-title {
+  font-size: 36px;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.victory-message {
+  font-size: 16px;
+  color: #ccc;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.victory-stats {
+  background: rgba(233, 69, 96, 0.1);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 25px;
+}
+
+.victory-stat {
+  font-size: 14px;
+  color: #fff;
+  margin: 5px 0;
+}
+
+.victory-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.victory-btn {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #e94560 0%, #c93a50 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.victory-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(233, 69, 96, 0.5);
+}
+
+.victory-btn.secondary {
+  background: linear-gradient(135deg, #533a71 0%, #3a2757 100%);
+}
+
+.victory-btn.secondary:hover {
+  box-shadow: 0 5px 20px rgba(83, 58, 113, 0.5);
+}
+
+/* PARTICLE EFFECTS */
+.particle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  animation: particleFall 3s linear forwards;
+}
+
+@keyframes particleFall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* WELCOME SCREEN */
+.welcome-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #16213e 0%, #0f1419 100%);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease;
+}
+
+.welcome-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.welcome-content {
+  text-align: center;
+  max-width: 600px;
+  padding: 40px;
+}
+
+.welcome-logo {
+  font-size: 120px;
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.welcome-title {
+  font-size: 48px;
+  color: #e94560;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+}
+
+.welcome-subtitle {
+  font-size: 18px;
+  color: #ccc;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.welcome-btn {
+  padding: 15px 40px;
+  background: linear-gradient(135deg, #e94560 0%, #c93a50 100%);
+  border: 2px solid #fff;
+  border-radius: 50px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 25px rgba(233, 69, 96, 0.5);
+}
+
+.welcome-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 30px rgba(233, 69, 96, 0.7);
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  .vertical-menu {
+    width: 100%;
+    transform: translateX(-100%);
+  }
+  
+  .vertical-menu.hidden {
+    transform: translateX(-100%);
+  }
+  
+  .vertical-menu:not(.hidden) {
+    transform: translateX(0);
+  }
+  
+  .menu-toggle {
+    left: 10px;
+  }
+  
+  .menu-toggle.menu-hidden {
+    left: 10px;
+  }
+  
+  .game-container {
+    left: 0;
+  }
+  
+  .detective-guide {
+    left: 20px;
+    bottom: 80px;
+  }
+  
+  .detective-guide.menu-hidden {
+    left: 20px;
+  }
+  
+  .detective-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 35px;
+  }
+  
+  .progress-hud {
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    min-width: 150px;
+  }
+  
+  .evidence-photo {
+    width: 90px;
+    height: 90px;
+    font-size: 45px;
+  }
+  
+  .menu-footer {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .back-btn {
+    padding: 10px;
+    font-size: 12px;
+  }
 }
 </style>
 </head>
 <body>
-<div class="menu-overlay" id="menuOverlay">
-  <div class="menu-box">
-    <div class="menu-title">🔍 Detective Hunt</div>
-    <div class="menu-subtitle">Solve cases by finding hidden clues in the city</div>
-    
-    <div class="game-grid">
-      <div class="game-option" data-game="downtown">
-        <div class="game-emoji">🏙️</div>
-        <div class="game-name">Downtown Mystery</div>
-        <div class="game-desc">Find evidence in the bustling city center</div>
-      </div>
-      
-      <div class="game-option" data-game="industrial">
-        <div class="game-emoji">🏭</div>
-        <div class="game-name">Industrial District</div>
-        <div class="game-desc">Search for clues in the old factory area</div>
-      </div>
-      
-      <div class="game-option" data-game="waterfront">
-        <div class="game-emoji">⚓</div>
-        <div class="game-name">Waterfront Case</div>
-        <div class="game-desc">Investigate the docks and harbor area</div>
-      </div>
-      
-      <div class="game-option" data-game="residential">
-        <div class="game-emoji">🏘️</div>
-        <div class="game-name">Residential Investigation</div>
-        <div class="game-desc">Gather evidence in the quiet neighborhood</div>
-      </div>
+
+<!-- Welcome Screen -->
+<div class="welcome-screen" id="welcomeScreen">
+  <div class="welcome-content">
+    <div class="welcome-logo">🕵️</div>
+    <div class="welcome-title">Detective Wall</div>
+    <div class="welcome-subtitle">
+      Unravel mysteries by finding interconnected clues.<br>
+      Each piece of evidence leads to the next!
     </div>
-    
-    <div class="btn-group">
-      <button class="menu-btn" id="startBtn">Start Investigation</button>
-      <button class="menu-btn primary" id="howToBtn">Case Briefing</button>
-    </div>
+    <button class="welcome-btn" onclick="startInvestigation()">Start Investigation</button>
   </div>
 </div>
 
-<!-- Downtown Game -->
-<div class="game-wrap" id="gameDowntown">
-  <canvas id="sceneDowntown"></canvas>
-  <canvas id="fgCanvasDowntown"></canvas>
-  
-  <div class="case-file">
-    <div class="case-title">Case #247</div>
-    <div class="case-desc">The Diamond Heist: Find 8 pieces of evidence from the jewelry store robbery</div>
+<!-- Vertical Menu -->
+<div class="vertical-menu" id="verticalMenu">
+  <div class="menu-header">
+    <div class="menu-logo">🕵️</div>
+    <div class="menu-title">Case Files</div>
+    <div class="menu-subtitle">Select Your Investigation</div>
   </div>
   
-  <div class="hud">
-    <div class="hud-box">
-      <div class="hud-label">Evidence</div>
-      <div class="hud-value" id="scoreValDowntown">0/8</div>
-    </div>
-    <div class="hud-box">
-      <div class="hud-label">Time</div>
-      <div class="hud-value" id="timeValDowntown">0:00</div>
-    </div>
+  <div class="menu-cases" id="menuCases">
+    <!-- Cases will be dynamically added here -->
   </div>
   
-  <div class="checklist" id="clListDowntown"></div>
-  <button class="btn-corner btn-hint" id="hintBtnDowntown">Hint (3)</button>
-  <button class="btn-corner btn-menu" id="menuBtnDowntown">Menu</button>
+  <div class="menu-footer">
+    <button class="back-btn global-back" onclick="window.location.href='index.html'">
+      🏠 Back to Home
+    </button>
+    <button class="back-btn" onclick="returnToMenu()">
+      ⬅ Back to Cases
+    </button>
+  </div>
 </div>
 
-<!-- Industrial Game -->
-<div class="game-wrap" id="gameIndustrial">
-  <canvas id="sceneIndustrial"></canvas>
-  <canvas id="fgCanvasIndustrial"></canvas>
-  
-  <div class="case-file">
-    <div class="case-title">Case #312</div>
-    <div class="case-desc">Missing Blueprints: Find evidence of industrial espionage</div>
-  </div>
-  
-  <div class="hud">
-    <div class="hud-box">
-      <div class="hud-label">Evidence</div>
-      <div class="hud-value" id="scoreValIndustrial">0/8</div>
-    </div>
-    <div class="hud-box">
-      <div class="hud-label">Time</div>
-      <div class="hud-value" id="timeValIndustrial">0:00</div>
-    </div>
-  </div>
-  
-  <div class="checklist" id="clListIndustrial"></div>
-  <button class="btn-corner btn-hint" id="hintBtnIndustrial">Hint (3)</button>
-  <button class="btn-corner btn-menu" id="menuBtnIndustrial">Menu</button>
+<!-- Menu Toggle Button -->
+<div class="menu-toggle" id="menuToggle" onclick="toggleMenu()">
+  ☰
 </div>
 
-<!-- Waterfront Game -->
-<div class="game-wrap" id="gameWaterfront">
-  <canvas id="sceneWaterfront"></canvas>
-  <canvas id="fgCanvasWaterfront"></canvas>
-  
-  <div class="case-file">
-    <div class="case-title">Case #428</div>
-    <div class="case-desc">Smuggling Ring: Gather evidence from the docks</div>
+<!-- Detective Guide -->
+<div class="detective-guide" id="detectiveGuide">
+  <div class="detective-avatar" onclick="toggleChat()">
+    🕵️
   </div>
-  
-  <div class="hud">
-    <div class="hud-box">
-      <div class="hud-label">Evidence</div>
-      <div class="hud-value" id="scoreValWaterfront">0/8</div>
-    </div>
-    <div class="hud-box">
-      <div class="hud-label">Time</div>
-      <div class="hud-value" id="timeValWaterfront">0:00</div>
-    </div>
+  <div class="chat-bubble" id="chatBubble">
+    <div class="chat-text" id="chatText">Click on the starting clue to begin your investigation!</div>
+    <div class="chat-hint" id="chatHint">💡 Look for unlocked evidence</div>
   </div>
-  
-  <div class="checklist" id="clListWaterfront"></div>
-  <button class="btn-corner btn-hint" id="hintBtnWaterfront">Hint (3)</button>
-  <button class="btn-corner btn-menu" id="menuBtnWaterfront">Menu</button>
 </div>
 
-<!-- Residential Game -->
-<div class="game-wrap" id="gameResidential">
-  <canvas id="sceneResidential"></canvas>
-  <canvas id="fgCanvasResidential"></canvas>
-  
-  <div class="case-file">
-    <div class="case-title">Case #539</div>
-    <div class="case-desc">Neighborhood Watch: Find clues about the suspicious activities</div>
+<!-- Game Container -->
+<div class="game-container" id="gameContainer">
+  <canvas class="string-canvas" id="stringCanvas"></canvas>
+  <div class="investigation-wall" id="investigationWall">
+    <!-- Evidence items will be dynamically added here -->
   </div>
-  
-  <div class="hud">
-    <div class="hud-box">
-      <div class="hud-label">Evidence</div>
-      <div class="hud-value" id="scoreValResidential">0/8</div>
-    </div>
-    <div class="hud-box">
-      <div class="hud-label">Time</div>
-      <div class="hud-value" id="timeValResidential">0:00</div>
-    </div>
-  </div>
-  
-  <div class="checklist" id="clListResidential"></div>
-  <button class="btn-corner btn-hint" id="hintBtnResidential">Hint (3)</button>
-  <button class="btn-corner btn-menu" id="menuBtnResidential">Menu</button>
 </div>
 
-<!-- Win Overlay -->
-<div class="overlay" id="winOverlay">
-  <div class="overlay-box">
-    <div class="overlay-title" id="winTitle">Case Solved!</div>
-    <div class="overlay-msg" id="winMsg">All evidence collected</div>
-    <div class="overlay-stats" id="winStats"></div>
-    <button class="overlay-btn" id="playAgainBtn">New Case</button>
-    <button class="overlay-btn" id="winMenuBtn" style="margin-left:6px">Headquarters</button>
+<!-- Progress HUD -->
+<div class="progress-hud" id="progressHud" style="display:none;">
+  <div class="hud-title">Investigation Progress</div>
+  <div class="hud-progress" id="hudProgress">
+    <!-- Progress dots will be added here -->
+  </div>
+  <div class="hud-stats">
+    <span>Found: <span class="stat-value" id="foundCount">0</span>/<span id="totalCount">0</span></span>
+    <span>Time: <span class="stat-value" id="timeCount">0:00</span></span>
+  </div>
+</div>
+
+<!-- Evidence Popup -->
+<div class="popup-overlay" id="popupOverlay" onclick="closePopup()"></div>
+<div class="evidence-popup" id="evidencePopup">
+  <div class="popup-emoji" id="popupEmoji">🔍</div>
+  <div class="popup-title" id="popupTitle">Evidence Found!</div>
+  <div class="popup-description" id="popupDescription">Description goes here</div>
+  <div class="popup-clue">
+    <div class="popup-clue-title">Next Clue</div>
+    <div class="popup-clue-text" id="popupClue">This leads to...</div>
+  </div>
+  <button class="popup-btn" onclick="closePopup()">Continue Investigation</button>
+</div>
+
+<!-- Victory Screen -->
+<div class="victory-screen" id="victoryScreen">
+  <div class="victory-content">
+    <div class="victory-emoji">🏆</div>
+    <div class="victory-title">Case Solved!</div>
+    <div class="victory-message" id="victoryMessage">Excellent detective work!</div>
+    <div class="victory-stats">
+      <div class="victory-stat">⏱️ Time: <span id="victoryTime">0:00</span></div>
+      <div class="victory-stat">🔍 Clues Found: <span id="victoryClues">0</span></div>
+      <div class="victory-stat">⭐ Performance: <span id="victoryRating">Perfect</span></div>
+    </div>
+    <div class="victory-buttons">
+      <button class="victory-btn" onclick="restartCase()">Replay Case</button>
+      <button class="victory-btn secondary" onclick="selectNewCase()">New Case</button>
+    </div>
   </div>
 </div>
 
 <script>
-// DETECTIVE THEME GAME CONFIGURATION
-const GAMES = {
-  downtown: {
-    id: 'downtown',
-    name: 'Downtown Mystery',
-    emoji: '🏙️',
-    color: '#3b82f6',
-    bgColor: '#0f1a2e',
+// GAME DATA
+const CASES = [
+  {
+    id: 'diamond_heist',
+    name: 'The Diamond Heist',
+    number: 'CASE #001',
+    difficulty: 2,
+    theme: 'A priceless diamond has been stolen from the museum',
     clues: [
-      { emoji:'💎', name:'Stolen Diamond', desc:'Master-cut diamond missing from the vault' },
-      { emoji:'🧤', name:'Glove', desc:'Black leather glove found near broken window' },
-      { emoji:'🔑', name:'Skeleton Key', desc:'Key that can open multiple locks' },
-      { emoji:'📱', name:'Burner Phone', desc:'Disposable phone found in alley' },
-      { emoji:'💵', name:'Marked Bills', desc:'Serial numbers match ransom money' },
-      { emoji:'🔍', name:'Magnifying Glass', desc:'Left at the crime scene' },
-      { emoji:'📼', name:'Security Tape', desc:'Partially erased CCTV footage' },
-      { emoji:'🖊️', name:'Pen', desc:'Custom engraved pen from luxury hotel' }
+      { 
+        emoji: '💎', 
+        name: 'Stolen Diamond', 
+        desc: 'The missing 50-carat blue diamond from the display case',
+        hint: 'The thief left behind a glove at the scene',
+        unlocks: [1],
+        isCorrect: true
+      },
+      { 
+        emoji: '🧤', 
+        name: 'Black Glove', 
+        desc: 'A single black leather glove found near the broken glass',
+        hint: 'The glove has a hotel receipt in the pocket',
+        unlocks: [2],
+        isCorrect: true
+      },
+      { 
+        emoji: '🧾', 
+        name: 'Hotel Receipt', 
+        desc: 'Receipt from the Grand Plaza Hotel, Room 507',
+        hint: 'A security badge was found in the hotel room',
+        unlocks: [3],
+        isCorrect: true
+      },
+      { 
+        emoji: '🎫', 
+        name: 'Security Badge', 
+        desc: 'Forged museum security badge with scratched ID number',
+        hint: 'The badge maker left their business card',
+        unlocks: [4],
+        isCorrect: true
+      },
+      { 
+        emoji: '💳', 
+        name: 'Business Card', 
+        desc: 'Card for "Quick ID Services" - a fake ID operation',
+        hint: 'A burner phone was found at the ID shop',
+        unlocks: [5],
+        isCorrect: true
+      },
+      { 
+        emoji: '📱', 
+        name: 'Burner Phone', 
+        desc: 'Prepaid phone with only one contact: "The Fence"',
+        hint: 'Text messages reveal a meeting at the old warehouse',
+        unlocks: [6],
+        isCorrect: true
+      },
+      { 
+        emoji: '📍', 
+        name: 'Location Pin', 
+        desc: 'GPS coordinates to an abandoned warehouse by the docks',
+        hint: 'Inside the warehouse, you find the suspect',
+        unlocks: [7],
+        isCorrect: true
+      },
+      { 
+        emoji: '👤', 
+        name: 'The Suspect', 
+        desc: 'Marcus "The Shadow" Rivera - caught red-handed with the diamond!',
+        hint: 'Case closed! The diamond has been recovered.',
+        unlocks: [],
+        isCorrect: true
+      }
     ],
-    caseTitle: 'Case #247',
-    caseDesc: 'The Diamond Heist: Find 8 pieces of evidence from the jewelry store robbery'
+    decoys: [
+      { emoji: '🚬', name: 'Cigarette Butt', desc: 'Old cigarette from unrelated visitor - dead end!' },
+      { emoji: '🎭', name: 'Theater Mask', desc: 'Props from nearby theater - not relevant to the heist' },
+      { emoji: '☕', name: 'Coffee Cup', desc: 'Leftover from museum staff - just trash' },
+      { emoji: '🔨', name: 'Hammer', desc: 'Construction tool from renovation work - red herring!' },
+      { emoji: '🎨', name: 'Paint Chip', desc: 'From wall repair last month - wrong lead' }
+    ]
   },
-  industrial: {
-    id: 'industrial',
-    name: 'Industrial District',
-    emoji: '🏭',
-    color: '#64748b',
-    bgColor: '#1e293b',
+  {
+    id: 'art_forgery',
+    name: 'The Art Forgery',
+    number: 'CASE #002',
+    difficulty: 3,
+    theme: 'A famous painting has been replaced with a perfect forgery',
     clues: [
-      { emoji:'📜', name:'Blueprints', desc:'Missing factory layout plans' },
-      { emoji:'🔧', name:'Tool', desc:'Modified wrench with unusual wear' },
-      { emoji:'💼', name:'Briefcase', desc:'Left behind near the main gate' },
-      { emoji:'📸', name:'Photos', desc:'Surveillance photos of the facility' },
-      { emoji:'🔌', name:'Wire', desc:'Cut electrical wire with unusual markings' },
-      { emoji:'🧪', name:'Chemical', desc:'Unlabeled chemical container' },
-      { emoji:'🗝️', name:'Master Key', desc:'Factory master keycard' },
-      { emoji:'📟', name:'Pager', desc:'Outdated communication device' }
+      { 
+        emoji: '🖼️', 
+        name: 'Forged Painting', 
+        desc: 'The fake Van Gogh that replaced the original in the gallery',
+        hint: 'Microscopic analysis reveals unique paint particles',
+        unlocks: [1],
+        isCorrect: true
+      },
+      { 
+        emoji: '🔬', 
+        name: 'Paint Sample', 
+        desc: 'Rare pigment only available from one supplier',
+        hint: 'The supplier keeps records of all purchases',
+        unlocks: [2],
+        isCorrect: true
+      },
+      { 
+        emoji: '📋', 
+        name: 'Purchase Order', 
+        desc: 'Order for rare pigments delivered to an art studio',
+        hint: 'The studio belongs to a struggling artist',
+        unlocks: [3],
+        isCorrect: true
+      },
+      { 
+        emoji: '🎨', 
+        name: 'Art Studio', 
+        desc: 'Hidden studio filled with forgery equipment',
+        hint: 'A shipping label for a crate to overseas buyer',
+        unlocks: [4],
+        isCorrect: true
+      },
+      { 
+        emoji: '📦', 
+        name: 'Shipping Label', 
+        desc: 'International shipment to a private collector',
+        hint: 'The collector is actually an underworld art dealer',
+        unlocks: [5],
+        isCorrect: true
+      },
+      { 
+        emoji: '💰', 
+        name: 'Money Trail', 
+        desc: 'Wire transfer records showing massive payment',
+        hint: 'Security footage from the gallery on theft night',
+        unlocks: [6],
+        isCorrect: true
+      },
+      { 
+        emoji: '📹', 
+        name: 'CCTV Footage', 
+        desc: 'Video shows the forger switching the paintings',
+        hint: 'The original painting is hidden in a secret location',
+        unlocks: [7],
+        isCorrect: true
+      },
+      { 
+        emoji: '🏛️', 
+        name: 'Hidden Vault', 
+        desc: 'Original Van Gogh found in a storage facility!',
+        hint: 'Both the painting and the forger have been recovered!',
+        unlocks: [],
+        isCorrect: true
+      }
     ],
-    caseTitle: 'Case #312',
-    caseDesc: 'Missing Blueprints: Find evidence of industrial espionage'
+    decoys: [
+      { emoji: '🖌️', name: 'Paint Brush', desc: 'Just a regular brush from cleaning supplies - wrong!' },
+      { emoji: '📸', name: 'Tourist Photo', desc: 'Random visitor selfie - not related to the crime' },
+      { emoji: '🎟️', name: 'Ticket Stub', desc: 'Old gallery entrance ticket - not helpful' },
+      { emoji: '🧹', name: 'Cleaning Rag', desc: 'Janitor\'s equipment - just a distraction' },
+      { emoji: '🗝️', name: 'Old Key', desc: 'Lost key from months ago - dead end!' }
+    ]
   },
-  waterfront: {
-    id: 'waterfront',
-    name: 'Waterfront Case',
-    emoji: '⚓',
-    color: '#0ea5e9',
-    bgColor: '#0c4a6e',
+  {
+    id: 'missing_scientist',
+    name: 'The Missing Scientist',
+    number: 'CASE #003',
+    difficulty: 2,
+    theme: 'A renowned scientist has vanished with secret research',
     clues: [
-      { emoji:'📦', name:'Crate', desc:'Unmarked shipping container' },
-      { emoji:'🗺️', name:'Map', desc:'Hand-drawn map of the harbor' },
-      { emoji:'⚓', name:'Anchor', desc:'Small boat anchor with fresh scratches' },
-      { emoji:'📅', name:'Logbook', desc:'Ship arrival/departure records' },
-      { emoji:'🕯️', name:'Signal Lamp', desc:'Modified flashlight for Morse code' },
-      { emoji:'🧵', name:'Rope', desc:'New rope with unusual fibers' },
-      { emoji:'📡', name:'Radio', desc:'Marine radio tuned to unusual frequency' },
-      { emoji:'🧭', name:'Compass', desc:'Navigation compass with altered markings' }
+      { 
+        emoji: '🔬', 
+        name: 'Empty Lab', 
+        desc: 'Dr. Chen\'s laboratory, abandoned in the middle of an experiment',
+        hint: 'A torn page from her research notebook on the floor',
+        unlocks: [1],
+        isCorrect: true
+      },
+      { 
+        emoji: '📓', 
+        name: 'Research Notes', 
+        desc: 'Partial notes about a breakthrough discovery',
+        hint: 'Mentions a secret meeting with an unknown person',
+        unlocks: [2],
+        isCorrect: true
+      },
+      { 
+        emoji: '✉️', 
+        name: 'Encrypted Email', 
+        desc: 'Strange coded message sent the night she disappeared',
+        hint: 'The code references a specific cafe downtown',
+        unlocks: [3],
+        isCorrect: true
+      },
+      { 
+        emoji: '☕', 
+        name: 'Coffee Shop', 
+        desc: 'The Midnight Brew - where the meeting took place',
+        hint: 'Barista remembers Dr. Chen meeting a corporate executive',
+        unlocks: [4],
+        isCorrect: true
+      },
+      { 
+        emoji: '💼', 
+        name: 'Corporate Badge', 
+        desc: 'ID badge from rival pharmaceutical company found in booth',
+        hint: 'The company has been trying to steal her research',
+        unlocks: [5],
+        isCorrect: true
+      },
+      { 
+        emoji: '🏢', 
+        name: 'Company HQ', 
+        desc: 'Rival company building with suspicious activity',
+        hint: 'Dr. Chen\'s phone GPS signal last pinged here',
+        unlocks: [6],
+        isCorrect: true
+      },
+      { 
+        emoji: '📡', 
+        name: 'GPS Signal', 
+        desc: 'Signal leads to basement level, unauthorized area',
+        hint: 'You hear Dr. Chen calling for help!',
+        unlocks: [7],
+        isCorrect: true
+      },
+      { 
+        emoji: '🚪', 
+        name: 'Secret Lab', 
+        desc: 'Dr. Chen found! She was being held captive for her research',
+        hint: 'Case solved! The rival company has been exposed!',
+        unlocks: [],
+        isCorrect: true
+      }
     ],
-    caseTitle: 'Case #428',
-    caseDesc: 'Smuggling Ring: Gather evidence from the docks'
+    decoys: [
+      { emoji: '🧪', name: 'Test Tube', desc: 'Empty vial from old experiment - not important' },
+      { emoji: '📚', name: 'Library Book', desc: 'Overdue textbook - unrelated to disappearance' },
+      { emoji: '🥼', name: 'Lab Coat', desc: 'Spare coat in closet - just clothing' },
+      { emoji: '🔋', name: 'Dead Battery', desc: 'Old equipment battery - red herring!' },
+      { emoji: '📄', name: 'Grocery List', desc: 'Personal shopping list - not a clue' }
+    ]
   },
-  residential: {
-    id: 'residential',
-    name: 'Residential Investigation',
-    emoji: '🏘️',
-    color: '#10b981',
-    bgColor: '#064e3b',
+  {
+    id: 'cyber_crime',
+    name: 'The Cyber Heist',
+    number: 'CASE #004',
+    difficulty: 3,
+    theme: 'Hackers have stolen millions from the city bank',
     clues: [
-      { emoji:'📬', name:'Mail', desc:'Unopened letters with suspicious return addresses' },
-      { emoji:'🔦', name:'Flashlight', desc:'Powerful flashlight with red filter' },
-      { emoji:'📹', name:'Camera', desc:'Hidden surveillance camera' },
-      { emoji:'🧾', name:'Receipt', desc:'Receipt from unusual purchase' },
-      { emoji:'🕵️', name:'Note', desc:'Cryptic handwritten note' },
-      { emoji:'🔐', name:'Lock', desc:'Damaged lock with tool marks' },
-      { emoji:'📻', name:'Radio', desc:'Shortwave radio tuned to odd frequency' },
-      { emoji:'🧩', name:'Puzzle', desc:'Jigsaw puzzle with missing pieces' }
+      { 
+        emoji: '💻', 
+        name: 'Hacked System', 
+        desc: 'Bank\'s security system compromised, money transferred out',
+        hint: 'Malware signature found in the system logs',
+        unlocks: [1],
+        isCorrect: true
+      },
+      { 
+        emoji: '🐛', 
+        name: 'Malware Code', 
+        desc: 'Sophisticated virus with unique coding patterns',
+        hint: 'Code matches previous attacks by "Ghost Protocol" group',
+        unlocks: [2],
+        isCorrect: true
+      },
+      { 
+        emoji: '👻', 
+        name: 'Hacker Group', 
+        desc: 'Known cyber criminal organization with many aliases',
+        hint: 'Dark web forum shows recent chatter about the heist',
+        unlocks: [3],
+        isCorrect: true
+      },
+      { 
+        emoji: '🌐', 
+        name: 'Dark Web Post', 
+        desc: 'Anonymous post bragging about the successful bank job',
+        hint: 'IP address briefly exposed before using VPN',
+        unlocks: [4],
+        isCorrect: true
+      },
+      { 
+        emoji: '🔍', 
+        name: 'IP Trace', 
+        desc: 'Brief connection from a local internet cafe',
+        hint: 'Cafe security camera caught the hacker',
+        unlocks: [5],
+        isCorrect: true
+      },
+      { 
+        emoji: '📹', 
+        name: 'Surveillance', 
+        desc: 'Video of suspect using laptop at specific time',
+        hint: 'Facial recognition identifies the hacker',
+        unlocks: [6],
+        isCorrect: true
+      },
+      { 
+        emoji: '🎭', 
+        name: 'Identity Revealed', 
+        desc: 'Alex "Cipher" Morgan - former IT security expert',
+        hint: 'Cryptocurrency wallet traced to luxury apartment',
+        unlocks: [7],
+        isCorrect: true
+      },
+      { 
+        emoji: '🏠', 
+        name: 'Hideout Found', 
+        desc: 'Arrested with stolen funds and hacking equipment!',
+        hint: 'All stolen money recovered! Case closed!',
+        unlocks: [],
+        isCorrect: true
+      }
     ],
-    caseTitle: 'Case #539',
-    caseDesc: 'Neighborhood Watch: Find clues about the suspicious activities'
+    decoys: [
+      { emoji: '🖱️', name: 'Wireless Mouse', desc: 'Random office equipment - not evidence' },
+      { emoji: '💾', name: 'Floppy Disk', desc: 'Ancient storage device - totally irrelevant!' },
+      { emoji: '📞', name: 'Phone Book', desc: 'Old directory from 2010 - useless' },
+      { emoji: '🖨️', name: 'Printer Error', desc: 'Paper jam from weeks ago - red herring!' },
+      { emoji: '🔌', name: 'Power Cable', desc: 'Generic computer cable - not a clue' }
+    ]
   }
-};
+];
 
 // GAME STATE
-let currentGame = null;
-let gameInstances = {};
+let currentCase = null;
+let foundClues = new Set();
+let startTime = null;
+let timerInterval = null;
+let menuHidden = false;
+let chatTimeout = null;
 
-// MENU FUNCTIONS
-function initMenu() {
-  const options = document.querySelectorAll('.game-option');
-  options.forEach(option => {
-    option.addEventListener('click', function() {
-      options.forEach(o => o.classList.remove('selected'));
-      this.classList.add('selected');
-      currentGame = this.dataset.game;
-    });
-  });
-  
-  document.getElementById('startBtn').addEventListener('click', function() {
-    if (!currentGame) {
-      currentGame = 'downtown';
-      document.querySelector(`[data-game="${currentGame}"]`).classList.add('selected');
-    }
-    startGame(currentGame);
-  });
-  
-  document.getElementById('howToBtn').addEventListener('click', function() {
-    alert('CASE BRIEFING:\n\n1. Investigate the scene by clicking/tapping\n2. Find 8 hidden pieces of evidence\n3. Each piece reveals more about the case\n4. Use hints if stuck (3 per case)\n5. Solve the case by collecting all evidence\n\nEach location presents a different mystery to solve!');
-  });
-  
-  // Auto-select first game
-  document.querySelector('.game-option').classList.add('selected');
-  currentGame = 'downtown';
+// INITIALIZE
+function init() {
+  renderCaseMenu();
+  setupCanvas();
+  window.addEventListener('resize', drawConnections);
 }
 
-function startGame(gameId) {
-  document.getElementById('menuOverlay').style.display = 'none';
+function startInvestigation() {
+  document.getElementById('welcomeScreen').classList.add('hidden');
   
-  // Hide all games, show selected
-  document.querySelectorAll('.game-wrap').forEach(wrap => {
-    wrap.classList.remove('active');
+  // Make sure menu is visible when entering from welcome screen
+  if (menuHidden) {
+    menuHidden = false;
+    const menu = document.getElementById('verticalMenu');
+    const toggle = document.getElementById('menuToggle');
+    const container = document.getElementById('gameContainer');
+    const guide = document.getElementById('detectiveGuide');
+    
+    menu.classList.remove('hidden');
+    toggle.classList.remove('menu-hidden');
+    container.classList.remove('menu-hidden');
+    guide.classList.remove('menu-hidden');
+  }
+}
+
+function renderCaseMenu() {
+  const container = document.getElementById('menuCases');
+  container.innerHTML = '';
+  
+  CASES.forEach(caseData => {
+    const card = document.createElement('div');
+    card.className = 'case-card';
+    card.dataset.caseId = caseData.id;
+    
+    const stars = '⭐'.repeat(caseData.difficulty);
+    
+    card.innerHTML = `
+      <div class="case-number">${caseData.number}</div>
+      <div class="case-name">${caseData.name}</div>
+      <div class="case-difficulty">
+        <span class="difficulty-stars">${stars}</span>
+        <span>Difficulty</span>
+      </div>
+    `;
+    
+    card.addEventListener('click', function() {
+      selectCase(caseData.id, this);
+    });
+    
+    container.appendChild(card);
+  });
+}
+
+function selectCase(caseId, clickedCard) {
+  currentCase = CASES.find(c => c.id === caseId);
+  if (!currentCase) return;
+  
+  foundClues.clear();
+  startTime = Date.now();
+  
+  // Update UI - mark active card
+  document.querySelectorAll('.case-card').forEach(card => card.classList.remove('active'));
+  if (clickedCard) {
+    clickedCard.classList.add('active');
+  }
+  
+  // Show game container and HUD
+  document.getElementById('gameContainer').classList.add('active');
+  document.getElementById('progressHud').style.display = 'block';
+  
+  setupCase();
+  startTimer();
+  showChat(`Starting investigation: ${currentCase.name}`, `Find the ${currentCase.clues[0].emoji} ${currentCase.clues[0].name} to begin!`);
+}
+
+function setupCase() {
+  const wall = document.getElementById('investigationWall');
+  wall.innerHTML = '';
+  
+  const totalClues = currentCase.clues.length;
+  const hudProgress = document.getElementById('hudProgress');
+  hudProgress.innerHTML = '';
+  
+  // Create progress dots (only for correct clues)
+  for (let i = 0; i < totalClues; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot';
+    dot.id = `progress-${i}`;
+    hudProgress.appendChild(dot);
+  }
+  
+  document.getElementById('foundCount').textContent = '0';
+  document.getElementById('totalCount').textContent = totalClues;
+  
+  // Position clues in a web-like pattern
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+  const radius = Math.min(window.innerWidth, window.innerHeight) * 0.35;
+  
+  // Add correct clues
+  currentCase.clues.forEach((clue, index) => {
+    const angle = (index / totalClues) * Math.PI * 2 - Math.PI / 2;
+    const x = centerX + Math.cos(angle) * radius - 140;
+    const y = centerY + Math.sin(angle) * radius;
+    
+    const item = document.createElement('div');
+    item.className = 'evidence-item';
+    item.id = `clue-${index}`;
+    item.dataset.type = 'correct';
+    item.dataset.index = index;
+    
+    // First clue is unlocked
+    if (index !== 0) {
+      item.classList.add('locked');
+    }
+    
+    item.style.left = `${x}px`;
+    item.style.top = `${y}px`;
+    
+    item.innerHTML = `
+      <div class="evidence-photo">
+        ${clue.emoji}
+        ${index !== 0 ? '<div class="lock-icon">🔒</div>' : ''}
+      </div>
+      <div class="evidence-label">${clue.name}</div>
+    `;
+    
+    item.onclick = () => clickClue(index);
+    wall.appendChild(item);
   });
   
-  const gameWrap = document.getElementById(`game${gameId.charAt(0).toUpperCase() + gameId.slice(1)}`);
-  gameWrap.classList.add('active');
-  
-  // Initialize or restart game
-  if (!gameInstances[gameId]) {
-    gameInstances[gameId] = new DetectiveGame(gameId);
+  // Add decoy clues (wrong evidence)
+  if (currentCase.decoys && currentCase.decoys.length > 0) {
+    currentCase.decoys.forEach((decoy, decoyIndex) => {
+      // Random position not too close to correct clues
+      let x, y, tooClose, attempts = 0;
+      do {
+        tooClose = false;
+        const angle = Math.random() * Math.PI * 2;
+        const dist = radius * 0.5 + Math.random() * radius * 0.6;
+        x = centerX + Math.cos(angle) * dist - 140;
+        y = centerY + Math.sin(angle) * dist;
+        
+        // Check distance from all correct clues
+        for (let i = 0; i < totalClues; i++) {
+          const clueEl = document.getElementById(`clue-${i}`);
+          if (clueEl) {
+            const clueX = parseInt(clueEl.style.left);
+            const clueY = parseInt(clueEl.style.top);
+            const distance = Math.sqrt(Math.pow(x - clueX, 2) + Math.pow(y - clueY, 2));
+            if (distance < 150) {
+              tooClose = true;
+              break;
+            }
+          }
+        }
+        attempts++;
+      } while (tooClose && attempts < 50);
+      
+      const item = document.createElement('div');
+      item.className = 'evidence-item';
+      item.id = `decoy-${decoyIndex}`;
+      item.dataset.type = 'decoy';
+      item.dataset.index = decoyIndex;
+      
+      item.style.left = `${x}px`;
+      item.style.top = `${y}px`;
+      
+      item.innerHTML = `
+        <div class="evidence-photo">
+          ${decoy.emoji}
+        </div>
+        <div class="evidence-label">${decoy.name}</div>
+      `;
+      
+      item.onclick = () => clickDecoy(decoyIndex, decoy);
+      wall.appendChild(item);
+    });
   }
-  gameInstances[gameId].init();
+  
+  drawConnections();
+}
+
+function clickDecoy(decoyIndex, decoy) {
+  const decoyElement = document.getElementById(`decoy-${decoyIndex}`);
+  
+  // Mark as wrong
+  decoyElement.classList.add('wrong');
+  
+  // Show X mark
+  const xMark = document.createElement('div');
+  xMark.className = 'wrong-x';
+  xMark.textContent = '✗';
+  decoyElement.appendChild(xMark);
+  
+  // Remove X after animation
+  setTimeout(() => {
+    xMark.remove();
+  }, 1500);
+  
+  // Show wrong clue popup
+  document.getElementById('popupEmoji').textContent = decoy.emoji;
+  document.getElementById('popupTitle').textContent = 'Wrong Clue!';
+  document.getElementById('popupDescription').textContent = decoy.desc;
+  document.getElementById('popupClue').textContent = 'This doesn\'t help the investigation. Look for evidence that connects!';
+  
+  const popup = document.getElementById('evidencePopup');
+  popup.classList.add('wrong');
+  
+  document.getElementById('popupOverlay').classList.add('show');
+  popup.classList.add('show');
+  
+  // Play wrong sound
+  playSound([400, 350, 300]);
+  
+  // Update chat
+  showChat('Dead end!', 'That\'s not the right evidence. Follow the investigation chain.');
+  
+  // Remove wrong styling from popup when closed
+  setTimeout(() => {
+    decoyElement.classList.remove('wrong');
+  }, 2000);
+}
+
+function clickClue(index) {
+  const clueElement = document.getElementById(`clue-${index}`);
+  
+  if (clueElement.classList.contains('locked')) {
+    showChat('This clue is locked!', 'Follow the investigation path to unlock it.');
+    return;
+  }
+  
+  if (foundClues.has(index)) {
+    showChat('Already investigated!', 'Move on to the next clue.');
+    return;
+  }
+  
+  foundClues.add(index);
+  clueElement.classList.add('found');
+  
+  const clue = currentCase.clues[index];
+  
+  // Update progress
+  document.getElementById(`progress-${index}`).classList.add('found');
+  document.getElementById('foundCount').textContent = foundClues.size;
+  
+  // Unlock connected clues
+  clue.unlocks.forEach(nextIndex => {
+    const nextClue = document.getElementById(`clue-${nextIndex}`);
+    if (nextClue) {
+      nextClue.classList.remove('locked');
+      const lock = nextClue.querySelector('.lock-icon');
+      if (lock) lock.remove();
+    }
+  });
+  
+  // Show popup
+  showEvidencePopup(clue, index);
+  
+  // Spawn particles
+  spawnParticles(clueElement);
+  
+  // Draw updated connections
+  drawConnections();
+  
+  // Check for case completion
+  if (foundClues.size === currentCase.clues.length) {
+    setTimeout(completeCaseInvestigation, 1000);
+  }
+}
+
+function showEvidencePopup(clue, index) {
+  document.getElementById('popupEmoji').textContent = clue.emoji;
+  document.getElementById('popupTitle').textContent = clue.name;
+  document.getElementById('popupDescription').textContent = clue.desc;
+  document.getElementById('popupClue').textContent = clue.hint;
+  
+  document.getElementById('popupOverlay').classList.add('show');
+  document.getElementById('evidencePopup').classList.add('show');
+  
+  // Play sound
+  playSound([523.25, 659.25, 783.99]);
+}
+
+function closePopup() {
+  document.getElementById('popupOverlay').classList.remove('show');
+  const popup = document.getElementById('evidencePopup');
+  popup.classList.remove('show');
+  popup.classList.remove('wrong');
+}
+
+function drawConnections() {
+  const canvas = document.getElementById('stringCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (!currentCase) return;
+  
+  // Only draw connections for correct clues
+  currentCase.clues.forEach((clue, index) => {
+    const element = document.getElementById(`clue-${index}`);
+    if (!element) return;
+    
+    const rect = element.getBoundingClientRect();
+    const startX = rect.left + rect.width / 2;
+    const startY = rect.top + rect.height / 2;
+    
+    clue.unlocks.forEach(nextIndex => {
+      const nextElement = document.getElementById(`clue-${nextIndex}`);
+      if (!nextElement) return;
+      
+      const nextRect = nextElement.getBoundingClientRect();
+      const endX = nextRect.left + nextRect.width / 2;
+      const endY = nextRect.top + nextRect.height / 2;
+      
+      // Draw string
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      
+      const isFound = foundClues.has(index);
+      const isNextUnlocked = !nextElement.classList.contains('locked');
+      
+      if (isFound || isNextUnlocked) {
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffd700';
+      } else {
+        ctx.strokeStyle = '#533a71';
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 0;
+      }
+      
+      // Curved line
+      const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2 - 50;
+      ctx.quadraticCurveTo(midX, midY, endX, endY);
+      ctx.stroke();
+      
+      // Reset shadow
+      ctx.shadowBlur = 0;
+    });
+  });
+}
+
+function spawnParticles(element) {
+  const rect = element.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  
+  const particles = ['✨', '⭐', '💫', '🌟'];
+  
+  for (let i = 0; i < 15; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.textContent = particles[Math.floor(Math.random() * particles.length)];
+    particle.style.left = centerX + 'px';
+    particle.style.top = centerY + 'px';
+    particle.style.fontSize = (Math.random() * 20 + 15) + 'px';
+    
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * 100 + 50;
+    particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+    particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+    
+    document.body.appendChild(particle);
+    
+    setTimeout(() => particle.remove(), 3000);
+  }
+}
+
+function completeCaseInvestigation() {
+  clearInterval(timerInterval);
+  
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  
+  let rating = 'Perfect Detective!';
+  if (elapsed > 180) rating = 'Excellent Work!';
+  if (elapsed > 300) rating = 'Good Job!';
+  
+  document.getElementById('victoryTime').textContent = timeStr;
+  document.getElementById('victoryClues').textContent = foundClues.size;
+  document.getElementById('victoryRating').textContent = rating;
+  document.getElementById('victoryMessage').textContent = `${currentCase.theme} - Case closed!`;
+  
+  document.getElementById('victoryScreen').classList.add('show');
+  
+  playSound([523.25, 659.25, 783.99, 1046.50]);
+  
+  // Victory particles
+  for (let i = 0; i < 50; i++) {
+    setTimeout(() => {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.textContent = ['🎉', '🎊', '⭐', '🏆'][Math.floor(Math.random() * 4)];
+      particle.style.left = Math.random() * window.innerWidth + 'px';
+      particle.style.top = '-50px';
+      particle.style.fontSize = (Math.random() * 30 + 20) + 'px';
+      document.body.appendChild(particle);
+      setTimeout(() => particle.remove(), 3000);
+    }, i * 50);
+  }
+}
+
+function restartCase() {
+  document.getElementById('victoryScreen').classList.remove('show');
+  if (currentCase) {
+    // Find the active case card and restart
+    const caseCard = document.querySelector(`.case-card[data-case-id="${currentCase.id}"]`);
+    selectCase(currentCase.id, caseCard);
+  }
+}
+
+function selectNewCase() {
+  document.getElementById('victoryScreen').classList.remove('show');
+  returnToMenu();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    document.getElementById('timeCount').textContent = 
+      `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }, 1000);
+}
+
+function toggleMenu() {
+  menuHidden = !menuHidden;
+  const menu = document.getElementById('verticalMenu');
+  const toggle = document.getElementById('menuToggle');
+  const container = document.getElementById('gameContainer');
+  const guide = document.getElementById('detectiveGuide');
+  
+  if (menuHidden) {
+    menu.classList.add('hidden');
+    toggle.classList.add('menu-hidden');
+    container.classList.add('menu-hidden');
+    guide.classList.add('menu-hidden');
+  } else {
+    menu.classList.remove('hidden');
+    toggle.classList.remove('menu-hidden');
+    container.classList.remove('menu-hidden');
+    guide.classList.remove('menu-hidden');
+  }
+  
+  setTimeout(drawConnections, 400);
 }
 
 function returnToMenu() {
-  document.querySelectorAll('.game-wrap').forEach(wrap => {
-    wrap.classList.remove('active');
-  });
-  document.getElementById('menuOverlay').style.display = 'flex';
-  document.getElementById('winOverlay').classList.remove('show');
-}
-
-// DETECTIVE GAME CLASS
-class DetectiveGame {
-  constructor(gameId) {
-    this.gameId = gameId;
-    this.config = GAMES[gameId];
-    this.W = this.H = 0;
-    this.score = 0;
-    this.hints = 3;
-    this.elapsed = 0;
-    this.timer = null;
-    this.hiddenClues = [];
-    this.environment = null;
-    this.initialized = false;
-    this.buildings = [];
-    this.vehicles = [];
-    this.lights = [];
-  }
+  clearInterval(timerInterval);
   
-  init() {
-    if (!this.initialized) {
-      this.setupCanvas();
-      this.setupEventListeners();
-      this.initialized = true;
-    }
-    this.reset();
-  }
+  // Hide game elements
+  document.getElementById('gameContainer').classList.remove('active');
+  document.getElementById('progressHud').style.display = 'none';
   
-  setupCanvas() {
-    this.cvs = document.getElementById(`scene${this.capitalize(this.gameId)}`);
-    this.ctx = this.cvs.getContext('2d');
-    this.fgCvs = document.getElementById(`fgCanvas${this.capitalize(this.gameId)}`);
-    this.fgCtx = this.fgCvs.getContext('2d');
-    this.wrap = document.getElementById(`game${this.capitalize(this.gameId)}`);
-    
-    window.addEventListener('resize', () => this.resize());
-    this.resize();
-  }
+  // Clear active states
+  document.querySelectorAll('.case-card').forEach(card => card.classList.remove('active'));
   
-  setupEventListeners() {
-    this.addTouchBtn(`hintBtn${this.capitalize(this.gameId)}`, () => this.useHint());
-    this.addTouchBtn(`menuBtn${this.capitalize(this.gameId)}`, returnToMenu);
-    
-    // Game interaction
-    this.wrap.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        this.handleInteraction(t.clientX, t.clientY);
-      }
-    }, { passive: false });
-    
-    this.wrap.addEventListener('click', (e) => {
-      this.handleInteraction(e.clientX, e.clientY);
-    });
-  }
+  // Clear canvas
+  const canvas = document.getElementById('stringCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  handleInteraction(x, y) {
-    this.spawnRipple(x, y);
-    this.spawnTouchRing(x, y);
-    
-    // Check if clicked on clue
-    for (let i = 0; i < this.hiddenClues.length; i++) {
-      const clue = this.hiddenClues[i];
-      if (clue.found) continue;
-      const rect = clue.el.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      
-      if (Math.abs(x - cx) < 40 && Math.abs(y - cy) < 40) {
-        this.revealClue(i);
-        return;
-      }
-    }
-  }
+  // Reset state
+  currentCase = null;
+  hideChat();
   
-  resize() {
-    this.W = this.cvs.width = this.fgCvs.width = window.innerWidth;
-    this.H = this.cvs.height = this.fgCvs.height = window.innerHeight;
-    this.buildEnvironment();
-    this.drawForeground();
-    this.placeClues();
-  }
-  
-  buildEnvironment() {
-    this.buildings = [];
-    this.vehicles = [];
-    this.lights = [];
-    
-    // Create environment based on game type
-    switch(this.gameId) {
-      case 'downtown':
-        this.buildDowntown();
-        break;
-      case 'industrial':
-        this.buildIndustrial();
-        break;
-      case 'waterfront':
-        this.buildWaterfront();
-        break;
-      case 'residential':
-        this.buildResidential();
-        break;
-    }
-  }
-  
-  buildDowntown() {
-    // Skyscrapers
-    for (let i = 0; i < 6; i++) {
-      const width = 40 + Math.random() * 40;
-      const height = 200 + Math.random() * 150;
-      const x = (i / 6) * this.W + Math.random() * 50;
-      
-      this.buildings.push({
-        x: x,
-        y: this.H - height,
-        width: width,
-        height: height,
-        windows: Math.floor(height / 20),
-        color: `hsl(${210 + Math.random() * 20}, 40%, ${30 + Math.random() * 20}%)`
-      });
-    }
-    
-    // Street lights
-    for (let i = 0; i < 8; i++) {
-      this.lights.push({
-        x: (i / 8) * this.W,
-        y: this.H * 0.7,
-        on: Math.random() > 0.5,
-        intensity: 0.3 + Math.random() * 0.4
-      });
-    }
-    
-    // Vehicles
-    for (let i = 0; i < 4; i++) {
-      this.vehicles.push({
-        x: Math.random() * this.W,
-        y: this.H * 0.75,
-        width: 40 + Math.random() * 20,
-        height: 20,
-        speed: 0.5 + Math.random() * 1
-      });
-    }
-  }
-  
-  buildIndustrial() {
-    // Factory buildings
-    for (let i = 0; i < 5; i++) {
-      const width = 60 + Math.random() * 80;
-      const height = 120 + Math.random() * 100;
-      const x = (i / 5) * this.W + Math.random() * 30;
-      
-      this.buildings.push({
-        x: x,
-        y: this.H - height,
-        width: width,
-        height: height,
-        chimneys: Math.floor(Math.random() * 3),
-        color: `hsl(${200 + Math.random() * 20}, 30%, ${25 + Math.random() * 15}%)`
-      });
-    }
-    
-    // Smokestacks
-    for (let i = 0; i < 3; i++) {
-      this.lights.push({
-        x: 100 + i * 200,
-        y: this.H * 0.3,
-        smoke: true,
-        intensity: 0.4 + Math.random() * 0.3
-      });
-    }
-  }
-  
-  buildWaterfront() {
-    // Warehouse buildings
-    for (let i = 0; i < 4; i++) {
-      const width = 80 + Math.random() * 60;
-      const height = 100 + Math.random() * 80;
-      const x = (i / 4) * this.W + Math.random() * 40;
-      
-      this.buildings.push({
-        x: x,
-        y: this.H - height,
-        width: width,
-        height: height,
-        dock: i === 2,
-        color: `hsl(${190 + Math.random() * 20}, 35%, ${30 + Math.random() * 15}%)`
-      });
-    }
-    
-    // Water
-    this.waterLevel = this.H * 0.65;
-    
-    // Boats
-    for (let i = 0; i < 3; i++) {
-      this.vehicles.push({
-        x: Math.random() * this.W,
-        y: this.waterLevel - 20,
-        width: 60 + Math.random() * 40,
-        height: 30,
-        boat: true,
-        speed: 0.3 + Math.random() * 0.4
-      });
-    }
-  }
-  
-  buildResidential() {
-    // Houses
-    for (let i = 0; i < 6; i++) {
-      const width = 50 + Math.random() * 40;
-      const height = 80 + Math.random() * 60;
-      const x = (i / 6) * this.W + Math.random() * 40;
-      
-      this.buildings.push({
-        x: x,
-        y: this.H - height,
-        width: width,
-        height: height,
-        roof: true,
-        color: `hsl(${Math.random() * 360}, 40%, ${40 + Math.random() * 20}%)`
-      });
-    }
-    
-    // Street lights
-    for (let i = 0; i < 6; i++) {
-      this.lights.push({
-        x: (i / 6) * this.W + 30,
-        y: this.H * 0.75,
-        on: true,
-        intensity: 0.2 + Math.random() * 0.3
-      });
-    }
-    
-    // Trees
-    for (let i = 0; i < 8; i++) {
-      this.lights.push({
-        x: 20 + i * 80,
-        y: this.H * 0.72,
-        tree: true,
-        size: 20 + Math.random() * 15
-      });
-    }
-  }
-  
-  drawForeground() {
-    this.fgCtx.clearRect(0, 0, this.W, this.H);
-    
-    // Top gradient (fog/darkness)
-    const topGrad = this.fgCtx.createLinearGradient(0, 0, 0, this.H * 0.2);
-    topGrad.addColorStop(0, `rgba(15,30,45,.6)`);
-    topGrad.addColorStop(1, 'rgba(15,30,45,0)');
-    this.fgCtx.fillStyle = topGrad;
-    this.fgCtx.fillRect(0, 0, this.W, this.H * 0.2);
-    
-    // Bottom gradient (ground fog)
-    const btmGrad = this.fgCtx.createLinearGradient(0, this.H * 0.8, 0, this.H);
-    btmGrad.addColorStop(0, 'rgba(15,30,45,0)');
-    btmGrad.addColorStop(1, `rgba(15,30,45,.4)`);
-    this.fgCtx.fillStyle = btmGrad;
-    this.fgCtx.fillRect(0, this.H * 0.8, this.W, this.H * 0.2);
-  }
-  
-  drawScene(now) {
-    const t = now * 0.001;
-    
-    // Clear canvas with game-specific background
-    this.ctx.fillStyle = this.config.bgColor;
-    this.ctx.fillRect(0, 0, this.W, this.H);
-    
-    // Draw game-specific environment
-    this.drawGameEnvironment(t);
-    
-    // Draw particles (dust, fog, etc.)
-    this.drawParticles(t);
-  }
-  
-  drawGameEnvironment(t) {
-    switch(this.gameId) {
-      case 'downtown':
-        this.drawDowntown(t);
-        break;
-      case 'industrial':
-        this.drawIndustrial(t);
-        break;
-      case 'waterfront':
-        this.drawWaterfront(t);
-        break;
-      case 'residential':
-        this.drawResidential(t);
-        break;
-    }
-  }
-  
-  drawDowntown(t) {
-    // Draw sky gradient
-    const skyGrad = this.ctx.createLinearGradient(0, 0, 0, this.H * 0.4);
-    skyGrad.addColorStop(0, '#1e293b');
-    skyGrad.addColorStop(1, '#334155');
-    this.ctx.fillStyle = skyGrad;
-    this.ctx.fillRect(0, 0, this.W, this.H * 0.4);
-    
-    // Draw buildings
-    this.buildings.forEach(building => {
-      // Building body
-      this.ctx.fillStyle = building.color;
-      this.ctx.fillRect(building.x, building.y, building.width, building.height);
-      
-      // Windows
-      this.ctx.fillStyle = 'rgba(255, 255, 200, 0.6)';
-      const windowWidth = 8;
-      const windowHeight = 12;
-      const windowsPerRow = Math.floor(building.width / (windowWidth + 4));
-      const rows = Math.floor(building.height / (windowHeight + 8));
-      
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < windowsPerRow; col++) {
-          if (Math.random() > 0.3) { // Random lights on/off
-            const wx = building.x + 6 + col * (windowWidth + 4);
-            const wy = building.y + 6 + row * (windowHeight + 8);
-            this.ctx.fillRect(wx, wy, windowWidth, windowHeight);
-          }
-        }
-      }
-    });
-    
-    // Draw street
-    this.ctx.fillStyle = '#475569';
-    this.ctx.fillRect(0, this.H * 0.75, this.W, this.H * 0.25);
-    
-    // Draw street lines
-    this.ctx.strokeStyle = '#fbbf24';
-    this.ctx.lineWidth = 3;
-    this.ctx.setLineDash([20, 15]);
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, this.H * 0.775);
-    this.ctx.lineTo(this.W, this.H * 0.775);
-    this.ctx.stroke();
-    this.ctx.setLineDash([]);
-    
-    // Draw street lights
-    this.lights.forEach(light => {
-      // Pole
-      this.ctx.fillStyle = '#64748b';
-      this.ctx.fillRect(light.x - 2, light.y, 4, 40);
-      
-      // Light
-      if (light.on) {
-        const lightGrad = this.ctx.createRadialGradient(
-          light.x, light.y - 5, 0,
-          light.x, light.y - 5, 30
-        );
-        lightGrad.addColorStop(0, `rgba(255, 255, 200, ${light.intensity})`);
-        lightGrad.addColorStop(1, 'rgba(255, 255, 200, 0)');
-        this.ctx.fillStyle = lightGrad;
-        this.ctx.fillRect(light.x - 30, light.y - 35, 60, 40);
-        
-        this.ctx.fillStyle = '#fbbf24';
-        this.ctx.beginPath();
-        this.ctx.arc(light.x, light.y - 5, 6, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
-    });
-    
-    // Draw moving vehicles
-    this.vehicles.forEach(vehicle => {
-      vehicle.x += vehicle.speed;
-      if (vehicle.x > this.W + 50) vehicle.x = -50;
-      
-      this.ctx.fillStyle = '#dc2626';
-      this.ctx.fillRect(vehicle.x, vehicle.y, vehicle.width, vehicle.height);
-      
-      // Windows
-      this.ctx.fillStyle = '#0ea5e9';
-      this.ctx.fillRect(vehicle.x + 5, vehicle.y + 2, vehicle.width - 30, 8);
-      
-      // Lights
-      this.ctx.fillStyle = '#fbbf24';
-      this.ctx.fillRect(vehicle.x + vehicle.width - 10, vehicle.y + 5, 5, 5);
-    });
-  }
-  
-  drawIndustrial(t) {
-    // Smoky sky
-    const skyGrad = this.ctx.createLinearGradient(0, 0, 0, this.H * 0.5);
-    skyGrad.addColorStop(0, '#374151');
-    skyGrad.addColorStop(1, '#4b5563');
-    this.ctx.fillStyle = skyGrad;
-    this.ctx.fillRect(0, 0, this.W, this.H * 0.5);
-    
-    // Draw factory buildings
-    this.buildings.forEach(building => {
-      // Main building
-      this.ctx.fillStyle = building.color;
-      this.ctx.fillRect(building.x, building.y, building.width, building.height);
-      
-      // Roof details
-      this.ctx.fillStyle = '#1f2937';
-      this.ctx.fillRect(building.x, building.y, building.width, 5);
-      
-      // Chimneys
-      for (let i = 0; i < building.chimneys; i++) {
-        const chimneyX = building.x + 10 + i * 20;
-        this.ctx.fillStyle = '#4b5563';
-        this.ctx.fillRect(chimneyX, building.y - 30, 8, 30);
-      }
-      
-      // Windows
-      this.ctx.fillStyle = 'rgba(255, 255, 200, 0.5)';
-      const windowSize = 12;
-      const windowsX = Math.floor(building.width / (windowSize + 8));
-      const windowsY = Math.floor(building.height / (windowSize + 10));
-      
-      for (let y = 0; y < windowsY; y++) {
-        for (let x = 0; x < windowsX; x++) {
-          if (Math.random() > 0.4) {
-            const wx = building.x + 10 + x * (windowSize + 8);
-            const wy = building.y + 10 + y * (windowSize + 10);
-            this.ctx.fillRect(wx, wy, windowSize, windowSize);
-          }
-        }
-      }
-    });
-    
-    // Draw smoke
-    this.lights.forEach(light => {
-      if (light.smoke) {
-        for (let i = 0; i < 3; i++) {
-          const smokeX = light.x + Math.sin(t + i) * 20;
-          const smokeY = light.y - t * 10 - i * 15;
-          const smokeSize = 15 + Math.sin(t * 0.5 + i) * 5;
-          
-          this.ctx.fillStyle = `rgba(200, 200, 200, ${0.3 - i * 0.1})`;
-          this.ctx.beginPath();
-          this.ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
-          this.ctx.fill();
-        }
-      }
-    });
-    
-    // Draw ground
-    this.ctx.fillStyle = '#6b7280';
-    this.ctx.fillRect(0, this.H * 0.7, this.W, this.H * 0.3);
-    
-    // Draw pipes and industrial details
-    this.ctx.strokeStyle = '#9ca3af';
-    this.ctx.lineWidth = 8;
-    this.ctx.beginPath();
-    this.ctx.moveTo(50, this.H * 0.7);
-    this.ctx.lineTo(this.W - 50, this.H * 0.7);
-    this.ctx.stroke();
-  }
-  
-  drawWaterfront(t) {
-    // Sky
-    const skyGrad = this.ctx.createLinearGradient(0, 0, 0, this.H * 0.4);
-    skyGrad.addColorStop(0, '#0c4a6e');
-    skyGrad.addColorStop(1, '#0369a1');
-    this.ctx.fillStyle = skyGrad;
-    this.ctx.fillRect(0, 0, this.W, this.H * 0.4);
-    
-    // Water
-    this.ctx.fillStyle = '#0284c7';
-    this.ctx.fillRect(0, this.waterLevel, this.W, this.H - this.waterLevel);
-    
-    // Water waves
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    this.ctx.lineWidth = 2;
-    this.ctx.beginPath();
-    for (let x = 0; x < this.W; x += 20) {
-      const waveY = this.waterLevel + Math.sin(t + x * 0.01) * 3;
-      if (x === 0) this.ctx.moveTo(x, waveY);
-      else this.ctx.lineTo(x, waveY);
-    }
-    this.ctx.stroke();
-    
-    // Draw warehouses
-    this.buildings.forEach(building => {
-      // Warehouse
-      this.ctx.fillStyle = building.color;
-      this.ctx.fillRect(building.x, building.y, building.width, building.height);
-      
-      // Dock extension
-      if (building.dock) {
-        this.ctx.fillStyle = '#7c2d12';
-        this.ctx.fillRect(building.x - 20, this.waterLevel - 10, building.width + 40, 10);
-      }
-      
-      // Large warehouse doors
-      this.ctx.fillStyle = '#1e293b';
-      this.ctx.fillRect(building.x + 10, building.y + building.height - 40, building.width - 20, 30);
-      
-      // Roof
-      this.ctx.fillStyle = '#374151';
-      this.ctx.fillRect(building.x - 5, building.y, building.width + 10, 5);
-    });
-    
-    // Draw boats
-    this.vehicles.forEach(boat => {
-      boat.x += boat.speed;
-      if (boat.x > this.W + 100) boat.x = -100;
-      
-      // Boat hull
-      this.ctx.fillStyle = '#78350f';
-      this.ctx.beginPath();
-      this.ctx.moveTo(boat.x, boat.y);
-      this.ctx.lineTo(boat.x + boat.width, boat.y);
-      this.ctx.lineTo(boat.x + boat.width - 15, boat.y + boat.height);
-      this.ctx.lineTo(boat.x + 15, boat.y + boat.height);
-      this.ctx.closePath();
-      this.ctx.fill();
-      
-      // Cabin
-      this.ctx.fillStyle = '#92400e';
-      this.ctx.fillRect(boat.x + 10, boat.y - 15, boat.width - 20, 15);
-      
-      // Light
-      this.ctx.fillStyle = '#fbbf24';
-      this.ctx.beginPath();
-      this.ctx.arc(boat.x + boat.width - 5, boat.y - 8, 3, 0, Math.PI * 2);
-      this.ctx.fill();
-    });
-    
-    // Draw cranes
-    this.ctx.fillStyle = '#64748b';
-    this.ctx.fillRect(this.W * 0.7, this.waterLevel - 50, 10, 50);
-    this.ctx.fillRect(this.W * 0.7 - 20, this.waterLevel - 50, 50, 8);
-  }
-  
-  drawResidential(t) {
-    // Evening sky
-    const skyGrad = this.ctx.createLinearGradient(0, 0, 0, this.H * 0.5);
-    skyGrad.addColorStop(0, '#7c2d12');
-    skyGrad.addColorStop(0.5, '#ea580c');
-    skyGrad.addColorStop(1, '#fbbf24');
-    this.ctx.fillStyle = skyGrad;
-    this.ctx.fillRect(0, 0, this.W, this.H * 0.5);
-    
-    // Draw houses
-    this.buildings.forEach(house => {
-      // House body
-      this.ctx.fillStyle = house.color;
-      this.ctx.fillRect(house.x, house.y, house.width, house.height);
-      
-      // Roof
-      if (house.roof) {
-        this.ctx.fillStyle = '#7c2d12';
-        this.ctx.beginPath();
-        this.ctx.moveTo(house.x - 5, house.y);
-        this.ctx.lineTo(house.x + house.width / 2, house.y - 20);
-        this.ctx.lineTo(house.x + house.width + 5, house.y);
-        this.ctx.closePath();
-        this.ctx.fill();
-      }
-      
-      // Door
-      this.ctx.fillStyle = '#78350f';
-      this.ctx.fillRect(house.x + house.width / 2 - 10, house.y + house.height - 30, 20, 30);
-      
-      // Windows
-      this.ctx.fillStyle = 'rgba(255, 255, 200, 0.8)';
-      this.ctx.fillRect(house.x + 10, house.y + 20, 15, 20);
-      this.ctx.fillRect(house.x + house.width - 25, house.y + 20, 15, 20);
-    });
-    
-    // Draw street
-    this.ctx.fillStyle = '#57534e';
-    this.ctx.fillRect(0, this.H * 0.75, this.W, this.H * 0.25);
-    
-    // Draw trees
-    this.lights.forEach(item => {
-      if (item.tree) {
-        // Trunk
-        this.ctx.fillStyle = '#78350f';
-        this.ctx.fillRect(item.x - 3, item.y, 6, 30);
-        
-        // Leaves
-        this.ctx.fillStyle = '#15803d';
-        this.ctx.beginPath();
-        this.ctx.arc(item.x, item.y - 10, item.size, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
-    });
-    
-    // Draw street lights
-    this.lights.forEach(light => {
-      if (!light.tree && light.on) {
-        // Pole
-        this.ctx.fillStyle = '#57534e';
-        this.ctx.fillRect(light.x - 2, light.y, 4, 35);
-        
-        // Light glow
-        const lightGrad = this.ctx.createRadialGradient(
-          light.x, light.y - 8, 0,
-          light.x, light.y - 8, 25
-        );
-        lightGrad.addColorStop(0, `rgba(255, 255, 200, ${light.intensity})`);
-        lightGrad.addColorStop(1, 'rgba(255, 255, 200, 0)');
-        this.ctx.fillStyle = lightGrad;
-        this.ctx.fillRect(light.x - 25, light.y - 33, 50, 30);
-        
-        // Light bulb
-        this.ctx.fillStyle = '#fbbf24';
-        this.ctx.beginPath();
-        this.ctx.arc(light.x, light.y - 8, 5, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
-    });
-  }
-  
-  drawParticles(t) {
-    // Draw ambient particles (dust, fog, etc.)
-    for (let i = 0; i < 15; i++) {
-      const px = (t * 10 + i * 100) % this.W;
-      const py = this.H * 0.3 + Math.sin(t * 0.5 + i) * 50;
-      const pr = 1 + Math.sin(t + i) * 0.5;
-      
-      this.ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + Math.sin(t * 2 + i) * 0.1})`;
-      this.ctx.beginPath();
-      this.ctx.arc(px, py, pr, 0, Math.PI * 2);
-      this.ctx.fill();
-    }
-  }
-  
-  placeClues() {
-    // Clear existing clues
-    this.hiddenClues.forEach(clue => clue.el.remove());
-    this.hiddenClues = [];
-    
-    const margin = 90;
-    const minDist = 120;
-    const midTop = this.H * 0.25;
-    const midBot = this.H * 0.75;
-    
-    this.config.clues.forEach(def => {
-      let x, y, tries = 0;
-      do {
-        x = margin + Math.random() * (this.W - margin * 2);
-        y = midTop + Math.random() * (midBot - midTop);
-        tries++;
-      } while (tries < 400 && this.hiddenClues.some(c => 
-        Math.hypot(c.x - x, c.y - y) < minDist));
-      
-      this.hiddenClues.push({
-        emoji: def.emoji,
-        name: def.name,
-        desc: def.desc,
-        x: x, y: y,
-        found: false
-      });
-    });
-    
-    // Create DOM elements for clues
-    this.hiddenClues.forEach(clue => {
-      const el = document.createElement('div');
-      el.className = 'clue-btn';
-      el.textContent = clue.emoji;
-      el.style.left = (clue.x - 24) + 'px';
-      el.style.top = (clue.y - 24) + 'px';
-      clue.el = el;
-      this.wrap.appendChild(el);
-    });
-    
-    // Build checklist
-    this.buildChecklist();
-  }
-  
-  buildChecklist() {
-    const el = document.getElementById(`clList${this.capitalize(this.gameId)}`);
-    el.innerHTML = '';
-    this.config.clues.forEach((clue, i) => {
-      const item = document.createElement('div');
-      item.className = 'cl-item';
-      item.id = `cl-${this.gameId}-${i}`;
-      item.innerHTML = `<span class="cl-emoji">${clue.emoji}</span><span class="cl-name">${clue.name}</span>`;
-      el.appendChild(item);
-    });
-  }
-  
-  reset() {
-    this.score = 0;
-    this.hints = 3;
-    this.elapsed = 0;
-    
-    if (this.timer) clearInterval(this.timer);
-    
-    // Update UI
-    document.getElementById(`scoreVal${this.capitalize(this.gameId)}`).textContent = '0/8';
-    document.getElementById(`timeVal${this.capitalize(this.gameId)}`).textContent = '0:00';
-    document.getElementById(`hintBtn${this.capitalize(this.gameId)}`).textContent = 'Hint (3)';
-    document.getElementById(`hintBtn${this.capitalize(this.gameId)}`).disabled = false;
-    
-    // Reset clues
-    this.hiddenClues.forEach(clue => {
-      clue.el.classList.remove('found');
-      clue.found = false;
-      clue.el.style.fontSize = 'clamp(32px,5vw,48px)';
-      clue.el.style.filter = 'saturate(.15) brightness(.55) hue-rotate(50deg)';
-      clue.el.style.opacity = '.32';
-    });
-    
-    // Reset checklist
-    this.config.clues.forEach((clue, i) => {
-      const item = document.getElementById(`cl-${this.gameId}-${i}`);
-      if (item) item.classList.remove('found');
-    });
-    
-    // Start timer
-    this.startTimer();
-    
-    // Start animation loop
-    if (this.animationId) cancelAnimationFrame(this.animationId);
-    this.animationLoop();
-  }
-  
-  startTimer() {
-    this.timer = setInterval(() => {
-      this.elapsed++;
-      const m = Math.floor(this.elapsed / 60);
-      const s = this.elapsed % 60;
-      document.getElementById(`timeVal${this.capitalize(this.gameId)}`).textContent = 
-        m + ':' + (s < 10 ? '0' : '') + s;
-    }, 1000);
-  }
-  
-  animationLoop() {
-    const loop = (now) => {
-      this.drawScene(now);
-      this.animationId = requestAnimationFrame(loop);
-    };
-    this.animationId = requestAnimationFrame(loop);
-  }
-  
-  revealClue(idx) {
-    const clue = this.hiddenClues[idx];
-    if (clue.found) return;
-    clue.found = true;
-    clue.el.classList.add('found');
-    this.score++;
-    
-    document.getElementById(`scoreVal${this.capitalize(this.gameId)}`).textContent = 
-      this.score + '/8';
-    
-    // Update checklist
-    const clIdx = this.config.clues.findIndex(c => c.name === clue.name);
-    if (clIdx >= 0) {
-      const item = document.getElementById(`cl-${this.gameId}-${clIdx}`);
-      if (item) item.classList.add('found');
-    }
-    
-    this.spawnBurst(clue.x, clue.y);
-    this.showPopup(clue);
-    this.playChime();
-    
-    if (this.score === 8) this.endGame();
-  }
-  
-  showPopup(clue) {
-    const popup = document.createElement('div');
-    popup.className = 'info-popup';
-    popup.style.left = clue.x + 'px';
-    popup.style.top = Math.max(60, clue.y - 80) + 'px';
-    popup.innerHTML = `
-      <span class="popup-emoji">${clue.emoji}</span>
-      <div class="popup-name">${clue.name}</div>
-      <div class="popup-desc">${clue.desc}</div>
-    `;
-    this.wrap.appendChild(popup);
-    setTimeout(() => {
-      popup.style.transition = 'opacity .4s';
-      popup.style.opacity = '0';
-      setTimeout(() => popup.remove(), 400);
-    }, 3000);
-  }
-  
-  useHint() {
-    if (this.hints <= 0) return;
-    const remaining = this.hiddenClues.filter(c => !c.found);
-    if (!remaining.length) return;
-    const target = remaining[Math.floor(Math.random() * remaining.length)];
-    
-    const ring = document.createElement('div');
-    ring.className = 'hint-ring';
-    ring.style.left = target.x + 'px';
-    ring.style.top = target.y + 'px';
-    ring.style.width = '90px';
-    ring.style.height = '90px';
-    this.wrap.appendChild(ring);
-    ring.addEventListener('animationend', () => ring.remove());
-    
-    this.hints--;
-    const btn = document.getElementById(`hintBtn${this.capitalize(this.gameId)}`);
-    btn.textContent = this.hints > 0 ? `Hint (${this.hints})` : 'No Hints';
-    if (this.hints <= 0) btn.disabled = true;
-  }
-  
-  endGame() {
-    clearInterval(this.timer);
-    setTimeout(() => {
-      const m = Math.floor(this.elapsed / 60);
-      const s = this.elapsed % 60;
-      document.getElementById('winTitle').textContent = 'Case Solved!';
-      document.getElementById('winMsg').textContent = `${this.config.name} completed`;
-      document.getElementById('winStats').innerHTML = `
-        Case: ${this.config.caseTitle}<br>
-        Time: ${m}:${s < 10 ? '0' : ''}${s}<br>
-        Hints used: ${3 - this.hints}<br>
-        All evidence collected!
-      `;
-      document.getElementById('winOverlay').classList.add('show');
-    }, 600);
-  }
-  
-  // HELPER FUNCTIONS
-  capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-  
-  addTouchBtn(id, fn) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('click', (e) => { 
-      if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) fn(); 
-    });
-    el.addEventListener('touchend', (e) => { 
-      e.preventDefault(); 
-      e.stopPropagation(); 
-      fn(); 
-    });
-  }
-  
-  spawnRipple(x, y) {
-    const r = document.createElement('div');
-    r.className = 'ripple';
-    r.style.left = x + 'px';
-    r.style.top = y + 'px';
-    r.style.marginLeft = '-60px';
-    r.style.marginTop = '-60px';
-    this.wrap.appendChild(r);
-    r.addEventListener('animationend', () => r.remove());
-  }
-  
-  spawnBurst(x, y) {
-    const bits = ['\u2B50', '\u2728', '\uD83C\uDF1F', '\uD83D\uDCAB', '\uD83C\uDF3F'];
-    for (let i = 0; i < 12; i++) {
-      const el = document.createElement('div');
-      el.className = 'found-burst';
-      el.textContent = bits[i % bits.length];
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-      const angle = (i / 12) * Math.PI * 2;
-      const dist = 50 + Math.random() * 70;
-      el.style.setProperty('--bx', (Math.cos(angle) * dist) + 'px');
-      el.style.setProperty('--by', (Math.sin(angle) * dist) + 'px');
-      this.wrap.appendChild(el);
-      el.addEventListener('animationend', function() { this.remove(); });
-    }
-  }
-  
-  spawnTouchRing(x, y) {
-    const ring = document.createElement('div');
-    ring.className = 'touch-ring';
-    ring.style.left = x + 'px';
-    ring.style.top = y + 'px';
-    document.body.appendChild(ring);
-    ring.addEventListener('animationend', () => ring.remove());
-  }
-  
-  playChime() {
-    try {
-      const ac = new (window.AudioContext || window.webkitAudioContext)();
-      [523.25, 659.25, 783.99].forEach((freq, i) => {
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination);
-        o.frequency.value = freq; o.type = 'sine';
-        const t0 = ac.currentTime + i * .08;
-        g.gain.setValueAtTime(.2, t0);
-        g.gain.exponentialRampToValueAtTime(.001, t0 + .3);
-        o.start(t0); o.stop(t0 + .3);
-      });
-    } catch (e) {}
+  // Make sure menu is visible
+  if (menuHidden) {
+    toggleMenu();
   }
 }
 
-// INITIALIZE APPLICATION
-document.addEventListener('DOMContentLoaded', () => {
-  initMenu();
+function showChat(text, hint = '') {
+  clearTimeout(chatTimeout);
   
-  // Win overlay buttons
-  document.getElementById('playAgainBtn').addEventListener('click', () => {
-    document.getElementById('winOverlay').classList.remove('show');
-    if (currentGame && gameInstances[currentGame]) {
-      gameInstances[currentGame].reset();
-    }
-  });
+  const bubble = document.getElementById('chatBubble');
+  document.getElementById('chatText').textContent = text;
+  document.getElementById('chatHint').textContent = hint ? `💡 ${hint}` : '';
   
-  document.getElementById('winMenuBtn').addEventListener('click', () => {
-    document.getElementById('winOverlay').classList.remove('show');
-    returnToMenu();
-  });
-});
+  bubble.classList.add('show');
+  
+  chatTimeout = setTimeout(() => {
+    bubble.classList.remove('show');
+  }, 5000);
+}
+
+function hideChat() {
+  document.getElementById('chatBubble').classList.remove('show');
+}
+
+function toggleChat() {
+  const bubble = document.getElementById('chatBubble');
+  bubble.classList.toggle('show');
+}
+
+function setupCanvas() {
+  const canvas = document.getElementById('stringCanvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function playSound(frequencies) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.1;
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      osc.start(t);
+      osc.stop(t + 0.4);
+    });
+  } catch (e) {}
+}
+
+// Initialize on load
+window.addEventListener('DOMContentLoaded', init);
 </script>
+
 </body>
 </html>
