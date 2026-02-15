@@ -42,39 +42,64 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
   50%{transform:translate(var(--dx,10px),var(--dy,-20px)) rotate(180deg);opacity:.45}
 }
 
+/* ═══════════════════════════════════════════════════
+   THREE-SECTION LAYOUT
+   TOP    → logo + title (flex-shrink:0)
+   MIDDLE → card grid (flex:1, vertically centered)
+   BOTTOM → intro button (flex-shrink:0)
+   ═══════════════════════════════════════════════════ */
 .menu-content{
-  position:relative;z-index:10;width:100%;height:100%;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:clamp(12px,2vh,24px) clamp(24px,4vw,60px);
+  position:relative;z-index:10;
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding:clamp(8px,1.1vh,16px) clamp(12px,2vw,40px);
+  overflow:hidden;
 }
 
+/* TOP */
+.menu-top{
+  flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;
+  gap:clamp(2px,0.35vh,5px);
+}
 .menu-title{
-  font-size:clamp(32px,5vw,60px);font-weight:900;
+  font-size:clamp(20px,2.8vw,44px);font-weight:900;
   color:#2D3748;text-shadow:0 2px 8px rgba(0,0,0,.06);
-  letter-spacing:-1px;margin-bottom:2px;
+  letter-spacing:-1px;line-height:1.1;text-align:center;
 }
 .menu-subtitle{
-  font-size:clamp(13px,1.8vw,20px);font-weight:600;
-  color:#718096;margin-bottom:clamp(12px,2vh,28px);
+  font-size:clamp(10px,1vw,14px);font-weight:600;
+  color:#718096;text-align:center;
 }
 
+/* MIDDLE */
+.grid-wrapper{
+  flex:1 1 0;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;
+  overflow:hidden;
+  padding:clamp(4px,0.5vh,8px) 0;
+}
 .card-grid{
   display:grid;
   grid-template-columns:repeat(5,1fr);
-  gap:clamp(8px,1.2vw,18px);
+  gap:clamp(6px,0.8vw,12px);
   width:100%;max-width:1500px;
 }
 
 .game-card{
   position:relative;
-  border-radius:clamp(22px,2.8vw,36px);
-  padding:clamp(14px,2vh,26px) clamp(10px,1vw,18px);
+  border-radius:clamp(14px,1.8vw,26px);
+  padding:clamp(9px,1.3vh,18px) clamp(5px,0.6vw,10px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   cursor:pointer;
   transition:transform .35s cubic-bezier(.175,.885,.32,1.275),box-shadow .35s;
   overflow:hidden;
   border:2px solid rgba(255,255,255,.65);
   box-shadow:0 4px 16px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.04);
+  min-height:clamp(68px,8vh,116px);
 }
 .game-card::before{
   content:'';position:absolute;inset:0;border-radius:inherit;
@@ -88,32 +113,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 .game-card:active{transform:translateY(-2px) scale(.96)}
 
 .card-icon{
-  font-size:clamp(34px,4.5vw,60px);line-height:1;margin-bottom:6px;
+  font-size:clamp(24px,3.2vw,46px);line-height:1;margin-bottom:4px;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.08));
   transition:transform .35s;
 }
 .game-card:hover .card-icon{transform:scale(1.18) rotate(-5deg)}
 .card-name{
-  font-size:clamp(10px,1.2vw,15px);font-weight:800;
+  font-size:clamp(8px,0.85vw,12px);font-weight:800;
   color:#2D3748;text-align:center;line-height:1.2;
   position:relative;z-index:2;
 }
 
-#center-button{
-  background:linear-gradient(135deg,#FF9A9A,#FFB347,#FFDD59);
-  border:3px solid rgba(255,255,255,.7);
-  box-shadow:0 8px 32px rgba(255,179,71,.25);
-  animation:pulseGlow 3s ease-in-out infinite;
-  cursor:pointer;
-  border-radius:clamp(22px,2.8vw,36px);
-}
-#center-button .card-icon{font-size:clamp(38px,5vw,68px)}
-#center-button .card-name{color:#7B341E;font-size:clamp(12px,1.4vw,17px)}
-@keyframes pulseGlow{
-  0%,100%{box-shadow:0 8px 32px rgba(255,179,71,.25)}
-  50%{box-shadow:0 8px 48px rgba(255,179,71,.45),0 0 24px rgba(255,221,89,.2)}
-}
-
+/* Card colours */
 .card-canvas{background:linear-gradient(135deg,#FFE0E6,#FFB3C1)}
 .card-solar{background:linear-gradient(135deg,#D4EDFF,#A8D8F0)}
 .card-coloring{background:linear-gradient(135deg,#D4F5E9,#A8E6CF)}
@@ -124,17 +135,51 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 .card-skills{background:linear-gradient(135deg,#FFF8D6,#FFF0A8)}
 .card-learning{background:linear-gradient(135deg,#D4F0F0,#A8E0E0)}
 .card-ocean{background:linear-gradient(135deg,#C5E8F7,#89CFF0)}
-.card-hidden{background:linear-gradient(135deg,#E8D5C4,#D4B896)}
 .card-forest{background:linear-gradient(135deg,#C8E6C9,#A5D6A7)}
 .card-music{background:linear-gradient(135deg,#F3D5E5,#E8B4D0)}
-.card-creature{background:linear-gradient(135deg,#D1C4E9,#B39DDB)}
 .card-balloon{background:linear-gradient(135deg,#FFD1DC,#FFB6D9)}
 .card-fish{background:linear-gradient(135deg,#87CEEB,#5B9FBD)}
 .card-puzzle{background:linear-gradient(135deg,#D2B48C,#A0826D)}
-.card-3d{background:linear-gradient(135deg,#87CEEB,#4A6FA5)}
+.card-tug{background:linear-gradient(135deg,#87CEEB,#4A6FA5)}
 .card-memory{background:linear-gradient(135deg,#DDA0DD,#BA55D3)}
 .card-shape{background:linear-gradient(135deg,#FFD700,#FFA500)}
 
+/* BOTTOM */
+
+
+/* ── Intro button: fixed bottom-left corner ── */
+#intro-btn{
+  position:fixed;
+  bottom:clamp(14px,2vh,24px);
+  right:clamp(14px,2vw,24px);
+  z-index:100;
+  background:linear-gradient(135deg,#FF9A9A,#FFB347,#FFDD59);
+  border:2px solid rgba(255,255,255,.8);
+  box-shadow:0 4px 18px rgba(255,179,71,.35);
+  border-radius:20px;
+  padding:clamp(8px,1vh,12px) clamp(14px,1.6vw,22px);
+  display:inline-flex;flex-direction:row;align-items:center;justify-content:center;
+  gap:clamp(5px,0.6vw,8px);
+  cursor:pointer;
+  animation:introPulse 3s ease-in-out infinite;
+  transition:transform .25s cubic-bezier(.175,.885,.32,1.275),box-shadow .25s;
+}
+#intro-btn:hover{
+  transform:translateY(-3px) scale(1.08);
+  box-shadow:0 8px 28px rgba(255,179,71,.55);
+}
+#intro-btn:active{transform:scale(.92)}
+#intro-btn .intro-icon{font-size:clamp(16px,1.8vw,22px);line-height:1}
+#intro-btn .intro-label{
+  font-size:clamp(11px,1.1vw,15px);font-weight:900;
+  color:#7B341E;white-space:nowrap;
+}
+@keyframes introPulse{
+  0%,100%{box-shadow:0 4px 18px rgba(255,179,71,.35)}
+  50%{box-shadow:0 6px 28px rgba(255,179,71,.6),0 0 16px rgba(255,221,89,.25)}
+}
+
+/* Submenus */
 .submenu-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
   z-index:50;display:none;align-items:center;justify-content:center;
@@ -187,9 +232,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
   100%{transform:translate(-50%,-60px) scale(.8);opacity:0}
 }
 
+img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;pointer-events:none;margin:0}
+.card-icon img.twemoji{height:1em;width:1em;vertical-align:middle;display:block;margin:0 auto}
+.intro-icon img.twemoji{height:1em;width:1em;vertical-align:middle}
+#floatingShapes img.twemoji{height:1em;width:1em;vertical-align:middle}
 .card-stagger{opacity:0;transform:translateY(30px) scale(.9);transition:opacity .4s ease,transform .4s ease}
 .card-stagger.show{opacity:1;transform:translateY(0) scale(1)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -210,95 +260,123 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
   <div id="floatingShapes"></div>
 
   <div class="menu-content">
-    <img id="main-logo" src="./assets/images/Auticare_logo_Embright%20(1).png" alt="Auticare Logo" style="width:160px;height:auto;margin-bottom:12px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.2)">
-    <h1 class="menu-title">Auticare Blue Room</h1>
-    <p class="menu-subtitle">Tap a card to start playing!</p>
 
-    <div class="card-grid">
-      <div class="game-card card-canvas card-stagger" data-game="canvas">
-        <div class="card-icon">&#x1F3A8;</div>
-        <div class="card-name">Free Canvas</div>
-      </div>
-      <div class="game-card card-solar card-stagger" data-game="solar-system">
-        <div class="card-icon">&#x1FA90;</div>
-        <div class="card-name">Solar System</div>
-      </div>
-      <div class="game-card card-coloring card-stagger" data-game="coloring-book">
-        <div class="card-icon">&#x1F58D;&#xFE0F;</div>
-        <div class="card-name">Coloring Book</div>
-      </div>
-      <div class="game-card card-particles card-stagger" data-game="particle-playground">
-        <div class="card-icon">&#x2728;</div>
-        <div class="card-name">Particles</div>
-      </div>
-      <div class="game-card card-goalkeeper card-stagger" data-game="goalkeeper">
-        <div class="card-icon">&#x26BD;</div>
-        <div class="card-name">Goalkeeper</div>
-      </div>
-
-      <div class="game-card card-fruit card-stagger" data-game="fruit-ninja">
-        <div class="card-icon">&#x1F349;</div>
-        <div class="card-name">Fruit Ninja</div>
-      </div>
-      <div class="game-card card-jungle card-stagger" data-category="jungle">
-        <div class="card-icon">&#x1F334;</div>
-        <div class="card-name">Jungle</div>
-      </div>
-      <div id="center-button" class="card-stagger">
-        <div class="card-icon">&#x1F680;</div>
-        <div class="card-name">Play Intro</div>
-      </div>
-      <div class="game-card card-skills card-stagger" data-category="daily-skills">
-        <div class="card-icon">&#x1F3E0;</div>
-        <div class="card-name">Daily Skills</div>
-      </div>
-      <div class="game-card card-learning card-stagger" data-category="learning">
-        <div class="card-icon">&#x1F4DA;</div>
-        <div class="card-name">Learning</div>
-      </div>
-
-      <div class="game-card card-ocean card-stagger" data-game="underwater-explorer">
-        <div class="card-icon">&#x1F30A;</div>
-        <div class="card-name">Sea Explorer</div>
-      </div>
-      <div class="game-card card-music card-stagger" data-game="music-maker">
-        <div class="card-icon">&#x1F3B5;</div>
-        <div class="card-name">Music Maker</div>
-      </div>
-      <div class="game-card card-forest card-stagger" data-game="creature-creator">
-        <div class="card-icon">&#x1F333;</div>
-        <div class="card-name">Creature Creator</div>
-      </div>
-      <div class="game-card card-stagger" data-game="butterfly-tracker" style="background:linear-gradient(135deg,#FFB6D9,#FF69B4)">
-        <div class="card-icon">&#x1F98B;</div>
-        <div class="card-name">Butterfly Tracker</div>
-      </div>
-      <div class="game-card card-balloon card-stagger" data-game="balloon-popper">
-        <div class="card-icon">&#x1F388;</div>
-        <div class="card-name">Balloon Popper</div>
-      </div>
-      <div class="game-card card-fish card-stagger" data-game="fish-it">
-        <div class="card-icon">&#x1F3A3;</div>
-        <div class="card-name">Fish It</div>
-      </div>
-      <div class="game-card card-puzzle card-stagger" data-game="puzzle-balance">
-        <div class="card-icon">⚖️</div>
-        <div class="card-name">Puzzle Balance</div>
-      </div>
-      <div class="game-card card-3d card-stagger" data-game="3d-viewer">
-        <div class="card-icon">🎯</div>
-        <div class="card-name">3D Viewer</div>
-      </div>
-      <div class="game-card card-memory card-stagger" data-game="memory-match">
-        <div class="card-icon">&#x1F9E0;</div>
-        <div class="card-name">Scavenger Hunt</div>
-      </div>
-      <div class="game-card card-shape card-stagger" data-game="shape-sorter">
-        <div class="card-icon">&#x1F535;</div>
-        <div class="card-name">Shape Sorter</div>
-      </div>
+    <!-- ══ TOP: logo + title ══ -->
+    <div class="menu-top card-stagger">
+      <img id="main-logo"
+           src="./assets/images/Auticare_logo_Embright%20(1).png"
+           alt="Auticare Logo"
+           style="width:clamp(72px,7.5vw,120px);height:auto;border-radius:12px;
+                  box-shadow:0 8px 24px rgba(0,0,0,.18);margin-bottom:4px">
+      <h1 class="menu-title">Auticare Blue Room</h1>
+      <p class="menu-subtitle">Tap a card to start playing!</p>
     </div>
-</div>
+
+    <!-- ══ MIDDLE: 5×4 card grid, vertically centered ══ -->
+    <div class="grid-wrapper">
+      <div class="card-grid">
+
+        <!-- Row 1 -->
+        <div class="game-card card-canvas card-stagger" data-game="canvas">
+          <div class="card-icon">🎨</div>
+          <div class="card-name">Free Canvas</div>
+        </div>
+        <div class="game-card card-solar card-stagger" data-game="solar-system">
+          <div class="card-icon">🪐</div>
+          <div class="card-name">Solar System</div>
+        </div>
+        <div class="game-card card-coloring card-stagger" data-game="coloring-book">
+          <div class="card-icon">🖍️</div>
+          <div class="card-name">Coloring Book</div>
+        </div>
+        <div class="game-card card-particles card-stagger" data-game="particle-playground">
+          <div class="card-icon">✨</div>
+          <div class="card-name">Particles</div>
+        </div>
+        <div class="game-card card-goalkeeper card-stagger" data-game="goalkeeper">
+          <div class="card-icon">⚽</div>
+          <div class="card-name">Goalkeeper</div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="game-card card-fruit card-stagger" data-game="fruit-ninja">
+          <div class="card-icon">🍉</div>
+          <div class="card-name">Fruit Ninja</div>
+        </div>
+        <div class="game-card card-jungle card-stagger" data-category="jungle">
+          <div class="card-icon">🌴</div>
+          <div class="card-name">Jungle</div>
+        </div>
+        <div class="game-card card-skills card-stagger" data-category="daily-skills">
+          <div class="card-icon">🏠</div>
+          <div class="card-name">Daily Skills</div>
+        </div>
+        <div class="game-card card-learning card-stagger" data-category="learning">
+          <div class="card-icon">📚</div>
+          <div class="card-name">Learning</div>
+        </div>
+        <div class="game-card card-ocean card-stagger" data-game="underwater-explorer">
+          <div class="card-icon">🌊</div>
+          <div class="card-name">Sea Explorer</div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="game-card card-music card-stagger" data-game="music-maker">
+          <div class="card-icon">🎵</div>
+          <div class="card-name">Music Maker</div>
+        </div>
+        <div class="game-card card-forest card-stagger" data-game="creature-creator">
+          <div class="card-icon">🌳</div>
+          <div class="card-name">Creature Creator</div>
+        </div>
+        <div class="game-card card-stagger" data-game="butterfly-tracker"
+             style="background:linear-gradient(135deg,#FFB6D9,#FF69B4)">
+          <div class="card-icon">🦋</div>
+          <div class="card-name">Butterfly Tracker</div>
+        </div>
+        <div class="game-card card-balloon card-stagger" data-game="balloon-popper">
+          <div class="card-icon">🎈</div>
+          <div class="card-name">Balloon Popper</div>
+        </div>
+        <div class="game-card card-fish card-stagger" data-game="fish-it">
+          <div class="card-icon">🎣</div>
+          <div class="card-name">Fish It</div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="game-card card-puzzle card-stagger" data-game="puzzle-balance">
+          <div class="card-icon">⚖️</div>
+          <div class="card-name">Puzzle Balance</div>
+        </div>
+        <div class="game-card card-tug card-stagger" data-game="tug-of-war">
+          <div class="card-icon">💪</div>
+          <div class="card-name">Tug of War</div>
+        </div>
+        <div class="game-card card-memory card-stagger" data-game="find-the-crime">
+          <div class="card-icon">🔍</div>
+          <div class="card-name">Find the Crime</div>
+        </div>
+        <div class="game-card card-shape card-stagger" data-game="shape-sorter">
+          <div class="card-icon">🔵</div>
+          <div class="card-name">Shape Sorter</div>
+        </div>
+        <div class="game-card card-stagger" data-game="hidden"
+             style="background:linear-gradient(135deg,#E8D5C4,#D4B896)">
+          <div class="card-icon">🎁</div>
+          <div class="card-name">Coming Soon</div>
+        </div>
+
+      </div><!-- /.card-grid -->
+    </div><!-- /.grid-wrapper -->
+
+    <!-- ══ BOTTOM: intro button (fixed, bottom-right) ══ -->
+
+  </div><!-- /.menu-content -->
+  <div id="intro-btn" class="card-stagger">
+    <span class="intro-icon">🚀</span>
+    <span class="intro-label">Play Intro</span>
+  </div>
+</div><!-- /#main-menu -->
 
 <div class="submenu-overlay" id="submenu-overlay">
   <div class="submenu-box" id="submenu-box">
@@ -340,9 +418,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
   }
 
   function pop(b) {
-    b.popping = true;
-    b.pp = 0;
-    b.parts = [];
+    b.popping = true; b.pp = 0; b.parts = [];
     for (var i = 0; i < 8; i++) {
       var a = (i / 8) * Math.PI * 2;
       b.parts.push({ x:b.x, y:b.y, vx:Math.cos(a)*(2+Math.random()*3), vy:Math.sin(a)*(2+Math.random()*3), r:2+Math.random()*4, o:1 });
@@ -502,7 +578,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 })();
 
 (function cardTilt() {
-  var cards = document.querySelectorAll('.game-card, #center-button');
+  var cards = document.querySelectorAll('.game-card, #intro-btn');
   cards.forEach(function(card) {
     card.addEventListener('mousemove', function(e) {
       var rect = this.getBoundingClientRect();
@@ -510,7 +586,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
       var y = (e.clientY - rect.top) / rect.height;
       var ry = (x - 0.5) * 18;
       var rx = (0.5 - y) * 18;
-      this.style.transform = 'perspective(600px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-6px) scale(1.04)';
+      this.style.transform = 'perspective(600px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-4px) scale(1.06)';
     });
     card.addEventListener('mouseleave', function() {
       this.style.transform = '';
@@ -518,10 +594,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
   });
 })();
 
-(function centerBtn() {
-  var btn = document.getElementById('center-button');
+(function introBtn() {
+  var btn = document.getElementById('intro-btn');
   var menuAudio = document.getElementById('menu-audio');
-  
+
   btn.addEventListener('click', function(e) {
     if (menuAudio) menuAudio.pause();
     if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
@@ -540,37 +616,34 @@ window.addEventListener('load', function() {
   var loadingAudio = document.getElementById('loading-audio');
   var menuAudio = document.getElementById('menu-audio');
 
-  // Attempt to play loading audio
   if (loadingAudio) {
     loadingAudio.volume = 0.6;
-    loadingAudio.play().catch(function(e) {
-      console.log('Audio autoplay prevented:', e);
-    });
+    loadingAudio.play().catch(function(e) { console.log('Audio autoplay prevented:', e); });
   }
 
   setTimeout(function() {
     loading.style.display = 'none';
     menu.style.display = 'flex';
 
-    // Stop loading audio and play menu audio
-    if (loadingAudio) {
-      loadingAudio.pause();
-      loadingAudio.currentTime = 0;
-    }
+    if (loadingAudio) { loadingAudio.pause(); loadingAudio.currentTime = 0; }
     if (menuAudio) {
       menuAudio.volume = 0.5;
-      menuAudio.play().catch(function(e) {
-        console.log('Audio autoplay prevented:', e);
-      });
+      menuAudio.play().catch(function(e) { console.log('Audio autoplay prevented:', e); });
     }
 
     if (window._startBubbles) window._startBubbles();
+    // Render 3D Twemoji for all emoji in the menu
+    if (window.twemoji) {
+      twemoji.parse(document.getElementById('main-menu'), {
+        folder: 'svg', ext: '.svg',
+        base: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/',
+        className: 'twemoji'
+      });
+    }
 
     var staggerCards = document.querySelectorAll('.card-stagger');
     staggerCards.forEach(function(card, i) {
-      setTimeout(function() {
-        card.classList.add('show');
-      }, 80 + i * 70);
+      setTimeout(function() { card.classList.add('show'); }, 80 + i * 70);
     });
   }, 3000);
 });
