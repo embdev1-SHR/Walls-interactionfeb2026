@@ -329,6 +329,9 @@ function loadGame(gameName) {
             case 'shape-sorter':
                 window.location.href = 'games/shape-sorter.html';
                 break;
+            case 'video-360-player':
+                window.location.href = 'games/video-360-player.html';
+                break;
             default:
                 console.log('Game not found:', gameName);
                 mainMenu.style.display = 'block';

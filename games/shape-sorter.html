@@ -3,72 +3,999 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shape Sorter</title>
+    <title>Shape Sorter - Multiplayer</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
         }
-        
+
         body {
+            font-family: 'Comic Sans MS', cursive, Arial, sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 50%, #90EE90 100%);
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
-            width: 100%;
+            color: #333;
+            display: flex;
             height: 100vh;
             touch-action: none;
-            background: linear-gradient(180deg, #f093fb 0%, #f5576c 50%, #ff9f43 100%);
+            position: relative;
         }
-        
-        .ui-top {
+
+        /* Classroom Background Elements */
+        .classroom-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .chalkboard {
             position: absolute;
-            top: 20px;
+            top: 5%;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 10;
+            width: 200px;
+            height: 120px;
+            background: #2F4F2F;
+            border: 8px solid #8B4513;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
-        
-        .stat-item {
-            background: rgba(255, 255, 255, 0.85);
-            padding: 12px 24px;
-            border-radius: 14px;
-            font-weight: 700;
-            color: #333;
-            display: inline-block;
-            margin: 0 10px;
-        }
-        
-        .btn-back {
+
+        .window {
             position: absolute;
-            bottom: 30px;
-            right: 30px;
-            padding: 12px 28px;
-            font-size: 16px;
-            font-weight: 600;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(180deg, #ADD8E6 0%, #87CEEB 100%);
+            border: 5px solid #8B4513;
+            border-radius: 5px;
+        }
+
+        .window1 { top: 10%; left: 5%; }
+        .window2 { top: 10%; right: 5%; }
+
+        .desk {
+            position: absolute;
+            bottom: 5%;
+            width: 100px;
+            height: 60px;
+            background: #D2691E;
+            border-radius: 5px 5px 0 0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .desk1 { left: 10%; }
+        .desk2 { right: 10%; }
+
+        .book {
+            position: absolute;
+            width: 40px;
+            height: 50px;
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            border-radius: 3px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .book1 { bottom: 20%; left: 15%; transform: rotate(-15deg); }
+        .book2 { bottom: 25%; right: 12%; transform: rotate(20deg); }
+
+        .pencil {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.3;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .pencil1 { top: 40%; left: 8%; animation-delay: 0s; }
+        .pencil2 { top: 60%; right: 8%; animation-delay: 3s; }
+        .pencil3 { bottom: 30%; left: 5%; animation-delay: 6s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .player-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border-right: 3px solid rgba(255, 255, 255, 0.4);
+            position: relative;
+        }
+
+        .player-section:last-child {
+            border-right: none;
+        }
+
+        .player-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+        }
+
+        .game-board {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+            height: 450px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sorter-box {
+            background: linear-gradient(135deg, #FFE5B4 0%, #FFD700 100%);
+            border: 4px solid #8B4513;
+            border-radius: 15px;
+            padding: 1rem;
+            height: 180px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .shape-hole {
+            width: 70px;
+            height: 70px;
+            background: rgba(139, 69, 19, 0.3);
+            border: 3px dashed #8B4513;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .shape-hole::before {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.15);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .shape-hole[data-shape="circle"]::before {
+            border-radius: 50%;
+        }
+
+        .shape-hole[data-shape="square"]::before {
+            border-radius: 5px;
+        }
+
+        .shape-hole[data-shape="triangle"]::before {
+            width: 0;
+            height: 0;
+            background: transparent;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 50px solid rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .shape-hole[data-shape="star"]::before {
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        }
+
+        .shape-hole.highlight {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4CAF50;
+            transform: scale(1.1);
+        }
+
+        .shape-hole.highlight::before {
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .shape-hole.highlight[data-shape="triangle"]::before {
+            border-bottom-color: rgba(76, 175, 80, 0.3);
+        }
+
+        .shape-hole.filled {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: #4CAF50;
+        }
+
+        .shape-hole.filled::before {
+            opacity: 0;
+        }
+
+        .shape-hole.filled .placed-shape {
+            position: absolute;
+            width: 55px;
+            height: 55px;
+            cursor: grab;
+            z-index: 5;
+            touch-action: none;
+        }
+
+        .shape-hole.filled .placed-shape:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+            z-index: 1000;
+        }
+
+        .shape-hole.filled .placed-shape.circle {
+            background: #FF6B6B;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .shape-hole.filled .placed-shape.square {
+            background: #4ECDC4;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .shape-hole.filled .placed-shape.triangle {
+            width: 0;
+            height: 0;
+            border-left: 27.5px solid transparent;
+            border-right: 27.5px solid transparent;
+            border-bottom: 55px solid #FFD93D;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .shape-hole.filled .placed-shape.star {
+            background: #A78BFA;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .shape-label {
+            position: absolute;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #8B4513;
+            bottom: -18px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px 6px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        .shape-area {
+            background: rgba(135, 206, 250, 0.3);
+            border: 3px solid #4169E1;
+            border-radius: 15px;
+            padding: 1rem;
+            height: 220px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .shape {
+            width: 60px;
+            height: 60px;
+            cursor: grab;
+            transition: transform 0.2s;
+            position: absolute;
+            touch-action: none;
+        }
+
+        .shape:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+            z-index: 1000;
+        }
+
+        .shape.circle {
+            background: #FF6B6B;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .shape.square {
+            background: #4ECDC4;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .shape.triangle {
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 60px solid #FFD93D;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .shape.star {
+            background: #A78BFA;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 0.5rem;
+        }
+
+        .score-number {
+            font-size: 2rem;
+            color: #4CAF50;
+        }
+
+        .right-sidebar {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1.5rem 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px 0 0 30px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .sidebar-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .global-btn {
+            padding: 1rem;
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #2c3e50;
+            color: #2c3e50;
+            border-radius: 50%;
             cursor: pointer;
-            z-index: 50;
+            transition: all 0.3s;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .global-btn:hover {
+            transform: scale(1.1);
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+        }
+
+        .difficulty-btn {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #2c3e50;
+            color: #2c3e50;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .difficulty-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .difficulty-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-5deg); }
+            75% { transform: scale(1.2) rotate(5deg); }
+        }
+
+        .celebrating {
+            animation: celebrate 0.5s ease-in-out;
+        }
+
+        @media (max-width: 1024px) {
+            .player-section {
+                padding: 0.5rem;
+            }
+            .player-header {
+                font-size: 1.2rem;
+            }
+            .game-board {
+                max-width: 280px;
+                height: 400px;
+            }
+            .shape-hole {
+                width: 55px;
+                height: 55px;
+            }
+            .shape {
+                width: 50px;
+                height: 50px;
+            }
         }
     </style>
 </head>
 <body>
+    <audio id="shape-music" preload="auto" loop>
+        <source src="../assets/Audio/capaholiczsfx-forest-daytime-446356.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- Classroom Background -->
+    <div class="classroom-bg">
+        <div class="chalkboard"></div>
+        <div class="window window1"></div>
+        <div class="window window2"></div>
+        <div class="desk desk1"></div>
+        <div class="desk desk2"></div>
+        <div class="book book1"></div>
+        <div class="book book2"></div>
+        <div class="pencil pencil1">✏️</div>
+        <div class="pencil pencil2">📐</div>
+        <div class="pencil pencil3">📏</div>
+    </div>
 
-<div class="ui-top">
-    <div class="stat-item">🔷 Shape Sorter Game 🔷</div>
-</div>
+    <div class="main-content">
+        <!-- Player 1 -->
+        <div class="player-section">
+            <div class="player-header">Player 1</div>
+            <div class="game-board" id="gameBoard1">
+                <div class="sorter-box" id="sorterBox1">
+                    <div class="shape-hole" data-shape="circle" data-player="1">
+                        <span class="shape-label">●</span>
+                    </div>
+                    <div class="shape-hole" data-shape="square" data-player="1">
+                        <span class="shape-label">■</span>
+                    </div>
+                    <div class="shape-hole" data-shape="triangle" data-player="1">
+                        <span class="shape-label">▲</span>
+                    </div>
+                    <div class="shape-hole" data-shape="star" data-player="1">
+                        <span class="shape-label">★</span>
+                    </div>
+                </div>
+                <div class="shape-area" id="shapeArea1"></div>
+            </div>
+            <div class="score-display">
+                Score: <span class="score-number" id="score1">0</span>
+            </div>
+        </div>
 
-<button class="btn-back" id="backBtn">Back to Menu</button>
+        <!-- Player 2 -->
+        <div class="player-section">
+            <div class="player-header">Player 2</div>
+            <div class="game-board" id="gameBoard2">
+                <div class="sorter-box" id="sorterBox2">
+                    <div class="shape-hole" data-shape="circle" data-player="2">
+                        <span class="shape-label">●</span>
+                    </div>
+                    <div class="shape-hole" data-shape="square" data-player="2">
+                        <span class="shape-label">■</span>
+                    </div>
+                    <div class="shape-hole" data-shape="triangle" data-player="2">
+                        <span class="shape-label">▲</span>
+                    </div>
+                    <div class="shape-hole" data-shape="star" data-player="2">
+                        <span class="shape-label">★</span>
+                    </div>
+                </div>
+                <div class="shape-area" id="shapeArea2"></div>
+            </div>
+            <div class="score-display">
+                Score: <span class="score-number" id="score2">0</span>
+            </div>
+        </div>
 
-<script>
-    document.getElementById('backBtn').addEventListener('click', function() {
-        window.location.href = '/index.html';
-    });
-</script>
+        <!-- Player 3 -->
+        <div class="player-section">
+            <div class="player-header">Player 3</div>
+            <div class="game-board" id="gameBoard3">
+                <div class="sorter-box" id="sorterBox3">
+                    <div class="shape-hole" data-shape="circle" data-player="3">
+                        <span class="shape-label">●</span>
+                    </div>
+                    <div class="shape-hole" data-shape="square" data-player="3">
+                        <span class="shape-label">■</span>
+                    </div>
+                    <div class="shape-hole" data-shape="triangle" data-player="3">
+                        <span class="shape-label">▲</span>
+                    </div>
+                    <div class="shape-hole" data-shape="star" data-player="3">
+                        <span class="shape-label">★</span>
+                    </div>
+                </div>
+                <div class="shape-area" id="shapeArea3"></div>
+            </div>
+            <div class="score-display">
+                Score: <span class="score-number" id="score3">0</span>
+            </div>
+        </div>
+    </div>
 
+    <!-- Right Sidebar -->
+    <div class="right-sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">DIFFICULTY</div>
+            <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
+            <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+            <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-label">CONTROLS</div>
+            <button class="global-btn" id="resetBtn" title="New Round">🔄</button>
+            <button class="global-btn" onclick="window.location.href='../index.html'" title="Back to Menu">🏠</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio setup
+        (function(){
+            var audio = document.getElementById('shape-music');
+            if(audio) {
+                window.addEventListener('load', function(){
+                    setTimeout(function(){
+                        try{ audio.volume = 0.3; audio.play().catch(function(){}); }catch(e){}
+                    }, 500);
+                });
+            }
+        })();
+
+        // Game State
+        const players = [
+            { id: 1, score: 0, shapes: [], difficulty: 'easy' },
+            { id: 2, score: 0, shapes: [], difficulty: 'easy' },
+            { id: 3, score: 0, shapes: [], difficulty: 'easy' }
+        ];
+
+        let currentDifficulty = 'easy';
+        const difficulties = {
+            easy: { shapes: 4, types: ['circle', 'square', 'triangle', 'star'] },
+            medium: { shapes: 6, types: ['circle', 'square', 'triangle', 'star'] },
+            hard: { shapes: 8, types: ['circle', 'square', 'triangle', 'star'] }
+        };
+
+        // Drag state
+        let draggedShape = null;
+        let draggedPlayer = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        function initGame() {
+            players.forEach((player, idx) => {
+                createShapes(idx + 1);
+            });
+        }
+
+        function createShapes(playerNum) {
+            const shapeArea = document.getElementById(`shapeArea${playerNum}`);
+            shapeArea.innerHTML = '';
+            
+            const config = difficulties[currentDifficulty];
+            const shapes = [];
+            
+            // Create shapes
+            for (let i = 0; i < config.shapes; i++) {
+                const shapeType = config.types[i % config.types.length];
+                shapes.push(shapeType);
+            }
+            
+            // Shuffle shapes
+            shapes.sort(() => Math.random() - 0.5);
+            
+            // Create shape elements
+            const areaRect = shapeArea.getBoundingClientRect();
+            const areaWidth = shapeArea.offsetWidth;
+            const areaHeight = shapeArea.offsetHeight;
+            
+            shapes.forEach((shapeType, idx) => {
+                const shape = document.createElement('div');
+                shape.className = `shape ${shapeType}`;
+                shape.dataset.shape = shapeType;
+                shape.dataset.player = playerNum;
+                
+                // Random position within shape area
+                const maxX = areaWidth - 70;
+                const maxY = areaHeight - 70;
+                const x = Math.random() * maxX;
+                const y = Math.random() * maxY;
+                
+                shape.style.left = x + 'px';
+                shape.style.top = y + 'px';
+                
+                // Touch and mouse events
+                shape.addEventListener('mousedown', startDrag);
+                shape.addEventListener('touchstart', startDrag, { passive: false });
+                
+                shapeArea.appendChild(shape);
+            });
+            
+            players[playerNum - 1].shapes = shapes;
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            draggedShape = e.target;
+            draggedPlayer = parseInt(draggedShape.dataset.player);
+            
+            const rect = draggedShape.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            offsetX = clientX - rect.left;
+            offsetY = clientY - rect.top;
+            
+            // Change to fixed positioning
+            const currentLeft = rect.left;
+            const currentTop = rect.top;
+            
+            draggedShape.style.position = 'fixed';
+            draggedShape.style.left = currentLeft + 'px';
+            draggedShape.style.top = currentTop + 'px';
+            draggedShape.style.margin = '0';
+            draggedShape.style.zIndex = '1000';
+            
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function drag(e) {
+            if (!draggedShape) return;
+            e.preventDefault();
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            // Get position relative to the viewport
+            let x = clientX - offsetX;
+            let y = clientY - offsetY;
+            
+            // Position relative to viewport, not constrained to shape area
+            draggedShape.style.position = 'fixed';
+            draggedShape.style.left = x + 'px';
+            draggedShape.style.top = y + 'px';
+            
+            // Check if over a hole
+            checkHoleProximity(clientX, clientY);
+        }
+
+        function checkHoleProximity(clientX, clientY) {
+            const holes = document.querySelectorAll(`[data-player="${draggedPlayer}"].shape-hole`);
+            let foundHole = false;
+            
+            holes.forEach(hole => {
+                const holeRect = hole.getBoundingClientRect();
+                const holeCenterX = holeRect.left + holeRect.width / 2;
+                const holeCenterY = holeRect.top + holeRect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(clientX - holeCenterX, 2) + 
+                    Math.pow(clientY - holeCenterY, 2)
+                );
+                
+                if (distance < 50 && !hole.classList.contains('filled')) {
+                    hole.classList.add('highlight');
+                    foundHole = true;
+                } else {
+                    hole.classList.remove('highlight');
+                }
+            });
+        }
+
+        function endDrag(e) {
+            if (!draggedShape) return;
+            
+            const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+            
+            const holes = document.querySelectorAll(`[data-player="${draggedPlayer}"].shape-hole`);
+            let matched = false;
+            
+            holes.forEach(hole => {
+                const holeRect = hole.getBoundingClientRect();
+                const holeCenterX = holeRect.left + holeRect.width / 2;
+                const holeCenterY = holeRect.top + holeRect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(clientX - holeCenterX, 2) + 
+                    Math.pow(clientY - holeCenterY, 2)
+                );
+                
+                if (distance < 60 && !hole.classList.contains('filled')) {
+                    const holeShape = hole.dataset.shape;
+                    const draggedShapeType = draggedShape.dataset.shape;
+                    
+                    if (holeShape === draggedShapeType) {
+                        // Correct match!
+                        matched = true;
+                        
+                        // Check if this was a placed shape being moved
+                        const wasPlaced = draggedShape.classList.contains('placed-shape');
+                        if (wasPlaced) {
+                            // Remove it from its parent hole
+                            const oldHole = draggedShape.parentElement;
+                            if (oldHole) {
+                                oldHole.classList.remove('filled');
+                            }
+                        }
+                        
+                        // Remove the draggable shape from shape area
+                        draggedShape.remove();
+                        
+                        // Add the shape visually in the hole
+                        const placedShape = document.createElement('div');
+                        placedShape.className = `placed-shape ${draggedShapeType}`;
+                        placedShape.dataset.shape = draggedShapeType;
+                        placedShape.dataset.player = draggedPlayer;
+                        
+                        // Make placed shape draggable
+                        placedShape.addEventListener('mousedown', startDragFromHole);
+                        placedShape.addEventListener('touchstart', startDragFromHole, { passive: false });
+                        
+                        hole.appendChild(placedShape);
+                        
+                        hole.classList.add('filled');
+                        hole.classList.remove('highlight');
+                        hole.classList.add('celebrating');
+                        setTimeout(() => hole.classList.remove('celebrating'), 500);
+                        
+                        // Update score only if it wasn't already placed
+                        if (!wasPlaced) {
+                            players[draggedPlayer - 1].score += 10;
+                            document.getElementById(`score${draggedPlayer}`).textContent = players[draggedPlayer - 1].score;
+                        }
+                        
+                        // Check if all shapes sorted
+                        checkCompletion(draggedPlayer);
+                    } else {
+                        // Wrong shape - animate back
+                        animateShapeBack();
+                    }
+                }
+                
+                hole.classList.remove('highlight');
+            });
+            
+            if (!matched) {
+                // Return to shape area
+                animateShapeBack();
+            }
+            
+            if (draggedShape) {
+                draggedShape.style.zIndex = '1';
+            }
+            draggedShape = null;
+            draggedPlayer = null;
+            
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('mouseup', endDrag);
+            document.removeEventListener('touchend', endDrag);
+        }
+
+        function startDragFromHole(e) {
+            e.preventDefault();
+            
+            // Get the placed shape
+            const placedShape = e.target;
+            const hole = placedShape.parentElement;
+            const playerNum = parseInt(placedShape.dataset.player);
+            
+            // Get current position
+            const rect = placedShape.getBoundingClientRect();
+            
+            // Remove from hole
+            hole.classList.remove('filled');
+            placedShape.remove();
+            
+            // Subtract score
+            players[playerNum - 1].score = Math.max(0, players[playerNum - 1].score - 10);
+            document.getElementById(`score${playerNum}`).textContent = players[playerNum - 1].score;
+            
+            // Create draggable shape at current position
+            const shapeArea = document.getElementById(`shapeArea${playerNum}`);
+            const shapeType = placedShape.dataset.shape;
+            
+            const shape = document.createElement('div');
+            shape.className = `shape ${shapeType}`;
+            shape.dataset.shape = shapeType;
+            shape.dataset.player = playerNum;
+            
+            // Position at current location with fixed positioning
+            shape.style.position = 'fixed';
+            shape.style.left = rect.left + 'px';
+            shape.style.top = rect.top + 'px';
+            shape.style.margin = '0';
+            
+            shapeArea.appendChild(shape);
+            
+            // Start dragging immediately
+            draggedShape = shape;
+            draggedPlayer = playerNum;
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            offsetX = clientX - rect.left;
+            offsetY = clientY - rect.top;
+            
+            shape.style.zIndex = '1000';
+            
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function animateShapeBack() {
+            if (!draggedShape) return;
+            
+            // Check if it's a placed shape that needs to return to shape area
+            const wasPlaced = draggedShape.classList.contains('placed-shape');
+            const shapeArea = document.getElementById(`shapeArea${draggedPlayer}`);
+            
+            if (wasPlaced) {
+                // Convert to regular draggable shape
+                const shapeType = draggedShape.dataset.shape;
+                const playerNum = draggedPlayer;
+                
+                draggedShape.remove();
+                
+                const shape = document.createElement('div');
+                shape.className = `shape ${shapeType}`;
+                shape.dataset.shape = shapeType;
+                shape.dataset.player = playerNum;
+                
+                const areaWidth = shapeArea.offsetWidth;
+                const areaHeight = shapeArea.offsetHeight;
+                const x = Math.random() * (areaWidth - 70);
+                const y = Math.random() * (areaHeight - 70);
+                
+                shape.style.position = 'absolute';
+                shape.style.left = x + 'px';
+                shape.style.top = y + 'px';
+                shape.style.transition = 'all 0.3s ease-out';
+                
+                shape.addEventListener('mousedown', startDrag);
+                shape.addEventListener('touchstart', startDrag, { passive: false });
+                
+                shapeArea.appendChild(shape);
+                
+                setTimeout(() => {
+                    shape.style.transition = '';
+                }, 300);
+            } else {
+                // Regular shape - return to shape area with absolute positioning
+                const areaRect = shapeArea.getBoundingClientRect();
+                const areaWidth = shapeArea.offsetWidth;
+                const areaHeight = shapeArea.offsetHeight;
+                const x = Math.random() * (areaWidth - 70);
+                const y = Math.random() * (areaHeight - 70);
+                
+                // Animate back with fixed positioning first
+                const targetX = areaRect.left + x;
+                const targetY = areaRect.top + y;
+                
+                draggedShape.style.transition = 'all 0.3s ease-out';
+                draggedShape.style.left = targetX + 'px';
+                draggedShape.style.top = targetY + 'px';
+                
+                setTimeout(() => {
+                    if (draggedShape) {
+                        // Convert back to absolute positioning within shape area
+                        draggedShape.style.position = 'absolute';
+                        draggedShape.style.left = x + 'px';
+                        draggedShape.style.top = y + 'px';
+                        draggedShape.style.transition = '';
+                    }
+                }, 300);
+            }
+        }
+
+        function checkCompletion(playerNum) {
+            const shapeArea = document.getElementById(`shapeArea${playerNum}`);
+            const remainingShapes = shapeArea.querySelectorAll('.shape');
+            
+            if (remainingShapes.length === 0) {
+                setTimeout(() => {
+                    alert(`Player ${playerNum} completed the round! Score: ${players[playerNum - 1].score}`);
+                    createShapes(playerNum);
+                    
+                    // Reset holes and remove placed shapes
+                    const holes = document.querySelectorAll(`[data-player="${playerNum}"].shape-hole`);
+                    holes.forEach(hole => {
+                        hole.classList.remove('filled', 'celebrating');
+                        const placedShape = hole.querySelector('.placed-shape');
+                        if (placedShape) {
+                            placedShape.remove();
+                        }
+                    });
+                }, 500);
+            }
+        }
+
+        // Difficulty buttons
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentDifficulty = btn.dataset.difficulty;
+                resetGame();
+            });
+        });
+
+        // Reset button
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+        function resetGame() {
+            players.forEach((player, idx) => {
+                player.score = 0;
+                document.getElementById(`score${idx + 1}`).textContent = '0';
+                
+                const holes = document.querySelectorAll(`[data-player="${idx + 1}"].shape-hole`);
+                holes.forEach(hole => {
+                    hole.classList.remove('filled', 'celebrating', 'highlight');
+                    // Remove any placed shapes
+                    const placedShape = hole.querySelector('.placed-shape');
+                    if (placedShape) {
+                        placedShape.remove();
+                    }
+                });
+                
+                createShapes(idx + 1);
+            });
+        }
+
+        // Initialize game
+        initGame();
+    </script>
+    <script src="../js/audio-manager.js"></script>
 </body>
 </html>

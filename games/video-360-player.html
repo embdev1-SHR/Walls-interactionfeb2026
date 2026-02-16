@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>360° Video Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Nunito', 'Segoe UI', sans-serif;
+            background: #000;
+            touch-action: none;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #canvas {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .controls-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .video-select {
+            padding: 10px 15px;
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .video-select:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .play-btn, .pause-btn, .back-btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .play-btn:hover, .pause-btn:hover, .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .play-btn:active, .pause-btn:active, .back-btn:active {
+            transform: scale(0.95);
+        }
+
+        .progress-container {
+            width: 150px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .time-display {
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .info-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-size: 14px;
+            max-width: 300px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+
+        .instructions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-size: 12px;
+            max-width: 250px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        .instruction-item {
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px 50px;
+            border-radius: 20px;
+            color: white;
+            font-size: 16px;
+            z-index: 200;
+            display: none;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="info-panel">
+        <div class="info-title">🌐 360° Video Player</div>
+        <div class="info-text" id="currentVideoName">Select a video to start</div>
+    </div>
+
+    <div class="instructions">
+        <div class="instructions-title">Controls</div>
+        <div class="instruction-item">🖱️ Drag to rotate</div>
+        <div class="instruction-item">⬆️⬇️⬅️➡️ Arrow keys</div>
+        <div class="instruction-item">🔢 Scroll to zoom</div>
+        <div class="instruction-item">Space = Play/Pause</div>
+    </div>
+
+    <div class="controls-container">
+        <select class="video-select" id="videoSelect" onchange="changeVideo(this.value)">
+            <option value="">Choose a video...</option>
+            <option value="nature">🌲 Nature Trail (Demo)</option>
+            <option value="space">🚀 Space Journey (Demo)</option>
+            <option value="ocean">🌊 Ocean Exploration (Demo)</option>
+        </select>
+
+        <button class="play-btn" id="playBtn" onclick="togglePlayPause()">▶ Play</button>
+        <button class="pause-btn" id="pauseBtn" onclick="togglePlayPause()" style="display:none;">⏸ Pause</button>
+
+        <div class="progress-container" id="progressContainer" onclick="seekVideo(event)">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+
+        <button class="back-btn" onclick="goBack()">← Back to Menu</button>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Loading 360° video...</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const canvas = document.getElementById('canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // Video player state
+        let video, videoTexture, videoMaterial, sphere;
+        let isPlaying = false;
+        let currentVideo = null;
+        let mouseDown = false;
+        let mouseX = 0, mouseY = 0;
+        let sphereRotationX = 0, sphereRotationY = 0;
+
+        // Demo videos configuration (using placeholder data URIs or external URLs)
+        const videos = {
+            nature: {
+                name: '🌲 Nature Trail',
+                description: 'Experience a peaceful walk through a forest',
+                url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerBlazes.mp4'
+            },
+            space: {
+                name: '🚀 Space Journey',
+                description: 'Explore the vast universe in 360°',
+                url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4'
+            },
+            ocean: {
+                name: '🌊 Ocean Exploration',
+                description: 'Dive into the beautiful underwater world',
+                url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ElephantsDream.mp4'
+            }
+        };
+
+        // Initialize video
+        function initializeVideo() {
+            video = document.createElement('video');
+            video.crossOrigin = 'anonymous';
+            video.loop = false;
+            video.addEventListener('timeupdate', updateProgress);
+            video.addEventListener('loadedmetadata', updateTimeDisplay);
+            video.addEventListener('play', () => {
+                document.getElementById('playBtn').style.display = 'none';
+                document.getElementById('pauseBtn').style.display = 'inline-block';
+                isPlaying = true;
+            });
+            video.addEventListener('pause', () => {
+                document.getElementById('playBtn').style.display = 'inline-block';
+                document.getElementById('pauseBtn').style.display = 'none';
+                isPlaying = false;
+            });
+        }
+
+        // Change video
+        function changeVideo(videoKey) {
+            if (!videoKey || !videos[videoKey]) return;
+
+            currentVideo = videoKey;
+            const videoData = videos[videoKey];
+            document.getElementById('currentVideoName').textContent = videoData.description;
+            document.getElementById('loading').style.display = 'block';
+
+            video.src = videoData.url;
+            video.load();
+
+            video.addEventListener('canplay', () => {
+                document.getElementById('loading').style.display = 'none';
+                createSphere();
+            }, { once: true });
+
+            video.addEventListener('error', () => {
+                document.getElementById('loading').style.display = 'none';
+                alert('Error loading video. Please check the video source.');
+            });
+        }
+
+        // Create sphere for 360 video
+        function createSphere() {
+            if (sphere) {
+                scene.remove(sphere);
+            }
+
+            videoTexture = new THREE.VideoTexture(video);
+            videoMaterial = new THREE.MeshBasicMaterial({ map: videoTexture });
+            const geometry = new THREE.SphereGeometry(500, 64, 64);
+            geometry.scale(-1, 1, 1); // Invert for inside view
+
+            sphere = new THREE.Mesh(geometry, videoMaterial);
+            scene.add(sphere);
+
+            camera.position.set(0, 0, 0);
+        }
+
+        // Play/Pause toggle
+        function togglePlayPause() {
+            if (!currentVideo) {
+                alert('Please select a video first');
+                return;
+            }
+
+            if (isPlaying) {
+                video.pause();
+            } else {
+                video.play();
+            }
+        }
+
+        // Seek video
+        function seekVideo(event) {
+            if (!currentVideo) return;
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            const percent = (event.clientX - rect.left) / rect.width;
+            video.currentTime = percent * video.duration;
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            if (video.duration) {
+                const percent = (video.currentTime / video.duration) * 100;
+                document.getElementById('progressBar').style.width = percent + '%';
+            }
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            const current = formatTime(video.currentTime);
+            const duration = formatTime(video.duration);
+            document.getElementById('timeDisplay').textContent = `${current} / ${duration}`;
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Go back to menu
+        function goBack() {
+            video.pause();
+            window.location.href = 'index.html';
+        }
+
+        // Mouse controls
+        document.addEventListener('mousedown', (e) => {
+            mouseDown = true;
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (mouseDown && sphere) {
+                const deltaX = e.clientX - mouseX;
+                const deltaY = e.clientY - mouseY;
+                sphereRotationY += deltaX * 0.005;
+                sphereRotationX += deltaY * 0.005;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            mouseDown = false;
+        });
+
+        // Keyboard controls
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+
+            if (e.key === ' ') {
+                e.preventDefault();
+                togglePlayPause();
+            }
+            if (e.key === 'Escape') {
+                goBack();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // Arrow key movement
+        function handleKeyboardMovement() {
+            const rotationSpeed = 0.03;
+            if (keys['ArrowLeft']) sphereRotationY += rotationSpeed;
+            if (keys['ArrowRight']) sphereRotationY -= rotationSpeed;
+            if (keys['ArrowUp']) sphereRotationX += rotationSpeed;
+            if (keys['ArrowDown']) sphereRotationX -= rotationSpeed;
+        }
+
+        // Mouse wheel for zoom
+        let fov = 75;
+        document.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            fov += e.deltaY * 0.05;
+            fov = Math.max(10, Math.min(120, fov));
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+        }, { passive: false });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Touch controls for mobile
+        let touchStartX = 0, touchStartY = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (sphere) {
+                const deltaX = e.touches[0].clientX - touchStartX;
+                const deltaY = e.touches[0].clientY - touchStartY;
+                sphereRotationY += deltaX * 0.005;
+                sphereRotationX += deltaY * 0.005;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            handleKeyboardMovement();
+
+            if (sphere) {
+                sphere.rotation.x = sphereRotationX;
+                sphere.rotation.y = sphereRotationY;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Initialize
+        initializeVideo();
+        animate();
+    </script>
+    <script src="../js/audio-manager.js"></script>
+</body>
+</html>

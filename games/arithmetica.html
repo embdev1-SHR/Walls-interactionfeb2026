@@ -317,5 +317,6 @@ for (var i = 0; i < 30; i++) {
 
 document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
 </script>
+    <script src="../js/audio-manager.js"></script>
 </body>
 </html>
