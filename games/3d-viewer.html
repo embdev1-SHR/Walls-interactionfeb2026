@@ -59,10 +59,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Poppins',sans-seri
 .sbtn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--goldd);}
 
 /* GAME — 3 columns */
-#game{flex-direction:row;background:var(--wdeep);overflow:hidden;}
+#game{flex-direction:row;background:var(--wdeep);overflow:hidden;width:100%;height:100%;}
 
 /* SIDE PANELS */
-.sp{display:flex;flex-direction:column;width:clamp(160px,27vw,320px);flex-shrink:0;position:relative;overflow:hidden;touch-action:none;}
+.sp{display:flex;flex-direction:column;flex:1;min-width:0;width:0;position:relative;overflow:hidden;touch-action:none;}
 #pl{background:linear-gradient(160deg,#200a0a,#3a1010,#1a0505);}
 #pr{background:linear-gradient(200deg,#0a1a0a,#0d2e12,#0a1a08);}
 .sp::before{content:'';position:absolute;top:0;bottom:0;width:4px;opacity:.6;}
@@ -87,11 +87,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Poppins',sans-seri
 @keyframes flok{0%,100%{background:rgba(255,255,255,0.07)}50%{background:rgba(46,213,115,0.25)}}
 @keyframes flno{0%,100%{background:rgba(255,255,255,0.07)}50%{background:rgba(255,71,87,0.25)}}
 .qlbl{font-size:clamp(7px,1.3vw,10px);font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
-.qtxt{font-size:clamp(18px,4vw,36px);font-weight:900;color:white;line-height:1.1;}
+.qtxt{font-size:clamp(16px,3.2vw,34px);font-weight:900;color:white;line-height:1.1;}
 .qpts{font-size:clamp(8px,1.4vw,11px);font-weight:800;color:var(--gold);margin-top:3px;letter-spacing:1px;}
 .opts{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:clamp(5px,1vw,9px);flex:1;}
 .opt{border-radius:clamp(9px,1.6vw,14px);padding:clamp(11px,2.2vh,20px) clamp(7px,1.3vw,12px);
-  cursor:pointer;font-size:clamp(15px,3vw,26px);font-weight:900;color:white;text-align:center;
+  cursor:pointer;font-size:clamp(14px,2.6vw,26px);font-weight:900;color:white;text-align:center;
   border:2px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.08);
   transition:transform .13s cubic-bezier(.34,1.56,.64,1),background .13s;
   display:flex;align-items:center;justify-content:center;
