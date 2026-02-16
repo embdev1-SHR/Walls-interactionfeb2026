@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Creature Creator</title>
+    <title>Trace & Learn - Multiplayer</title>
     <style>
         * {
             margin: 0;
@@ -12,95 +12,843 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Comic Sans MS', cursive, Arial, sans-serif;
             background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
             overflow: hidden;
             color: white;
             display: flex;
+            height: 100vh;
+            touch-action: none;
+        }
+
+        .player-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            padding: 1rem;
+            border-right: 3px solid rgba(255, 255, 255, 0.3);
+            position: relative;
         }
 
-        .container {
-            text-align: center;
-            padding: 2rem;
+        .player-section:last-child {
+            border-right: none;
         }
 
-        h1 {
-            font-size: 4rem;
-            margin-bottom: 2rem;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-        }
-
-        .placeholder-text {
-            font-size: 2rem;
-            margin-bottom: 3rem;
-            opacity: 0.9;
-        }
-
-        .back-button {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 1.5rem 3rem;
+        .player-header {
             font-size: 1.5rem;
-            background: rgba(255, 255, 255, 0.2);
-            border: 3px solid white;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-area {
+            position: relative;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .trace-canvas, .draw-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+            border-radius: 15px;
+        }
+
+        .trace-canvas {
+            z-index: 1;
+        }
+
+        .draw-canvas {
+            z-index: 2;
+        }
+
+        .accuracy-meter {
+            width: 100%;
+            max-width: 300px;
+            margin: 0.5rem 0;
+        }
+
+        .accuracy-label {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            font-weight: bold;
+        }
+
+        .accuracy-bar {
+            width: 100%;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid white;
+            position: relative;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ffaa00, #4CAF50);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 10px;
+        }
+
+        .accuracy-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            font-weight: bold;
             color: white;
-            border-radius: 50px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid white;
+            color: #ff6b9d;
+            border-radius: 25px;
             cursor: pointer;
             transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-small:hover {
+            transform: scale(1.05);
+            background: white;
+        }
+
+        .btn-small.active {
+            background: #ff6b9d;
+            color: white;
+        }
+
+        .global-controls {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px 0 0 20px;
             backdrop-filter: blur(10px);
             z-index: 1000;
         }
 
-        .back-button:hover {
+        .global-btn {
+            padding: 1rem;
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid white;
+            color: #ff6b9d;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .global-btn:hover {
+            transform: scale(1.1);
             background: white;
-            color: #fed6e3;
+        }
+
+        .category-select {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .category-btn {
+            padding: 0.6rem 1.2rem;
+            font-size: 1.2rem;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-btn.active {
+            background: white;
+            color: #ff6b9d;
             transform: scale(1.1);
         }
 
-        .icon {
-            font-size: 8rem;
-            margin-bottom: 2rem;
-            animation: bounce 2s ease-in-out infinite;
+        .feedback {
+            font-size: 1rem;
+            font-weight: bold;
+            min-height: 1.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            margin-top: 0.25rem;
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-30px); }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .excellent {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @media (max-width: 1024px) {
+            .player-section {
+                padding: 0.5rem;
+            }
+            .player-header {
+                font-size: 1.2rem;
+            }
+            .category-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <audio id="creature-creator-music" preload="auto" loop>
+    <audio id="trace-music" preload="auto" loop>
         <source src="../assets/Audio/capaholiczsfx-forest-daytime-446356.mp3" type="audio/mpeg">
     </audio>
-    <div class="container">
-        <div class="icon">🦄</div>
-        <h1>Creature Creator</h1>
-        <p class="placeholder-text">Coming Soon!</p>
-        <p class="placeholder-text" style="font-size: 1.5rem;">Design and customize your own magical creatures</p>
-        <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
+    
+    <div class="category-select">
+        <button class="category-btn active" data-category="letters">ABC</button>
+        <button class="category-btn" data-category="numbers">123</button>
+        <button class="category-btn" data-category="malayalam">മലയാളം</button>
+        <button class="category-btn" data-category="shapes">⬤△⬜</button>
+        <button class="category-btn" data-category="animals">🐱🐶</button>
     </div>
+
+    <!-- Player 1 -->
+    <div class="player-section">
+        <div class="player-header">Player 1</div>
+        <div class="game-area" id="gameArea1">
+            <canvas class="trace-canvas" id="traceCanvas1"></canvas>
+            <canvas class="draw-canvas" id="drawCanvas1"></canvas>
+        </div>
+        <div class="accuracy-meter">
+            <div class="accuracy-label">Accuracy</div>
+            <div class="accuracy-bar">
+                <div class="accuracy-fill" id="accuracyFill1"></div>
+                <div class="accuracy-text" id="accuracyText1">0%</div>
+            </div>
+        </div>
+        <div class="feedback" id="feedback1">Start tracing!</div>
+        <div class="player-controls">
+            <button class="btn-small" id="clearBtn1">🗑️ Clear</button>
+            <button class="btn-small" id="hintBtn1">💡 Hint</button>
+        </div>
+    </div>
+
+    <!-- Player 2 -->
+    <div class="player-section">
+        <div class="player-header">Player 2</div>
+        <div class="game-area" id="gameArea2">
+            <canvas class="trace-canvas" id="traceCanvas2"></canvas>
+            <canvas class="draw-canvas" id="drawCanvas2"></canvas>
+        </div>
+        <div class="accuracy-meter">
+            <div class="accuracy-label">Accuracy</div>
+            <div class="accuracy-bar">
+                <div class="accuracy-fill" id="accuracyFill2"></div>
+                <div class="accuracy-text" id="accuracyText2">0%</div>
+            </div>
+        </div>
+        <div class="feedback" id="feedback2">Start tracing!</div>
+        <div class="player-controls">
+            <button class="btn-small" id="clearBtn2">🗑️ Clear</button>
+            <button class="btn-small" id="hintBtn2">💡 Hint</button>
+        </div>
+    </div>
+
+    <!-- Player 3 -->
+    <div class="player-section">
+        <div class="player-header">Player 3</div>
+        <div class="game-area" id="gameArea3">
+            <canvas class="trace-canvas" id="traceCanvas3"></canvas>
+            <canvas class="draw-canvas" id="drawCanvas3"></canvas>
+        </div>
+        <div class="accuracy-meter">
+            <div class="accuracy-label">Accuracy</div>
+            <div class="accuracy-bar">
+                <div class="accuracy-fill" id="accuracyFill3"></div>
+                <div class="accuracy-text" id="accuracyText3">0%</div>
+            </div>
+        </div>
+        <div class="feedback" id="feedback3">Start tracing!</div>
+        <div class="player-controls">
+            <button class="btn-small" id="clearBtn3">🗑️ Clear</button>
+            <button class="btn-small" id="hintBtn3">💡 Hint</button>
+        </div>
+    </div>
+
+    <!-- Global Controls -->
+    <div class="global-controls">
+        <button class="global-btn" id="nextBtn" title="Next Item">➡️</button>
+        <button class="global-btn" onclick="window.location.href='../index.html'" title="Back to Menu">🏠</button>
+    </div>
+
     <script>
+        // Audio setup
         (function(){
-            var audio = document.getElementById('creature-creator-music');
-            if(!audio) return;
-            window.addEventListener('load', function(){
-                setTimeout(function(){
-                    try{ audio.volume = 0.5; audio.play().catch(function(){}); }catch(e){}
-                }, 500);
-            });
-            var back = document.querySelector('.back-button');
-            if(back){
-                back.addEventListener('click', function(){
-                    try{ audio.pause(); audio.currentTime = 0; }catch(e){}
+            var audio = document.getElementById('trace-music');
+            if(audio) {
+                window.addEventListener('load', function(){
+                    setTimeout(function(){
+                        try{ audio.volume = 0.3; audio.play().catch(function(){}); }catch(e){}
+                    }, 500);
                 });
             }
         })();
+
+        // Game Data
+        const gameData = {
+            letters: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
+            numbers: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+            malayalam: ['അ', 'ആ', 'ഇ', 'ഈ', 'ഉ', 'ഊ', 'എ', 'ഏ', 'ഐ', 'ഒ', 'ഓ', 'ഔ', 'ക', 'ഖ', 'ഗ', 'ഘ', 'ച', 'ഛ', 'ജ', 'ഝ', 'ട', 'ഠ', 'ഡ', 'ഢ', 'ണ', 'ത', 'ഥ', 'ദ', 'ധ', 'ന', 'പ', 'ഫ', 'ബ', 'ഭ', 'മ', 'യ', 'ര', 'ല', 'വ', 'ശ', 'ഷ', 'സ', 'ഹ', 'ള', 'ഴ', 'റ'],
+            shapes: ['circle', 'square', 'triangle', 'star', 'heart'],
+            animals: ['cat', 'dog', 'fish', 'bird', 'butterfly']
+        };
+
+        // Game State
+        let currentCategory = 'letters';
+        let currentIndex = 0;
+        
+        // Player states
+        const players = [
+            {
+                id: 1,
+                isDrawing: false,
+                drawnPoints: [],
+                showingHint: true,
+                totalDrawnPixels: 0,
+                autoAdvanceTimeout: null,
+                lastAccuracy: 0
+            },
+            {
+                id: 2,
+                isDrawing: false,
+                drawnPoints: [],
+                showingHint: true,
+                totalDrawnPixels: 0,
+                autoAdvanceTimeout: null,
+                lastAccuracy: 0
+            },
+            {
+                id: 3,
+                isDrawing: false,
+                drawnPoints: [],
+                showingHint: true,
+                totalDrawnPixels: 0,
+                autoAdvanceTimeout: null,
+                lastAccuracy: 0
+            }
+        ];
+
+        // Canvas setup for each player
+        const canvases = [];
+        for (let i = 1; i <= 3; i++) {
+            const traceCanvas = document.getElementById(`traceCanvas${i}`);
+            const drawCanvas = document.getElementById(`drawCanvas${i}`);
+            canvases.push({
+                traceCanvas,
+                drawCanvas,
+                traceCtx: traceCanvas.getContext('2d'),
+                drawCtx: drawCanvas.getContext('2d')
+            });
+        }
+
+        // Responsive canvas size
+        function resizeCanvases() {
+            const maxWidth = Math.min(350, (window.innerWidth / 3) - 60);
+            const maxHeight = Math.min(300, window.innerHeight * 0.4);
+            
+            canvases.forEach((canvas, idx) => {
+                canvas.traceCanvas.width = canvas.drawCanvas.width = maxWidth;
+                canvas.traceCanvas.height = canvas.drawCanvas.height = maxHeight;
+                
+                document.getElementById(`gameArea${idx + 1}`).style.width = maxWidth + 'px';
+                document.getElementById(`gameArea${idx + 1}`).style.height = maxHeight + 'px';
+            });
+            
+            loadCurrentItem();
+        }
+
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
+
+        // Drawing functions
+        function drawLetter(ctx, letter, opacity = 1) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.globalAlpha = opacity;
+            
+            const fontSize = currentCategory === 'malayalam' ? ctx.canvas.height * 0.55 : ctx.canvas.height * 0.65;
+            ctx.font = 'bold ' + fontSize + 'px Arial';
+            ctx.fillStyle = '#ff6b9d';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(letter, ctx.canvas.width / 2, ctx.canvas.height / 2);
+            
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeText(letter, ctx.canvas.width / 2, ctx.canvas.height / 2);
+            ctx.setLineDash([]);
+            ctx.globalAlpha = 1;
+        }
+
+        function drawShape(ctx, shape, opacity = 1) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.globalAlpha = opacity;
+            ctx.strokeStyle = '#ff6b9d';
+            ctx.lineWidth = 6;
+            ctx.fillStyle = 'transparent';
+
+            const centerX = ctx.canvas.width / 2;
+            const centerY = ctx.canvas.height / 2;
+            const size = Math.min(ctx.canvas.width, ctx.canvas.height) * 0.4;
+
+            ctx.beginPath();
+            switch(shape) {
+                case 'circle':
+                    ctx.arc(centerX, centerY, size * 0.4, 0, Math.PI * 2);
+                    break;
+                case 'square':
+                    ctx.rect(centerX - size * 0.4, centerY - size * 0.4, size * 0.8, size * 0.8);
+                    break;
+                case 'triangle':
+                    ctx.moveTo(centerX, centerY - size * 0.4);
+                    ctx.lineTo(centerX + size * 0.4, centerY + size * 0.4);
+                    ctx.lineTo(centerX - size * 0.4, centerY + size * 0.4);
+                    ctx.closePath();
+                    break;
+                case 'star':
+                    drawStar(ctx, centerX, centerY, 5, size * 0.4, size * 0.2);
+                    break;
+                case 'heart':
+                    drawHeart(ctx, centerX, centerY, size * 0.4);
+                    break;
+            }
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
+
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            const step = Math.PI / spikes;
+
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+        }
+
+        function drawHeart(ctx, cx, cy, size) {
+            ctx.moveTo(cx, cy + size * 0.3);
+            ctx.bezierCurveTo(cx, cy, cx - size * 0.5, cy - size * 0.5, cx - size * 0.5, cy - size * 0.2);
+            ctx.bezierCurveTo(cx - size * 0.5, cy + size * 0.1, cx, cy + size * 0.5, cx, cy + size * 0.8);
+            ctx.bezierCurveTo(cx, cy + size * 0.5, cx + size * 0.5, cy + size * 0.1, cx + size * 0.5, cy - size * 0.2);
+            ctx.bezierCurveTo(cx + size * 0.5, cy - size * 0.5, cx, cy, cx, cy + size * 0.3);
+            ctx.closePath();
+        }
+
+        function drawAnimal(ctx, animal, opacity = 1) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.globalAlpha = opacity;
+            
+            const centerX = ctx.canvas.width / 2;
+            const centerY = ctx.canvas.height / 2;
+            const size = Math.min(ctx.canvas.width, ctx.canvas.height) * 0.5;
+            
+            ctx.strokeStyle = '#ff6b9d';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            switch(animal) {
+                case 'cat':
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, size * 0.3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - size * 0.2, centerY - size * 0.25);
+                    ctx.lineTo(centerX - size * 0.3, centerY - size * 0.45);
+                    ctx.lineTo(centerX - size * 0.1, centerY - size * 0.3);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + size * 0.2, centerY - size * 0.25);
+                    ctx.lineTo(centerX + size * 0.3, centerY - size * 0.45);
+                    ctx.lineTo(centerX + size * 0.1, centerY - size * 0.3);
+                    ctx.stroke();
+                    break;
+                case 'dog':
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, size * 0.3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(centerX - size * 0.3, centerY, size * 0.15, size * 0.25, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(centerX + size * 0.3, centerY, size * 0.15, size * 0.25, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 'fish':
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, size * 0.3, size * 0.2, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + size * 0.3, centerY);
+                    ctx.lineTo(centerX + size * 0.5, centerY - size * 0.15);
+                    ctx.lineTo(centerX + size * 0.5, centerY + size * 0.15);
+                    ctx.closePath();
+                    ctx.stroke();
+                    break;
+                case 'bird':
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, size * 0.2, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - size * 0.2, centerY);
+                    ctx.quadraticCurveTo(centerX - size * 0.4, centerY - size * 0.2, centerX - size * 0.3, centerY - size * 0.1);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + size * 0.2, centerY);
+                    ctx.quadraticCurveTo(centerX + size * 0.4, centerY - size * 0.2, centerX + size * 0.3, centerY - size * 0.1);
+                    ctx.stroke();
+                    break;
+                case 'butterfly':
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, size * 0.05, size * 0.25, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(centerX - size * 0.15, centerY - size * 0.1, size * 0.2, size * 0.15, -0.3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(centerX + size * 0.15, centerY - size * 0.1, size * 0.2, size * 0.15, 0.3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(centerX - size * 0.15, centerY + size * 0.1, size * 0.2, size * 0.15, 0.3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(centerX + size * 0.15, centerY + size * 0.1, size * 0.2, size * 0.15, -0.3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function loadCurrentItem() {
+            const items = gameData[currentCategory];
+            const currentItem = items[currentIndex];
+            
+            canvases.forEach((canvas, idx) => {
+                const player = players[idx];
+                
+                if (player.autoAdvanceTimeout) {
+                    clearTimeout(player.autoAdvanceTimeout);
+                    player.autoAdvanceTimeout = null;
+                }
+                
+                player.drawnPoints = [];
+                player.totalDrawnPixels = 0;
+                player.lastAccuracy = 0;
+                canvas.drawCtx.clearRect(0, 0, canvas.drawCanvas.width, canvas.drawCanvas.height);
+                
+                if (currentCategory === 'letters' || currentCategory === 'numbers' || currentCategory === 'malayalam') {
+                    drawLetter(canvas.traceCtx, currentItem, player.showingHint ? 0.3 : 0);
+                } else if (currentCategory === 'shapes') {
+                    drawShape(canvas.traceCtx, currentItem, player.showingHint ? 0.3 : 0);
+                } else if (currentCategory === 'animals') {
+                    drawAnimal(canvas.traceCtx, currentItem, player.showingHint ? 0.3 : 0);
+                }
+                
+                document.getElementById(`feedback${idx + 1}`).textContent = 'Start tracing!';
+                document.getElementById(`accuracyFill${idx + 1}`).style.width = '0%';
+                document.getElementById(`accuracyText${idx + 1}`).textContent = '0%';
+            });
+        }
+
+        // Multi-touch drawing
+        function getPos(e, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function setupPlayerCanvas(playerIdx) {
+            const canvas = canvases[playerIdx];
+            const player = players[playerIdx];
+            const drawCanvas = canvas.drawCanvas;
+
+            function startDrawing(e) {
+                e.preventDefault();
+                player.isDrawing = true;
+                const pos = getPos(e, drawCanvas);
+                player.drawnPoints.push(pos);
+            }
+
+            function draw(e) {
+                if (!player.isDrawing) return;
+                e.preventDefault();
+                
+                const pos = getPos(e, drawCanvas);
+                player.drawnPoints.push(pos);
+                
+                canvas.drawCtx.strokeStyle = '#4CAF50';
+                canvas.drawCtx.lineWidth = 6;
+                canvas.drawCtx.lineCap = 'round';
+                canvas.drawCtx.lineJoin = 'round';
+                
+                if (player.drawnPoints.length > 1) {
+                    canvas.drawCtx.beginPath();
+                    canvas.drawCtx.moveTo(player.drawnPoints[player.drawnPoints.length - 2].x, 
+                                          player.drawnPoints[player.drawnPoints.length - 2].y);
+                    canvas.drawCtx.lineTo(pos.x, pos.y);
+                    canvas.drawCtx.stroke();
+                    player.totalDrawnPixels++;
+                }
+                
+                if (player.totalDrawnPixels % 15 === 0 && player.totalDrawnPixels > 0) {
+                    checkCompletion(playerIdx);
+                }
+            }
+
+            function stopDrawing() {
+                if (player.isDrawing && player.drawnPoints.length > 10) {
+                    checkCompletion(playerIdx);
+                }
+                player.isDrawing = false;
+            }
+
+            drawCanvas.addEventListener('mousedown', startDrawing);
+            drawCanvas.addEventListener('mousemove', draw);
+            drawCanvas.addEventListener('mouseup', stopDrawing);
+            drawCanvas.addEventListener('mouseout', stopDrawing);
+
+            drawCanvas.addEventListener('touchstart', startDrawing, { passive: false });
+            drawCanvas.addEventListener('touchmove', draw, { passive: false });
+            drawCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function checkCompletion(playerIdx) {
+            const player = players[playerIdx];
+            if (player.drawnPoints.length < 10) return;
+            
+            const accuracy = calculateTraceAccuracy(playerIdx);
+            player.lastAccuracy = accuracy;
+            updateFeedback(playerIdx, accuracy);
+        }
+
+        function calculateTraceAccuracy(playerIdx) {
+            try {
+                const canvas = canvases[playerIdx];
+                const player = players[playerIdx];
+                
+                const templateData = canvas.traceCtx.getImageData(0, 0, canvas.traceCanvas.width, canvas.traceCanvas.height);
+                const userDrawing = canvas.drawCtx.getImageData(0, 0, canvas.drawCanvas.width, canvas.drawCanvas.height);
+                
+                const templatePixels = new Set();
+                const tolerance = 20;
+                
+                for (let y = 0; y < templateData.height; y += 2) {
+                    for (let x = 0; x < templateData.width; x += 2) {
+                        const idx = (y * templateData.width + x) * 4;
+                        const alpha = templateData.data[idx + 3];
+                        if (alpha > 30) {
+                            const key = `${Math.floor(x / tolerance)},${Math.floor(y / tolerance)}`;
+                            templatePixels.add(key);
+                        }
+                    }
+                }
+                
+                if (templatePixels.size === 0) return 0;
+                
+                let matchedCells = 0;
+                const userCells = new Set();
+                
+                for (let y = 0; y < userDrawing.height; y += 2) {
+                    for (let x = 0; x < userDrawing.width; x += 2) {
+                        const idx = (y * userDrawing.width + x) * 4;
+                        const alpha = userDrawing.data[idx + 3];
+                        if (alpha > 30) {
+                            const key = `${Math.floor(x / tolerance)},${Math.floor(y / tolerance)}`;
+                            if (!userCells.has(key)) {
+                                userCells.add(key);
+                                if (templatePixels.has(key)) {
+                                    matchedCells++;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                const coverage = matchedCells / templatePixels.size;
+                return coverage;
+            } catch (e) {
+                
+                return 0;
+            }
+        }
+
+        function updateFeedback(playerIdx, accuracy) {
+            const percentage = Math.round(accuracy * 100);
+            const feedbackEl = document.getElementById(`feedback${playerIdx + 1}`);
+            const fillEl = document.getElementById(`accuracyFill${playerIdx + 1}`);
+            const textEl = document.getElementById(`accuracyText${playerIdx + 1}`);
+            const player = players[playerIdx];
+            
+            fillEl.style.width = percentage + '%';
+            textEl.textContent = percentage + '%';
+            
+            if (percentage >= 80) {
+                feedbackEl.textContent = 'Excellent! 🎉';
+                feedbackEl.classList.add('excellent');
+                setTimeout(() => feedbackEl.classList.remove('excellent'), 500);
+                
+                // Auto-advance after 2.5 seconds
+                if (!player.autoAdvanceTimeout) {
+                    player.autoAdvanceTimeout = setTimeout(() => {
+                        advanceToNext();
+                    }, 2500);
+                }
+            } else if (percentage >= 60) {
+                feedbackEl.textContent = 'Very Good! 👍';
+            } else if (percentage >= 40) {
+                feedbackEl.textContent = 'Good Try! 😊';
+            } else if (percentage >= 20) {
+                feedbackEl.textContent = 'Keep Going! 💪';
+            } else if (player.totalDrawnPixels > 20) {
+                feedbackEl.textContent = 'Follow the lines!';
+            }
+        }
+
+        function advanceToNext() {
+            const items = gameData[currentCategory];
+            currentIndex = (currentIndex + 1) % items.length;
+            
+            if (currentIndex === 0) {
+                players.forEach((player, idx) => {
+                    document.getElementById(`feedback${idx + 1}`).textContent = '🎊 Complete! 🎊';
+                });
+                setTimeout(() => {
+                    players.forEach(player => {
+                        player.showingHint = true;
+                    });
+                    document.querySelectorAll('[id^="hintBtn"]').forEach(btn => btn.classList.remove('active'));
+                    loadCurrentItem();
+                }, 2000);
+            } else {
+                players.forEach(player => {
+                    player.showingHint = true;
+                });
+                document.querySelectorAll('[id^="hintBtn"]').forEach(btn => btn.classList.remove('active'));
+                loadCurrentItem();
+            }
+        }
+
+        // Setup all players
+        for (let i = 0; i < 3; i++) {
+            setupPlayerCanvas(i);
+            
+            // Clear button
+            document.getElementById(`clearBtn${i + 1}`).addEventListener('click', () => {
+                const canvas = canvases[i];
+                const player = players[i];
+                
+                canvas.drawCtx.clearRect(0, 0, canvas.drawCanvas.width, canvas.drawCanvas.height);
+                player.drawnPoints = [];
+                player.totalDrawnPixels = 0;
+                player.lastAccuracy = 0;
+                document.getElementById(`feedback${i + 1}`).textContent = 'Try again!';
+                document.getElementById(`accuracyFill${i + 1}`).style.width = '0%';
+                document.getElementById(`accuracyText${i + 1}`).textContent = '0%';
+                
+                if (player.autoAdvanceTimeout) {
+                    clearTimeout(player.autoAdvanceTimeout);
+                    player.autoAdvanceTimeout = null;
+                }
+            });
+            
+            // Hint button
+            document.getElementById(`hintBtn${i + 1}`).addEventListener('click', (e) => {
+                players[i].showingHint = !players[i].showingHint;
+                e.target.classList.toggle('active');
+                loadCurrentItem();
+            });
+        }
+
+        // Global next button
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            advanceToNext();
+        });
+
+        // Category selection
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                currentIndex = 0;
+                players.forEach(player => {
+                    player.showingHint = true;
+                });
+                document.querySelectorAll('[id^="hintBtn"]').forEach(btn => btn.classList.remove('active'));
+                loadCurrentItem();
+            });
+        });
+
+        // Initialize
+        loadCurrentItem();
     </script>
 </body>
 </html>
+        
