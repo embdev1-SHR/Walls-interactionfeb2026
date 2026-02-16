@@ -13,12 +13,52 @@
 
         body {
             font-family: 'Comic Sans MS', cursive, Arial, sans-serif;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
             overflow: hidden;
-            color: white;
+            color: #333;
             display: flex;
             height: 100vh;
             touch-action: none;
+            position: relative;
+        }
+
+        /* Fun Background Elements */
+        .background-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floating-shape {
+            position: absolute;
+            opacity: 0.15;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape1 { top: 10%; left: 5%; font-size: 4rem; animation-delay: 0s; }
+        .shape2 { top: 20%; right: 10%; font-size: 3rem; animation-delay: 2s; }
+        .shape3 { bottom: 15%; left: 15%; font-size: 3.5rem; animation-delay: 4s; }
+        .shape4 { top: 60%; right: 5%; font-size: 3rem; animation-delay: 6s; }
+        .shape5 { bottom: 30%; right: 20%; font-size: 4rem; animation-delay: 8s; }
+        .shape6 { top: 40%; left: 8%; font-size: 2.5rem; animation-delay: 10s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            50% { transform: translateY(-40px) rotate(-5deg); }
+            75% { transform: translateY(-20px) rotate(3deg); }
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            position: relative;
+            z-index: 1;
         }
 
         .player-section {
@@ -40,7 +80,8 @@
             font-size: 1.5rem;
             font-weight: bold;
             margin-bottom: 0.5rem;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
         }
 
         .game-area {
@@ -77,15 +118,16 @@
             font-size: 0.9rem;
             margin-bottom: 0.25rem;
             font-weight: bold;
+            color: #2c3e50;
         }
 
         .accuracy-bar {
             width: 100%;
             height: 25px;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.5);
             border-radius: 12px;
             overflow: hidden;
-            border: 2px solid white;
+            border: 2px solid #2c3e50;
             position: relative;
         }
 
@@ -104,8 +146,8 @@
             transform: translate(-50%, -50%);
             font-size: 0.9rem;
             font-weight: bold;
-            color: white;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            color: #2c3e50;
+            text-shadow: 0 0 3px white;
         }
 
         .player-controls {
@@ -118,8 +160,8 @@
             padding: 0.5rem 1rem;
             font-size: 0.9rem;
             background: rgba(255, 255, 255, 0.9);
-            border: 2px solid white;
-            color: #ff6b9d;
+            border: 2px solid #2c3e50;
+            color: #2c3e50;
             border-radius: 25px;
             cursor: pointer;
             transition: all 0.3s;
@@ -129,14 +171,16 @@
         .btn-small:hover {
             transform: scale(1.05);
             background: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         }
 
         .btn-small.active {
             background: #ff6b9d;
             color: white;
+            border-color: #ff6b9d;
         }
 
-        .global-controls {
+        .right-sidebar {
             position: fixed;
             right: 0;
             top: 50%;
@@ -144,71 +188,92 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 20px 0 0 20px;
+            padding: 1.5rem 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px 0 0 30px;
             backdrop-filter: blur(10px);
             z-index: 1000;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .sidebar-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .category-btn {
+            padding: 0.7rem;
+            font-size: 1.3rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #2c3e50;
+            color: #2c3e50;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+        }
+
+        .category-btn.active {
+            background: #ff6b9d;
+            color: white;
+            border-color: #ff6b9d;
+            transform: scale(1.15);
         }
 
         .global-btn {
             padding: 1rem;
             font-size: 1.5rem;
             background: rgba(255, 255, 255, 0.9);
-            border: 3px solid white;
-            color: #ff6b9d;
+            border: 2px solid #2c3e50;
+            color: #2c3e50;
             border-radius: 50%;
             cursor: pointer;
             transition: all 0.3s;
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
         }
 
         .global-btn:hover {
             transform: scale(1.1);
             background: white;
-        }
-
-        .category-select {
-            position: fixed;
-            top: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 0.75rem;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.75rem 1.5rem;
-            border-radius: 30px;
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-        }
-
-        .category-btn {
-            padding: 0.6rem 1.2rem;
-            font-size: 1.2rem;
-            background: rgba(255, 255, 255, 0.3);
-            border: 2px solid white;
-            color: white;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .category-btn.active {
-            background: white;
-            color: #ff6b9d;
-            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
         }
 
         .feedback {
             font-size: 1rem;
             font-weight: bold;
             min-height: 1.5rem;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
             margin-top: 0.25rem;
         }
 
@@ -219,6 +284,7 @@
 
         .excellent {
             animation: pulse 0.5s ease-in-out;
+            color: #4CAF50;
         }
 
         @media (max-width: 1024px) {
@@ -228,9 +294,13 @@
             .player-header {
                 font-size: 1.2rem;
             }
-            .category-btn {
-                padding: 0.5rem 0.8rem;
-                font-size: 1rem;
+            .category-btn, .global-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 1.1rem;
+            }
+            .floating-shape {
+                font-size: 2rem !important;
             }
         }
     </style>
@@ -240,81 +310,97 @@
         <source src="../assets/Audio/capaholiczsfx-forest-daytime-446356.mp3" type="audio/mpeg">
     </audio>
     
-    <div class="category-select">
-        <button class="category-btn active" data-category="letters">ABC</button>
-        <button class="category-btn" data-category="numbers">123</button>
-        <button class="category-btn" data-category="malayalam">മലയാളം</button>
-        <button class="category-btn" data-category="shapes">⬤△⬜</button>
-        <button class="category-btn" data-category="animals">🐱🐶</button>
+    <!-- Fun Background Elements -->
+    <div class="background-elements">
+        <div class="floating-shape shape1">✏️</div>
+        <div class="floating-shape shape2">🌟</div>
+        <div class="floating-shape shape3">📚</div>
+        <div class="floating-shape shape4">🎨</div>
+        <div class="floating-shape shape5">✨</div>
+        <div class="floating-shape shape6">📝</div>
     </div>
 
-    <!-- Player 1 -->
-    <div class="player-section">
-        <div class="player-header">Player 1</div>
-        <div class="game-area" id="gameArea1">
-            <canvas class="trace-canvas" id="traceCanvas1"></canvas>
-            <canvas class="draw-canvas" id="drawCanvas1"></canvas>
-        </div>
-        <div class="accuracy-meter">
-            <div class="accuracy-label">Accuracy</div>
-            <div class="accuracy-bar">
-                <div class="accuracy-fill" id="accuracyFill1"></div>
-                <div class="accuracy-text" id="accuracyText1">0%</div>
+    <div class="main-content">
+        <!-- Player 1 -->
+        <div class="player-section">
+            <div class="player-header">Player 1</div>
+            <div class="game-area" id="gameArea1">
+                <canvas class="trace-canvas" id="traceCanvas1"></canvas>
+                <canvas class="draw-canvas" id="drawCanvas1"></canvas>
+            </div>
+            <div class="accuracy-meter">
+                <div class="accuracy-label">Accuracy</div>
+                <div class="accuracy-bar">
+                    <div class="accuracy-fill" id="accuracyFill1"></div>
+                    <div class="accuracy-text" id="accuracyText1">0%</div>
+                </div>
+            </div>
+            <div class="feedback" id="feedback1">Start tracing!</div>
+            <div class="player-controls">
+                <button class="btn-small" id="clearBtn1">🗑️ Clear</button>
+                <button class="btn-small" id="hintBtn1">💡 Hint</button>
             </div>
         </div>
-        <div class="feedback" id="feedback1">Start tracing!</div>
-        <div class="player-controls">
-            <button class="btn-small" id="clearBtn1">🗑️ Clear</button>
-            <button class="btn-small" id="hintBtn1">💡 Hint</button>
-        </div>
-    </div>
 
-    <!-- Player 2 -->
-    <div class="player-section">
-        <div class="player-header">Player 2</div>
-        <div class="game-area" id="gameArea2">
-            <canvas class="trace-canvas" id="traceCanvas2"></canvas>
-            <canvas class="draw-canvas" id="drawCanvas2"></canvas>
-        </div>
-        <div class="accuracy-meter">
-            <div class="accuracy-label">Accuracy</div>
-            <div class="accuracy-bar">
-                <div class="accuracy-fill" id="accuracyFill2"></div>
-                <div class="accuracy-text" id="accuracyText2">0%</div>
+        <!-- Player 2 -->
+        <div class="player-section">
+            <div class="player-header">Player 2</div>
+            <div class="game-area" id="gameArea2">
+                <canvas class="trace-canvas" id="traceCanvas2"></canvas>
+                <canvas class="draw-canvas" id="drawCanvas2"></canvas>
+            </div>
+            <div class="accuracy-meter">
+                <div class="accuracy-label">Accuracy</div>
+                <div class="accuracy-bar">
+                    <div class="accuracy-fill" id="accuracyFill2"></div>
+                    <div class="accuracy-text" id="accuracyText2">0%</div>
+                </div>
+            </div>
+            <div class="feedback" id="feedback2">Start tracing!</div>
+            <div class="player-controls">
+                <button class="btn-small" id="clearBtn2">🗑️ Clear</button>
+                <button class="btn-small" id="hintBtn2">💡 Hint</button>
             </div>
         </div>
-        <div class="feedback" id="feedback2">Start tracing!</div>
-        <div class="player-controls">
-            <button class="btn-small" id="clearBtn2">🗑️ Clear</button>
-            <button class="btn-small" id="hintBtn2">💡 Hint</button>
-        </div>
-    </div>
 
-    <!-- Player 3 -->
-    <div class="player-section">
-        <div class="player-header">Player 3</div>
-        <div class="game-area" id="gameArea3">
-            <canvas class="trace-canvas" id="traceCanvas3"></canvas>
-            <canvas class="draw-canvas" id="drawCanvas3"></canvas>
-        </div>
-        <div class="accuracy-meter">
-            <div class="accuracy-label">Accuracy</div>
-            <div class="accuracy-bar">
-                <div class="accuracy-fill" id="accuracyFill3"></div>
-                <div class="accuracy-text" id="accuracyText3">0%</div>
+        <!-- Player 3 -->
+        <div class="player-section">
+            <div class="player-header">Player 3</div>
+            <div class="game-area" id="gameArea3">
+                <canvas class="trace-canvas" id="traceCanvas3"></canvas>
+                <canvas class="draw-canvas" id="drawCanvas3"></canvas>
+            </div>
+            <div class="accuracy-meter">
+                <div class="accuracy-label">Accuracy</div>
+                <div class="accuracy-bar">
+                    <div class="accuracy-fill" id="accuracyFill3"></div>
+                    <div class="accuracy-text" id="accuracyText3">0%</div>
+                </div>
+            </div>
+            <div class="feedback" id="feedback3">Start tracing!</div>
+            <div class="player-controls">
+                <button class="btn-small" id="clearBtn3">🗑️ Clear</button>
+                <button class="btn-small" id="hintBtn3">💡 Hint</button>
             </div>
         </div>
-        <div class="feedback" id="feedback3">Start tracing!</div>
-        <div class="player-controls">
-            <button class="btn-small" id="clearBtn3">🗑️ Clear</button>
-            <button class="btn-small" id="hintBtn3">💡 Hint</button>
-        </div>
     </div>
 
-    <!-- Global Controls -->
-    <div class="global-controls">
-        <button class="global-btn" id="nextBtn" title="Next Item">➡️</button>
-        <button class="global-btn" onclick="window.location.href='../index.html'" title="Back to Menu">🏠</button>
+    <!-- Right Sidebar with Categories and Controls -->
+    <div class="right-sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">CATEGORY</div>
+            <button class="category-btn active" data-category="letters" title="Letters">🔤</button>
+            <button class="category-btn" data-category="numbers" title="Numbers">🔢</button>
+            <button class="category-btn" data-category="malayalam" title="Malayalam">മ</button>
+            <button class="category-btn" data-category="shapes" title="Shapes">⬤</button>
+            <button class="category-btn" data-category="animals" title="Animals">🐱</button>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-label">CONTROLS</div>
+            <button class="global-btn" id="nextBtn" title="Next Item">➡️</button>
+            <button class="global-btn" onclick="window.location.href='../index.html'" title="Back to Menu">🏠</button>
+        </div>
     </div>
 
     <script>
