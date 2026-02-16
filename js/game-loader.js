@@ -317,6 +317,9 @@ function loadGame(gameName) {
             case 'puzzle-balance':
                 window.location.href = 'games/puzzle-balance.html';
                 break;
+            case 'tug-of-war':
+                window.location.href = 'games/3d-viewer.html';
+                break;
             case '3d-viewer':
                 window.location.href = 'games/3d-viewer.html';
                 break;
