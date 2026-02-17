@@ -190,6 +190,53 @@
         }
         #back-btn:active { transform: translateY(-50%) scale(0.95); }
 
+        /* --- Audio Controls --- */
+        #audio-controls {
+            position: fixed;
+            right: 90px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .audio-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(111, 177, 252, 0.3);
+            background: rgba(40, 40, 40, 0.85);
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audio-btn:hover {
+            background: rgba(102, 126, 234, 0.6);
+            border-color: #6fb1fc;
+            transform: scale(1.08);
+        }
+
+        .audio-btn:active {
+            transform: scale(0.92);
+        }
+
+        #volume-slider {
+            position: fixed;
+            right: 20px;
+            bottom: 90px;
+            width: 200px;
+            z-index: 100;
+            cursor: pointer;
+        }
+
         #loading {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -240,6 +287,11 @@
     </div>
 
     <button id="back-btn" title="Back to Menu">← Back</button>
+
+    <div id="audio-controls">
+        <button class="audio-btn" id="play-audio-btn" title="Play Audio">♫</button>
+        <button class="audio-btn" id="mute-audio-btn" title="Mute Audio">🔊</button>
+    </div>
 
     <div id="controls">
         <button id="reset-view" title="Reset Camera">↻</button>
@@ -351,7 +403,7 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
+        renderer.toneMappingExposure = 0.8;
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -364,15 +416,15 @@
         controls.autoRotateSpeed = 0.5; // Slow, cinematic rotation
 
         // --- LIGHTING ---
-        // Reduce ambient light to prevent whitewashing
-        const hemiLight = new THREE.HemisphereLight(0xccddff, 0x443366, 0.25); 
+        // Minimal ambient light to prevent whitewashing
+        const hemiLight = new THREE.HemisphereLight(0xaabbdd, 0x332244, 0.15); 
         scene.add(hemiLight);
 
-        const ambientLight = new THREE.AmbientLight(0xaabbff, 0.15); 
+        const ambientLight = new THREE.AmbientLight(0x667788, 0.08); 
         scene.add(ambientLight);
 
-        // Sun light with reduced intensity
-        const sunLight = new THREE.PointLight(0xffffff, 2.0, 1000, 1);
+        // Sun light with realistic intensity
+        const sunLight = new THREE.PointLight(0xffffff, 1.5, 1200, 1);
         sunLight.position.set(0, 0, 0);
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 1024;
@@ -382,15 +434,15 @@
 
         // Volumetric ambient light for galaxy atmosphere
         const atmosphereLight = new THREE.Light();
-        atmosphereLight.intensity = 0.3;
+        atmosphereLight.intensity = 0.25;
         scene.add(atmosphereLight);
 
         // Add point lights for volumetric effect
-        const spaceLight1 = new THREE.PointLight(0x6699ff, 0.8, 400);
+        const spaceLight1 = new THREE.PointLight(0x4488ff, 0.6, 500);
         spaceLight1.position.set(200, 150, 200);
         scene.add(spaceLight1);
 
-        const spaceLight2 = new THREE.PointLight(0xff6699, 0.6, 400);
+        const spaceLight2 = new THREE.PointLight(0xff4488, 0.5, 500);
         spaceLight2.position.set(-250, -100, -150);
         scene.add(spaceLight2);
 
@@ -650,6 +702,21 @@
             window.location.href = 'index.html';
         });
 
+        // Audio control handlers
+        document.getElementById('play-audio-btn').addEventListener('click', () => {
+            if (window.audioManager) {
+                audioManager.resume();
+                document.getElementById('play-audio-btn').style.opacity = '0.5';
+            }
+        });
+
+        document.getElementById('mute-audio-btn').addEventListener('click', () => {
+            if (window.audioManager) {
+                audioManager.pause();
+                document.getElementById('play-audio-btn').style.opacity = '1';
+            }
+        });
+
         document.getElementById('fullscreen-btn').addEventListener('click', () => {
             if(!document.fullscreenElement) document.documentElement.requestFullscreen();
             else document.exitFullscreen();
@@ -718,10 +785,10 @@
                 camera.position.lerp(camPos, 0.05);
                 controls.target.lerp(targetPos, 0.05);
                 
-                // Move UI panel closer to planet in world space
+                // Move UI panel to the right side of planet
                 infoPanelWorldPos.copy(targetPos);
-                infoPanelWorldPos.y += focusTarget.userData.size * 2.5;
-                infoPanelWorldPos.x -= 30;
+                infoPanelWorldPos.y += focusTarget.userData.size * 2;
+                infoPanelWorldPos.x += 40;
             }
 
             controls.update();

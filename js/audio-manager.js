@@ -58,11 +58,14 @@ class AudioManager {
         this.volume = volume;
         const audioFile = this.audioMap[pageName];
 
+        console.log(`[Audio Manager] Initializing for page: ${pageName}`);
+
         if (!audioFile) {
-            console.warn(`No audio mapping found for page: ${pageName}`);
+            console.warn(`[Audio Manager] No audio mapping found for page: ${pageName}`);
             return;
         }
 
+        console.log(`[Audio Manager] Mapped audio file: ${audioFile}`);
         this.createAudioElement(audioFile);
         this.setupAutoLoop();
         this.play();
@@ -88,9 +91,15 @@ class AudioManager {
         
         document.body.appendChild(this.audio);
 
+        console.log(`[Audio Manager] Loading: ${audioFile}.mp3 from ../assets/Audio/${audioFile}.mp3`);
+
         // Error handling
         this.audio.addEventListener('error', (e) => {
-            console.error(`Failed to load audio: ${audioFile}`, e);
+            console.error(`[Audio Manager] Failed to load audio: ${audioFile}`, e);
+        });
+
+        this.audio.addEventListener('canplay', () => {
+            console.log(`[Audio Manager] Audio ready: ${audioFile}`);
         });
 
         return this.audio;
@@ -117,14 +126,20 @@ class AudioManager {
     play() {
         if (!this.audio) return;
 
+        console.log(`[Audio Manager] Playing audio`);
+
         const playPromise = this.audio.play();
         if (playPromise !== undefined) {
             playPromise.catch(err => {
-                console.warn('Audio playback failed:', err);
+                console.warn('[Audio Manager] Audio playback failed:', err);
                 // Fallback: Try again on user interaction
-                document.addEventListener('click', () => {
-                    this.audio.play().catch(() => {});
-                }, { once: true });
+                const playOnClick = () => {
+                    this.audio.play().catch(() => {
+                        console.warn('[Audio Manager] Still unable to play audio');
+                    });
+                    document.removeEventListener('click', playOnClick);
+                };
+                document.addEventListener('click', playOnClick);
             });
         }
         this.isPlaying = true;
@@ -233,6 +248,9 @@ class AudioManager {
 // Global audio manager instance
 const audioManager = new AudioManager();
 
+// Make it accessible globally
+window.audioManager = audioManager;
+
 // Helper function to get page name from current file
 function getPageName() {
     const pathname = window.location.pathname;
@@ -243,11 +261,23 @@ function getPageName() {
     return pageName;
 }
 
-// Auto-initialize audio when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+// Auto-initialize audio when DOM is ready or after a delay for module scripts
+function initializeAudio() {
     const pageName = getPageName();
     audioManager.initialize(pageName, 0.5);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeAudio();
 });
+
+// For module scripts that load after DOMContentLoaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAudio);
+} else {
+    // If script loads after DOM is ready
+    setTimeout(initializeAudio, 500);
+}
 
 // Handle visibility change to pause/resume audio
 document.addEventListener('visibilitychange', () => {
