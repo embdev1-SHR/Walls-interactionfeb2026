@@ -239,8 +239,8 @@
     <div id="canvas-container"></div>
     <div class="loading" id="loading">Ignition Sequence Start...</div>
 
-    <!-- ── Audio: preloaded in HTML, same pattern as index.html ── -->
-    <audio id="bg-audio" preload="auto" loop>
+    <!-- ── Audio: preloaded in HTML, autoplay enabled ── -->
+    <audio id="bg-audio" preload="auto" autoplay loop muted>
         <source src="./assets/Audio/solarsystem.mp3" type="audio/mpeg">
     </audio>
 
@@ -297,10 +297,11 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         // ================================================================
-        //  AUDIO — direct element approach, same as index.html
+        //  AUDIO — direct element approach, autoplay enabled
         // ================================================================
         const bgAudio = document.getElementById('bg-audio');
         bgAudio.volume = 0;
+        bgAudio.muted = false;
 
         let fadeInTimer  = null;
         let fadeOutTimer = null;
@@ -343,15 +344,10 @@
             }).catch(err => console.log('Audio play failed:', err));
         }
 
-        // Start audio on first any user interaction with the page
-        let audioStarted = false;
-        function onFirstGesture() {
-            if (audioStarted) return;
-            audioStarted = true;
+        // Auto-start audio on page load
+        window.addEventListener('load', () => {
             startAudio();
-        }
-        document.addEventListener('click',      onFirstGesture, { once: true });
-        document.addEventListener('touchstart', onFirstGesture, { once: true });
+        });
 
         // Play / Pause button
         document.getElementById('play-pause-btn').addEventListener('click', (e) => {
@@ -670,9 +666,10 @@
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         });
 
-        window.addEventListener('click', (event) => {
-            if (event.target.closest('#planet-menu') || event.target.closest('#planet-menu-toggle') || event.target.closest('#controls')) return;
-
+        function handlePlanetSelection(clientX, clientY) {
+            mouse.x =  (clientX / window.innerWidth)  * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+            
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(planetMeshes, true);
             if (intersects.length > 0) {
@@ -683,7 +680,20 @@
                     if (parentKey) { focusOnPlanet(parentKey); break; }
                 }
             }
+        }
+
+        window.addEventListener('click', (event) => {
+            if (event.target.closest('#planet-menu') || event.target.closest('#planet-menu-toggle') || event.target.closest('#controls')) return;
+            handlePlanetSelection(event.clientX, event.clientY);
         });
+
+        window.addEventListener('touchstart', (event) => {
+            if (event.target.closest('#planet-menu') || event.target.closest('#planet-menu-toggle') || event.target.closest('#controls')) return;
+            if (event.touches.length > 0) {
+                const touch = event.touches[0];
+                handlePlanetSelection(touch.clientX, touch.clientY);
+            }
+        }, { passive: true });
 
         document.querySelectorAll('.planet-item').forEach(item => {
             item.addEventListener('click', (e) => {
