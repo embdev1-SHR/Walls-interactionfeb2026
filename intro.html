@@ -124,7 +124,7 @@
         .logo-box{
             display:flex;flex-direction:column;align-items:center;
             gap:12px;
-            background:linear-gradient(145deg,rgba(0,8,22,.92) 0%,rgba(0,25,60,.88) 100%);
+            background:#FFFFFF;
             border:1.5px solid rgba(0,229,255,.35);
             border-radius:20px;
             padding:30px 40px 26px;
@@ -667,10 +667,13 @@ function showText(el, delay, exitDelay, animClass="anim-enter"){
 function continueSequence(){
     document.body.classList.remove("interactive-mode");
     instructionText.classList.remove("show");
-    // Play audio after click
-    if(window.audioManager) window.audioManager.play('intro');
-    // Kerala map
+    // Hard-coded audio playback
+    const introAudio = new Audio('../assets/Audio/intro.mp3');
+    introAudio.volume = 0.6;
+    introAudio.play().catch(e => console.log('Audio play failed:', e));
+    // Kerala map - clear confetti
     setTimeout(()=>{
+        physicsObjects = physicsObjects.filter(obj => !(obj instanceof Confetti));
         keralaContainer.classList.add("show");
         document.querySelectorAll(".halo-ring").forEach(r=>r.classList.add("animate"));
     },500);
