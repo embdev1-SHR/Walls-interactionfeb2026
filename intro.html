@@ -78,42 +78,7 @@
             position:relative;display:inline-block;
         }
 
-        /* SVG sits exactly behind each text, overflow visible so outlines spill out */
-        .halo-svg{
-            position:absolute;
-            top:50%;left:50%;
-            transform:translate(-50%,-50%);
-            pointer-events:none;
-            overflow:visible;
-            z-index:-1;
-        }
 
-        /*
-         * MULTI-CONCENTRIC OUTLINE EFFECT
-         * Each layer is an SVG <text> with fill:none and a fixed stroke-width.
-         * Layers go from thickest (outermost) to thinnest (innermost).
-         * They are painted back-to-front so inner strokes sit on top.
-         * A slow breathing animation pulses the whole stack gently.
-         * A separate "wave" animation ripples outward ring by ring.
-         */
-        .halo-svg text{
-            fill: none;
-            stroke-linejoin: round;
-            stroke-linecap:  round;
-            paint-order: stroke fill;
-        }
-
-        /* Continuous gentle shimmer across rings */
-        @keyframes outlineWave{
-            0%,100%{ stroke-opacity: 1;    }
-            50%    { stroke-opacity: 0.55; }
-        }
-        /* Whole SVG gentle breathe */
-        @keyframes haloBreath{
-            0%,100%{ opacity: 0.9; }
-            50%    { opacity: 1;   }
-        }
-        .halo-svg{ animation: haloBreath 3s ease-in-out infinite; }
 
         /* font variants */
         .t-hero  {font-family:"Cinzel Decorative",serif;font-size:72px;font-weight:900;
@@ -267,37 +232,13 @@
     <img src="Kerala-map-en.svg" class="kerala-svg" alt="Kerala Map">
 </div>
 
-<!-- Cinematic texts — SVG halo stroke rings radiate from letterforms -->
-<div id="welcomeText" class="cinematic-text">
-  <span class="ti t-hero" data-text="Welcome to Kerala">Welcome to Kerala
-    <svg class="halo-svg" id="hsvg-welcome" aria-hidden="true"></svg>
-  </span>
-</div>
-<div id="realityText" class="cinematic-text">
-  <span class="ti t-italic" data-text="Stepping into a New Reality">Stepping into a New Reality
-    <svg class="halo-svg" id="hsvg-reality" aria-hidden="true"></svg>
-  </span>
-</div>
-<div id="text1" class="cinematic-text">
-  <span class="ti t-large" data-text="Experience the New Vision">Experience the New Vision
-    <svg class="halo-svg" id="hsvg-text1" aria-hidden="true"></svg>
-  </span>
-</div>
-<div id="text2" class="cinematic-text">
-  <span class="ti t-caps" data-text="THAT IS">THAT IS
-    <svg class="halo-svg" id="hsvg-text2" aria-hidden="true"></svg>
-  </span>
-</div>
-<div id="text3" class="cinematic-text">
-  <span class="ti t-giant" data-text="BIGGER">BIGGER
-    <svg class="halo-svg" id="hsvg-text3" aria-hidden="true"></svg>
-  </span>
-</div>
-<div id="text4" class="cinematic-text">
-  <span class="ti t-giant" data-text="BRIGHTER">BRIGHTER
-    <svg class="halo-svg" id="hsvg-text4" aria-hidden="true"></svg>
-  </span>
-</div>
+<!-- Cinematic texts -->
+<div id="welcomeText" class="cinematic-text"><span class="ti t-hero">Welcome to Kerala</span></div>
+<div id="realityText" class="cinematic-text"><span class="ti t-italic">Stepping into a New Reality</span></div>
+<div id="text1" class="cinematic-text"><span class="ti t-large">Experience the New Vision</span></div>
+<div id="text2" class="cinematic-text"><span class="ti t-caps">THAT IS</span></div>
+<div id="text3" class="cinematic-text"><span class="ti t-giant">BIGGER</span></div>
+<div id="text4" class="cinematic-text"><span class="ti t-giant">BRIGHTER</span></div>
 
 <div id="logo" class="logo-container">
     <div class="logo-box">
@@ -411,7 +352,7 @@ class RopeConstraint{
     }
 }
 
-// Confetti
+// Confetti — life-based so ALL pieces fall and fade regardless of screen position
 class Confetti{
     constructor(x,y,burst){
         this.x=x;this.y=y;
@@ -434,27 +375,30 @@ class Confetti{
         this.w=6+Math.random()*10;this.h=4+Math.random()*6;
         this.color=["#FF6B00","#FFD700","#FF1744","#00E676","#2979FF",
                     "#FF4081","#EEFF41","#18FFFF","#FF9100","#F50057"][Math.floor(Math.random()*10)];
-        this.gravity=.28;this.opacity=1;this.trail=[];
+        this.gravity=0.32;
+        // life timer: starts at 1, fades to 0 over ~3-5 seconds
+        this.life=1;
+        this.decay=0.004+Math.random()*0.004; // slow decay so they fall fully first
+        this.opacity=1;
     }
     update(){
-        this.trail.push({x:this.x,y:this.y,o:this.opacity*.35});
-        if(this.trail.length>5)this.trail.shift();
-        this.vx*=.985;this.vy+=this.gravity;
-        this.x+=this.vx;this.y+=this.vy;
+        // Always apply gravity so pieces fall continuously
+        this.vx*=.984;
+        this.vy+=this.gravity;
+        this.x+=this.vx;
+        this.y+=this.vy;
         this.rotation+=this.angularVelocity;
-        if(this.y>physicsCanvas.height+40)this.opacity-=.03;
+        // Decay life gradually — pieces fade out over time regardless of position
+        this.life-=this.decay;
+        this.opacity=Math.max(0, this.life);
     }
     draw(){
-        this.trail.forEach((t,i)=>{
-            physicsCtx.save();physicsCtx.globalAlpha=t.o*(i/this.trail.length);
-            physicsCtx.fillStyle=this.color;
-            physicsCtx.translate(t.x,t.y);physicsCtx.rotate(this.rotation);
-            physicsCtx.fillRect(-this.w/2,-this.h/2,this.w,this.h);physicsCtx.restore();
-        });
+        if(this.opacity<=0)return;
         physicsCtx.save();physicsCtx.globalAlpha=this.opacity;
         physicsCtx.translate(this.x,this.y);physicsCtx.rotate(this.rotation);
-        physicsCtx.fillStyle=this.color;physicsCtx.shadowBlur=8;physicsCtx.shadowColor=this.color;
-        physicsCtx.fillRect(-this.w/2,-this.h/2,this.w,this.h);physicsCtx.restore();
+        physicsCtx.fillStyle=this.color;
+        physicsCtx.fillRect(-this.w/2,-this.h/2,this.w,this.h);
+        physicsCtx.restore();
     }
 }
 
@@ -606,8 +550,13 @@ function animatePhysics(){
     }
     if(animatingPhysics){
         for(let i=physicsObjects.length-1;i>=0;i--){
-            physicsObjects[i].update();physicsObjects[i].draw();
-            if(physicsObjects[i].opacity<=0)physicsObjects.splice(i,1);
+            physicsObjects[i].update();
+            physicsObjects[i].draw();
+            // Remove when fully faded (opacity/life at 0)
+            if((physicsObjects[i].opacity!==undefined && physicsObjects[i].opacity<=0)||
+               (physicsObjects[i].life!==undefined && physicsObjects[i].life<=0)){
+                physicsObjects.splice(i,1);
+            }
         }
         if(!physicsObjects.length)animatingPhysics=false;
     }
@@ -699,106 +648,17 @@ document.addEventListener("touchstart",e=>{
 },{passive:false});
 
 // ================================================================
-//  CINEMATIC TEXT — Multi-concentric outline effect
-//  Like the reference image: many tight parallel stroke outlines
-//  stacked concentrically around each letterform.
-//  Technique: N SVG <text> layers, each fill:none, progressively
-//  larger stroke-width, decreasing opacity → looks like laser-etched
-//  neon outline rings radiating from every letter curve.
+//  CINEMATIC TEXT — clean, no halo effect
 // ================================================================
-
-const fontMap = {
-    "t-hero"  : { family:'"Cinzel Decorative", serif',  size:72,  weight:"900", spacing:6   },
-    "t-large" : { family:'"Cinzel Decorative", serif',  size:54,  weight:"700", spacing:4   },
-    "t-italic": { family:'"Cormorant Garamond", serif', size:62,  weight:"300", spacing:8,  style:"italic" },
-    "t-caps"  : { family:'"Rajdhani", sans-serif',      size:40,  weight:"400", spacing:16  },
-    "t-giant" : { family:'"Cinzel Decorative", serif',  size:118, weight:"900", spacing:2   },
-};
-
-// Colour palette — all faded gold only, outermost very dim, innermost slightly brighter
-const RING_PALETTE = [
-    "rgba(255,200,0,0.04)",   // 1 — outermost, barely visible
-    "rgba(255,200,0,0.06)",
-    "rgba(255,205,0,0.08)",
-    "rgba(255,210,0,0.09)",
-    "rgba(255,210,0,0.10)",
-    "rgba(255,215,0,0.11)",
-    "rgba(255,215,0,0.12)",
-    "rgba(255,218,0,0.13)",
-    "rgba(255,220,0,0.15)",
-    "rgba(255,222,0,0.17)",
-    "rgba(255,225,0,0.20)",
-    "rgba(255,228,0,0.24)",   // 12 — innermost, still subtle gold
-];
-
-function buildHaloSVG(containerEl){
-    const span = containerEl.querySelector(".ti");
-    if(!span) return;
-    const svg = containerEl.querySelector(".halo-svg");
-    if(!svg)  return;
-
-    const fontClass = ["t-hero","t-large","t-italic","t-caps","t-giant"]
-        .find(c => span.classList.contains(c)) || "t-large";
-    const f   = fontMap[fontClass];
-    const txt = span.getAttribute("data-text") || span.textContent.trim();
-
-    const W = span.offsetWidth;
-    const H = span.offsetHeight;
-    const baseY = H * 0.78;
-
-    svg.setAttribute("width",  W);
-    svg.setAttribute("height", H);
-    svg.style.width  = W + "px";
-    svg.style.height = H + "px";
-    svg.innerHTML = "";
-
-    const ns   = "http://www.w3.org/2000/svg";
-    const N    = RING_PALETTE.length;
-    const STEP = 5.5;   // large gap — rings spread far out from letterforms
-
-    // Build outermost first so inner rings paint on top
-    for(let i = 0; i < N; i++){
-        const strokeW = (N - i) * STEP;   // outermost = widest
-        const color   = RING_PALETTE[i];
-
-        const t = document.createElementNS(ns, "text");
-        t.setAttribute("x", W / 2);
-        t.setAttribute("y", baseY);
-        t.setAttribute("text-anchor",    "middle");
-        t.setAttribute("font-family",    f.family);
-        t.setAttribute("font-size",      f.size + "px");
-        t.setAttribute("font-weight",    f.weight);
-        t.setAttribute("letter-spacing", f.spacing + "px");
-        if(f.style) t.setAttribute("font-style", f.style);
-
-        t.setAttribute("fill",            "none");
-        t.setAttribute("stroke",          color);
-        t.setAttribute("stroke-width",    strokeW);
-        t.setAttribute("stroke-linejoin", "round");
-        t.setAttribute("stroke-linecap",  "round");
-
-        const delayMs = i * 60;
-        t.style.animation = `outlineWave 4s ease-in-out ${delayMs}ms infinite`;
-
-        t.textContent = txt;
-        svg.appendChild(t);
-    }
-}
-
 function showText(el, delay, exitDelay, animClass="anim-enter"){
     setTimeout(()=>{
         el.classList.add(animClass);
-        setTimeout(()=> buildHaloSVG(el), 220);
-
         setTimeout(()=>{
-            const svg = el.querySelector(".halo-svg");
-            if(svg) svg.style.opacity = "0";
             el.classList.remove(animClass);
             el.classList.add("anim-exit");
             setTimeout(()=>{
                 el.classList.remove("anim-exit");
                 el.style.opacity = "0";
-                if(svg){ svg.style.opacity = "1"; svg.innerHTML = ""; }
             }, 1000);
         }, exitDelay || 2200);
     }, delay);
@@ -835,58 +695,33 @@ function continueSequence(){
 }
 
 // ================================================================
-//  AUDIO  — Kerala classical + cinematic orchestral (Internet Archive)
+//  AUDIO — place your music file URL below
 // ================================================================
 function initAudio(){
-    // Kerala Carnatic / Sopana + cinematic ambient
-    // All from Internet Archive (public domain / CC)
-    const keralaTracks=[
-        // Kerala Sopana Sangeetham — public domain archival recording
-        "https://archive.org/download/Kerala_Classical/sopana.mp3",
-        // Carnatic Veena — public domain
-        "https://archive.org/download/KeralaClassical_201504/01-Mohana_Veena.mp3",
-        // Nadaswaram Kerala classical
-        "https://archive.org/download/classical-music-archive/nadaswaram_01.mp3"
-    ];
-    // Cinematic orchestral swell — public domain / CC0
-    const cinematicTracks=[
-        "https://archive.org/download/CinematicOrchestra/cinematic_swell_01.mp3",
-        "https://archive.org/download/PublicDomainAmbient/orchestral_rise.mp3"
-    ];
+    const MUSIC_URL = "";   // ← paste your audio file URL here
 
-    function makeAudio(srcs,vol,loop){
-        const a=new Audio();a.volume=0;a.loop=loop;a.crossOrigin="anonymous";
-        let idx=0;
-        function tryNext(){
-            if(idx<srcs.length){a.src=srcs[idx++];a.load();a.play().catch(tryNext);}
-        }
-        tryNext();
-        // fade in
-        const fi=setInterval(()=>{
-            if(a.volume<vol){a.volume=Math.min(a.volume+.008,vol);}
+    if(!MUSIC_URL) return;
+
+    const audio = new Audio(MUSIC_URL);
+    audio.loop   = true;
+    audio.volume = 0;
+
+    audio.play().then(()=>{
+        const fi = setInterval(()=>{
+            if(audio.volume < 0.6) audio.volume = Math.min(audio.volume + 0.01, 0.6);
             else clearInterval(fi);
-        },120);
-        return a;
-    }
+        }, 100);
+    }).catch(()=>{});
 
-    const keralaAudio   = makeAudio(keralaTracks,  .52, true);
-    const cinematicAudio= makeAudio(cinematicTracks,.22, true);
-
-    // After ribbon cut → swell cinematic, gently fade Kerala
-    window._postCutAudio=()=>{
-        const sw=setInterval(()=>{
-            if(cinematicAudio.volume<.45)cinematicAudio.volume=Math.min(cinematicAudio.volume+.006,.45);
-            if(keralaAudio.volume>.3)    keralaAudio.volume   =Math.max(keralaAudio.volume-.004,.3);
-            if(cinematicAudio.volume>=.45&&keralaAudio.volume<=.3)clearInterval(sw);
-        },80);
-    };
+    window._postCutAudio = ()=>{};
 }
-let audioStarted=false;
+
+let audioStarted = false;
 function startAudioOnce(){
-    if(!audioStarted){audioStarted=true;initAudio();}
+    if(!audioStarted){ audioStarted = true; initAudio(); }
 }
-document.addEventListener("click",   startAudioOnce,{once:true});
-document.addEventListener("touchstart",startAudioOnce,{once:true});
+document.addEventListener("click",     startAudioOnce, {once:true});
+document.addEventListener("touchstart",startAudioOnce, {once:true});
 
 // ================================================================
 //  INIT
