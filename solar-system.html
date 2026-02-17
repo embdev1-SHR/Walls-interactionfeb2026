@@ -72,7 +72,7 @@
 
         /* --- Controls --- */
         #controls {
-            position: absolute;
+            position: fixed;
             bottom: 20px; right: 20px;
             display: flex;
             gap: 10px;
@@ -94,25 +94,38 @@
 
         /* --- Menu Toggle --- */
         #planet-menu-toggle {
-            position: absolute;
-            top: 20px; right: 20px;
-            background: rgba(0,0,0,0.6);
-            padding: 12px 20px;
-            border-radius: 30px;
-            border: 1px solid rgba(111, 177, 252, 0.3);
+            position: fixed;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 16px 14px;
+            border-radius: 20px;
+            border: 2px solid rgba(111, 177, 252, 0.3);
             cursor: pointer;
             backdrop-filter: blur(10px);
             display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 10px;
             transition: 0.3s;
             z-index: 100;
         }
-        #planet-menu-toggle:hover { border-color: #6fb1fc; background: rgba(0,0,0,0.8); }
+        #planet-menu-toggle span:first-child {
+            font-size: 1.4rem;
+        }
+        #planet-menu-toggle span:last-child {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #6fb1fc;
+        }
+        #planet-menu-toggle:hover { border-color: #6fb1fc; background: rgba(0,0,0,0.9); transform: translateY(-50%) scale(1.05); }
 
         #planet-menu {
-            position: absolute;
-            top: 75px; right: 20px;
+            position: fixed;
+            top: 50%;
+            left: 90px;
+            transform: translateY(-50%);
             background: rgba(5, 10, 20, 0.95);
             border: 1px solid rgba(111, 177, 252, 0.3);
             border-radius: 15px;
@@ -121,8 +134,7 @@
             flex-direction: column;
             gap: 5px;
             backdrop-filter: blur(15px);
-            transform-origin: top right;
-            transform: scale(0.9);
+            transform-origin: left center;
             opacity: 0;
             pointer-events: none;
             transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -130,7 +142,6 @@
         }
 
         #planet-menu.open {
-            transform: scale(1);
             opacity: 1;
             pointer-events: auto;
         }
@@ -139,16 +150,45 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 8px 15px;
+            padding: 10px 14px;
             border-radius: 8px;
             cursor: pointer;
             transition: 0.2s;
             color: #ddd;
+            white-space: nowrap;
         }
-        .planet-item:hover { background: rgba(255,255,255,0.15); color: white; transform: translateX(-5px); }
+        .planet-item:hover { background: rgba(255,255,255,0.15); color: white; transform: translateX(5px); }
         .planet-item.active { background: rgba(111, 177, 252, 0.25); color: #6fb1fc; border: 1px solid rgba(111, 177, 252, 0.4); }
 
         .planet-icon { width: 24px; height: 24px; border-radius: 50%; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
+
+        /* --- Back Button --- */
+        #back-btn {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 2px solid rgba(111, 177, 252, 0.4);
+            background: rgba(40, 40, 40, 0.9);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #back-btn:hover { 
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: #6fb1fc;
+            transform: translateY(-50%) scale(1.1);
+        }
+        #back-btn:active { transform: translateY(-50%) scale(0.95); }
 
         #loading {
             position: absolute; top: 50%; left: 50%;
@@ -177,8 +217,8 @@
     </div>
 
     <div id="planet-menu-toggle">
+        <span>🪐</span>
         <span>Planets</span>
-        <span>▼</span>
     </div>
 
     <div id="planet-menu">
@@ -198,6 +238,8 @@
         <p>Description goes here.</p>
         <div id="stats-container"></div>
     </div>
+
+    <button id="back-btn" title="Back to Menu">← Back</button>
 
     <div id="controls">
         <button id="reset-view" title="Reset Camera">↻</button>
@@ -322,19 +364,35 @@
         controls.autoRotateSpeed = 0.5; // Slow, cinematic rotation
 
         // --- LIGHTING ---
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6); 
+        // Reduce ambient light to prevent whitewashing
+        const hemiLight = new THREE.HemisphereLight(0xccddff, 0x443366, 0.25); 
         scene.add(hemiLight);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); 
+        const ambientLight = new THREE.AmbientLight(0xaabbff, 0.15); 
         scene.add(ambientLight);
 
-        const sunLight = new THREE.PointLight(0xffffff, 3.0, 800, 1);
+        // Sun light with reduced intensity
+        const sunLight = new THREE.PointLight(0xffffff, 2.0, 1000, 1);
         sunLight.position.set(0, 0, 0);
         sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 2048;
-        sunLight.shadow.mapSize.height = 2048;
-        sunLight.shadow.bias = -0.0001;
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
+        sunLight.shadow.bias = -0.0005;
         scene.add(sunLight);
+
+        // Volumetric ambient light for galaxy atmosphere
+        const atmosphereLight = new THREE.Light();
+        atmosphereLight.intensity = 0.3;
+        scene.add(atmosphereLight);
+
+        // Add point lights for volumetric effect
+        const spaceLight1 = new THREE.PointLight(0x6699ff, 0.8, 400);
+        spaceLight1.position.set(200, 150, 200);
+        scene.add(spaceLight1);
+
+        const spaceLight2 = new THREE.PointLight(0xff6699, 0.6, 400);
+        spaceLight2.position.set(-250, -100, -150);
+        scene.add(spaceLight2);
 
         // --- STARS ---
         function createStars() {
@@ -429,8 +487,9 @@
                 } else {
                     mat = new THREE.MeshStandardMaterial({ 
                         map: tex, 
-                        roughness: 0.6,
-                        metalness: 0.1
+                        roughness: 0.7,
+                        metalness: 0.05,
+                        toneMapped: true
                     });
                 }
 
@@ -492,6 +551,7 @@
         // --- Camera Logic ---
         let focusTarget = null;
         let cameraOffset = new THREE.Vector3(0, 10, 20);
+        let infoPanelWorldPos = new THREE.Vector3();
 
         function focusOnPlanet(key) {
             // STOP auto rotate when focusing
@@ -500,8 +560,8 @@
             focusTarget = planets[key];
             const data = planetData[key];
 
-            const dist = data.size * 4 + 10;
-            cameraOffset.set(0, data.size * 1.5, dist);
+            const dist = data.size * 5.5 + 15;
+            cameraOffset.set(0, data.size * 2, dist);
 
             document.querySelectorAll('.planet-item').forEach(el => el.classList.remove('active'));
             document.querySelector(`.planet-item[data-planet="${key}"]`)?.classList.add('active');
@@ -533,11 +593,20 @@
             if (event.target.closest('#planet-menu') || event.target.closest('#planet-menu-toggle') || event.target.closest('#controls')) return;
 
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(planetMeshes);
+            const intersects = raycaster.intersectObjects(planetMeshes, true);
 
             if (intersects.length > 0) {
-                const key = intersects[0].object.userData.parentKey;
-                if (key) focusOnPlanet(key);
+                for (let i = 0; i < intersects.length; i++) {
+                    const obj = intersects[i].object;
+                    let parentKey = obj.userData.parentKey;
+                    if (!parentKey && obj.parent) {
+                        parentKey = obj.parent.userData.key;
+                    }
+                    if (parentKey) {
+                        focusOnPlanet(parentKey);
+                        break;
+                    }
+                }
             }
         });
 
@@ -555,6 +624,7 @@
 
         document.getElementById('reset-view').addEventListener('click', () => {
             focusTarget = null;
+            infoPanelWorldPos.set(0, 0, 0);
             
             // RE-ENABLE auto rotate when resetting
             controls.autoRotate = true;
@@ -576,6 +646,10 @@
             document.querySelectorAll('.planet-item').forEach(el => el.classList.remove('active'));
         });
 
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
         document.getElementById('fullscreen-btn').addEventListener('click', () => {
             if(!document.fullscreenElement) document.documentElement.requestFullscreen();
             else document.exitFullscreen();
@@ -587,13 +661,45 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
+        // Update info panel position to follow planet in 3D space
+        const screenPos = new THREE.Vector2();
+        const updateInfoPanelPosition = () => {
+            if (focusTarget) {
+                const vector = infoPanelWorldPos.project(camera);
+                screenPos.x = (vector.x * window.innerWidth / 2) + (window.innerWidth / 2);
+                screenPos.y = -(vector.y * window.innerHeight / 2) + (window.innerHeight / 2);
+                
+                const infoPanel = document.getElementById('info-panel');
+                if (infoPanel.classList.contains('visible')) {
+                    const panelWidth = Math.min(350, window.innerWidth * 0.9);
+                    const panelHeight = 300;
+                    let posX = screenPos.x - panelWidth / 2;
+                    let posY = screenPos.y - panelHeight - 20;
+                    
+                    posX = Math.max(10, Math.min(window.innerWidth - panelWidth - 10, posX));
+                    posY = Math.max(10, Math.min(window.innerHeight - panelHeight - 10, posY));
+                    
+                    infoPanel.style.position = 'fixed';
+                    infoPanel.style.left = posX + 'px';
+                    infoPanel.style.top = posY + 'px';
+                    infoPanel.style.transform = 'none';
+                }
+            }
+        };
+
         // --- Animation Loop ---
         function animate() {
             requestAnimationFrame(animate);
 
+            updateInfoPanelPosition();
+
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(planetMeshes);
+            const intersects = raycaster.intersectObjects(planetMeshes, true);
             document.body.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
+
+            // Rotate space lights for dynamic volumetric effect
+            spaceLight1.position.x = 200 * Math.cos(Date.now() * 0.0001);
+            spaceLight1.position.z = 200 * Math.sin(Date.now() * 0.0001);
 
             Object.values(planets).forEach(group => {
                 const data = group.userData;
@@ -611,6 +717,11 @@
                 const camPos = targetPos.clone().add(offset);
                 camera.position.lerp(camPos, 0.05);
                 controls.target.lerp(targetPos, 0.05);
+                
+                // Move UI panel closer to planet in world space
+                infoPanelWorldPos.copy(targetPos);
+                infoPanelWorldPos.y += focusTarget.userData.size * 2.5;
+                infoPanelWorldPos.x -= 30;
             }
 
             controls.update();
