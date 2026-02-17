@@ -11,7 +11,7 @@ class AudioManager {
         this.audioMap = {
             // Main Pages
             'index': 'menu',
-            'intro': 'menu',
+            'intro': 'intro',
             'FreeCanvas': 'Free Canvas',
             'solar-system': 'solarsystem',
             
