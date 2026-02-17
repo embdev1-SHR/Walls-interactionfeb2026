@@ -203,6 +203,11 @@
 <div id="vignette"></div>
 <div class="streak" id="streak"></div>
 
+<!-- ===== AUDIO — same pattern as index.html ===== -->
+<audio id="intro-audio" preload="auto">
+    <source src="./assets/Audio/intro.mp3" type="audio/mpeg">
+</audio>
+
 <!-- Scissors cursor -->
 <svg class="scissors-cursor" id="scissorsCursor" viewBox="0 0 56 56">
     <defs>
@@ -237,7 +242,7 @@
 <div id="text3"       class="cinematic-text"><span class="ti t-giant">BIGGER</span></div>
 <div id="text4"       class="cinematic-text"><span class="ti t-giant">BRIGHTER</span></div>
 
-<!-- Logo: text only, no image -->
+<!-- Logo: text only -->
 <div id="logo" class="logo-container">
     <div class="logo-box">
         <div class="logo-title">Auticare</div>
@@ -266,6 +271,10 @@ const scissorsCursor = document.getElementById("scissorsCursor");
 const instructionText= document.getElementById("instructionText");
 const keralaContainer= document.getElementById("keralaContainer");
 const startButton    = document.getElementById("startButton");
+
+// ===== AUDIO element (preloaded in HTML) =====
+const introAudio = document.getElementById("intro-audio");
+introAudio.volume = 0.6;
 
 // ================================================================
 //  BACKGROUND — stars + lamp sparks
@@ -317,7 +326,7 @@ function animateBg(){
 animateBg();
 
 // ================================================================
-//  PHYSICS OBJECTS  ← `let` so continueSequence can filter it
+//  PHYSICS OBJECTS  — `let` so continueSequence can reassign
 // ================================================================
 let physicsObjects = [];
 let animatingPhysics = false;
@@ -606,6 +615,7 @@ document.addEventListener("mousemove",e=>{
     if(hit){ scissorsCursor.classList.add("hovering"); isHoveringRibbon=true; }
     else   { scissorsCursor.classList.remove("hovering"); isHoveringRibbon=false; }
 });
+
 function handleClick(e){
     if(ribbonCut) return;
     e.preventDefault();
@@ -614,10 +624,16 @@ function handleClick(e){
     if(hit){
         ribbonCut=true; isHoveringRibbon=false;
         scissorsCursor.classList.remove("hovering");
-        if(cutRibbon(hit.x,hit.y)) setTimeout(continueSequence,2400);
+
+        // ── Play audio on the ribbon click (user gesture) ──
+        introAudio.play().catch(function(err){
+            console.log('Audio play failed:', err);
+        });
+
+        if(cutRibbon(hit.x,hit.y)) setTimeout(continueSequence, 2400);
     }
 }
-document.addEventListener("click",handleClick);
+document.addEventListener("click", handleClick);
 document.addEventListener("touchstart",e=>{
     scissorsCursor.style.left=(e.touches[0]?.clientX??0)+"px";
     scissorsCursor.style.top =(e.touches[0]?.clientY??0)+"px";
@@ -648,7 +664,7 @@ function continueSequence(){
         keralaContainer.classList.add("show");
         document.querySelectorAll(".halo-ring").forEach(r=>r.classList.add("animate"));
     }, 500);
-    setTimeout(()=>keralaContainer.classList.add("hide"),4800);
+    setTimeout(()=>keralaContainer.classList.add("hide"), 4800);
 
     let t=5600;
     showText(document.getElementById("welcomeText"),t,2400,"anim-wipe"); t+=3400;
@@ -664,38 +680,6 @@ function continueSequence(){
 }
 
 // ================================================================
-//  AUDIO
-//  The ribbon click already satisfies the browser autoplay policy,
-//  so audio starts reliably on that same user gesture.
-// ================================================================
-let audioStarted=false;
-
-function initAudio(){
-    const MUSIC_URL="../assets/Audio/intro.mp3";
-    if(!MUSIC_URL) return;
-
-    const audio=new Audio(MUSIC_URL);
-    audio.loop=false;
-    audio.volume=0;
-
-    const p=audio.play();
-    if(p!==undefined){
-        p.then(()=>{
-            const fi=setInterval(()=>{
-                if(audio.volume<0.6) audio.volume=Math.min(audio.volume+0.01,0.6);
-                else clearInterval(fi);
-            },50);
-        }).catch(err=>console.warn("Audio blocked:",err));
-    }
-}
-
-function startAudioOnce(){
-    if(!audioStarted){ audioStarted=true; initAudio(); }
-}
-document.addEventListener("click",     startAudioOnce,{once:true});
-document.addEventListener("touchstart",startAudioOnce,{once:true});
-
-// ================================================================
 //  INIT
 // ================================================================
 function startSequence(){
@@ -704,9 +688,9 @@ function startSequence(){
         scissorsCursor.style.opacity="1";
         instructionText.classList.add("show");
         document.body.classList.add("interactive-mode");
-    },600);
+    }, 600);
 }
-setTimeout(startSequence,400);
+setTimeout(startSequence, 400);
 
 startButton.addEventListener("click",()=>{ window.location.href="index.html"; });
 
