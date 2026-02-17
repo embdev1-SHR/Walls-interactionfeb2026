@@ -106,11 +106,13 @@ model-viewer.animal-viewer{
   --poster-color:transparent;
   background:rgba(0,0,0,.3);
   touch-action:none;
+  object-fit:contain;
 }
 .model-placeholder{
-  perspective:250px;
-  width:70px;height:70px;
+  perspective:800px;
+  width:140px;height:140px;
   position:relative;
+  display:flex;align-items:center;justify-content:center;
 }
 .cube{
   width:100%;height:100%;position:relative;
@@ -118,19 +120,19 @@ model-viewer.animal-viewer{
   transition:transform .05s linear;
 }
 .cube-face{
-  position:absolute;width:70px;height:70px;
+  position:absolute;width:140px;height:140px;
   display:flex;align-items:center;justify-content:center;
-  font-size:38px;
+  font-size:72px;
   border:2px solid rgba(129,199,132,.3);
   background:rgba(15,40,25,.8);
   backface-visibility:visible;
 }
-.cube-face:nth-child(1){transform:rotateY(0deg) translateZ(35px)}
-.cube-face:nth-child(2){transform:rotateY(90deg) translateZ(35px)}
-.cube-face:nth-child(3){transform:rotateY(180deg) translateZ(35px)}
-.cube-face:nth-child(4){transform:rotateY(-90deg) translateZ(35px)}
-.cube-face:nth-child(5){transform:rotateX(90deg) translateZ(35px)}
-.cube-face:nth-child(6){transform:rotateX(-90deg) translateZ(35px)}
+.cube-face:nth-child(1){transform:rotateY(0deg) translateZ(70px)}
+.cube-face:nth-child(2){transform:rotateY(90deg) translateZ(70px)}
+.cube-face:nth-child(3){transform:rotateY(180deg) translateZ(70px)}
+.cube-face:nth-child(4){transform:rotateY(-90deg) translateZ(70px)}
+.cube-face:nth-child(5){transform:rotateX(90deg) translateZ(70px)}
+.cube-face:nth-child(6){transform:rotateX(-90deg) translateZ(70px)}
 .model-badge{
   position:absolute;bottom:4px;right:6px;
   font-size:8px;color:rgba(255,255,255,.3);
@@ -238,7 +240,7 @@ var ANIMALS = [
       'Can run at 40 mph',
       'Babies are born with white spots for camouflage'
     ],
-    sound:{type:'bellow',freq:130,dur:0.9},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/9/9e/Cervus_elaphus_roar.ogg',
     model:'../3dmodels/Deer.glb'
   },
   {
@@ -249,7 +251,7 @@ var ANIMALS = [
       'Use Earth\'s magnetic field to hunt',
       'Have over 40 different calls'
     ],
-    sound:{type:'bark',freq:800,dur:0.12},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/2/2c/Vulpes_vulpes.ogg',
     model:'../3dmodels/red_fox_standing_pose_realistic.glb'
   },
   {
@@ -260,7 +262,7 @@ var ANIMALS = [
       'Sprint at 35 mph',
       'Hibernate for 5 to 7 months'
     ],
-    sound:{type:'growl',freq:75,dur:1.2},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/1/1a/Ursus_arctos_SATAO.ogg',
     model:'../3dmodels/bear.glb'
   },
   {
@@ -271,7 +273,7 @@ var ANIMALS = [
       'Fly in complete silence',
       'Grip strength is 300 PSI'
     ],
-    sound:{type:'hoot',freq:300,dur:0.4},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/8/8a/Bubo_virginianus_06.ogg',
     model:'../3dmodels/owl.glb'
   },
   {
@@ -282,7 +284,7 @@ var ANIMALS = [
       'Paws are like tiny human hands',
       'Wash food in water before eating'
     ],
-    sound:{type:'chitter',freq:600,dur:0.06},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/0/0c/Procyon_lotor.ogg',
     model:'../3dmodels/racoon.glb'
   },
   {
@@ -293,7 +295,7 @@ var ANIMALS = [
       'Leap 10x their body length',
       'Plant trees by forgetting buried nuts'
     ],
-    sound:{type:'chirp',freq:900,dur:0.15},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/a/a5/Sciurus_vulgaris.ogg',
     model:'../3dmodels/realistic_squirrel_3d_model.glb'
   },
   {
@@ -304,7 +306,7 @@ var ANIMALS = [
       'Hold breath for 15 minutes',
       'Teeth contain iron -- super strong!'
     ],
-    sound:{type:'slap',freq:200,dur:0.15},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/2/2e/Castor_fiber.ogg',
     model:'../3dmodels/realistic_beaver__castor_3d_model.glb'
   },
   {
@@ -315,7 +317,7 @@ var ANIMALS = [
       'Each howl is unique like a fingerprint',
       'Travel 50 miles in a single day'
     ],
-    sound:{type:'howl',freq:220,dur:2.0},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/0/0b/Canis_lupus_howl.ogg',
     model:'../3dmodels/wolf.glb'
   },
   {
@@ -326,7 +328,7 @@ var ANIMALS = [
       'Spot a rabbit from 3 km away',
       'Mate for life'
     ],
-    sound:{type:'screech',freq:1800,dur:0.6},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/5/56/Aquila_chrysaetos_TypeA.ogg',
     model:'../3dmodels/day_23_-_wild_eagle.glb'
   },
   {
@@ -337,7 +339,7 @@ var ANIMALS = [
       'Curl into a tight spiky ball',
       'Immune to some snake venoms'
     ],
-    sound:{type:'snuffle',freq:400,dur:0.5}
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/d/d4/Erinaceus_europaeus_1.ogg'
   },
   {
     name:'Forest Gecko', latin:'Phelsuma grandis', emoji:'\uD83E\uDD8E',
@@ -347,7 +349,7 @@ var ANIMALS = [
       'Lick their eyeballs to clean them',
       'Walk on ceilings'
     ],
-    sound:{type:'click',freq:1500,dur:0.04},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/e/e5/Phelsuma_grandis.ogg',
     model:'../3dmodels/gecko_thinker.glb'
   },
   {
@@ -358,7 +360,7 @@ var ANIMALS = [
       'Jump 3 meters high from standing',
       'Nearly 360-degree vision'
     ],
-    sound:{type:'thump',freq:55,dur:0.12},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/3/3d/Lepus_europaeus.ogg',
     model:'../3dmodels/rabbit.glb'
   },
   {
@@ -369,7 +371,7 @@ var ANIMALS = [
       'Sleep up to 20 hours a day',
       'Females do most of the hunting'
     ],
-    sound:{type:'roar',freq:100,dur:1.5},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/7/73/Lion_roar.ogg',
     model:'../3dmodels/lion_lowpoly.glb'
   },
   {
@@ -380,7 +382,7 @@ var ANIMALS = [
       'Can leap over 9 meters forward',
       'Excellent swimmers unlike most cats'
     ],
-    sound:{type:'roar',freq:90,dur:1.3},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/d/d0/Tiger.ogg',
     model:'../3dmodels/tiger.glb'
   },
   {
@@ -391,7 +393,7 @@ var ANIMALS = [
       'Communicate through ground vibrations',
       'Herds are led by wise matriarchs'
     ],
-    sound:{type:'trumpet',freq:350,dur:0.8},
+    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/0/04/Elephant_rumble.ogg',
     model:'../3dmodels/elephant__gajah.glb'
   }
 ];
@@ -570,196 +572,53 @@ window.addEventListener('load', function() {
   }, 500);
 });
 
+var currentAudio = null;
+
 document.addEventListener('click', function(e) {
   if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
   var btn = e.target.closest('.card-sound');
-  if (btn) playAnimalSound(ANIMALS[parseInt(btn.dataset.index)].sound, btn);
+  if (btn) playAnimalSound(ANIMALS[parseInt(btn.dataset.index)].soundUrl, btn);
 });
 document.addEventListener('touchend', function(e) {
   var btn = e.target.closest('.card-sound');
-  if (btn) { e.preventDefault(); playAnimalSound(ANIMALS[parseInt(btn.dataset.index)].sound, btn); }
+  if (btn) { e.preventDefault(); playAnimalSound(ANIMALS[parseInt(btn.dataset.index)].soundUrl, btn); }
 });
 
-function playAnimalSound(cfg, btn) {
+function playAnimalSound(soundUrl, btn) {
   if (btn.classList.contains('playing')) return;
   btn.classList.add('playing');
+  
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
+  
   try {
-    var ac = new (window.AudioContext || window.webkitAudioContext)();
-    var now = ac.currentTime;
-
-    if (cfg.type === 'bellow') {
-      var o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = 'triangle'; o.frequency.setValueAtTime(cfg.freq, now);
-      o.frequency.linearRampToValueAtTime(cfg.freq * 0.8, now + cfg.dur);
-      var lfo = ac.createOscillator(), lfoG = ac.createGain();
-      lfo.connect(lfoG); lfoG.connect(o.frequency);
-      lfo.frequency.value = 5; lfoG.gain.value = 15; lfo.start(now);
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.2, now + 0.1);
-      g.gain.linearRampToValueAtTime(0.15, now + cfg.dur * 0.7);
-      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
-      o.start(now); o.stop(now + cfg.dur); lfo.stop(now + cfg.dur);
-    }
-    else if (cfg.type === 'bark') {
-      for (var b = 0; b < 3; b++) {
-        var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination); o.type = 'square';
-        var t = now + b * 0.18;
-        o.frequency.setValueAtTime(cfg.freq, t);
-        o.frequency.exponentialRampToValueAtTime(cfg.freq * 0.5, t + cfg.dur);
-        g.gain.setValueAtTime(0.15, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
-        o.start(t); o.stop(t + cfg.dur);
+    var audio = new Audio(soundUrl);
+    audio.crossOrigin = 'anonymous';
+    audio.volume = 0.7;
+    currentAudio = audio;
+    
+    audio.play().catch(function(err) {
+      console.log('Error playing sound:', err);
+      btn.classList.remove('playing');
+    });
+    
+    audio.onended = function() {
+      btn.classList.remove('playing');
+      currentAudio = null;
+    };
+    
+    audio.onerror = function() {
+      btn.classList.remove('playing');
+      currentAudio = null;
+    };
+    
+    setTimeout(function() {
+      if (btn.classList.contains('playing')) {
+        btn.classList.remove('playing');
       }
-    }
-    else if (cfg.type === 'growl') {
-      var o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = 'sawtooth'; o.frequency.value = cfg.freq;
-      var lfo = ac.createOscillator(), lfoG = ac.createGain();
-      lfo.connect(lfoG); lfoG.connect(o.frequency);
-      lfo.frequency.value = 3; lfoG.gain.value = 10; lfo.start(now);
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.12, now + 0.2);
-      g.gain.setValueAtTime(0.12, now + cfg.dur * 0.6);
-      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
-      o.start(now); o.stop(now + cfg.dur); lfo.stop(now + cfg.dur);
-    }
-    else if (cfg.type === 'hoot') {
-      [cfg.freq, cfg.freq * 0.82].forEach(function(f, i) {
-        var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination);
-        o.type = 'sine'; o.frequency.value = f;
-        var t = now + i * (cfg.dur + 0.15);
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.18, t + 0.05);
-        g.gain.setValueAtTime(0.18, t + cfg.dur * 0.7);
-        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
-        o.start(t); o.stop(t + cfg.dur);
-      });
-    }
-    else if (cfg.type === 'chitter') {
-      for (var c = 0; c < 12; c++) {
-        var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination); o.type = 'square';
-        var t = now + c * cfg.dur;
-        o.frequency.value = cfg.freq + Math.random() * 200;
-        g.gain.setValueAtTime(0.1, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur * 0.8);
-        o.start(t); o.stop(t + cfg.dur);
-      }
-    }
-    else if (cfg.type === 'chirp') {
-      for (var ch = 0; ch < 4; ch++) {
-        var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination); o.type = 'sine';
-        var t = now + ch * 0.2;
-        o.frequency.setValueAtTime(cfg.freq, t);
-        o.frequency.exponentialRampToValueAtTime(cfg.freq * 1.8, t + cfg.dur);
-        g.gain.setValueAtTime(0.15, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
-        o.start(t); o.stop(t + cfg.dur);
-      }
-    }
-    else if (cfg.type === 'slap') {
-      var buf = ac.createBuffer(1, ac.sampleRate * cfg.dur, ac.sampleRate);
-      var data = buf.getChannelData(0);
-      for (var s = 0; s < data.length; s++) data[s] = (Math.random() * 2 - 1) * Math.exp(-s / (ac.sampleRate * 0.02));
-      var src = ac.createBufferSource(), g = ac.createGain();
-      src.buffer = buf; src.connect(g); g.connect(ac.destination);
-      g.gain.setValueAtTime(0.3, now); g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
-      src.start(now);
-    }
-    else if (cfg.type === 'howl') {
-      var o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination); o.type = 'sine';
-      o.frequency.setValueAtTime(cfg.freq, now);
-      o.frequency.linearRampToValueAtTime(cfg.freq * 2.5, now + cfg.dur * 0.4);
-      o.frequency.linearRampToValueAtTime(cfg.freq * 2.2, now + cfg.dur * 0.7);
-      o.frequency.linearRampToValueAtTime(cfg.freq * 1.5, now + cfg.dur);
-      var lfo = ac.createOscillator(), lfoG = ac.createGain();
-      lfo.connect(lfoG); lfoG.connect(o.frequency);
-      lfo.frequency.value = 4; lfoG.gain.value = 8; lfo.start(now);
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.18, now + 0.15);
-      g.gain.setValueAtTime(0.18, now + cfg.dur * 0.6);
-      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
-      o.start(now); o.stop(now + cfg.dur); lfo.stop(now + cfg.dur);
-    }
-    else if (cfg.type === 'screech') {
-      var o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination); o.type = 'sawtooth';
-      o.frequency.setValueAtTime(cfg.freq, now);
-      o.frequency.exponentialRampToValueAtTime(cfg.freq * 0.4, now + cfg.dur);
-      g.gain.setValueAtTime(0.1, now); g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
-      o.start(now); o.stop(now + cfg.dur);
-    }
-    else if (cfg.type === 'snuffle') {
-      for (var sn = 0; sn < 5; sn++) {
-        var buf = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate);
-        var data = buf.getChannelData(0);
-        for (var s = 0; s < data.length; s++) data[s] = (Math.random() * 2 - 1) * 0.3;
-        var src = ac.createBufferSource(), g = ac.createGain();
-        var filt = ac.createBiquadFilter();
-        filt.type = 'lowpass'; filt.frequency.value = cfg.freq;
-        src.buffer = buf; src.connect(filt); filt.connect(g); g.connect(ac.destination);
-        var t = now + sn * 0.12;
-        g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        src.start(t);
-      }
-    }
-    else if (cfg.type === 'click') {
-      for (var ck = 0; ck < 3; ck++) {
-        var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination); o.type = 'sine'; o.frequency.value = cfg.freq;
-        var t = now + ck * 0.1;
-        g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
-        o.start(t); o.stop(t + cfg.dur);
-      }
-    }
-    else if (cfg.type === 'thump') {
-      for (var th = 0; th < 3; th++) {
-        var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination); o.type = 'sine'; o.frequency.value = cfg.freq;
-        var t = now + th * 0.2;
-        g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
-        o.start(t); o.stop(t + cfg.dur);
-      }
-    }
-    else if (cfg.type === 'roar') {
-      var o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(cfg.freq, now);
-      o.frequency.linearRampToValueAtTime(cfg.freq * 1.8, now + cfg.dur * 0.3);
-      o.frequency.linearRampToValueAtTime(cfg.freq * 0.6, now + cfg.dur);
-      var lfo = ac.createOscillator(), lfoG = ac.createGain();
-      lfo.connect(lfoG); lfoG.connect(o.frequency);
-      lfo.frequency.value = 6; lfoG.gain.value = 20; lfo.start(now);
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.18, now + 0.1);
-      g.gain.setValueAtTime(0.18, now + cfg.dur * 0.5);
-      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
-      o.start(now); o.stop(now + cfg.dur); lfo.stop(now + cfg.dur);
-    }
-    else if (cfg.type === 'trumpet') {
-      var o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = 'square';
-      o.frequency.setValueAtTime(cfg.freq, now);
-      o.frequency.linearRampToValueAtTime(cfg.freq * 3, now + cfg.dur * 0.4);
-      o.frequency.setValueAtTime(cfg.freq * 2.5, now + cfg.dur * 0.6);
-      o.frequency.linearRampToValueAtTime(cfg.freq * 2, now + cfg.dur);
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.15, now + 0.05);
-      g.gain.setValueAtTime(0.15, now + cfg.dur * 0.6);
-      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
-      o.start(now); o.stop(now + cfg.dur);
-    }
-
-    var totalDur = cfg.type === 'howl' ? cfg.dur : cfg.type === 'bark' ? 0.6 : cfg.type === 'chitter' ? 0.8 : cfg.type === 'chirp' ? 0.8 : cfg.type === 'hoot' ? 1.1 : cfg.type === 'snuffle' ? 0.7 : cfg.type === 'click' ? 0.3 : cfg.type === 'thump' ? 0.6 : cfg.type === 'roar' ? cfg.dur : cfg.type === 'trumpet' ? cfg.dur : cfg.dur + 0.1;
-    setTimeout(function() { btn.classList.remove('playing'); }, totalDur * 1000);
+    }, 15000);
   } catch (e) {
     btn.classList.remove('playing');
   }

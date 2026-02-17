@@ -188,30 +188,75 @@
             border-radius: 4px;
         }
 
-        .back-button {
+        .toolbar-right {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 16px 40px;
-            font-size: 18px;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
             z-index: 1000;
-            letter-spacing: 0.5px;
+            pointer-events: auto;
+            width: 64px;
+            background: linear-gradient(135deg, rgba(20, 120, 200, 0.25), rgba(100, 200, 255, 0.15));
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 12px 8px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            touch-action: none;
         }
 
-        .back-button:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .toolbar-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .toolbar-back-btn {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 700;
+            background: linear-gradient(135deg, rgba(100, 150, 200, 0.4), rgba(100, 180, 220, 0.3));
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        .toolbar-back-btn:hover {
+            background: linear-gradient(135deg, rgba(120, 170, 220, 0.5), rgba(120, 200, 240, 0.4));
             border-color: rgba(255, 255, 255, 0.5);
-            transform: translateX(-50%) scale(1.05);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .toolbar-back-btn:active {
+            transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .tool-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.5px;
         }
 
         .info-text {
@@ -314,7 +359,12 @@
     </div>
 
     <div class="info-text">Touch or click to change particle colors • Multi-touch supported</div>
-    <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
+    
+    <div class="toolbar-right" id="toolbar">
+        <div class="toolbar-action">
+            <button class="toolbar-back-btn" id="backBtn" touch-action="manipulation">↩ Back to Menu</button>
+        </div>
+    </div>
 
     <script>
         var particleMusic = document.getElementById('particle-playground-music');
@@ -737,18 +787,46 @@
 
         animate();
         
-            document.addEventListener('DOMContentLoaded', function() {
-                var backBtn = document.querySelector('.back-button');
-                var originalOnclick = backBtn && backBtn.onclick;
-                if (backBtn) {
-                    backBtn.onclick = function() {
-                        var music = document.getElementById('particle-playground-music');
-                        if (music) { try { music.pause(); music.currentTime = 0; } catch(e) {} }
-                        if (originalOnclick) originalOnclick.call(this);
-                        else window.location.href='../index.html';
-                    };
-                }
+        // Toolbar back button with multi-touch support
+        var backBtn = document.getElementById('backBtn');
+        var toolbar = document.getElementById('toolbar');
+        
+        if (backBtn && toolbar) {
+            // Prevent touch events on toolbar from affecting canvas
+            toolbar.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+            }, { passive: false });
+            
+            toolbar.addEventListener('touchmove', function(e) {
+                e.stopPropagation();
+            }, { passive: false });
+            
+            toolbar.addEventListener('touchend', function(e) {
+                e.stopPropagation();
+            }, { passive: false });
+            
+            // Back button click handler
+            backBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    var music = document.getElementById('particle-playground-music');
+                    if (music) { try { music.pause(); music.currentTime = 0; } catch(e) {} }
+                } catch(err) {}
+                window.location.href = '../index.html';
             });
+            
+            // Back button touch handler for mobile
+            backBtn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    var music = document.getElementById('particle-playground-music');
+                    if (music) { try { music.pause(); music.currentTime = 0; } catch(e) {} }
+                } catch(err) {}
+                window.location.href = '../index.html';
+            }, { passive: false });
+        }
     </script>
     <script src="../js/audio-manager.js"></script>
 </body>

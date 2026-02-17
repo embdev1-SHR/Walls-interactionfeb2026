@@ -105,6 +105,25 @@ body{-webkit-user-select:none;user-select:none;touch-action:none;background:#1a1
 }
 .btn-back:hover{background:rgba(0,0,0,.7);transform:scale(1.05)}
 
+.toolbar{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:12px;
+  z-index:600;pointer-events:auto;
+}
+.toolbar-btn{
+  padding:12px 18px;font-size:14px;font-weight:700;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(10px);
+  border:2px solid rgba(255,255,255,.18);
+  color:white;border-radius:30px;cursor:pointer;
+  transition:all .3s;min-width:120px;text-align:center;
+}
+.toolbar-btn:hover{
+  background:rgba(0,0,0,.7);transform:scale(1.08);
+}
+.toolbar-btn:active{
+  transform:scale(0.95);
+}
+
 .progress-wrap{
   position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
   width:clamp(180px,30vw,320px);z-index:600;text-align:center;
@@ -175,6 +194,10 @@ body{-webkit-user-select:none;user-select:none;touch-action:none;background:#1a1
     <div class="progress-text" id="progressText">0 / 5 items placed</div>
   </div>
   <button class="btn-back" id="backBtn">Menu</button>
+  <div class="toolbar">
+    <button class="toolbar-btn" id="reshuffleBtn">🔀 Reshuffle</button>
+    <button class="toolbar-btn" id="backToolbarBtn">← Back</button>
+  </div>
 </div>
 
 <div class="overlay" id="winOverlay">
@@ -1117,6 +1140,37 @@ function randomFloorPos() {
   };
 }
 
+function reshuffleItems() {
+  if (gameOver) return;
+  
+  // Clear highlights and active drags
+  clearHighlights();
+  activeDrags.clear();
+  
+  // Reset all items to random positions
+  var usedStartPositions = [];
+  itemEls.forEach(function(el) {
+    if (el.dataset.placed === 'true') return;
+    
+    var pos, tries = 0;
+    do {
+      pos = randomFloorPos();
+      tries++;
+    } while (tries < 100 && usedStartPositions.some(function(p) { return Math.hypot(p.x - pos.x, p.y - pos.y) < 0.12; }));
+    usedStartPositions.push(pos);
+    
+    var rot = (Math.random() - 0.5) * 35;
+    var px = pos.x * W - 36;
+    var py = pos.y * H - 36;
+    el.style.left = px + 'px';
+    el.style.top = py + 'px';
+    el.style.transform = 'rotate(' + rot + 'deg)';
+    el.dataset.homeX = px;
+    el.dataset.homeY = py;
+    el.dataset.homeRot = rot;
+  });
+}
+
 function initGame() {
   document.getElementById('roomTitle').textContent = config.name;
   document.getElementById('scoreVal').textContent = '0/' + totalItems;
@@ -1384,6 +1438,21 @@ document.getElementById('playAgainBtn').addEventListener('click', function(e) { 
 document.getElementById('playAgainBtn').addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); navReload(); });
 document.getElementById('menuBtn').addEventListener('click', function(e) { if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) navTo('../index.html'); });
 document.getElementById('menuBtn').addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); navTo('../index.html'); });
+
+// Toolbar button handlers
+document.getElementById('reshuffleBtn').addEventListener('click', function(e) {
+  if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) reshuffleItems();
+});
+document.getElementById('reshuffleBtn').addEventListener('touchend', function(e) {
+  e.preventDefault(); e.stopPropagation(); reshuffleItems();
+});
+
+document.getElementById('backToolbarBtn').addEventListener('click', function(e) {
+  if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) navTo('../index.html');
+});
+document.getElementById('backToolbarBtn').addEventListener('touchend', function(e) {
+  e.preventDefault(); e.stopPropagation(); navTo('../index.html');
+});
 
 resize();
 initGame();

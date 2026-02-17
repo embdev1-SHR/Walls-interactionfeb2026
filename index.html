@@ -238,6 +238,14 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
 #floatingShapes img.twemoji{height:1em;width:1em;vertical-align:middle}
 .card-stagger{opacity:0;transform:translateY(30px) scale(.9);transition:opacity .4s ease,transform .4s ease}
 .card-stagger.show{opacity:1;transform:translateY(0) scale(1)}
+
+/* ═══════════════════════════════
+   ANIMATED FLOATING BUBBLES
+   ═══════════════════════════════ */
+#bubble-background{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.ball{position:absolute;border-radius:100%;cursor:pointer;transition:transform .2s ease,opacity .2s ease;box-shadow:inset -2px -2px 4px rgba(0,0,0,0.3), -4px 8px 16px rgba(0,0,0,0.25), -2px 4px 8px rgba(0,0,0,0.15)}
+.ball:hover{transform:scale(1.1);opacity:0.9;pointer-events:auto;box-shadow:inset -2px -2px 4px rgba(0,0,0,0.3), -6px 12px 20px rgba(0,0,0,0.35), -3px 6px 12px rgba(0,0,0,0.2)}
+.ball:active{transform:scale(0.95);box-shadow:inset -1px -1px 2px rgba(0,0,0,0.2), -2px 4px 8px rgba(0,0,0,0.2), -1px 2px 4px rgba(0,0,0,0.1)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
@@ -251,6 +259,7 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
 </div>
 
 <div id="main-menu">
+  <div id="bubble-background"></div>
   <canvas id="menu-canvas"></canvas>
   <canvas id="bubble-canvas"></canvas>
   <audio id="menu-audio" preload="auto" loop>
@@ -475,11 +484,16 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
       b.wobble += b.ws;
       b.x += Math.sin(b.wobble) * 0.5;
       if (b.y < -50) return false;
+      bx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      bx.shadowBlur = 12;
+      bx.shadowOffsetX = -3;
+      bx.shadowOffsetY = 6;
       bx.beginPath();
       bx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
       bx.globalAlpha = b.alpha;
       bx.fillStyle = b.color;
       bx.fill();
+      bx.shadowColor = 'transparent';
       bx.beginPath();
       bx.arc(b.x - b.r * .25, b.y - b.r * .25, b.r * .25, 0, Math.PI * 2);
       bx.globalAlpha = 0.35;
@@ -632,6 +646,7 @@ window.addEventListener('load', function() {
     }
 
     if (window._startBubbles) window._startBubbles();
+    if (window._startFloatingBalls) window._startFloatingBalls();
     // Render 3D Twemoji for all emoji in the menu
     if (window.twemoji) {
       twemoji.parse(document.getElementById('main-menu'), {
@@ -657,6 +672,135 @@ document.addEventListener('touchstart', function(event) {
     ring.addEventListener('animationend', function() { this.remove(); });
   }
 }, { passive: true });
+
+/* ═══════════════════════════════
+   FLOATING BALLS ANIMATION SYSTEM
+   ═══════════════════════════════ */
+window._startFloatingBalls = (function() {
+  var colors = ['#3CC157', '#2AA7FF', '#1B1B1B', '#FCBC0F', '#F85F36', '#FF6B9D', '#C44569', '#FFB3BA', '#BAE1FF', '#BAFFC9', '#FFDEBA'];
+  var numBalls = 50;
+  var container = document.getElementById('bubble-background');
+
+  return function() {
+    if (!container) return;
+    
+    var animationFrames = '';
+    for (var i = 0; i < numBalls; i++) {
+      var ball = document.createElement('div');
+      ball.classList.add('ball');
+      ball.style.background = colors[Math.floor(Math.random() * colors.length)];
+      ball.style.left = Math.floor(Math.random() * 100) + 'vw';
+      ball.style.top = Math.floor(Math.random() * 100) + 'vh';
+      ball.style.opacity = (0.4 + Math.random() * 0.5).toString();
+      var scale = Math.random();
+      ball.style.transform = 'scale(' + scale + ')';
+      var size = (0.5 + Math.random() * 1.2) + 'em';
+      ball.style.width = size;
+      ball.style.height = size;
+      ball.style.zIndex = 1;
+      ball.style.pointerEvents = 'auto';
+      
+      container.appendChild(ball);
+      
+      (function(el, idx) {
+        var duration = (Math.random() + 1) * 2000 + Math.random() * 3000;
+        var delay = Math.random() * 2000;
+        
+        var xDir = idx % 2 === 0 ? -1 : 1;
+        var xDistance = (3 + Math.random() * 8) * xDir;
+        var yDistance = 8 + Math.random() * 12;
+        
+        var keyframes = '@keyframes float' + idx + '{0%,100%{transform:translate(0,0) scale(' + scale + ')}33%{transform:translate(' + xDistance + 'rem, ' + yDistance + 'rem) scale(' + (scale * 1.05) + ')}66%{transform:translate(' + (xDistance * 0.5) + 'rem, ' + (yDistance * 0.5) + 'rem) scale(' + scale + ')}}';
+        
+        var style = document.createElement('style');
+        style.textContent = keyframes;
+        document.head.appendChild(style);
+        
+        el.style.animation = 'float' + idx + ' ' + (duration / 1000) + 's ease-in-out infinite';
+        el.style.animationDelay = (delay / 1000) + 's';
+        
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          popBall(el, el.style.background);
+        });
+        
+        el.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          popBall(el, el.style.background);
+        });
+      })(ball, i);
+    }
+  };
+  
+  function popBall(el, color) {
+    el.style.pointerEvents = 'none';
+    el.style.animation = 'none';
+    
+    var rect = el.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    
+    for (var p = 0; p < 12; p++) {
+      var particle = document.createElement('div');
+      particle.style.cssText = 'position:fixed;width:4px;height:4px;background:' + color + ';border-radius:50%;pointer-events:none;z-index:999;box-shadow:0 0 6px ' + color;
+      particle.style.left = cx + 'px';
+      particle.style.top = cy + 'px';
+      document.body.appendChild(particle);
+      
+      var angle = (p / 12) * Math.PI * 2;
+      var speed = 3 + Math.random() * 4;
+      var vx = Math.cos(angle) * speed;
+      var vy = Math.sin(angle) * speed;
+      var life = 0;
+      var lifeMax = 400 + Math.random() * 200;
+      var px = cx;
+      var py = cy;
+      
+      var interval = setInterval(function() {
+        life += 16;
+        px += vx;
+        py += vy;
+        vy += 0.2;
+        var alpha = 1 - (life / lifeMax);
+        particle.style.left = px + 'px';
+        particle.style.top = py + 'px';
+        particle.style.opacity = alpha.toString();
+        
+        if (life >= lifeMax) {
+          clearInterval(interval);
+          particle.remove();
+        }
+      }, 16);
+    }
+    
+    try {
+      var ac = new (window.AudioContext || window.webkitAudioContext)();
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g);
+      g.connect(ac.destination);
+      o.frequency.value = 600 + Math.random() * 400;
+      o.type = 'sine';
+      g.gain.setValueAtTime(0.15, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.1);
+      o.start();
+      o.stop(ac.currentTime + 0.1);
+    } catch(e){}
+    
+    var texts = ['POP! 🎉', 'BOOM! 💥', 'YAY! 🎊', 'WOW! ✨', 'ZAP! ⚡'];
+    var popEl = document.createElement('div');
+    popEl.className = 'pop-text';
+    popEl.textContent = texts[Math.floor(Math.random() * texts.length)];
+    popEl.style.left = cx + 'px';
+    popEl.style.top = cy + 'px';
+    popEl.style.color = color;
+    document.body.appendChild(popEl);
+    popEl.addEventListener('animationend', function() { popEl.remove(); });
+    
+    el.style.opacity = '0';
+    setTimeout(function() { el.remove(); }, 300);
+  }
+})();
 </script>
 <script src="js/audio-manager.js"></script>
 

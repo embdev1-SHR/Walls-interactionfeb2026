@@ -114,6 +114,181 @@ canvas{display:block;position:fixed;inset:0;z-index:0}
   cursor:pointer;
 }
 
+.toolbar-right{
+  position:fixed;
+  right:15px;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index:100;
+  pointer-events:auto;
+}
+.toolbar-btn{
+  padding:10px 14px;
+  width:50px;
+  height:50px;
+  font-size:11px;
+  font-weight:700;
+  background:rgba(255,255,255,0.2);
+  color:white;
+  border:2px solid rgba(255,255,255,0.4);
+  border-radius:50%;
+  backdrop-filter:blur(4px);
+  text-align:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
+  cursor:pointer;
+  transition:all .2s;
+}
+.toolbar-btn:hover{
+  background:rgba(255,255,255,0.3);
+  transform:scale(1.08);
+}
+.toolbar-btn:active{
+  transform:scale(0.95);
+}
+
+.speed-slider-wrap{
+  position:fixed;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  z-index:100;
+  pointer-events:auto;
+  width:70px;
+  align-items:center;
+  background:linear-gradient(135deg, rgba(20,120,200,0.25), rgba(100,200,255,0.15));
+  border:2px solid rgba(255,255,255,0.2);
+  border-radius:16px;
+  padding:16px 12px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.15);
+}
+.speed-tool{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  width:100%;
+}
+.speed-icon{
+  font-size:24px;
+  color:rgba(255,255,255,0.8);
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.speed-slider{
+  width:200px;
+  height:8px;
+  border-radius:4px;
+  background:linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.2));
+  outline:none;
+  -webkit-appearance:none;
+  appearance:none;
+  writing-mode:vertical-lr;
+  direction:ltr;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,0.3);
+}
+.speed-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:linear-gradient(135deg, rgba(255,200,100,1), rgba(255,150,0,1));
+  cursor:pointer;
+  box-shadow:0 0 12px rgba(255,150,0,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition:all .2s;
+  border:2px solid rgba(255,255,255,0.5);
+}
+.speed-slider::-webkit-slider-thumb:hover{
+  background:linear-gradient(135deg, rgba(255,220,120,1), rgba(255,170,20,1));
+  transform:scale(1.2);
+  box-shadow:0 0 18px rgba(255,150,0,0.9), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.speed-slider::-moz-range-thumb{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:linear-gradient(135deg, rgba(255,200,100,1), rgba(255,150,0,1));
+  cursor:pointer;
+  border:2px solid rgba(255,255,255,0.5);
+  box-shadow:0 0 12px rgba(255,150,0,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition:all .2s;
+}
+.speed-slider::-moz-range-thumb:hover{
+  background:linear-gradient(135deg, rgba(255,220,120,1), rgba(255,170,20,1));
+  transform:scale(1.2);
+  box-shadow:0 0 18px rgba(255,150,0,0.9), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.speed-label{
+  color:rgba(255,255,255,0.9);
+  font-size:13px;
+  font-weight:800;
+  text-align:center;
+  min-width:50px;
+  background:rgba(0,0,0,0.2);
+  padding:6px 8px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.15);
+  letter-spacing:0.5px;
+}
+.toolbar-divider{
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  margin:8px 0;
+}
+.toolbar-action{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.toolbar-btn{
+  padding:10px 12px;
+  width:48px;
+  height:48px;
+  font-size:20px;
+  font-weight:700;
+  background:linear-gradient(135deg, rgba(220,100,100,0.3), rgba(200,50,50,0.2));
+  color:white;
+  border:2px solid rgba(255,255,255,0.25);
+  border-radius:10px;
+  backdrop-filter:blur(4px);
+  text-align:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1);
+  cursor:pointer;
+  transition:all .2s;
+}
+.toolbar-btn:hover{
+  background:linear-gradient(135deg, rgba(240,120,120,0.4), rgba(220,70,70,0.3));
+  transform:scale(1.1);
+  box-shadow:0 6px 16px rgba(200,50,50,0.4), inset 0 1px 1px rgba(255,255,255,0.15);
+  border-color:rgba(255,255,255,0.35);
+}
+.toolbar-btn:active{
+  transform:scale(0.95);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,0.3);
+}
+.tool-label{
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.6);
+  letter-spacing:0.5px;
+}
+
 .tap-ring{
   position:fixed;pointer-events:none;z-index:150;
   border:4px solid #fff;border-radius:50%;
@@ -172,6 +347,19 @@ canvas{display:block;position:fixed;inset:0;z-index:0}
 
 <div class="side-bar">
   <button class="btn-back" id="backBtn">EXIT</button>
+</div>
+
+<div class="speed-slider-wrap">
+  <div class="speed-tool">
+    <div class="speed-icon">⚡</div>
+    <div class="speed-label" id="speedLabel">1.0x</div>
+    <input type="range" id="speedSlider" class="speed-slider" min="0.5" max="3" step="0.1" value="1" title="Ball Speed">
+  </div>
+  <div class="toolbar-divider"></div>
+  <div class="toolbar-action">
+    <button class="toolbar-btn" id="backToolbarBtn" title="Back to Menu">← </button>
+    <div class="tool-label">Exit</div>
+  </div>
 </div>
 
 <script>
@@ -268,6 +456,7 @@ var gameActive = false, balls = [], particles = [];
 var difficulty = 1, spawnInterval = 1600;
 var lastSpawn = 0, clockTimer = null;
 var goalY, goalH;
+var speedMultiplier = 1; // Speed control multiplier
 
 // Pre-calculate visuals
 var grassPattern;
@@ -343,7 +532,7 @@ function Ball() {
   // SLOWED DOWN SPEED
   // Was: 2 + diff*0.4
   // Now: 1.2 + diff*0.2 (Much slower)
-  var speed = 1.2 + difficulty * 0.2 + Math.random() * 0.5;
+  var speed = (1.2 + difficulty * 0.2 + Math.random() * 0.5) * speedMultiplier;
   
   this.vx = (dx / dist) * speed;
   this.vy = (dy / dist) * speed;
@@ -742,6 +931,11 @@ function restartGame() {
   }, 1000);
 }
 
+function updateSpeedMultiplier(value) {
+  speedMultiplier = parseFloat(value);
+  document.getElementById('speedLabel').textContent = speedMultiplier.toFixed(1) + 'x';
+}
+
 cvs.addEventListener('pointerdown', function(e) {
   e.preventDefault();
   handleTap(e.clientX, e.clientY);
@@ -761,6 +955,18 @@ addTouchBtn('startBtn', startGame);
 addTouchBtn('restartBtn', restartGame);
 addTouchBtn('goMenuBtn', function() { location.href = '../index.html'; });
 addTouchBtn('backBtn', function() { location.href = '../index.html'; });
+addTouchBtn('backToolbarBtn', function() { location.href = '../index.html'; });
+
+// Speed slider
+var speedSlider = document.getElementById('speedSlider');
+if (speedSlider) {
+  speedSlider.addEventListener('input', function(e) {
+    updateSpeedMultiplier(e.target.value);
+  });
+  speedSlider.addEventListener('change', function(e) {
+    updateSpeedMultiplier(e.target.value);
+  });
+}
 
 // Start
 gameLoop();

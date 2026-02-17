@@ -43,7 +43,7 @@
       display: grid;
       grid-template-columns: repeat(2, 64px);
       gap: 12px;
-      padding: 20px 16px;
+      padding: 24px 16px;
       border-radius: 28px;
       background: rgba(10, 15, 30, 0.75);
       backdrop-filter: blur(20px) saturate(200%);
@@ -139,34 +139,37 @@
       border-bottom: 1.5px solid rgba(255,255,255,0.12);
     }
 
-    /* Back button */
-    .back-button {
-      position: fixed;
-      left: 24px;
-      bottom: 24px;
+    /* Back button placed inside toolbar */
+    .toolbar-grid .back-button {
+      grid-column: span 2;
+      width: auto;
       background: linear-gradient(145deg,#ef4444,#f97316);
       color: #fff;
       border: none;
-      padding: 12px 24px;
-      border-radius: 50px;
+      padding: 12px 20px;
+      border-radius: 28px;
       cursor: pointer;
-      font-size: 15px;
+      font-size: 14px;
       z-index: 1200;
       transition: transform .16s ease, box-shadow .2s ease;
-      box-shadow: 0 14px 24px rgba(239,68,68,0.25);
+      box-shadow: 0 12px 22px rgba(239,68,68,0.22);
       font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.2);
-      backdrop-filter: blur(8px);
-      display: flex;
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(6px);
+      display: inline-flex;
       align-items: center;
       gap: 8px;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
+      justify-self: start;
+      margin-top: 6px;
     }
-    .back-button:hover{ transform: translateY(-4px); background: linear-gradient(145deg,#dc2626,#ea580c); }
+    .toolbar-grid .back-button:hover{ transform: translateY(-4px); background: linear-gradient(145deg,#dc2626,#ea580c); }
 
     canvas {
       background: #fff;
     }
+
+    
 
     /* clear button spans both columns */
     button[data-brush="clear-canvas"] {
@@ -183,7 +186,7 @@
     }
     button[data-brush="clear-canvas"] .label {
       right: auto;
-      left: -130px;
+      left: -140px;
     }
   </style>
 </head>
@@ -254,10 +257,16 @@
     </svg>
     <span class="label" style="right: auto; left: -140px;">Clear Canvas</span>
   </button>
+
+  <a class="back-button" title="Back to home" aria-label="Back to home" href="index.html">← Back</a>
+
+  <!-- keep audio element inside toolbar (hidden) -->
+  <audio id="bg-audio" preload="auto" autoplay loop muted style="display:none">
+    <source src="./assets/Audio/solarsystem.mp3" type="audio/mpeg">
+  </audio>
+
 </div>
 
-<!-- Back button -->
-<button class="back-button" onclick="window.location.href='index.html'">← Back</button>
 
 <canvas id="canvas"></canvas>
 
@@ -594,6 +603,58 @@
     }
   }
 </style>
+<script>
+  (function(){
+    const bgAudio = document.getElementById('bg-audio');
+    if (!bgAudio) return;
+    bgAudio.volume = 0;
+    bgAudio.muted = false;
+
+    let fadeInTimer = null;
+    let fadeOutTimer = null;
+    let audioPlaying = false;
+    let audioMuted = false;
+
+    function audioFadeIn() {
+      clearInterval(fadeOutTimer);
+      fadeInTimer = setInterval(() => {
+        if (bgAudio.volume < 0.5) {
+          bgAudio.volume = Math.min(bgAudio.volume + 0.02, 0.5);
+        } else {
+          clearInterval(fadeInTimer);
+        }
+      }, 40);
+    }
+
+    function audioFadeOut(cb) {
+      clearInterval(fadeInTimer);
+      fadeOutTimer = setInterval(() => {
+        if (bgAudio.volume > 0.02) {
+          bgAudio.volume = Math.max(bgAudio.volume - 0.02, 0);
+        } else {
+          bgAudio.volume = 0;
+          bgAudio.pause();
+          clearInterval(fadeOutTimer);
+          audioPlaying = false;
+          if (cb) cb();
+        }
+      }, 40);
+    }
+
+    function startAudio() {
+      if (audioPlaying) return;
+      bgAudio.volume = 0;
+      bgAudio.play().then(() => {
+        audioPlaying = true;
+        audioFadeIn();
+      }).catch(err => console.log('Audio play failed:', err));
+    }
+
+    window.addEventListener('load', () => {
+      startAudio();
+    });
+  })();
+</script>
 <script src="js/audio-manager.js"></script>
 </body>
 </html>
