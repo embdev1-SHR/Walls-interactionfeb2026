@@ -699,27 +699,7 @@ function continueSequence(){
     if(window._postCutAudio)window._postCutAudio();
 }
 
-// ================================================================
-//  AUDIO — place your music file URL below
-// ================================================================
-function initAudio(){
-    const MUSIC_URL = "../assets/Audio/intro.mp3";   // ← paste your audio file URL here
 
-    if(!MUSIC_URL) return;
-
-    const audio = new Audio(MUSIC_URL);
-    audio.loop   = true;
-    audio.volume = 0;
-
-    audio.play().then(()=>{
-        const fi = setInterval(()=>{
-            if(audio.volume < 0.6) audio.volume = Math.min(audio.volume + 0.01, 0.6);
-            else clearInterval(fi);
-        }, 100);
-    }).catch(()=>{});
-
-    window._postCutAudio = ()=>{};
-}
 
 let audioStarted = false;
 function startAudioOnce(){
