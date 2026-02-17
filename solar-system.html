@@ -111,9 +111,7 @@
             transition: 0.3s;
             z-index: 100;
         }
-        #planet-menu-toggle span:first-child {
-            font-size: 1.4rem;
-        }
+        #planet-menu-toggle span:first-child { font-size: 1.4rem; }
         #planet-menu-toggle span:last-child {
             font-size: 0.75rem;
             font-weight: 700;
@@ -140,11 +138,7 @@
             transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 99;
         }
-
-        #planet-menu.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        #planet-menu.open { opacity: 1; pointer-events: auto; }
 
         .planet-item {
             display: flex;
@@ -159,7 +153,6 @@
         }
         .planet-item:hover { background: rgba(255,255,255,0.15); color: white; transform: translateX(5px); }
         .planet-item.active { background: rgba(111, 177, 252, 0.25); color: #6fb1fc; border: 1px solid rgba(111, 177, 252, 0.4); }
-
         .planet-icon { width: 24px; height: 24px; border-radius: 50%; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
 
         /* --- Back Button --- */
@@ -183,7 +176,7 @@
             align-items: center;
             justify-content: center;
         }
-        #back-btn:hover { 
+        #back-btn:hover {
             background: linear-gradient(135deg, #667eea, #764ba2);
             border-color: #6fb1fc;
             transform: translateY(-50%) scale(1.1);
@@ -201,7 +194,6 @@
             gap: 12px;
             z-index: 100;
         }
-
         .audio-btn {
             width: 48px;
             height: 48px;
@@ -217,25 +209,13 @@
             align-items: center;
             justify-content: center;
         }
-
         .audio-btn:hover {
             background: rgba(102, 126, 234, 0.6);
             border-color: #6fb1fc;
             transform: scale(1.08);
         }
-
-        .audio-btn:active {
-            transform: scale(0.92);
-        }
-
-        #volume-slider {
-            position: fixed;
-            right: 20px;
-            bottom: 90px;
-            width: 200px;
-            z-index: 100;
-            cursor: pointer;
-        }
+        .audio-btn:active { transform: scale(0.92); }
+        .audio-btn.muted { opacity: 0.45; }
 
         #loading {
             position: absolute; top: 50%; left: 50%;
@@ -245,7 +225,7 @@
             border: 1px solid #6fb1fc;
             z-index: 200;
         }
-        
+
         #title {
             position: absolute; top: 20px; left: 20px;
             background: rgba(0,0,0,0.5); padding: 12px 25px;
@@ -258,6 +238,11 @@
 
     <div id="canvas-container"></div>
     <div class="loading" id="loading">Ignition Sequence Start...</div>
+
+    <!-- ── Audio: preloaded in HTML, same pattern as index.html ── -->
+    <audio id="bg-audio" preload="auto" loop>
+        <source src="./assets/Audio/solar.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="title">
         <h1 style="font-size: 1.2rem; color: #fff; text-shadow: 0 0 10px rgba(111,177,252,0.5);">🌌 Solar System Explorer</h1>
@@ -289,8 +274,8 @@
     <button id="back-btn" title="Back to Menu">← Back</button>
 
     <div id="audio-controls">
-        <button class="audio-btn" id="play-audio-btn" title="Play Audio">♫</button>
-        <button class="audio-btn" id="mute-audio-btn" title="Mute Audio">🔊</button>
+        <button class="audio-btn" id="play-pause-btn" title="Play / Pause">▶</button>
+        <button class="audio-btn" id="mute-btn" title="Mute / Unmute">🔊</button>
     </div>
 
     <div id="controls">
@@ -311,58 +296,137 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        // --- Configuration ---
+        // ================================================================
+        //  AUDIO — direct element approach, same as index.html
+        // ================================================================
+        const bgAudio = document.getElementById('bg-audio');
+        bgAudio.volume = 0;
+
+        let fadeInTimer  = null;
+        let fadeOutTimer = null;
+        let audioPlaying = false;
+        let audioMuted   = false;
+
+        function audioFadeIn() {
+            clearInterval(fadeOutTimer);
+            fadeInTimer = setInterval(() => {
+                if (bgAudio.volume < 0.5) {
+                    bgAudio.volume = Math.min(bgAudio.volume + 0.02, 0.5);
+                } else {
+                    clearInterval(fadeInTimer);
+                }
+            }, 40);
+        }
+
+        function audioFadeOut(cb) {
+            clearInterval(fadeInTimer);
+            fadeOutTimer = setInterval(() => {
+                if (bgAudio.volume > 0.02) {
+                    bgAudio.volume = Math.max(bgAudio.volume - 0.02, 0);
+                } else {
+                    bgAudio.volume = 0;
+                    bgAudio.pause();
+                    clearInterval(fadeOutTimer);
+                    audioPlaying = false;
+                    if (cb) cb();
+                }
+            }, 40);
+        }
+
+        function startAudio() {
+            if (audioPlaying) return;
+            bgAudio.volume = 0;
+            bgAudio.play().then(() => {
+                audioPlaying = true;
+                audioFadeIn();
+                document.getElementById('play-pause-btn').textContent = '⏸';
+            }).catch(err => console.log('Audio play failed:', err));
+        }
+
+        // Start audio on first any user interaction with the page
+        let audioStarted = false;
+        function onFirstGesture() {
+            if (audioStarted) return;
+            audioStarted = true;
+            startAudio();
+        }
+        document.addEventListener('click',      onFirstGesture, { once: true });
+        document.addEventListener('touchstart', onFirstGesture, { once: true });
+
+        // Play / Pause button
+        document.getElementById('play-pause-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); // don't re-trigger onFirstGesture
+            if (audioPlaying) {
+                audioFadeOut();
+                document.getElementById('play-pause-btn').textContent = '▶';
+            } else {
+                startAudio();
+            }
+        });
+
+        // Mute / Unmute button
+        document.getElementById('mute-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            audioMuted = !audioMuted;
+            bgAudio.muted = audioMuted;
+            document.getElementById('mute-btn').textContent = audioMuted ? '🔇' : '🔊';
+            document.getElementById('mute-btn').classList.toggle('muted', audioMuted);
+        });
+
+        // ================================================================
+        //  PLANET DATA
+        // ================================================================
         const planetData = {
-            sun: { 
-                size: 12, distance: 0, speed: 0.002, 
+            sun: {
+                size: 12, distance: 0, speed: 0.002,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_sun.jpg',
                 name: "The Sun",
                 description: "The star at the center of our Solar System. Its gravity holds the system together.",
                 facts: ["Type: Yellow Dwarf", "Surface Temp: 5,500°C", "Mass: 99.86% of Solar System"],
                 color: 0xffaa00, glow: 0xff4400
             },
-            mercury: { 
-                size: 1.2, distance: 25, speed: 0.004, 
+            mercury: {
+                size: 1.2, distance: 25, speed: 0.004,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_mercury.jpg',
                 name: "Mercury",
                 description: "The smallest planet in our solar system and closest to the Sun.",
                 facts: ["Orbit: 88 days", "Day: 59 Earth days", "Temp: -180°C to 430°C"],
                 color: 0xaaaaaa
             },
-            venus: { 
-                size: 1.8, distance: 35, speed: 0.003, 
+            venus: {
+                size: 1.8, distance: 35, speed: 0.003,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_venus.jpg',
                 name: "Venus",
                 description: "Second planet from the Sun. It has a thick, toxic atmosphere that traps heat.",
                 facts: ["Orbit: 225 days", "Temp: 471°C", "Rotation: Retrograde (Backwards)"],
                 color: 0xeecfa1
             },
-            earth: { 
-                size: 2.2, distance: 48, speed: 0.002, 
+            earth: {
+                size: 2.2, distance: 48, speed: 0.002,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_earth_daymap.jpg',
                 name: "Earth",
                 description: "Our home planet. The only place we know of so far that's inhabited by living things.",
                 facts: ["Orbit: 365.25 days", "Moons: 1", "Surface: 71% Water"],
                 color: 0x2233ff
             },
-            mars: { 
-                size: 1.5, distance: 62, speed: 0.0018, 
+            mars: {
+                size: 1.5, distance: 62, speed: 0.0018,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_mars.jpg',
                 name: "Mars",
                 description: "The Red Planet. It's a dusty, cold, desert world with a very thin atmosphere.",
                 facts: ["Orbit: 687 days", "Moons: 2", "Gravity: 38% of Earth"],
                 color: 0xff4422
             },
-            jupiter: { 
-                size: 6.5, distance: 85, speed: 0.001, 
+            jupiter: {
+                size: 6.5, distance: 85, speed: 0.001,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_jupiter.jpg',
                 name: "Jupiter",
                 description: "A gas giant and the largest planet in our solar system.",
                 facts: ["Orbit: 12 years", "Moons: 79+", "Day: 10 hours"],
                 color: 0xd8ca9d
             },
-            saturn: { 
-                size: 5.5, distance: 110, speed: 0.0008, 
+            saturn: {
+                size: 5.5, distance: 110, speed: 0.0008,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_saturn.jpg',
                 ringUrl: 'https://www.solarsystemscope.com/textures/download/2k_saturn_ring_alpha.png',
                 name: "Saturn",
@@ -370,16 +434,16 @@
                 facts: ["Orbit: 29 years", "Moons: 82", "Type: Gas Giant"],
                 color: 0xf4d0a9, hasRings: true
             },
-            uranus: { 
-                size: 3.8, distance: 135, speed: 0.0006, 
+            uranus: {
+                size: 3.8, distance: 135, speed: 0.0006,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_uranus.jpg',
                 name: "Uranus",
                 description: "An ice giant that rotates at a nearly 90-degree angle from the plane of its orbit.",
                 facts: ["Orbit: 84 years", "Temp: -224°C", "Moons: 27"],
                 color: 0x77ddff
             },
-            neptune: { 
-                size: 3.6, distance: 155, speed: 0.0005, 
+            neptune: {
+                size: 3.6, distance: 155, speed: 0.0005,
                 textureUrl: '3dmodels/solarsystem/Textures/2k_neptune.jpg',
                 name: "Neptune",
                 description: "Dark, cold and whipped by supersonic winds. It is the last of the planets.",
@@ -388,9 +452,11 @@
             }
         };
 
-        // --- Init Scene ---
+        // ================================================================
+        //  SCENE SETUP
+        // ================================================================
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x020205); 
+        scene.background = new THREE.Color(0x020205);
         scene.fog = new THREE.FogExp2(0x020205, 0.001);
 
         const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
@@ -410,20 +476,15 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.maxDistance = 600;
-        
-        // --- AUTO ROTATE SETUP ---
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5; // Slow, cinematic rotation
+        controls.autoRotateSpeed = 0.5;
 
-        // --- LIGHTING ---
-        // Minimal ambient light to prevent whitewashing
-        const hemiLight = new THREE.HemisphereLight(0xaabbdd, 0x332244, 0.15); 
-        scene.add(hemiLight);
+        // ================================================================
+        //  LIGHTING
+        // ================================================================
+        scene.add(new THREE.HemisphereLight(0xaabbdd, 0x332244, 0.15));
+        scene.add(new THREE.AmbientLight(0x667788, 0.08));
 
-        const ambientLight = new THREE.AmbientLight(0x667788, 0.08); 
-        scene.add(ambientLight);
-
-        // Sun light with realistic intensity
         const sunLight = new THREE.PointLight(0xffffff, 1.5, 1200, 1);
         sunLight.position.set(0, 0, 0);
         sunLight.castShadow = true;
@@ -432,12 +493,6 @@
         sunLight.shadow.bias = -0.0005;
         scene.add(sunLight);
 
-        // Volumetric ambient light for galaxy atmosphere
-        const atmosphereLight = new THREE.Light();
-        atmosphereLight.intensity = 0.25;
-        scene.add(atmosphereLight);
-
-        // Add point lights for volumetric effect
         const spaceLight1 = new THREE.PointLight(0x4488ff, 0.6, 500);
         spaceLight1.position.set(200, 150, 200);
         scene.add(spaceLight1);
@@ -446,50 +501,41 @@
         spaceLight2.position.set(-250, -100, -150);
         scene.add(spaceLight2);
 
-        // --- STARS ---
+        // ================================================================
+        //  STARS
+        // ================================================================
         function createStars() {
             const geometry = new THREE.BufferGeometry();
             const count = 18000;
             const pos = new Float32Array(count * 3);
             const sizes = new Float32Array(count);
             const colors = new Float32Array(count * 3);
-
             const colorOptions = [
                 new THREE.Color(0xffffff),
-                new THREE.Color(0xaaccff), 
-                new THREE.Color(0xffccaa)  
+                new THREE.Color(0xaaccff),
+                new THREE.Color(0xffccaa)
             ];
-
-            for(let i=0; i<count; i++) {
-                pos[i*3] = (Math.random()-0.5) * 2500;
+            for (let i = 0; i < count; i++) {
+                pos[i*3]   = (Math.random()-0.5) * 2500;
                 pos[i*3+1] = (Math.random()-0.5) * 2500;
                 pos[i*3+2] = (Math.random()-0.5) * 2500;
-                sizes[i] = Math.random() * 2.0; 
-                
+                sizes[i] = Math.random() * 2.0;
                 const col = colorOptions[Math.floor(Math.random() * colorOptions.length)];
-                colors[i*3] = col.r;
-                colors[i*3+1] = col.g;
-                colors[i*3+2] = col.b;
+                colors[i*3] = col.r; colors[i*3+1] = col.g; colors[i*3+2] = col.b;
             }
-
             geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
+            geometry.setAttribute('size',     new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
             const material = new THREE.PointsMaterial({
-                size: 1, 
-                sizeAttenuation: true, 
-                vertexColors: true,
-                transparent: true, 
-                opacity: 0.9
+                size: 1, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.9
             });
-
-            const stars = new THREE.Points(geometry, material);
-            scene.add(stars);
+            scene.add(new THREE.Points(geometry, material));
         }
         createStars();
 
-        // --- Helpers ---
+        // ================================================================
+        //  HELPERS
+        // ================================================================
         function createOrbit(radius) {
             const geometry = new THREE.RingGeometry(radius - 0.2, radius + 0.2, 128);
             const material = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.15, transparent: true, side: THREE.DoubleSide });
@@ -499,19 +545,18 @@
         }
 
         function createSunGlow(size, color) {
-            const spriteMaterial = new THREE.SpriteMaterial({ 
-                map: new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/glow.png'), 
-                color: color, 
-                transparent: true, 
-                blending: THREE.AdditiveBlending,
-                opacity: 1.0
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/glow.png'),
+                color: color, transparent: true, blending: THREE.AdditiveBlending, opacity: 1.0
             });
             const sprite = new THREE.Sprite(spriteMaterial);
             sprite.scale.set(size * 4.5, size * 4.5, 1.0);
             return sprite;
         }
 
-        // --- Load Planets ---
+        // ================================================================
+        //  LOAD PLANETS
+        // ================================================================
         const planets = {};
         const planetMeshes = [];
         const loader = new THREE.TextureLoader();
@@ -521,8 +566,8 @@
         Object.entries(planetData).forEach(([key, data]) => {
             const group = new THREE.Group();
             group.userData = { key, ...data };
-            
-            if(data.distance > 0) createOrbit(data.distance);
+
+            if (data.distance > 0) createOrbit(data.distance);
 
             const angle = Math.random() * Math.PI * 2;
             group.userData.angle = angle;
@@ -531,36 +576,22 @@
             loader.load(data.textureUrl, (tex) => {
                 const geom = new THREE.SphereGeometry(data.size, 64, 64);
                 let mat;
-
                 if (key === 'sun') {
                     mat = new THREE.MeshBasicMaterial({ map: tex });
-                    const glow = createSunGlow(data.size, data.glow);
-                    group.add(glow);
+                    group.add(createSunGlow(data.size, data.glow));
                 } else {
-                    mat = new THREE.MeshStandardMaterial({ 
-                        map: tex, 
-                        roughness: 0.7,
-                        metalness: 0.05,
-                        toneMapped: true
-                    });
+                    mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, metalness: 0.05, toneMapped: true });
                 }
-
                 const mesh = new THREE.Mesh(geom, mat);
                 mesh.userData = { parentKey: key };
-                
-                if (key !== 'sun') {
-                    mesh.castShadow = true;
-                    mesh.receiveShadow = true;
-                }
-
+                if (key !== 'sun') { mesh.castShadow = true; mesh.receiveShadow = true; }
                 group.add(mesh);
                 planetMeshes.push(mesh);
 
                 if (key === 'earth') {
                     const atmoGeom = new THREE.SphereGeometry(data.size * 1.03, 64, 64);
                     const atmoMat = new THREE.MeshPhongMaterial({
-                        color: 0x00aaff, transparent: true, opacity: 0.25, side: THREE.BackSide,
-                        blending: THREE.AdditiveBlending
+                        color: 0x00aaff, transparent: true, opacity: 0.25, side: THREE.BackSide, blending: THREE.AdditiveBlending
                     });
                     group.add(new THREE.Mesh(atmoGeom, atmoMat));
                 }
@@ -568,9 +599,7 @@
                 if (data.hasRings) {
                     loader.load(data.ringUrl, (ringTex) => {
                         const ringGeom = new THREE.RingGeometry(data.size * 1.4, data.size * 2.4, 64);
-                        const ringMat = new THREE.MeshStandardMaterial({ 
-                            map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.85 
-                        });
+                        const ringMat = new THREE.MeshStandardMaterial({ map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
                         const rings = new THREE.Mesh(ringGeom, ringMat);
                         rings.rotation.x = -Math.PI / 2;
                         rings.receiveShadow = true;
@@ -581,10 +610,9 @@
                 scene.add(group);
                 planets[key] = group;
                 checkLoad();
-
             }, undefined, () => {
                 const geom = new THREE.SphereGeometry(data.size, 32, 32);
-                const mat = new THREE.MeshStandardMaterial({ color: data.color });
+                const mat  = new THREE.MeshStandardMaterial({ color: data.color });
                 const mesh = new THREE.Mesh(geom, mat);
                 mesh.userData = { parentKey: key };
                 group.add(mesh);
@@ -600,24 +628,23 @@
             if (loaded === total) document.getElementById('loading').style.display = 'none';
         }
 
-        // --- Camera Logic ---
+        // ================================================================
+        //  CAMERA / FOCUS
+        // ================================================================
         let focusTarget = null;
         let cameraOffset = new THREE.Vector3(0, 10, 20);
         let infoPanelWorldPos = new THREE.Vector3();
 
         function focusOnPlanet(key) {
-            // STOP auto rotate when focusing
             controls.autoRotate = false;
-            
             focusTarget = planets[key];
             const data = planetData[key];
-
             const dist = data.size * 5.5 + 15;
             cameraOffset.set(0, data.size * 2, dist);
 
             document.querySelectorAll('.planet-item').forEach(el => el.classList.remove('active'));
             document.querySelector(`.planet-item[data-planet="${key}"]`)?.classList.add('active');
-            
+
             const panel = document.getElementById('info-panel');
             panel.classList.remove('visible');
             setTimeout(() => {
@@ -632,12 +659,14 @@
             }, 300);
         }
 
-        // --- Interaction ---
+        // ================================================================
+        //  INTERACTION
+        // ================================================================
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
         window.addEventListener('mousemove', (event) => {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.x =  (event.clientX / window.innerWidth)  * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         });
 
@@ -646,18 +675,12 @@
 
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(planetMeshes, true);
-
             if (intersects.length > 0) {
                 for (let i = 0; i < intersects.length; i++) {
                     const obj = intersects[i].object;
                     let parentKey = obj.userData.parentKey;
-                    if (!parentKey && obj.parent) {
-                        parentKey = obj.parent.userData.key;
-                    }
-                    if (parentKey) {
-                        focusOnPlanet(parentKey);
-                        break;
-                    }
+                    if (!parentKey && obj.parent) parentKey = obj.parent.userData.key;
+                    if (parentKey) { focusOnPlanet(parentKey); break; }
                 }
             }
         });
@@ -677,8 +700,6 @@
         document.getElementById('reset-view').addEventListener('click', () => {
             focusTarget = null;
             infoPanelWorldPos.set(0, 0, 0);
-            
-            // RE-ENABLE auto rotate when resetting
             controls.autoRotate = true;
 
             const startPos = camera.position.clone();
@@ -698,27 +719,13 @@
             document.querySelectorAll('.planet-item').forEach(el => el.classList.remove('active'));
         });
 
+        // Back button — fade audio out then navigate
         document.getElementById('back-btn').addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-
-        // Audio control handlers
-        document.getElementById('play-audio-btn').addEventListener('click', () => {
-            if (window.audioManager) {
-                audioManager.resume();
-                document.getElementById('play-audio-btn').style.opacity = '0.5';
-            }
-        });
-
-        document.getElementById('mute-audio-btn').addEventListener('click', () => {
-            if (window.audioManager) {
-                audioManager.pause();
-                document.getElementById('play-audio-btn').style.opacity = '1';
-            }
+            audioFadeOut(() => { window.location.href = 'index.html'; });
         });
 
         document.getElementById('fullscreen-btn').addEventListener('click', () => {
-            if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
             else document.exitFullscreen();
         });
 
@@ -728,43 +735,43 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Update info panel position to follow planet in 3D space
+        // ================================================================
+        //  INFO PANEL POSITION
+        // ================================================================
         const screenPos = new THREE.Vector2();
         const updateInfoPanelPosition = () => {
             if (focusTarget) {
                 const vector = infoPanelWorldPos.project(camera);
-                screenPos.x = (vector.x * window.innerWidth / 2) + (window.innerWidth / 2);
+                screenPos.x = (vector.x * window.innerWidth  / 2) + (window.innerWidth  / 2);
                 screenPos.y = -(vector.y * window.innerHeight / 2) + (window.innerHeight / 2);
-                
+
                 const infoPanel = document.getElementById('info-panel');
                 if (infoPanel.classList.contains('visible')) {
-                    const panelWidth = Math.min(350, window.innerWidth * 0.9);
+                    const panelWidth  = Math.min(350, window.innerWidth * 0.9);
                     const panelHeight = 300;
                     let posX = screenPos.x - panelWidth / 2;
                     let posY = screenPos.y - panelHeight - 20;
-                    
-                    posX = Math.max(10, Math.min(window.innerWidth - panelWidth - 10, posX));
+                    posX = Math.max(10, Math.min(window.innerWidth  - panelWidth  - 10, posX));
                     posY = Math.max(10, Math.min(window.innerHeight - panelHeight - 10, posY));
-                    
-                    infoPanel.style.position = 'fixed';
-                    infoPanel.style.left = posX + 'px';
-                    infoPanel.style.top = posY + 'px';
+                    infoPanel.style.position  = 'fixed';
+                    infoPanel.style.left      = posX + 'px';
+                    infoPanel.style.top       = posY + 'px';
                     infoPanel.style.transform = 'none';
                 }
             }
         };
 
-        // --- Animation Loop ---
+        // ================================================================
+        //  ANIMATION LOOP
+        // ================================================================
         function animate() {
             requestAnimationFrame(animate);
-
             updateInfoPanelPosition();
 
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(planetMeshes, true);
             document.body.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
 
-            // Rotate space lights for dynamic volumetric effect
             spaceLight1.position.x = 200 * Math.cos(Date.now() * 0.0001);
             spaceLight1.position.z = 200 * Math.sin(Date.now() * 0.0001);
 
@@ -781,11 +788,8 @@
             if (focusTarget) {
                 const targetPos = focusTarget.position.clone();
                 const offset = cameraOffset.clone();
-                const camPos = targetPos.clone().add(offset);
-                camera.position.lerp(camPos, 0.05);
+                camera.position.lerp(targetPos.clone().add(offset), 0.05);
                 controls.target.lerp(targetPos, 0.05);
-                
-                // Move UI panel to the right side of planet
                 infoPanelWorldPos.copy(targetPos);
                 infoPanelWorldPos.y += focusTarget.userData.size * 2;
                 infoPanelWorldPos.x += 40;
@@ -797,6 +801,5 @@
 
         animate();
     </script>
-    <script src="js/audio-manager.js"></script>
 </body>
 </html>
