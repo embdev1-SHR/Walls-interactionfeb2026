@@ -625,12 +625,15 @@ function handleClick(e){
         ribbonCut=true; isHoveringRibbon=false;
         scissorsCursor.classList.remove("hovering");
 
-        // ── Play audio on the ribbon click (user gesture) ──
+        // ── Play audio on the ribbon click (user gesture) with fade-in ──
+        introAudio.loop   = true;
+        introAudio.volume = 0;
         introAudio.play().catch(function(err){
             console.log('Audio play failed:', err);
         });
+        audioFadeIn();
 
-        if(cutRibbon(hit.x,hit.y)) setTimeout(continueSequence, 2400);
+        if(cutRibbon(hit.x,hit.y)) setTimeout(continueSequence, 2000);
     }
 }
 document.addEventListener("click", handleClick);
@@ -658,15 +661,32 @@ function continueSequence(){
     document.body.classList.remove("interactive-mode");
     instructionText.classList.remove("show");
 
-    // Clear confetti, show Kerala map
-    setTimeout(()=>{
-        physicsObjects = physicsObjects.filter(obj => !(obj instanceof Confetti));
-        keralaContainer.classList.add("show");
-        document.querySelectorAll(".halo-ring").forEach(r=>r.classList.add("animate"));
-    }, 500);
-    setTimeout(()=>keralaContainer.classList.add("hide"), 4800);
+    // ── Fade confetti opacity to 0 over 2 seconds, then remove them ──
+    const confettiStart = performance.now();
+    const CONFETTI_FADE = 2000; // ms
+    function fadeConfetti(){
+        const elapsed = performance.now() - confettiStart;
+        const progress = Math.min(elapsed / CONFETTI_FADE, 1);
+        physicsObjects.forEach(obj => {
+            if(obj instanceof Confetti) obj.opacity = Math.max(0, (1 - progress) * obj.life);
+        });
+        if(progress < 1){
+            requestAnimationFrame(fadeConfetti);
+        } else {
+            // All confetti fully invisible — remove them
+            physicsObjects = physicsObjects.filter(obj => !(obj instanceof Confetti));
+            // ── Now start Kerala map ──
+            keralaContainer.classList.add("show");
+            document.querySelectorAll(".halo-ring").forEach(r=>r.classList.add("animate"));
+        }
+    }
+    requestAnimationFrame(fadeConfetti);
 
-    let t=5600;
+    // Kerala hides after 4.8s from when it appears (2s after continueSequence)
+    setTimeout(()=>keralaContainer.classList.add("hide"), 2000 + 4800);
+
+    // Cinematic texts start after Kerala is hidden
+    let t = 2000 + 5600;
     showText(document.getElementById("welcomeText"),t,2400,"anim-wipe"); t+=3400;
     showText(document.getElementById("realityText"),t,2600);             t+=3400;
     showText(document.getElementById("text1"),      t,2600);             t+=3400;
@@ -675,8 +695,39 @@ function continueSequence(){
     showText(document.getElementById("text4"),      t,2200);             t+=3000;
 
     setTimeout(()=>{ document.getElementById("logo").classList.add("reveal"); }, t);
-    t+=2200;
+    t += 2200;
     setTimeout(()=>startButton.classList.add("show"), t);
+}
+
+// ================================================================
+//  AUDIO FADE HELPERS
+// ================================================================
+let fadeInTimer  = null;
+let fadeOutTimer = null;
+
+function audioFadeIn(){
+    clearInterval(fadeOutTimer);
+    fadeInTimer = setInterval(()=>{
+        if(introAudio.volume < 0.6){
+            introAudio.volume = Math.min(introAudio.volume + 0.02, 0.6);
+        } else {
+            clearInterval(fadeInTimer);
+        }
+    }, 40); // steps every 40ms → reaches 0.6 in ~1.2s
+}
+
+function audioFadeOut(cb){
+    clearInterval(fadeInTimer);
+    fadeOutTimer = setInterval(()=>{
+        if(introAudio.volume > 0.02){
+            introAudio.volume = Math.max(introAudio.volume - 0.02, 0);
+        } else {
+            introAudio.volume = 0;
+            introAudio.pause();
+            clearInterval(fadeOutTimer);
+            if(cb) cb();
+        }
+    }, 40); // same rate → ~1.2s fade-out
 }
 
 // ================================================================
@@ -692,7 +743,9 @@ function startSequence(){
 }
 setTimeout(startSequence, 400);
 
-startButton.addEventListener("click",()=>{ window.location.href="index.html"; });
+startButton.addEventListener("click",()=>{
+    audioFadeOut(()=>{ window.location.href="index.html"; });
+});
 
 window.addEventListener("resize",()=>{
     resizeCanvases();
