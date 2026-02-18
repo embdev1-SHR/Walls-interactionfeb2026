@@ -5,61 +5,110 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Forest Animals Showcase</title>
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-family:'Nunito',sans-serif;
   background:#071a10;color:white;
   -webkit-user-select:none;user-select:none;
 }
 
-.scene{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.forest-bg{
-  position:absolute;width:100%;height:70%;inset:0;
-  display:flex;align-items:flex-end;justify-content:center;
-}
-.forest-layer{
-  position:absolute;height:100%;bottom:0;
-  background-size:cover;background-position:center bottom;
-  transition:transform .05s ease-out;
-}
+/* ─── SCENE / PARALLAX ─── */
+.scene{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#071a10}
+.forest-bg{position:absolute;width:100%;height:100%;inset:0;display:flex;align-items:flex-end;justify-content:center}
+.forest-layer{position:absolute;height:100%;bottom:0;background-size:cover;background-position:center bottom;transition:transform .05s ease-out}
 .forest-layer.p1{background-image:url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/forest_1.svg');width:120%}
 .forest-layer.p2{background-image:url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/forest_2.svg');width:120%}
 .forest-layer.p3{background-image:url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/forest_3.svg');width:120%}
 .forest-layer.p4{background-image:url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/forest_4.svg');width:120%}
 .forest-layer.p5{background-image:url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/forest_5.svg');width:120%}
-.firefly{
-  position:absolute;width:4px;height:4px;border-radius:50%;
-  background:#ffd54f;box-shadow:0 0 8px 3px rgba(255,213,79,.5);
-  animation:fly var(--dur) ease-in-out infinite;
-}
-@keyframes fly{
-  0%{opacity:0;transform:translate(0,0)}
-  25%{opacity:1}50%{opacity:.3;transform:translate(var(--dx),var(--dy))}
-  75%{opacity:1}100%{opacity:0;transform:translate(0,0)}
-}
-.leaf{
-  position:absolute;font-size:16px;opacity:0;
-  animation:leafDrop var(--dur) linear infinite;
-}
-@keyframes leafDrop{
-  0%{transform:translate(0,-20px) rotate(0);opacity:0}
-  10%{opacity:.6}90%{opacity:.4}
-  100%{transform:translate(var(--dx),100vh) rotate(720deg);opacity:0}
-}
+.firefly{position:absolute;width:4px;height:4px;border-radius:50%;background:#ffd54f;box-shadow:0 0 8px 3px rgba(255,213,79,.5);animation:fly var(--dur) ease-in-out infinite}
+@keyframes fly{0%{opacity:0;transform:translate(0,0)}25%{opacity:1}50%{opacity:.3;transform:translate(var(--dx),var(--dy))}75%{opacity:1}100%{opacity:0;transform:translate(0,0)}}
+.leaf{position:absolute;font-size:16px;opacity:0;animation:leafDrop var(--dur) linear infinite}
+@keyframes leafDrop{0%{transform:translate(0,-20px) rotate(0);opacity:0}10%{opacity:.6}90%{opacity:.4}100%{transform:translate(var(--dx),100vh) rotate(720deg);opacity:0}}
 
+/* ─── APP SHELL ─── */
 .app{position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column}
 
+/* ─── HEADER ─── */
 .header{flex-shrink:0;text-align:center;padding:10px 20px 4px}
-.header h1{font-size:clamp(16px,2.4vw,24px);font-weight:800;color:#a5d6a7;text-shadow:0 3px 12px rgba(0,0,0,.6)}
+.header h1{font-family:'Playfair Display',serif;font-size:clamp(16px,2.4vw,24px);font-weight:900;color:#a5d6a7;text-shadow:0 3px 12px rgba(0,0,0,.6)}
 .header p{font-size:clamp(9px,1.1vw,12px);color:rgba(255,255,255,.4)}
 
-.scroll-area{
-  flex:1;min-height:0;position:relative;
-  display:flex;align-items:center;
-  padding:6px 0;
+/* ─── TOOLBAR (RIGHT SIDE) ─── */
+.toolbar{
+  position:fixed;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:20;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:flex-end;
 }
+.toolbar-left{display:none}
+.toolbar-center{display:none}
+.toolbar-right{display:flex;flex-direction:column;gap:8px}
+
+.tb-btn{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:8px 14px;
+  font-family:'Nunito',sans-serif;font-size:clamp(11px,1.1vw,14px);font-weight:700;
+  border-radius:50px;cursor:pointer;transition:all .25s;
+  border:2px solid;white-space:nowrap;
+  backdrop-filter:blur(12px);
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.tb-btn-back{
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.25);
+  color:rgba(255,255,255,.9);
+}
+.tb-btn-back:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.45)}
+
+.tb-btn-ml{
+  background:rgba(255,183,77,.12);
+  border-color:rgba(255,183,77,.4);
+  color:#ffcc80;
+}
+.tb-btn-ml:hover{background:rgba(255,183,77,.22);border-color:rgba(255,183,77,.65)}
+.tb-btn-ml.active{background:rgba(255,183,77,.35);border-color:rgba(255,183,77,.85);color:#ffe0b2}
+
+.tb-btn-audio{
+  background:rgba(129,199,132,.1);
+  border-color:rgba(129,199,132,.3);
+  color:#a5d6a7;
+  padding:8px 12px;
+  min-width:48px;
+}
+.tb-btn-audio:hover{background:rgba(129,199,132,.2);border-color:rgba(129,199,132,.55)}
+
+/* ─── REGION FILTER TABS ─── */
+.filter-bar{
+  flex-shrink:0;
+  display:flex;align-items:center;gap:6px;
+  padding:5px 14px;
+  overflow-x:auto;scrollbar-width:none;
+  background:rgba(3,18,8,.5);
+  border-bottom:1px solid rgba(129,199,132,.1);
+}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-tab{
+  flex-shrink:0;
+  padding:3px 12px;font-size:clamp(9px,.85vw,11px);font-weight:700;
+  border-radius:50px;cursor:pointer;transition:all .2s;
+  border:1.5px solid rgba(129,199,132,.2);
+  color:rgba(255,255,255,.5);background:transparent;
+}
+.filter-tab:hover{border-color:rgba(129,199,132,.4);color:rgba(255,255,255,.8)}
+.filter-tab.active{background:rgba(129,199,132,.18);border-color:rgba(129,199,132,.6);color:#a5d6a7}
+.filter-label{font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;flex-shrink:0;padding-right:4px}
+
+/* ─── SCROLL AREA ─── */
+.scroll-area{flex:1;min-height:0;position:relative;display:flex;align-items:center;padding:6px 0}
 .scroll-track{
   display:flex;gap:12px;justify-content:center;
   overflow-x:auto;overflow-y:hidden;
@@ -74,148 +123,111 @@ body{
 
 .arrow-btn{
   position:absolute;top:50%;transform:translateY(-50%);
-  width:clamp(30px,3vw,38px);height:clamp(30px,3vw,38px);
-  border-radius:50%;
+  width:clamp(30px,3vw,38px);height:clamp(30px,3vw,38px);border-radius:50%;
   background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
-  border:2px solid rgba(129,199,132,.35);
-  color:white;font-size:clamp(12px,1.4vw,16px);
-  cursor:pointer;z-index:10;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .3s;
+  border:2px solid rgba(129,199,132,.35);color:white;font-size:clamp(12px,1.4vw,16px);
+  cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;transition:all .3s;
 }
 .arrow-btn:hover{background:rgba(129,199,132,.2);border-color:rgba(129,199,132,.6)}
 .arrow-btn:active{transform:translateY(-50%) scale(.92)}
-.arrow-left{left:4px}
-.arrow-right{right:4px}
+.arrow-left{left:4px}.arrow-right{right:4px}
 
+/* ─── CARD ─── */
 .card{
   flex-shrink:0;
-  width:clamp(200px,20vw,260px);
-  max-height:clamp(340px,48vh,480px);
+  width:clamp(200px,20vw,250px);
+  max-height:clamp(350px,50vh,490px);
   scroll-snap-align:center;
   background:rgba(255,255,255,.04);
   border:1px solid rgba(129,199,132,.2);
-  border-radius:14px;
+  border-radius:16px;
   display:flex;flex-direction:column;
   overflow:hidden;
   transition:border-color .3s,box-shadow .3s;
+  position:relative;
 }
-.card:hover{
-  border-color:rgba(129,199,132,.45);
-  box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 16px rgba(129,199,132,.08);
+.card:hover{border-color:rgba(129,199,132,.45);box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 16px rgba(129,199,132,.08)}
+.card.indian-native .card-region-badge{display:flex}
+.card.hidden{display:none}
+
+/* Region badge */
+.card-region-badge{
+  display:none;
+  position:absolute;top:8px;left:8px;z-index:5;
+  align-items:center;gap:4px;
+  background:rgba(255,152,0,.15);border:1px solid rgba(255,152,0,.45);
+  border-radius:20px;padding:2px 8px;
+  font-size:9px;font-weight:700;color:#ffcc80;
 }
 
+/* Domestic badge */
+.card.domestic .card-region-badge{display:flex;background:rgba(79,195,247,.1);border-color:rgba(79,195,247,.4);color:#80d8ff}
+
+/* ─── MODEL AREA ─── */
 .model-area{
-  flex-shrink:0;
-  height:clamp(180px,24vh,280px);
-  background:rgba(0,0,0,.3);
-  display:flex;align-items:center;justify-content:center;
-  position:relative;overflow:hidden;
-  border-bottom:1px solid rgba(129,199,132,.12);
-  cursor:grab;
-  touch-action:none;
+  flex-shrink:0;height:clamp(170px,22vh,260px);
+  background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;border-bottom:1px solid rgba(129,199,132,.12);
+  cursor:grab;touch-action:none;
 }
 .model-area:active{cursor:grabbing}
-model-viewer.animal-viewer{
-  width:100%;height:100%;
-  --poster-color:transparent;
-  background:rgba(0,0,0,.3);
-  touch-action:none;
-  object-fit:contain;
-}
-.model-placeholder{
-  perspective:800px;
-  width:140px;height:140px;
-  position:relative;
-  display:flex;align-items:center;justify-content:center;
-}
-.cube{
-  width:100%;height:100%;position:relative;
-  transform-style:preserve-3d;
-  transition:transform .05s linear;
-}
-.cube-face{
-  position:absolute;width:140px;height:140px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:72px;
-  border:2px solid rgba(129,199,132,.3);
-  background:rgba(15,40,25,.8);
-  backface-visibility:visible;
-}
-.cube-face:nth-child(1){transform:rotateY(0deg) translateZ(70px)}
-.cube-face:nth-child(2){transform:rotateY(90deg) translateZ(70px)}
-.cube-face:nth-child(3){transform:rotateY(180deg) translateZ(70px)}
-.cube-face:nth-child(4){transform:rotateY(-90deg) translateZ(70px)}
-.cube-face:nth-child(5){transform:rotateX(90deg) translateZ(70px)}
-.cube-face:nth-child(6){transform:rotateX(-90deg) translateZ(70px)}
-.model-badge{
-  position:absolute;bottom:4px;right:6px;
-  font-size:8px;color:rgba(255,255,255,.3);
-  background:rgba(0,0,0,.4);padding:2px 6px;border-radius:6px;
-}
+model-viewer.animal-viewer{width:100%;height:100%;--poster-color:transparent;background:rgba(0,0,0,.3);touch-action:none;object-fit:contain}
+.model-placeholder{perspective:800px;width:130px;height:130px;position:relative;display:flex;align-items:center;justify-content:center}
+.cube{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .05s linear}
+.cube-face{position:absolute;width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:64px;border:2px solid rgba(129,199,132,.3);background:rgba(15,40,25,.8);backface-visibility:visible}
+.cube-face:nth-child(1){transform:rotateY(0deg) translateZ(65px)}
+.cube-face:nth-child(2){transform:rotateY(90deg) translateZ(65px)}
+.cube-face:nth-child(3){transform:rotateY(180deg) translateZ(65px)}
+.cube-face:nth-child(4){transform:rotateY(-90deg) translateZ(65px)}
+.cube-face:nth-child(5){transform:rotateX(90deg) translateZ(65px)}
+.cube-face:nth-child(6){transform:rotateX(-90deg) translateZ(65px)}
+.model-badge{position:absolute;bottom:4px;right:6px;font-size:8px;color:rgba(255,255,255,.3);background:rgba(0,0,0,.4);padding:2px 6px;border-radius:6px}
 
-.card-body{
-  flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:4px;
-  overflow-y:auto;min-height:0;
-}
+/* ─── CARD BODY ─── */
+.card-body{flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;min-height:0}
 .card-body::-webkit-scrollbar{width:3px}
 .card-body::-webkit-scrollbar-thumb{background:rgba(129,199,132,.25);border-radius:3px}
 
 .card-top{display:flex;align-items:center;gap:8px;margin-bottom:1px}
-.card-emoji{font-size:clamp(22px,2.5vw,30px);filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))}
+.card-emoji{font-size:clamp(22px,2.5vw,28px);filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))}
 .card-titles{display:flex;flex-direction:column}
-.card-name{font-size:clamp(12px,1.3vw,16px);font-weight:700;color:#a5d6a7;line-height:1.2}
+.card-name{font-size:clamp(12px,1.3vw,15px);font-weight:700;color:#a5d6a7;line-height:1.2}
+.card-name-ml{font-size:clamp(11px,1.1vw,14px);font-weight:700;color:#a5d6a7;line-height:1.2;display:none}
 .card-latin{font-size:clamp(8px,.8vw,10px);font-style:italic;color:rgba(255,255,255,.3)}
 
-.card-desc{font-size:clamp(9px,.95vw,11px);color:rgba(255,255,255,.6);line-height:1.45}
+.card-desc{font-size:clamp(9px,.9vw,10.5px);color:rgba(255,255,255,.6);line-height:1.45}
+.card-desc-ml{font-size:clamp(9px,.9vw,10.5px);color:rgba(255,255,255,.6);line-height:1.5;display:none}
 
 .facts-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:2px}
-.facts-list li{
-  font-size:clamp(9px,.85vw,11px);color:rgba(255,255,255,.65);
-  line-height:1.4;padding:2px 0 2px 14px;position:relative;
-}
-.facts-list li::before{
-  content:'';position:absolute;left:1px;top:50%;transform:translateY(-50%);
-  width:6px;height:6px;border-radius:50%;
-  background:rgba(129,199,132,.5);border:1px solid rgba(129,199,132,.7);
-}
-.facts-list li:nth-child(2)::before{background:rgba(255,193,7,.5);border-color:rgba(255,193,7,.7)}
-.facts-list li:nth-child(3)::before{background:rgba(79,195,247,.5);border-color:rgba(79,195,247,.7)}
+.facts-list li{font-size:clamp(9px,.85vw,10.5px);color:rgba(255,255,255,.65);line-height:1.4;padding:2px 0 2px 14px;position:relative}
+.facts-list li.ml-fact{color:rgba(255,255,255,.65);display:none}
+.facts-list li.en-fact{display:list-item}
+.facts-list li::before{content:'';position:absolute;left:1px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:rgba(129,199,132,.5);border:1px solid rgba(129,199,132,.7)}
+.facts-list li:nth-child(odd)::before{background:rgba(255,193,7,.5);border-color:rgba(255,193,7,.7)}
 
 .card-sound{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:4px 10px;margin-top:auto;align-self:flex-start;
-  background:rgba(129,199,132,.1);border:1px solid rgba(129,199,132,.3);
-  border-radius:14px;color:#a5d6a7;
-  font-size:clamp(8px,.9vw,11px);font-weight:600;
-  cursor:pointer;transition:all .3s;flex-shrink:0;
+  display:inline-flex;align-items:center;gap:4px;padding:4px 10px;margin-top:auto;align-self:flex-start;
+  background:rgba(129,199,132,.1);border:1px solid rgba(129,199,132,.3);border-radius:14px;color:#a5d6a7;
+  font-size:clamp(8px,.9vw,11px);font-weight:600;cursor:pointer;transition:all .3s;flex-shrink:0;
+  font-family:'Nunito',sans-serif;
 }
 .card-sound:hover,.card-sound:active{background:rgba(129,199,132,.22)}
 .card-sound.playing{background:rgba(129,199,132,.3);border-color:rgba(129,199,132,.6)}
 
-.footer{
-  flex-shrink:0;text-align:center;
-  padding:4px 20px 10px;
-}
-.btn-back{
-  padding:6px 22px;font-size:13px;font-weight:600;
-  background:rgba(129,199,132,.1);border:2px solid rgba(129,199,132,.3);
-  color:white;border-radius:50px;cursor:pointer;
-  transition:all .3s;backdrop-filter:blur(8px);
-}
-.btn-back:hover,.btn-back:active{background:rgba(129,199,132,.2);border-color:rgba(129,199,132,.5)}
+/* ─── TRANSLATION STATE ─── */
+body.malayalam-mode .card-name{display:none}
+body.malayalam-mode .card-name-ml{display:block}
+body.malayalam-mode .card-desc{display:none}
+body.malayalam-mode .card-desc-ml{display:block}
+body.malayalam-mode .facts-list li.en-fact{display:none}
+body.malayalam-mode .facts-list li.ml-fact{display:list-item}
 
-.touch-ring{
-  position:fixed;width:60px;height:60px;
-  border:3px solid rgba(129,199,132,.6);border-radius:50%;
-  pointer-events:none;z-index:9999;
-  transform:translate(-50%,-50%) scale(0);
-  animation:ringPop .6s ease forwards;
-}
-@keyframes ringPop{
-  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
-  100%{transform:translate(-50%,-50%) scale(2);opacity:0}
-}
+/* ─── TOUCH RING ─── */
+.touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(129,199,132,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:ringPop .6s ease forwards}
+@keyframes ringPop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
+
+/* ─── COUNT BADGE ─── */
+.animal-count{font-size:10px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:2px 10px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -223,6 +235,7 @@ model-viewer.animal-viewer{
   <source src="../assets/Audio/capaholiczsfx-forest-daytime-446356.mp3" type="audio/mpeg">
 </audio>
 
+<!-- PARALLAX SCENE -->
 <div class="scene" id="scene">
   <div class="forest-bg" id="forestBg">
     <div class="forest-layer p1" id="layer1"></div>
@@ -234,195 +247,265 @@ model-viewer.animal-viewer{
 </div>
 
 <div class="app">
+
+  <!-- ═══ HEADER ═══ -->
   <div class="header">
-    <h1>Forest Animals Showcase</h1>
-    <p>Drag to rotate 3D models -- tap to hear sounds</p>
+    <h1>🌿 Forest Animals Showcase</h1>
+    <p>Drag 3D models · Tap for sound</p>
   </div>
 
+  <!-- ═══ FILTER BAR ═══ -->
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <button class="filter-tab active" data-filter="all">All Animals</button>
+    <button class="filter-tab" data-filter="indian">🇮🇳 Indian</button>
+    <button class="filter-tab" data-filter="domestic">🏡 Domestic</button>
+    <button class="filter-tab" data-filter="wild">🌲 Wild</button>
+    <span id="countBadge" class="animal-count">21 animals</span>
+  </div>
+
+  <!-- ═══ SCROLL AREA ═══ -->
   <div class="scroll-area">
     <button class="arrow-btn arrow-left" id="prevBtn">&#9664;</button>
     <div class="scroll-track" id="scrollTrack"></div>
     <button class="arrow-btn arrow-right" id="nextBtn">&#9654;</button>
   </div>
 
-  <div class="footer">
-    <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:8px">
-      <button id="audioToggle" style="padding:6px 16px;font-size:13px;font-weight:600;background:rgba(129,199,132,.1);border:2px solid rgba(129,199,132,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s;backdrop-filter:blur(8px);width:fit-content">🔊 Music</button>
-    </div>
-    <button class="btn-back" id="backBtn">Back to Menu</button>
+</div>
+
+<!-- ═══ TOOLBAR (FLOATING RIGHT) ═══ -->
+<div class="toolbar">
+  <div class="toolbar-right">
+    <button class="tb-btn tb-btn-back" id="backBtn">← Back</button>
+    <button class="tb-btn tb-btn-ml" id="mlToggle" title="Translate to Malayalam">🔤 ML</button>
+    <button class="tb-btn tb-btn-audio" id="audioToggle">🔊</button>
   </div>
 </div>
 
 <script>
+// ══════════════════════════════════════════════════════
+// ANIMAL DATA — 22 animals (including native Indian ones)
+// categories: 'wild' | 'domestic' | 'indian-wild' | 'indian-domestic'
+// ══════════════════════════════════════════════════════
 var ANIMALS = [
+  /* ── INDIAN NATIVE ANIMALS ── */
   {
-    name:'Red Deer', latin:'Cervus elaphus', emoji:'\uD83E\uDD8C',
+    name:'Bengal Tiger', latin:'Panthera tigris tigris', emoji:'🐅',
+    nameMl:'ബംഗാൾ കടുവ',
+    desc:'India\'s national animal, a powerful apex predator of dense forests and grasslands.',
+    descMl:'ഇന്ത്യയുടെ ദേശീയ മൃഗം, ഇടതൂർന്ന വനങ്ങളിലെ ശക്തനായ വേട്ടക്കാരൻ.',
+    facts:['Less than 3,000 remain in the wild','Can leap over 9 metres forward','Stripes are unique like fingerprints'],
+    factsMl:['കാട്ടിൽ 3,000-ത്തിൽ താഴെ മാത്രം','9 മീറ്ററിലധികം ചാടാൻ കഴിയും','വരകൾ വിരലടയാളം പോലെ അദ്വിതീയം'],
+    soundUrl:'../assets/Audio/animals/tiger.mp3',
+    category:'indian-wild', model:'../3dmodels/tiger.glb'
+  },
+  {
+    name:'Indian Elephant', latin:'Elephas maximus indicus', emoji:'🐘',
+    nameMl:'ഇന്ത്യൻ ആന',
+    desc:'Revered across India, these gentle giants are intelligent and deeply social.',
+    descMl:'ഇന്ത്യ മുഴുവൻ ആദരിക്കപ്പെടുന്ന ഈ ബൃഹദ്ജീവികൾ ബുദ്ധിമാന്മാരും സ്നേഹപ്രദവുമാണ്.',
+    facts:['Smaller ears than African cousins','Can recognize themselves in mirrors','Communicate through low rumbles felt in feet'],
+    factsMl:['ആഫ്രിക്കൻ ആനകളെക്കാൾ ചെറിയ ചെവി','കണ്ണാടിയിൽ സ്വയം തിരിച്ചറിയാൻ കഴിയും','കാൽ വഴി ആശയവിനിമയം നടത്തുന്നു'],
+    soundUrl:'../assets/Audio/animals/elephant.mp3',
+    category:'indian-wild', model:'../3dmodels/elephant__gajah.glb'
+  },
+  {
+    name:'Indian Peacock', latin:'Pavo cristatus', emoji:'🦚',
+    nameMl:'ഇന്ത്യൻ മയിൽ',
+    desc:'India\'s national bird, dazzles with iridescent blue-green plumage and spectacular tail display.',
+    descMl:'ഇന്ത്യയുടെ ദേശീയ പക്ഷി, നീല-പച്ച തൂവലുകളുടെ ഗംഭീരമായ പ്രദർശനം.',
+    facts:['Tail feathers can span 1.8 metres','Feathers shimmer due to tiny crystal structures','Male dances during monsoon rains'],
+    factsMl:['വാൽ തൂവലുകൾ 1.8 മീ വരെ നീളം','തൂവലുകൾ ക്രിസ്റ്റൽ ഘടനകൾ മൂലം തിളങ്ങുന്നു','മഴക്കാലത്ത് ആൺ മയിൽ നൃത്തം ചെയ്യുന്നു'],
+    soundUrl:'../assets/Audio/animals/turkey.mp3',
+    category:'indian-wild', model:'../3dmodels/peacock.glb'
+  },
+  {
+    name:'Indian Cobra', latin:'Naja naja', emoji:'🐍',
+    nameMl:'ഇന്ത്യൻ മൂർഖൻ',
+    desc:'Sacred in Hindu mythology, this snake is known for its iconic hood-spread display.',
+    descMl:'ഹിന്ദു പുരാണങ്ങളിൽ പവിത്രമായ, ഐതിഹ്യ ചെകിൾ വിരിക്കൽ പ്രശസ്തമാണ്.',
+    facts:['Venom can kill in 15 minutes','Spreads hood as a threat display','Icon of snake charmers across India'],
+    factsMl:['വിഷം 15 മിനിറ്റിൽ കൊല്ലും','ഭീഷണി അറിയിക്കാൻ ചെകിൾ വിരിക്കുന്നു','ഇന്ത്യൻ പാമ്പ് കളിക്കാരുടെ ചിഹ്നം'],
+    soundUrl:'../assets/Audio/animals/rattlesnake.mp3',
+    category:'indian-wild', model:'../3dmodels/cobra.glb', animation:'HoodSpread'
+  },
+  {
+    name:'Mugger Crocodile', latin:'Crocodylus palustris', emoji:'🐊',
+    nameMl:'മഗ്ഗർ മുതല',
+    desc:'A freshwater reptile lurking in India\'s rivers, lakes, and marshes for millions of years.',
+    descMl:'ഇന്ത്യയിലെ നദികളിലും തടാകങ്ങളിലും ദശലക്ഷക്കണക്കിന് വർഷമായി ജീവിക്കുന്ന ഉരഗം.',
+    facts:['Has 80 teeth replaced throughout life','Can hold breath for over an hour','Oldest parental care in reptiles'],
+    factsMl:['ജീവിതകാലം 80 പല്ലുകൾ മാറുന്നു','ഒരു മണിക്കൂറിലധികം ശ്വാസം പിടിക്കാൻ കഴിയും','ഉരഗങ്ങളിൽ ഏറ്റവും പഴക്കമുള്ള കുഞ്ഞ് പരിചരണം'],
+    soundUrl:'../assets/Audio/animals/alligator.mp3',
+    category:'indian-wild', model:'../3dmodels/crocodile.glb'
+  },
+  {
+    name:'Indian Rhinoceros', latin:'Rhinoceros unicornis', emoji:'🦏',
+    nameMl:'ഇന്ത്യൻ കൃഷ്ണമൃഗം',
+    desc:'The one-horned giant of India, found mainly in Assam\'s Kaziranga National Park.',
+    descMl:'ഒറ്റക്കൊമ്പൻ കാണ്ടാമൃഗം, ആസ്സാമിലെ കാസിരംഗ ദേശീയ ഉദ്യാനത്തിൽ കാണപ്പെടുന്നു.',
+    facts:['Horn made of compacted hair (keratin)','Can run at 55 km/h despite size','Population recovered from just 200 to 4,000'],
+    factsMl:['കൊമ്പ് ഒട്ടിച്ചേർന്ന മുടി (കെരാറ്റിൻ) കൊണ്ടാണ്','55 കി.മി/മ വേഗത്തിൽ ഓടാൻ കഴിയും','200ൽ നിന്ന് 4,000 ആയി ജനസംഖ്യ വളർന്നു'],
+    soundUrl:'../assets/Audio/animals/rhinoceros.mp3',
+    category:'indian-wild', model:'../3dmodels/rhino.glb'
+  },
+  {
+    name:'Indian Grey Mongoose', latin:'Herpestes edwardsii', emoji:'🦦',
+    nameMl:'ഇന്ത്യൻ കീരി',
+    desc:'Swift and fearless — famous for its legendary battles against cobras across India.',
+    descMl:'ചുറുചുറുക്കും നിർഭയവും — ഇന്ത്യ മുഴുവൻ മൂർഖനോടുള്ള യുദ്ധത്തിന് പ്രശസ്തം.',
+    facts:['Partially immune to cobra venom','Can dodge a cobra strike in 0.01 seconds','The hero of Kipling\'s "Rikki-Tikki-Tavi"'],
+    factsMl:['മൂർഖൻ വിഷത്തെ ഭാഗികമായി ചെറുക്കും','0.01 സെക്കൻഡിൽ ആക്രമണം ഒഴിവാക്കും','കിപ്ലിങ്ങിന്റെ "രിക്കി-ടിക്കി-തവി"യിലെ നായകൻ'],
+    soundUrl:'../assets/Audio/animals/otter.mp3',
+    category:'indian-wild', model:'../3dmodels/mongoose.glb'
+  },
+  {
+    name:'Indian Cow', latin:'Bos taurus indicus', emoji:'🐄',
+    nameMl:'ഇന്ത്യൻ പശു',
+    desc:'Sacred and central to Indian culture, native breeds like Gir and Sahiwal are famous worldwide.',
+    descMl:'ഇന്ത്യൻ സംസ്കൃതിയുടെ ഹൃദയം — ഗിർ, സഹിവാൾ ഇനങ്ങൾ ലോകപ്രശസ്തം.',
+    facts:['Over 30 indigenous Indian breeds','Zebu hump stores water and nutrients','Revered as "Gau Mata" — Mother Cow'],
+    factsMl:['30-ലധികം ഇന്ത്യൻ ഇനങ്ങൾ','കൂനൽ ജലവും പോഷകങ്ങളും സൂക്ഷിക്കുന്നു','"ഗൗ മാതാ" ആയി ആദരിക്കപ്പെടുന്നു'],
+    soundUrl:'../assets/Audio/animals/cow.mp3',
+    category:'indian-domestic', model:'../3dmodels/cow.glb'
+  },
+
+  {
+    name:'Indian Camel', latin:'Camelus dromedarius', emoji:'🐪',
+    nameMl:'ഒട്ടകം',
+    desc:'The "Ship of the Desert" — essential to Rajasthani culture, trade, and transport for centuries.',
+    descMl:'മരുഭൂമിയുടെ കപ്പൽ — രാജസ്ഥാൻ സംസ്കൃതിക്ക് നൂറ്റാണ്ടുകളായി അവശ്യം.',
+    facts:['Hump stores fat, not water','Can drink 135 litres of water at once','Eyes have triple eyelids against sand'],
+    factsMl:['കൂനൽ ജലമല്ല, കൊഴുപ്പ് സൂക്ഷിക്കുന്നു','ഒറ്റ ഇരിക്കലിൽ 135 ലിറ്റർ കുടിക്കും','മണലിൽ നിന്ന് രക്ഷ നൽകുന്ന മൂന്ന് കണ്പോളകൾ'],
+    soundUrl:'../assets/Audio/animals/camel.mp3',
+    category:'indian-domestic', model:'../3dmodels/camel.glb'
+  },
+
+  /* ── GLOBAL FOREST ANIMALS ── */
+  {
+    name:'Red Deer', latin:'Cervus elaphus', emoji:'🦌',
+    nameMl:'ചുവന്ന കലമാൻ',
     desc:'Majestic woodland herbivores. Males grow impressive antlers each year.',
-    facts:[
-      'Antlers grow up to 1 inch per day!',
-      'Can run at 40 mph',
-      'Babies are born with white spots for camouflage'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/9/9e/Cervus_elaphus_roar.ogg',
-    model:'../3dmodels/Deer.glb'
+    descMl:'ഗംഭീര വനജീവി. ആണ്ണ് ഇണ ഓരോ വർഷവും കൊമ്പ് വളർത്തുന്നു.',
+    facts:['Antlers grow up to 1 inch per day','Can run at 40 mph','Babies born with white spots for camouflage'],
+    factsMl:['കൊമ്പ് ദിനം 1 ഇഞ്ച് വളരുന്നു','മണിക്കൂറിൽ 64 കി.മി ഓടും','കുഞ്ഞുങ്ങൾ വെള്ളം കൊണ്ടുള്ള കോലം ജനിക്കുന്നു'],
+    soundUrl:'../assets/Audio/animals/antelope.mp3',
+    category:'wild', model:'../3dmodels/Deer.glb'
   },
   {
-    name:'Red Fox', latin:'Vulpes vulpes', emoji:'\uD83E\uDD8A',
+    name:'Red Fox', latin:'Vulpes vulpes', emoji:'🦊',
+    nameMl:'ചുവന്ന കുറുക്കൻ',
     desc:'Clever predators with exceptional hearing. Most widespread wild carnivore.',
-    facts:[
-      'Can hear a watch ticking from 40 yards away!',
-      'Use Earth\'s magnetic field to hunt',
-      'Have over 40 different calls'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/2/2c/Vulpes_vulpes.ogg',
-    model:'../3dmodels/red_fox_standing_pose_realistic.glb'
+    descMl:'ബുദ്ധിമതിയായ വേട്ടക്കാരൻ. ലോകത്ത് ഏറ്റവും വ്യാപകമായ ഇറച്ചി ഭക്ഷകൻ.',
+    facts:['Hears a watch ticking from 40 yards','Uses Earth\'s magnetic field to hunt','Has over 40 different calls'],
+    factsMl:['40 ഗജം അകലെ ഘടികാരം കേൾക്കും','ഭൂ കാന്തിക ക്ഷേത്രം ഉപയോഗിച്ച് വേട്ട','40-ലധികം ശബ്ദ ആശയ വിനിമയം'],
+    soundUrl:'../assets/Audio/animals/ferret.mp3',
+    category:'wild', model:'../3dmodels/red_fox_standing_pose_realistic.glb'
   },
   {
-    name:'Brown Bear', latin:'Ursus arctos', emoji:'\uD83D\uDC3B',
+    name:'Brown Bear', latin:'Ursus arctos', emoji:'🐻',
+    nameMl:'തവിട്ട് കരടി',
     desc:'Powerful omnivores among the largest land predators on Earth.',
-    facts:[
-      'Can eat 90 pounds of food per day!',
-      'Sprint at 35 mph',
-      'Hibernate for 5 to 7 months'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/1/1a/Ursus_arctos_SATAO.ogg',
-    model:'../3dmodels/bear.glb'
+    descMl:'ഭൂമിയിലെ ഏറ്റവും വലിയ കര ഇരപ്പിടിക്കുന്നവരിൽ ഒരാൾ.',
+    facts:['Can eat 90 pounds of food per day','Sprint at 35 mph','Hibernate for 5–7 months'],
+    factsMl:['ദിവസം 40 കി.ഗ്രാം ഭക്ഷണം കഴിക്കും','56 കി.മി/മ ഓടും','5–7 മാസം ഉറക്കം'],
+    soundUrl:'../assets/Audio/animals/bear.mp3',
+    category:'wild', model:'../3dmodels/bear.glb'
   },
   {
-    name:'Great Horned Owl', latin:'Bubo virginianus', emoji:'\uD83E\uDD89',
+    name:'Great Horned Owl', latin:'Bubo virginianus', emoji:'🦉',
+    nameMl:'ഗ്രേറ്റ് ഹോൺ മൂങ്ങ',
     desc:'Silent nocturnal hunters with extraordinary night vision.',
-    facts:[
-      'Can turn their head 270 degrees!',
-      'Fly in complete silence',
-      'Grip strength is 300 PSI'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/8/8a/Bubo_virginianus_06.ogg',
-    model:'../3dmodels/owl.glb'
+    descMl:'അസൽ രാത്രി കാഴ്ചയുള്ള നിശ്ശബ്ദ രാത്രി ഇരപ്പിടിക്കുന്നവർ.',
+    facts:['Turn head 270 degrees','Fly in complete silence','Grip strength is 300 PSI'],
+    factsMl:['തല 270° തിരിക്കാൻ കഴിയും','പൂർണ്ണ നിശ്ശബ്ദതയിൽ പറക്കും','300 PSI പിടി ബലം'],
+    soundUrl:'../assets/Audio/animals/owl.mp3',
+    category:'wild', model:'../3dmodels/owl.glb'
   },
   {
-    name:'Raccoon', latin:'Procyon lotor', emoji:'\uD83E\uDD9D',
+    name:'Grey Wolf', latin:'Canis lupus', emoji:'🐺',
+    nameMl:'ചാരനിറ ചെന്നായ',
+    desc:'Social pack hunters with complex communication and howling.',
+    descMl:'സങ്കീർണ്ണ ആശയ വിനിമയമുള്ള കൂട്ടം ചേർന്ന് വേട്ടയാടുന്നവർ.',
+    facts:['Howls heard from 16 km away','Each howl is unique like a fingerprint','Travel 50 miles in a single day'],
+    factsMl:['ഊളക്ക് 16 കി.മി ദൂരത്ത് കേൾക്കും','ഓരോ ഊളയും അദ്വിതീയം','ദിനം 80 കി.മി സഞ്ചരിക്കും'],
+    soundUrl:'../assets/Audio/animals/wolf.mp3',
+    category:'wild', model:'../3dmodels/wolf.glb'
+  },
+  {
+    name:'Raccoon', latin:'Procyon lotor', emoji:'🦝',
+    nameMl:'റക്കൂൺ',
     desc:'Curious creatures famous for masked faces and dexterous paws.',
-    facts:[
-      'Remember puzzles for 3 years!',
-      'Paws are like tiny human hands',
-      'Wash food in water before eating'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/0/0c/Procyon_lotor.ogg',
-    model:'../3dmodels/racoon.glb'
+    descMl:'കൗതുകമുള്ള ജീവി, മുഖ മറ ഇടുന്നതും ചടുലമായ കൈകളും പ്രശസ്തം.',
+    facts:['Remember puzzles for 3 years','Paws like tiny human hands','Wash food in water before eating'],
+    factsMl:['3 വർഷം പ്രശ്നം ഓർക്കും','കൈകൾ ചെറു മനുഷ്യ കൈ പോലെ','ഭക്ഷണം വെള്ളത്തിൽ കഴുകി കഴിക്കും'],
+    soundUrl:'../assets/Audio/animals/raccoon.mp3',
+    category:'wild', model:'../3dmodels/racoon.glb'
   },
   {
-    name:'Red Squirrel', latin:'Sciurus vulgaris', emoji:'\uD83D\uDC3F\uFE0F',
-    desc:'Acrobatic woodland gymnasts leaping between treetops.',
-    facts:[
-      'Bury 10,000 nuts each autumn!',
-      'Leap 10x their body length',
-      'Plant trees by forgetting buried nuts'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/a/a5/Sciurus_vulgaris.ogg',
-    model:'../3dmodels/realistic_squirrel_3d_model.glb'
+    name:'Golden Eagle', latin:'Aquila chrysaetos', emoji:'🦅',
+    nameMl:'സ്വർണ്ണ കഴുകൻ',
+    desc:'Apex aerial predators with incredible eyesight and breathtaking speed.',
+    descMl:'അതിശ്രേഷ്ഠ ആകാശ ഇരപ്പിടിക്കുന്നവൻ, അതിശയകരമായ കാഴ്ചശക്തിയും വേഗവും.',
+    facts:['Dives at 240 km/h','Spots a rabbit from 3 km away','Mates for life'],
+    factsMl:['240 കി.മി/മ ഊൺ ഊക്കിൽ ഇറക്കം','3 കി.മി ദൂരത്ത് മുയൽ കാണും','ആജീവനാന്ത ജോടി'],
+    soundUrl:'../assets/Audio/animals/falcon.mp3',
+    category:'wild', model:'../3dmodels/day_23_-_wild_eagle.glb'
   },
   {
-    name:'Beaver', latin:'Castor fiber', emoji:'\uD83E\uDDAB',
-    desc:'Nature\'s engineers reshaping landscapes with dams and lodges.',
-    facts:[
-      'Dams can stretch over 800 meters!',
-      'Hold breath for 15 minutes',
-      'Teeth contain iron -- super strong!'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/2/2e/Castor_fiber.ogg',
-    model:'../3dmodels/realistic_beaver__castor_3d_model.glb'
+    name:'Monkey', latin:'Primates', emoji:'🐵',
+    nameMl:'കുരങ്ങ്',
+    desc:'Intelligent social primates known for their playful nature and acrobatic swinging through forests.',
+    descMl:'കളിയായ സ്വഭാവവും വനത്തിൽ ചാടിയാലിപ്പായും പരിചിതരായ ബുദ്ധിമാൻ സാമൂഹിക പ്രാണികൾ.',
+    facts:['Use tools to solve problems','Form complex social hierarchies','Some species live 40+ years in wild'],
+    factsMl:['പ്രശ്നം പരിഹരിക്കാൻ ഉപകരണങ്ങൾ ഉപയോഗിക്കുന്നു','സങ്കീർണ്ണ സാമൂഹിക തരത്തിനം ഉണ്ട്','ചില ഇനങ്ങൾ 40+ വർഷം ജീവിക്കുന്നു'],
+    soundUrl:'../assets/Audio/animals/penguin.mp3',
+    category:'wild', model:'../3dmodels/monkey.glb'
   },
   {
-    name:'Grey Wolf', latin:'Canis lupus', emoji:'\uD83D\uDC3A',
-    desc:'Social pack hunters with complex communication.',
-    facts:[
-      'Howls heard from 16 km away!',
-      'Each howl is unique like a fingerprint',
-      'Travel 50 miles in a single day'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/0/0b/Canis_lupus_howl.ogg',
-    model:'../3dmodels/wolf.glb'
+    name:'Zebra', latin:'Equus quagga', emoji:'🦓',
+    nameMl:'സീബ്ര',
+    desc:'Iconic striped herbivores of African savannas — each stripe pattern is unique.',
+    descMl:'ആഫ്രിക്കൻ സവന്നയിലെ പ്രശസ്ത വരയുള്ള സസ്യഭുക്ക് — ഓരോ വരയും അദ്വിതീയം.',
+    facts:['Each zebra has unique stripe pattern','Stripes confuse predators in groups','Can run at 65 km/h to escape lions'],
+    factsMl:['ഓരോ സീബ്രയ്ക്കും അദ്വിതീയ വര പാറ്റേൺ','കൂട്ടത്തിൽ വര ഇരപ്പിടിക്കുന്നവരെ ആശയക്കുഴപ്പത്തിലാക്കും','സിംഹങ്ങളിൽ നിന്ന് 65 കി.മി/മ ഓടി രക്ഷപ്പെടും'],
+    soundUrl:'../assets/Audio/animals/giraffe.mp3',
+    category:'wild', model:'../3dmodels/zebra.glb'
   },
   {
-    name:'Golden Eagle', latin:'Aquila chrysaetos', emoji:'\uD83E\uDD85',
-    desc:'Apex aerial predators with incredible eyesight.',
-    facts:[
-      'Dive at speeds up to 240 km/h!',
-      'Spot a rabbit from 3 km away',
-      'Mate for life'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/5/56/Aquila_chrysaetos_TypeA.ogg',
-    model:'../3dmodels/day_23_-_wild_eagle.glb'
-  },
-  {
-    name:'Hedgehog', latin:'Erinaceus europaeus', emoji:'\uD83E\uDD94',
-    desc:'Tiny nocturnal insectivores covered in protective spines.',
-    facts:[
-      'Covered in about 7,000 spines!',
-      'Curl into a tight spiky ball',
-      'Immune to some snake venoms'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/d/d4/Erinaceus_europaeus_1.ogg'
-  },
-  {
-    name:'Forest Gecko', latin:'Phelsuma grandis', emoji:'\uD83E\uDD8E',
-    desc:'Masters of camouflage and climbing any surface.',
-    facts:[
-      'Can regrow their tail!',
-      'Lick their eyeballs to clean them',
-      'Walk on ceilings'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/e/e5/Phelsuma_grandis.ogg',
-    model:'../3dmodels/gecko_thinker.glb'
-  },
-  {
-    name:'European Hare', latin:'Lepus europaeus', emoji:'\uD83D\uDC07',
-    desc:'Lightning-fast runners born ready to sprint from day one.',
-    facts:[
-      'Sprint at 70 km/h!',
-      'Jump 3 meters high from standing',
-      'Nearly 360-degree vision'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/3/3d/Lepus_europaeus.ogg',
-    model:'../3dmodels/rabbit.glb'
-  },
-  {
-    name:'Lion', latin:'Panthera leo', emoji:'\uD83E\uDD81',
+    name:'Lion', latin:'Panthera leo', emoji:'🦁',
+    nameMl:'സിംഹം',
     desc:'Majestic kings of the savanna, known for powerful roars and social prides.',
-    facts:[
-      'Roars can be heard 8 km away!',
-      'Sleep up to 20 hours a day',
-      'Females do most of the hunting'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/7/73/Lion_roar.ogg',
-    model:'../3dmodels/lion_lowpoly.glb'
+    descMl:'സവന്നയിലെ ഗംഭീര രാജൻ, ഉഗ്ര ഘർജനം, ആൾക്കൂട്ടം.',
+    facts:['Roars heard 8 km away','Sleep up to 20 hours a day','Females do most of the hunting'],
+    factsMl:['ഘർജനം 8 കി.മി ദൂരത്ത് കേൾക്കും','ദിനം 20 മണിക്കൂർ ഉറങ്ങും','ആൺ ഒഴിച്ചുള്ള ഇണ വേട്ടയാടും'],
+    soundUrl:'../assets/Audio/animals/tiger (1).mp3',
+    category:'wild', model:'../3dmodels/lion_lowpoly.glb'
   },
   {
-    name:'Tiger', latin:'Panthera tigris', emoji:'\uD83D\uDC2F',
-    desc:'The largest wild cat species, with unique stripe patterns like fingerprints.',
-    facts:[
-      'No two tigers have the same stripes!',
-      'Can leap over 9 meters forward',
-      'Excellent swimmers unlike most cats'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/d/d0/Tiger.ogg',
-    model:'../3dmodels/tiger.glb'
-  },
-  {
-    name:'Elephant', latin:'Loxodonta africana', emoji:'\uD83D\uDC18',
-    desc:'The largest land animals, with incredible memory and deep family bonds.',
-    facts:[
-      'Can recognize themselves in mirrors!',
-      'Communicate through ground vibrations',
-      'Herds are led by wise matriarchs'
-    ],
-    soundUrl:'https://upload.wikimedia.org/wikipedia/commons/0/04/Elephant_rumble.ogg',
-    model:'../3dmodels/elephant__gajah.glb'
+    name:'Rabbit', latin:'Lepus europaeus', emoji:'🐇',
+    nameMl:'മുയൽ',
+    desc:'Lightning-fast runners born ready to sprint from their very first day.',
+    descMl:'ജനനദിനം മുതൽ ഓടാൻ തൈമ്പ്! മിന്നൽ വേഗമുള്ള ഓട്ടക്കാർ.',
+    facts:['Sprint at 70 km/h','Jump 3 metres high from standing','Nearly 360-degree vision'],
+    factsMl:['70 കി.മി/മ ഓടും','നിൽക്കുന്ന സ്ഥലത്ത് നിന്ന് 3 മി ഉയരത്തിൽ ചാടും','ഏതാണ്ട് 360° കാഴ്ചശക്തി'],
+    soundUrl:'../assets/Audio/animals/rabbit.mp3',
+    category:'wild', model:'../3dmodels/rabbit.glb'
   }
 ];
 
-var track = document.getElementById('scrollTrack');
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+var isMalayalam = false;
+var currentFilter = 'all';
+var currentAudio = null;
+var musicPlaying = false;
+var forestMusic = document.getElementById('forest-music');
 
+// ══════════════════════════════════════════════════════
+// MODEL PATH HELPER
+// ══════════════════════════════════════════════════════
 function resolveModelPath(relPath) {
   if (typeof process !== 'undefined' && process.versions && process.versions.electron) {
     var path = require('path');
@@ -436,20 +519,43 @@ function resolveModelPath(relPath) {
   return relPath;
 }
 
+// ══════════════════════════════════════════════════════
+// BUILD CARDS
+// ══════════════════════════════════════════════════════
 function buildCards() {
+  var track = document.getElementById('scrollTrack');
+  track.innerHTML = '';
+
   ANIMALS.forEach(function(animal, idx) {
     var card = document.createElement('div');
-    card.className = 'card';
+    var isIndian = animal.category === 'indian-wild' || animal.category === 'indian-domestic';
+    var isDomestic = animal.category === 'indian-domestic';
 
+    card.className = 'card' +
+      (isIndian ? ' indian-native' : '') +
+      (isDomestic ? ' domestic' : '') +
+      ' cat-' + animal.category;
+
+    // Badge label
+    var badgeLabel = isIndian ? (isDomestic ? '🏡 Indian Domestic' : '🇮🇳 Indian Wild') : '';
+
+    // Facts HTML
     var factsHtml = '';
-    animal.facts.forEach(function(f) { factsHtml += '<li>' + f + '</li>'; });
+    (animal.facts || []).forEach(function(f, i) {
+      factsHtml += '<li class="en-fact">' + f + '</li>';
+    });
+    (animal.factsMl || []).forEach(function(f, i) {
+      factsHtml += '<li class="ml-fact">' + f + '</li>';
+    });
 
+    // Model HTML
     var modelHtml;
     if (animal.model) {
       var modelSrc = resolveModelPath(animal.model);
+      var animAttr = animal.animation ? ' animation-name="' + animal.animation + '"' : '';
       modelHtml =
         '<div class="model-area" data-idx="' + idx + '">' +
-          '<model-viewer class="animal-viewer" src="' + modelSrc + '" auto-rotate camera-controls interaction-prompt="none" shadow-intensity="0.8" exposure="1.5" environment-image="neutral" camera-orbit="0deg 75deg 2.5m" tone-mapping="commerce"></model-viewer>' +
+          '<model-viewer class="animal-viewer" src="' + modelSrc + '" auto-rotate camera-controls interaction-prompt="none" shadow-intensity="0.8" exposure="1.5" environment-image="neutral" camera-orbit="0deg 75deg 2.5m" tone-mapping="commerce"' + animAttr + '></model-viewer>' +
           '<span class="model-badge">3D MODEL</span>' +
         '</div>';
     } else {
@@ -469,134 +575,181 @@ function buildCards() {
         '</div>';
     }
 
-    card.innerHTML = modelHtml +
+    card.innerHTML =
+      (badgeLabel ? '<div class="card-region-badge">' + badgeLabel + '</div>' : '') +
+      modelHtml +
       '<div class="card-body">' +
         '<div class="card-top">' +
           '<span class="card-emoji">' + animal.emoji + '</span>' +
           '<div class="card-titles">' +
             '<div class="card-name">' + animal.name + '</div>' +
+            '<div class="card-name-ml">' + (animal.nameMl || animal.name) + '</div>' +
             '<div class="card-latin">' + animal.latin + '</div>' +
           '</div>' +
         '</div>' +
         '<div class="card-desc">' + animal.desc + '</div>' +
+        '<div class="card-desc-ml">' + (animal.descMl || animal.desc) + '</div>' +
         '<ul class="facts-list">' + factsHtml + '</ul>' +
-        '<button class="card-sound" data-index="' + idx + '">&#128266; Sound</button>' +
+        '<button class="card-sound" data-index="' + idx + '">🔊 Sound</button>' +
       '</div>';
 
     track.appendChild(card);
   });
 
-  initAllCubeRotation();
+  initCubeRotations();
+  initAnimationPause();
+  applyFilter(currentFilter);
 }
 
-function initAllCubeRotation() {
-  var areas = document.querySelectorAll('.model-area');
-  areas.forEach(function(area) {
-    var cubeEl = area.querySelector('.cube');
-    var rotX = -20, rotY = 0;
-    var startX, startY, dragging = false;
-    var autoSpin = true;
-    var autoFrame;
+// ══════════════════════════════════════════════════════
+// ANIMATION PAUSE (keep animations paused & never play)
+// ══════════════════════════════════════════════════════
+function initAnimationPause() {
+  document.querySelectorAll('model-viewer.animal-viewer').forEach(function(viewer) {
+    if (viewer.getAttribute('animation-name')) {
+      // Wait for model to load
+      viewer.addEventListener('load', function() {
+        setTimeout(function() {
+          if (viewer.animationName && viewer.currentTime !== undefined) {
+            viewer.pause();
+          }
+        }, 100);
+      });
+      // Also immediately pause on demand
+      viewer.addEventListener('play', function(e) {
+        if (viewer.animationName === viewer.getAttribute('animation-name')) {
+          viewer.pause();
+        }
+      });
+    }
+  });
+}
 
-    function autoRotate() {
+// ══════════════════════════════════════════════════════
+// CUBE ROTATION
+// ══════════════════════════════════════════════════════
+function initCubeRotations() {
+  document.querySelectorAll('.model-area').forEach(function(area) {
+    var cubeEl = area.querySelector('.cube');
+    if (!cubeEl) return;
+    var rotX = -20, rotY = 0, startX, startY, dragging = false, autoSpin = true;
+
+    (function spin() {
       if (autoSpin) {
         rotY += 0.5;
         cubeEl.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
       }
-      autoFrame = requestAnimationFrame(autoRotate);
-    }
-    autoRotate();
+      requestAnimationFrame(spin);
+    })();
 
     area.addEventListener('pointerdown', function(e) {
-      dragging = true;
-      autoSpin = false;
-      startX = e.clientX;
-      startY = e.clientY;
-      area.setPointerCapture(e.pointerId);
-      e.preventDefault();
+      dragging = true; autoSpin = false;
+      startX = e.clientX; startY = e.clientY;
+      area.setPointerCapture(e.pointerId); e.preventDefault();
     });
-
     area.addEventListener('pointermove', function(e) {
       if (!dragging) return;
-      var dx = e.clientX - startX;
-      var dy = e.clientY - startY;
-      rotY += dx * 0.8;
-      rotX -= dy * 0.8;
+      rotY += (e.clientX - startX) * 0.8;
+      rotX -= (e.clientY - startY) * 0.8;
       rotX = Math.max(-80, Math.min(80, rotX));
       cubeEl.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
-      startX = e.clientX;
-      startY = e.clientY;
-      e.preventDefault();
+      startX = e.clientX; startY = e.clientY; e.preventDefault();
     });
-
-    area.addEventListener('pointerup', function(e) {
-      dragging = false;
-      setTimeout(function() { autoSpin = true; }, 2000);
-    });
-
-    area.addEventListener('pointercancel', function() {
-      dragging = false;
-      setTimeout(function() { autoSpin = true; }, 2000);
-    });
+    area.addEventListener('pointerup', function() { dragging = false; setTimeout(function() { autoSpin = true; }, 2000); });
+    area.addEventListener('pointercancel', function() { dragging = false; setTimeout(function() { autoSpin = true; }, 2000); });
   });
 }
 
+// ══════════════════════════════════════════════════════
+// FILTER
+// ══════════════════════════════════════════════════════
+function applyFilter(filter) {
+  currentFilter = filter;
+  var cards = document.querySelectorAll('.card');
+  var count = 0;
+  cards.forEach(function(card) {
+    var show = false;
+    if (filter === 'all') show = true;
+    else if (filter === 'indian') show = card.classList.contains('indian-native');
+    else if (filter === 'domestic') show = card.classList.contains('domestic');
+    else if (filter === 'wild') show = !card.classList.contains('domestic');
+    card.classList.toggle('hidden', !show);
+    if (show) count++;
+  });
+  document.getElementById('countBadge').textContent = count + ' animal' + (count !== 1 ? 's' : '');
+
+  document.querySelectorAll('.filter-tab').forEach(function(tab) {
+    tab.classList.toggle('active', tab.dataset.filter === filter);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// SOUND
+// ══════════════════════════════════════════════════════
+function playAnimalSound(soundUrl, btn) {
+  if (!soundUrl || btn.classList.contains('playing')) return;
+  btn.classList.add('playing');
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+
+  var audio = new Audio();
+  audio.crossOrigin = 'anonymous';
+  audio.volume = 0.7;
+  audio.src = soundUrl;
+  currentAudio = audio;
+  var cleanup = function() { btn.classList.remove('playing'); currentAudio = null; };
+  audio.onended = cleanup;
+  audio.onerror = cleanup;
+  audio.play().catch(cleanup);
+  setTimeout(cleanup, 20000);
+}
+
+// ══════════════════════════════════════════════════════
+// SCROLL ARROWS
+// ══════════════════════════════════════════════════════
 function scrollBy(dir) {
-  var cardW = track.querySelector('.card').offsetWidth + 12;
+  var track = document.getElementById('scrollTrack');
+  var firstCard = track.querySelector('.card:not(.hidden)');
+  var cardW = firstCard ? firstCard.offsetWidth + 12 : 262;
   track.scrollBy({ left: dir * cardW, behavior: 'smooth' });
 }
 
-function bindTouch(el, fn) {
-  el.addEventListener('click', function(e) {
-    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-    fn(e);
-  });
-  el.addEventListener('touchend', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    fn(e);
-  });
-}
+// ══════════════════════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════════════════════
+document.getElementById('prevBtn').addEventListener('click', function() { scrollBy(-1); });
+document.getElementById('nextBtn').addEventListener('click', function() { scrollBy(1); });
 
-bindTouch(document.getElementById('prevBtn'), function() { scrollBy(-1); });
-bindTouch(document.getElementById('nextBtn'), function() { scrollBy(1); });
+// Malayalam toggle
+document.getElementById('mlToggle').addEventListener('click', function() {
+  isMalayalam = !isMalayalam;
+  document.body.classList.toggle('malayalam-mode', isMalayalam);
+  this.classList.toggle('active', isMalayalam);
+  this.textContent = isMalayalam ? '🔤 English' : '🔤 മലയാളം';
+});
 
-var forestMusic = document.getElementById('forest-music');
-var audioToggle = document.getElementById('audioToggle');
-var musicPlaying = false;
-
-audioToggle.addEventListener('click', function() {
+// Audio toggle
+document.getElementById('audioToggle').addEventListener('click', function() {
   if (musicPlaying) {
-    forestMusic.pause();
-    musicPlaying = false;
-    audioToggle.textContent = '🔇 Music';
+    forestMusic.pause(); musicPlaying = false; this.textContent = '🔇';
   } else {
     forestMusic.volume = 0.5;
-    forestMusic.play().catch(function(e) {
-      console.log('Audio autoplay prevented:', e);
-    });
-    musicPlaying = true;
-    audioToggle.textContent = '🔊 Music';
+    forestMusic.play().catch(function(){});
+    musicPlaying = true; document.getElementById('audioToggle').textContent = '🔊';
   }
 });
 
-bindTouch(document.getElementById('backBtn'), function() { 
+// Back button
+document.getElementById('backBtn').addEventListener('click', function() {
   forestMusic.pause();
-  location.href = '../index.html'; 
+  location.href = '../index.html';
 });
 
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    forestMusic.volume = 0.5;
-    forestMusic.play().catch(function(e) {
-      console.log('Audio autoplay prevented:', e);
-    });
-    musicPlaying = true;
-  }, 500);
+// Filter tabs
+document.querySelectorAll('.filter-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() { applyFilter(this.dataset.filter); });
 });
 
-var currentAudio = null;
-
+// Sound buttons
 document.addEventListener('click', function(e) {
   var btn = e.target.closest('.card-sound');
   if (btn && e.isTrusted) {
@@ -605,79 +758,12 @@ document.addEventListener('click', function(e) {
 });
 document.addEventListener('touchend', function(e) {
   var btn = e.target.closest('.card-sound');
-  if (btn) { 
-    e.preventDefault();
-    e.stopPropagation();
-    playAnimalSound(ANIMALS[parseInt(btn.dataset.index)].soundUrl, btn);
-  }
+  if (btn) { e.preventDefault(); e.stopPropagation(); playAnimalSound(ANIMALS[parseInt(btn.dataset.index)].soundUrl, btn); }
 }, { passive: false });
 
-function playAnimalSound(soundUrl, btn) {
-  if (!soundUrl) {
-    console.warn('No sound URL for animal');
-    return;
-  }
-  
-  if (btn.classList.contains('playing')) return;
-  btn.classList.add('playing');
-  
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-  }
-  
-  try {
-    var audio = new Audio();
-    audio.crossOrigin = 'anonymous';
-    audio.volume = 0.7;
-    audio.src = soundUrl;
-    currentAudio = audio;
-    
-    var playPromise = audio.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.then(function() {
-        console.log('Audio playing:', soundUrl);
-      }).catch(function(err) {
-        console.error('Error playing audio:', err);
-        btn.classList.remove('playing');
-      });
-    }
-    
-    audio.onended = function() {
-      btn.classList.remove('playing');
-      currentAudio = null;
-    };
-    
-    audio.onerror = function() {
-      console.error('Audio error:', audio.error);
-      btn.classList.remove('playing');
-      currentAudio = null;
-    };
-    
-    var timeout = setTimeout(function() {
-      if (btn.classList.contains('playing')) {
-        btn.classList.remove('playing');
-      }
-    }, 20000);
-    
-    audio.onended = function() {
-      clearTimeout(timeout);
-      btn.classList.remove('playing');
-      currentAudio = null;
-    };
-    
-  } catch (e) {
-    console.error('Exception creating audio:', e);
-    btn.classList.remove('playing');
-  }
-}
-
-buildCards();
-
-var sc = document.getElementById('scene');
-var subtleness = 25;
-var maxWidth = 700;
+// ══════════════════════════════════════════════════════
+// PARALLAX LAYERS
+// ══════════════════════════════════════════════════════
 var layers = [
   document.getElementById('layer1'),
   document.getElementById('layer2'),
@@ -685,17 +771,19 @@ var layers = [
   document.getElementById('layer4'),
   document.getElementById('layer5')
 ];
-
 document.addEventListener('mousemove', function(e) {
-  if (window.innerWidth > maxWidth) {
-    var ax = -(window.innerWidth / 2 - e.pageX) / subtleness;
+  if (window.innerWidth > 700) {
+    var ax = -(window.innerWidth / 2 - e.pageX) / 25;
     layers.forEach(function(layer, idx) {
-      var offset = ax / (16 - idx);
-      layer.style.transform = 'translateX(' + offset + 'px)';
+      layer.style.transform = 'translateX(' + (ax / (16 - idx)) + 'px)';
     });
   }
 });
 
+// ══════════════════════════════════════════════════════
+// FIREFLIES & LEAVES
+// ══════════════════════════════════════════════════════
+var sc = document.getElementById('scene');
 for (var i = 0; i < 20; i++) {
   var f = document.createElement('div');
   f.className = 'firefly';
@@ -707,18 +795,19 @@ for (var i = 0; i < 20; i++) {
   f.style.animationDelay = (Math.random() * 5) + 's';
   sc.appendChild(f);
 }
-var leafEmojis = ['\uD83C\uDF43', '\uD83C\uDF42', '\uD83C\uDF41'];
-for (var i = 0; i < 8; i++) {
-  var l = document.createElement('div');
-  l.className = 'leaf';
-  l.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
-  l.style.left = (Math.random() * 100) + '%';
-  l.style.setProperty('--dur', (8 + Math.random() * 6) + 's');
-  l.style.setProperty('--dx', ((Math.random() - .5) * 150) + 'px');
-  l.style.animationDelay = (Math.random() * 10) + 's';
-  sc.appendChild(l);
-}
+['🍃','🍂','🍁'].forEach(function(emoji) {
+  for (var i = 0; i < 3; i++) {
+    var l = document.createElement('div');
+    l.className = 'leaf'; l.textContent = emoji;
+    l.style.left = (Math.random() * 100) + '%';
+    l.style.setProperty('--dur', (8 + Math.random() * 6) + 's');
+    l.style.setProperty('--dx', ((Math.random() - .5) * 150) + 'px');
+    l.style.animationDelay = (Math.random() * 10) + 's';
+    sc.appendChild(l);
+  }
+});
 
+// Touch ring effect
 document.addEventListener('touchstart', function(e) {
   for (var i = 0; i < e.changedTouches.length; i++) {
     var t = e.changedTouches[i];
@@ -730,7 +819,19 @@ document.addEventListener('touchstart', function(e) {
     ring.addEventListener('animationend', function() { this.remove(); });
   }
 }, { passive: true });
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+buildCards();
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    forestMusic.volume = 0.5;
+    forestMusic.play().then(function() { musicPlaying = true; }).catch(function(){});
+  }, 500);
+});
 </script>
-    <script src="../js/audio-manager.js"></script>
+<script src="../js/audio-manager.js"></script>
 </body>
 </html>
