@@ -1527,11 +1527,15 @@ function checkDrop(el,dropX,dropY){
     placedCount++;updateProgress();spawnSparkles(dropX,dropY);playSound(true);
     if(placedCount>=totalItems)endGame();
   }else{
+    // Update home position to where it was dropped — stays put instead of snapping back
+    var newLeft=dropX-el.offsetWidth/2;
+    var newTop=dropY-el.offsetHeight/2;
+    el.dataset.homeX=newLeft;el.dataset.homeY=newTop;el.dataset.homeRot=0;
     el.classList.add('wrong');playSound(false);
     setTimeout(function(){
       el.classList.remove('wrong','dragging');
-      el.style.left=el.dataset.homeX+'px';el.style.top=el.dataset.homeY+'px';
-      el.style.transform='rotate('+el.dataset.homeRot+'deg)';
+      el.style.left=newLeft+'px';el.style.top=newTop+'px';
+      el.style.transform='rotate(0deg)';
     },420);
   }
 }

@@ -1,271 +1,228 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Underwater Explorer / വെള്ളത്തിനടിയിലെ പര്യവേക്ഷണം</title>
+<title>Underwater Explorer</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;touch-action:none}
 
 #ocean{position:fixed;inset:0;transition:background 1.8s ease}
-.zone-reef #ocean{background:linear-gradient(180deg,#006994 0%,#004e71 20%,#003d5c 45%,#005577 70%,#003a55 100%)}
-.zone-open #ocean{background:linear-gradient(180deg,#003366 0%,#002244 25%,#001a33 55%,#001122 100%)}
-.zone-deep #ocean{background:linear-gradient(180deg,#0a0a2e 0%,#050520 25%,#020215 55%,#010108 100%)}
+.zone-reef   #ocean{background:linear-gradient(180deg,#0095c8 0%,#0077a3 15%,#005a7a 35%,#003d5c 65%,#002a40 100%)}
+.zone-open   #ocean{background:linear-gradient(180deg,#003a70 0%,#002550 25%,#001a38 55%,#000e20 100%)}
+.zone-deep   #ocean{background:linear-gradient(180deg,#08082a 0%,#050518 25%,#020210 55%,#010108 100%)}
 
-.caustic-layer{
-  position:fixed;inset:0;z-index:1;pointer-events:none;
-  opacity:.3;transition:opacity 1.8s;
-  background:
-    radial-gradient(ellipse 600px 300px at 20% 15%, rgba(100,210,255,.08), transparent),
-    radial-gradient(ellipse 400px 400px at 70% 25%, rgba(80,200,240,.06), transparent),
-    radial-gradient(ellipse 500px 250px at 45% 10%, rgba(120,220,255,.05), transparent);
-  animation:causticShift 12s ease-in-out infinite alternate;
-}
+.caustic-layer{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.25;transition:opacity 1.8s;animation:causticShift 12s ease-in-out infinite alternate}
 .zone-deep .caustic-layer{opacity:.03}
-@keyframes causticShift{
-  0%{background-position:0 0,0 0,0 0}
-  100%{background-position:40px 20px,-30px 15px,20px -10px}
-}
+@keyframes causticShift{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(20deg)}}
 
-#light-rays{position:fixed;top:-10%;left:0;right:0;height:65%;z-index:1;pointer-events:none;transition:opacity 1.8s}
-.zone-deep #light-rays{opacity:.05}
-.zone-open #light-rays{opacity:.18}
-.zone-reef #light-rays{opacity:.35}
-.ray{
-  position:absolute;top:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.03) 50%,transparent 100%);
-  transform-origin:top center;
-  animation:shimmer var(--dur,8s) ease-in-out infinite;
-}
-@keyframes shimmer{
-  0%,100%{opacity:.4;transform:rotate(var(--r,0deg)) scaleX(1)}
-  50%{opacity:.9;transform:rotate(var(--r,0deg)) scaleX(1.4)}
-}
+#light-rays{position:fixed;top:-10%;left:0;right:0;height:70%;z-index:1;pointer-events:none;transition:opacity 1.8s}
+.zone-deep  #light-rays{opacity:.03}
+.zone-open  #light-rays{opacity:.14}
+.zone-reef  #light-rays{opacity:.30}
+.ray{position:absolute;top:0;background:linear-gradient(180deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.04) 50%,transparent 100%);transform-origin:top center;animation:shimmer var(--dur,8s) ease-in-out infinite}
+@keyframes shimmer{0%,100%{opacity:.4;transform:rotate(var(--r,0deg)) scaleX(1)}50%{opacity:.9;transform:rotate(var(--r,0deg)) scaleX(1.5)}}
 
 canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 
-#seabed{
-  position:fixed;bottom:0;left:0;right:0;z-index:3;
-  pointer-events:none;overflow:hidden;transition:opacity 1.8s,transform 1.8s;
-  height:32vh;
-}
-.zone-reef #seabed{opacity:1;transform:translateY(0)}
-.zone-open #seabed{opacity:.15;transform:translateY(50%)}
-.zone-deep #seabed{opacity:.03;transform:translateY(80%)}
+#seabed{position:fixed;bottom:0;left:0;right:0;z-index:3;pointer-events:none;overflow:hidden;height:32vh;transition:opacity 1.8s,transform 1.8s}
+.zone-reef  #seabed{opacity:1;transform:translateY(0)}
+.zone-open  #seabed{opacity:.12;transform:translateY(55%)}
+.zone-deep  #seabed{opacity:.02;transform:translateY(85%)}
 
-.kelp{
-  position:fixed;bottom:0;z-index:3;pointer-events:none;
-  transition:opacity 1.8s,transform 1.8s;
-}
-.zone-open .kelp{opacity:.2;transform:translateY(30%)}
-.zone-deep .kelp{opacity:.02;transform:translateY(60%)}
-.kelp-strand{
-  position:absolute;bottom:0;width:18px;border-radius:50% 50% 0 0;
-  animation:kelpSway var(--dur,6s) ease-in-out infinite alternate;
-  transform-origin:bottom center;
-}
-@keyframes kelpSway{
-  0%{transform:rotate(-8deg) scaleY(1)}
-  50%{transform:rotate(5deg) scaleY(1.04)}
-  100%{transform:rotate(-6deg) scaleY(.97)}
-}
+.kelp{position:fixed;bottom:0;z-index:3;pointer-events:none;transition:opacity 1.8s,transform 1.8s}
+.zone-open .kelp{opacity:.15;transform:translateY(35%)}
+.zone-deep .kelp{opacity:.01;transform:translateY(65%)}
+.kelp-strand{position:absolute;bottom:0;width:18px;border-radius:50% 50% 0 0;animation:kelpSway var(--dur,6s) ease-in-out infinite alternate;transform-origin:bottom center}
+@keyframes kelpSway{0%{transform:rotate(-8deg) scaleY(1)}50%{transform:rotate(5deg) scaleY(1.04)}100%{transform:rotate(-6deg) scaleY(.97)}}
 
-.seagrass{
-  position:fixed;bottom:0;z-index:3;pointer-events:none;
-  transition:opacity 1.8s;
-}
-.zone-open .seagrass{opacity:.15}
-.zone-deep .seagrass{opacity:.02}
-.grass-blade{
-  position:absolute;bottom:0;width:4px;border-radius:3px 3px 0 0;
-  animation:grassSway var(--dur,4s) ease-in-out infinite alternate;
-  transform-origin:bottom center;
-}
-@keyframes grassSway{
-  0%{transform:rotate(-12deg)}
-  100%{transform:rotate(12deg)}
-}
+.seagrass{position:fixed;bottom:0;z-index:3;pointer-events:none;transition:opacity 1.8s}
+.zone-open .seagrass{opacity:.12}
+.zone-deep .seagrass{opacity:.01}
+.grass-blade{position:absolute;bottom:0;width:4px;border-radius:3px 3px 0 0;animation:grassSway var(--dur,4s) ease-in-out infinite alternate;transform-origin:bottom center}
+@keyframes grassSway{0%{transform:rotate(-12deg)}100%{transform:rotate(12deg)}}
 
-#dive-layer{
-  position:fixed;inset:0;z-index:5;
-  transition:transform .9s cubic-bezier(.4,0,.2,1),opacity .7s ease;
-}
-.dive-down #dive-layer{transform:translateY(-120vh);opacity:0}
-.dive-up #dive-layer{transform:translateY(120vh);opacity:0}
-.dive-enter-down #dive-layer{transform:translateY(120vh);opacity:0}
-.dive-enter-up #dive-layer{transform:translateY(-120vh);opacity:0}
+#dive-layer{position:fixed;inset:0;z-index:5;transition:transform .9s cubic-bezier(.4,0,.2,1),opacity .7s ease}
+.dive-down         #dive-layer{transform:translateY(-120vh);opacity:0}
+.dive-up           #dive-layer{transform:translateY(120vh);opacity:0}
+.dive-enter-down   #dive-layer{transform:translateY(120vh);opacity:0}
+.dive-enter-up     #dive-layer{transform:translateY(-120vh);opacity:0}
 
 #creatures{position:absolute;inset:0}
-.creature{
-  position:absolute;cursor:pointer;
-  will-change:transform,left,top;
-  transition:filter .3s;
-  display:flex;align-items:center;justify-content:center;
-}
-.creature:hover{filter:brightness(1.25) drop-shadow(0 0 24px rgba(100,200,255,.7))!important}
-.creature:active{filter:brightness(.9)!important}
 
-.creature-emoji{
-  font-size:80px;
-  text-shadow:0 8px 32px rgba(0,0,0,.5),0 0 50px rgba(0,80,180,.2);
-  transition:transform .3s;
+.creature{
+  position:absolute;cursor:pointer;will-change:transform,left,top;
+  transition:filter .3s;display:flex;align-items:center;justify-content:center;
 }
-.creature:hover .creature-emoji{
-  transform:scale(1.15);
-}
+.creature:hover{filter:brightness(1.25) drop-shadow(0 0 22px rgba(80,200,255,.7))!important}
+.creature:active{filter:brightness(.85)!important}
+.creature-svg{width:100%;height:100%;display:block;transition:transform .3s}
+.creature:hover .creature-svg{transform:scale(1.1)}
 
 .creature-name{
-  position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);
-  background:rgba(0,30,60,.85);backdrop-filter:blur(6px);
-  color:#fff;font-size:11px;font-weight:700;
+  position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);
+  background:rgba(0,20,50,.88);backdrop-filter:blur(8px);
+  color:#fff;font-size:11px;font-weight:800;
   padding:3px 12px;border-radius:20px;white-space:nowrap;
   opacity:0;transition:opacity .3s;pointer-events:none;
   border:1px solid rgba(100,200,255,.25);
 }
 .creature:hover .creature-name{opacity:1}
 
-#info-panel{
-  position:fixed;inset:0;z-index:200;
-  background:rgba(0,10,25,.88);backdrop-filter:blur(16px);
-  display:none;align-items:center;justify-content:center;
-}
+/* ── Info Panel ── */
+#info-panel{position:fixed;inset:0;z-index:200;background:rgba(0,10,28,.92);backdrop-filter:blur(20px);display:none;align-items:center;justify-content:center}
 #info-panel.open{display:flex}
-
 .info-card{
   background:linear-gradient(145deg,#071e36,#0c2d4d);
-  border-radius:24px;max-width:560px;width:92%;
-  overflow:hidden;
-  border:2px solid rgba(100,200,255,.15);
+  border-radius:24px;max-width:560px;width:92%;overflow:hidden;
+  border:2px solid rgba(100,200,255,.18);
   box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 80px rgba(0,100,200,.1);
   animation:infoIn .45s cubic-bezier(.175,.885,.32,1.275);
   max-height:90vh;overflow-y:auto;
 }
 @keyframes infoIn{from{transform:scale(.7) translateY(50px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-
-.info-emoji{
-  width:100%;height:200px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:120px;
+.info-svg-wrap{
+  width:100%;height:200px;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,rgba(0,80,150,.3),rgba(0,50,100,.2));
-  border-bottom:1px solid rgba(100,200,255,.1);
+  border-bottom:1px solid rgba(100,200,255,.1);padding:18px;
 }
+.info-svg-wrap svg{width:160px;height:160px;filter:drop-shadow(0 8px 24px rgba(0,100,200,.4))}
 .info-body{padding:22px 26px 26px}
 .info-title{font-size:26px;font-weight:900;color:#64d2ff;margin-bottom:2px;text-shadow:0 2px 10px rgba(100,210,255,.25)}
 .info-latin{font-size:12px;color:rgba(255,255,255,.35);font-style:italic;margin-bottom:14px}
 .info-facts{list-style:none;padding:0}
-.info-facts li{
-  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);
-  color:rgba(255,255,255,.85);font-size:14px;font-weight:600;
-  line-height:1.5;display:flex;gap:10px;align-items:flex-start;
-}
+.info-facts li{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.85);font-size:14px;font-weight:600;line-height:1.5;display:flex;gap:10px;align-items:flex-start}
 .info-facts li:last-child{border-bottom:none}
 .fact-ic{font-size:17px;flex-shrink:0;margin-top:1px}
-
-.info-close-btn{
-  display:block;width:100%;margin-top:18px;padding:13px;
-  background:linear-gradient(135deg,#0077b6,#0096c7);
-  color:white;border:none;border-radius:14px;
-  font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;
-  transition:background .3s,transform .2s;
-  box-shadow:0 4px 16px rgba(0,119,182,.3);
-}
+.info-close-btn{display:block;width:100%;margin-top:18px;padding:13px;background:linear-gradient(135deg,#0077b6,#0096c7);color:white;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:background .3s,transform .2s;box-shadow:0 4px 16px rgba(0,119,182,.3)}
 .info-close-btn:hover{background:linear-gradient(135deg,#0096c7,#00b4d8)}
 .info-close-btn:active{transform:scale(.96)}
 
-.ui-bar{
-  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:100;
-  display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
-  background:rgba(0,20,40,.75);backdrop-filter:blur(14px);
-  padding:8px 18px;border-radius:40px;
-  border:1px solid rgba(100,200,255,.15);
-  box-shadow:0 8px 36px rgba(0,0,0,.35);
-  max-width:95%;
-}
-.zone-tab{
-  padding:10px 22px;border-radius:30px;border:2px solid transparent;
-  cursor:pointer;font-size:13px;font-weight:800;font-family:inherit;
-  color:rgba(255,255,255,.6);background:transparent;transition:all .3s;
-}
-.zone-tab:hover{color:#fff;background:rgba(100,200,255,.1)}
-.zone-tab.active{
-  color:#64d2ff;background:rgba(100,210,255,.12);
-  border-color:rgba(100,210,255,.35);box-shadow:0 0 14px rgba(100,210,255,.12);
+/* ── RIGHT TOOLBAR ── */
+#right-toolbar {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 15, 35, 0.82);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(100,200,255,.18);
+  border-radius: 28px;
+  padding: 14px 10px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
 }
 
-.lang-switch{
-  position:fixed;top:14px;right:14px;z-index:100;
-  padding:9px 20px;background:rgba(0,20,40,.65);backdrop-filter:blur(8px);
-  border:1px solid rgba(100,200,255,.15);border-radius:30px;
-  color:rgba(255,255,255,.75);font-size:13px;font-weight:800;
-  cursor:pointer;font-family:inherit;transition:all .3s;
+/* Back button in toolbar */
+.tb-back-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0,90,180,.8), rgba(0,55,130,.9));
+  border: 1px solid rgba(80,180,255,.3);
+  color: rgba(180,230,255,.95);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .25s;
+  font-family: 'Nunito', sans-serif;
 }
-.lang-switch:hover{background:rgba(0,40,80,.85);color:#fff;border-color:rgba(100,200,255,.35)}
+.tb-back-btn:hover { background: linear-gradient(135deg, rgba(0,130,255,.9), rgba(0,75,170,.95)); transform: scale(1.1); box-shadow: 0 4px 18px rgba(0,100,255,.4); }
 
-.hdr{
-  position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:100;
-  text-align:center;pointer-events:none;
+/* Language button in toolbar */
+.tb-lang-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(20,80,140,.7);
+  border: 1px solid rgba(100,200,255,.2);
+  color: rgba(150,220,255,.9);
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .25s;
+  font-family: 'Nunito', sans-serif;
+  text-align: center;
+  line-height: 1.2;
+  padding: 4px;
 }
-.hdr h1{
-  font-size:clamp(18px,3.2vw,34px);font-weight:900;
-  color:rgba(255,255,255,.88);text-shadow:0 2px 14px rgba(0,80,180,.35);
+.tb-lang-btn:hover { background: rgba(0,120,220,.8); transform: scale(1.1); box-shadow: 0 4px 18px rgba(0,100,200,.35); color: #fff; }
+
+/* Divider */
+.tb-divider {
+  width: 28px;
+  height: 1px;
+  background: rgba(100,200,255,.15);
+  margin: 2px 0;
 }
+
+/* Zone buttons */
+.tb-zone-btn {
+  width: 44px;
+  border-radius: 14px;
+  background: transparent;
+  border: 1px solid rgba(100,200,255,.1);
+  color: rgba(255,255,255,.5);
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  transition: all .3s;
+  font-family: 'Nunito', sans-serif;
+}
+.tb-zone-btn:hover { background: rgba(100,200,255,.1); color: rgba(255,255,255,.85); border-color: rgba(100,200,255,.25); }
+.tb-zone-btn.active {
+  background: rgba(100,210,255,.14);
+  border-color: rgba(100,210,255,.4);
+  color: #64d2ff;
+  box-shadow: 0 0 16px rgba(100,210,255,.15);
+}
+.tb-zone-emoji { font-size: 18px; line-height: 1; }
+.tb-zone-label { font-size: 7.5px; font-weight: 800; text-align: center; line-height: 1.2; letter-spacing: .3px; white-space: nowrap; }
+
+/* Depth indicator within toolbar */
+.tb-depth-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.tb-depth-track {
+  width: 3px;
+  height: 14px;
+  background: rgba(255,255,255,.08);
+  border-radius: 2px;
+  position: relative;
+  margin: 0;
+}
+.tb-depth-track-fill {
+  position: absolute;
+  top: 0; left: 0; width: 100%;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #64d2ff, #0077b6);
+  transition: height .8s ease;
+}
+
+/* Header */
+.hdr{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;pointer-events:none}
+.hdr h1{font-size:clamp(18px,3.2vw,34px);font-weight:900;color:rgba(255,255,255,.88);text-shadow:0 2px 14px rgba(0,80,180,.4)}
 .hdr p{font-size:clamp(11px,1.4vw,14px);font-weight:600;color:rgba(100,210,255,.6);margin-top:1px}
 
-.depth-indicator{
-  position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:100;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-}
-.depth-line{width:2px;height:60px;background:rgba(255,255,255,.1);border-radius:2px;position:relative}
-.depth-fill{
-  position:absolute;top:0;left:0;width:100%;border-radius:2px;
-  background:linear-gradient(180deg,#64d2ff,#0077b6);
-  transition:height .8s ease;
-}
-.d-dot{
-  width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.15);
-  border:2px solid rgba(255,255,255,.25);transition:all .5s;cursor:pointer;
-}
-.d-dot.on{background:#64d2ff;border-color:#64d2ff;box-shadow:0 0 12px rgba(100,210,255,.5);transform:scale(1.3)}
-.d-label{
-  font-size:9px;font-weight:700;color:rgba(255,255,255,.3);
-  writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:1px;
-  margin-top:6px;
-}
-
-.floating-particle{
-  position:fixed;pointer-events:none;z-index:4;border-radius:50%;
-  background:rgba(180,220,255,.15);
-  animation:pFloat var(--t,10s) linear infinite;
-}
-@keyframes pFloat{
-  0%{transform:translateY(0) translateX(0) scale(1);opacity:.2}
-  50%{transform:translateY(calc(var(--dy,-300px)*.5)) translateX(var(--sx,15px)) scale(.8);opacity:.15}
-  100%{transform:translateY(var(--dy,-300px)) translateX(0) scale(.6);opacity:0}
-}
-
-.glow-orb{
-  position:fixed;pointer-events:none;z-index:4;border-radius:50%;
-  transition:opacity 1.8s;
-}
-.zone-reef .glow-orb{opacity:0}
-.zone-open .glow-orb{opacity:.3}
-.zone-deep .glow-orb{opacity:.8}
+.floating-particle{position:fixed;pointer-events:none;z-index:4;border-radius:50%;background:rgba(180,220,255,.15);animation:pFloat var(--t,10s) linear infinite}
+@keyframes pFloat{0%{transform:translateY(0) translateX(0) scale(1);opacity:.2}50%{transform:translateY(calc(var(--dy,-300px)*.5)) translateX(var(--sx,15px)) scale(.8);opacity:.15}100%{transform:translateY(var(--dy,-300px)) translateX(0) scale(.6);opacity:0}}
 </style>
 </head>
 <body class="zone-reef">
-
-<audio id="underwater-explorer-music" preload="auto" loop>
-  <source src="../assets/Audio/freesound_community-night-cyprus-sea-53355.mp3" type="audio/mpeg">
-</audio>
 
 <div id="ocean"></div>
 <div class="caustic-layer"></div>
 <div id="light-rays"></div>
 <canvas id="bubble-cv"></canvas>
-
 <div id="kelp-container"></div>
 <div id="seagrass-container"></div>
 
@@ -275,1027 +232,1793 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 
 <div class="hdr">
   <h1 id="main-title">Underwater Explorer</h1>
-  <p id="zone-desc">Coral Reef -- Tap any creature to learn about it!</p>
+  <p id="zone-desc">Coral Reef — Tap any creature to learn about it!</p>
 </div>
 
-<button class="lang-switch" id="lang-btn">മലയാളം</button>
+<!-- RIGHT TOOLBAR: Back, Language, Zone switcher + depth indicators -->
+<div id="right-toolbar">
+  <!-- Back -->
+  <button class="tb-back-btn" id="globalBackBtn" title="Back">←</button>
+  <!-- Language -->
+  <button class="tb-lang-btn" id="lang-btn">മല<br>യാളം</button>
 
-<div class="depth-indicator">
-  <div class="d-dot on" data-z="reef"></div>
-  <div class="depth-line"><div class="depth-fill" id="depth-fill" style="height:0%"></div></div>
-  <div class="d-dot" data-z="open"></div>
-  <div class="depth-line"><div class="depth-fill" style="height:0%"></div></div>
-  <div class="d-dot" data-z="deep"></div>
-  <div class="d-label">DEPTH</div>
+  <div class="tb-divider"></div>
+
+  <!-- Reef -->
+  <button class="tb-zone-btn active" data-z="reef">
+    <span class="tb-zone-emoji">🏝️</span>
+    <span class="tb-zone-label" id="label-reef">Coral<br>Reef</span>
+  </button>
+  <div class="tb-depth-section">
+    <div class="tb-depth-track"><div class="tb-depth-track-fill" id="depth-fill-1" style="height:0%"></div></div>
+  </div>
+  <!-- Open Ocean -->
+  <button class="tb-zone-btn" data-z="open">
+    <span class="tb-zone-emoji">🌊</span>
+    <span class="tb-zone-label" id="label-open">Open<br>Ocean</span>
+  </button>
+  <div class="tb-depth-section">
+    <div class="tb-depth-track"><div class="tb-depth-track-fill" id="depth-fill-2" style="height:0%"></div></div>
+  </div>
+  <!-- Deep Sea -->
+  <button class="tb-zone-btn" data-z="deep">
+    <span class="tb-zone-emoji">🌑</span>
+    <span class="tb-zone-label" id="label-deep">Deep<br>Sea</span>
+  </button>
 </div>
-
-<nav class="ui-bar">
-  <button class="zone-tab active" data-z="reef"><span class="zone-label">🏝️ Coral Reef</span></button>
-  <button class="zone-tab" data-z="open"><span class="zone-label">🌊 Open Ocean</span></button>
-  <button class="zone-tab" data-z="deep"><span class="zone-label">🌑 Deep Sea</span></button>
-</nav>
 
 <div id="info-panel">
   <div class="info-card">
-    <div class="info-emoji" id="ip-emoji"></div>
+    <div class="info-svg-wrap" id="ip-svg"></div>
     <div class="info-body">
-      <h2 class="info-title" id="ip-name"></h2>
-      <p class="info-latin" id="ip-latin"></p>
-      <ul class="info-facts" id="ip-facts"></ul>
+      <h2 class="info-title"  id="ip-name"></h2>
+      <p  class="info-latin"  id="ip-latin"></p>
+      <ul class="info-facts"  id="ip-facts"></ul>
       <button class="info-close-btn" id="ip-close">Got it!</button>
     </div>
   </div>
 </div>
 
 <script>
-(function(){
+/* ════════════════════════════════════════════════════
+   HIGHLY REALISTIC SVG LIBRARY
+════════════════════════════════════════════════════ */
+var SVGS = {
 
-var W = window.innerWidth;
-var H = window.innerHeight;
-var zone = 'reef';
-var currentLang = 'en';
-var layer = document.getElementById('creatures');
-var diveLayer = document.getElementById('dive-layer');
-var alive = [];
-var raf;
-var ZONE_ORDER = ['reef','open','deep'];
+clownfish:`<svg viewBox="0 0 140 100" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="cf_body" cx="35%" cy="30%"><stop offset="0%" stop-color="#FF8C00"/><stop offset="55%" stop-color="#E85000"/><stop offset="100%" stop-color="#AA2200"/></radialGradient>
+  <radialGradient id="cf_belly" cx="50%" cy="40%"><stop offset="0%" stop-color="#FFA040"/><stop offset="100%" stop-color="#CC4000"/></radialGradient>
+  <radialGradient id="cf_eye" cx="28%" cy="25%"><stop offset="0%" stop-color="#4a3800"/><stop offset="40%" stop-color="#1a1200"/><stop offset="100%" stop-color="#000"/></radialGradient>
+  <filter id="cf_shadow"><feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,.4)"/></filter>
+</defs>
+<!-- tail fin with rays -->
+<path d="M108,50 Q124,28 134,22 Q130,35 128,50 Q130,65 134,78 Q124,72 108,50Z" fill="#CC3300"/>
+<path d="M108,50 Q122,32 130,26" fill="none" stroke="#FF6600" stroke-width="1.2" opacity=".6"/>
+<path d="M108,50 Q124,50 132,50" fill="none" stroke="#FF6600" stroke-width="1" opacity=".5"/>
+<path d="M108,50 Q122,68 130,74" fill="none" stroke="#FF6600" stroke-width="1.2" opacity=".6"/>
+<!-- body main -->
+<ellipse cx="62" cy="50" rx="48" ry="30" fill="url(#cf_body)" filter="url(#cf_shadow)"/>
+<!-- belly lighter zone -->
+<ellipse cx="58" cy="57" rx="36" ry="16" fill="url(#cf_belly)" opacity=".5"/>
+<!-- scale texture (subtle arcs) -->
+<path d="M28,38 Q45,32 62,36" fill="none" stroke="rgba(255,180,80,.18)" stroke-width="2.5"/>
+<path d="M20,46 Q45,40 70,44" fill="none" stroke="rgba(255,180,80,.14)" stroke-width="2"/>
+<path d="M20,54 Q45,48 72,52" fill="none" stroke="rgba(255,180,80,.12)" stroke-width="2"/>
+<path d="M24,62 Q46,57 70,60" fill="none" stroke="rgba(255,180,80,.11)" stroke-width="1.8"/>
+<!-- white stripe 1 (head band) -->
+<path d="M24,23 Q28,50 24,77 Q18,74 16,50 Q18,26 24,23Z" fill="white" opacity=".94"/>
+<path d="M24,23 Q28,50 24,77" fill="none" stroke="#FF7700" stroke-width="1.5"/>
+<path d="M16,25 Q20,50 16,75" fill="none" stroke="#CC3300" stroke-width="1"/>
+<!-- white stripe 2 (middle) -->
+<path d="M56,21 Q60,50 56,79 Q50,77 50,50 Q50,23 56,21Z" fill="white" opacity=".92"/>
+<path d="M56,21 Q60,50 56,79" fill="none" stroke="#FF7700" stroke-width="1.5"/>
+<!-- white stripe 3 (tail base) -->
+<path d="M88,24 Q92,50 88,76 Q84,74 82,50 Q83,26 88,24Z" fill="white" opacity=".90"/>
+<path d="M88,24 Q92,50 88,76" fill="none" stroke="#FF7700" stroke-width="1.5"/>
+<!-- body outline -->
+<ellipse cx="62" cy="50" rx="48" ry="30" fill="none" stroke="#991800" stroke-width="1.8"/>
+<!-- dorsal fin with rays -->
+<path d="M28,22 Q50,8 82,18 Q76,22 50,20 Q30,20 28,22Z" fill="#CC2200"/>
+<path d="M32,21 L30,8" stroke="#FF5500" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M42,17 L42,4" stroke="#FF5500" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M52,14 L54,3" stroke="#FF5500" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M62,15 L65,5" stroke="#FF5500" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M72,17 L76,8" stroke="#FF5500" stroke-width="1.5" stroke-linecap="round"/>
+<!-- pectoral fin -->
+<path d="M66,62 Q80,76 66,84 Q56,74 62,64Z" fill="#DD4400" stroke="#AA2200" stroke-width="1.2"/>
+<path d="M66,64 L62,78" stroke="#FF6600" stroke-width=".8" opacity=".6"/>
+<path d="M70,68 L68,80" stroke="#FF6600" stroke-width=".8" opacity=".5"/>
+<!-- anal fin -->
+<path d="M56,78 Q70,90 80,80 Q72,80 60,78Z" fill="#CC2200"/>
+<!-- eye socket -->
+<circle cx="20" cy="46" r="12" fill="#1a0800"/>
+<circle cx="20" cy="46" r="10" fill="url(#cf_eye)"/>
+<!-- iris detail -->
+<circle cx="20" cy="46" r="7" fill="#3d2800"/>
+<circle cx="20" cy="46" r="5" fill="#1a0800"/>
+<!-- pupil -->
+<circle cx="20" cy="46" r="3.5" fill="#050200"/>
+<!-- eye shine -->
+<circle cx="16.5" cy="42.5" r="2.8" fill="rgba(255,255,255,.9)"/>
+<circle cx="22" cy="44" r="1.2" fill="rgba(255,255,255,.5)"/>
+<!-- white ring around eye -->
+<circle cx="20" cy="46" r="12" fill="none" stroke="white" stroke-width="2"/>
+<!-- mouth -->
+<path d="M6,52 Q13,60 22,56" fill="none" stroke="#880000" stroke-width="2" stroke-linecap="round"/>
+<path d="M6,52 Q12,48 18,48" fill="none" stroke="#AA2200" stroke-width="1.5" stroke-linecap="round"/>
+<!-- nostril -->
+<circle cx="9" cy="49" r="1.5" fill="#660000"/>
+</svg>`,
 
+seaTurtle:`<svg viewBox="0 0 130 115" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="tu_shell" cx="40%" cy="35%"><stop offset="0%" stop-color="#7CB87C"/><stop offset="45%" stop-color="#4a9050"/><stop offset="100%" stop-color="#1B5E20"/></radialGradient>
+  <radialGradient id="tu_skin" cx="40%" cy="30%"><stop offset="0%" stop-color="#5a9a5a"/><stop offset="100%" stop-color="#2E7D32"/></radialGradient>
+  <filter id="tu_drop"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,.35)"/></filter>
+</defs>
+<!-- rear flippers -->
+<ellipse cx="28" cy="82" rx="20" ry="9" fill="#2E7D32" transform="rotate(28 28 82)" filter="url(#tu_drop)"/>
+<path d="M18,88 L10,96 M22,92 L16,100 M28,94 L24,102" stroke="#1B5E20" stroke-width="1.5" stroke-linecap="round"/>
+<ellipse cx="102" cy="82" rx="20" ry="9" fill="#2E7D32" transform="rotate(-28 102 82)" filter="url(#tu_drop)"/>
+<path d="M112,88 L120,96 M108,92 L114,100 M102,94 L106,102" stroke="#1B5E20" stroke-width="1.5" stroke-linecap="round"/>
+<!-- front flippers -->
+<ellipse cx="22" cy="44" rx="22" ry="10" fill="url(#tu_skin)" transform="rotate(-38 22 44)" filter="url(#tu_drop)"/>
+<path d="M8,36 L2,28 M12,32 L8,22 M18,30 L16,20" stroke="#1B5E20" stroke-width="1.5" stroke-linecap="round"/>
+<ellipse cx="108" cy="44" rx="22" ry="10" fill="url(#tu_skin)" transform="rotate(38 108 44)" filter="url(#tu_drop)"/>
+<path d="M122,36 L128,28 M118,32 L122,22 M112,30 L114,20" stroke="#1B5E20" stroke-width="1.5" stroke-linecap="round"/>
+<!-- shell base -->
+<ellipse cx="65" cy="60" rx="42" ry="36" fill="url(#tu_shell)" filter="url(#tu_drop)"/>
+<!-- shell scute pattern - central vertebral scutes -->
+<path d="M65,26 L65,94" fill="none" stroke="#1B5E20" stroke-width="2.5"/>
+<path d="M50,28 L44,94" fill="none" stroke="#1B5E20" stroke-width="1.8"/>
+<path d="M80,28 L86,94" fill="none" stroke="#1B5E20" stroke-width="1.8"/>
+<path d="M36,38 L28,86" fill="none" stroke="#1B5E20" stroke-width="1.5"/>
+<path d="M94,38 L102,86" fill="none" stroke="#1B5E20" stroke-width="1.5"/>
+<!-- horizontal scute lines -->
+<path d="M30,44 Q65,36 100,44" fill="none" stroke="#1B5E20" stroke-width="1.8"/>
+<path d="M26,56 Q65,48 104,56" fill="none" stroke="#1B5E20" stroke-width="1.6"/>
+<path d="M28,68 Q65,60 102,68" fill="none" stroke="#1B5E20" stroke-width="1.5"/>
+<path d="M30,80 Q65,72 100,80" fill="none" stroke="#1B5E20" stroke-width="1.4"/>
+<!-- scute highlights (center of each polygon) -->
+<circle cx="65" cy="32" r="4" fill="rgba(120,200,120,.25)"/>
+<circle cx="65" cy="50" r="5" fill="rgba(120,200,120,.2)"/>
+<circle cx="65" cy="66" r="5" fill="rgba(120,200,120,.2)"/>
+<circle cx="65" cy="82" r="4" fill="rgba(120,200,120,.18)"/>
+<circle cx="44" cy="44" r="4" fill="rgba(120,200,120,.18)"/>
+<circle cx="86" cy="44" r="4" fill="rgba(120,200,120,.18)"/>
+<!-- shell outline -->
+<ellipse cx="65" cy="60" rx="42" ry="36" fill="none" stroke="#1B5E20" stroke-width="2.2"/>
+<!-- neck -->
+<path d="M52,26 Q58,16 72,16 Q78,26 74,26" fill="#4CAF50" stroke="#2E7D32" stroke-width="1.5"/>
+<!-- head -->
+<ellipse cx="65" cy="18" rx="16" ry="13" fill="#4CAF50" filter="url(#tu_drop)"/>
+<!-- head scale pattern -->
+<path d="M55,14 Q65,11 75,14" fill="none" stroke="#2E7D32" stroke-width="1"/>
+<path d="M53,18 Q65,14 77,18" fill="none" stroke="#2E7D32" stroke-width="1"/>
+<!-- nostrils -->
+<circle cx="60" cy="14" r="2" fill="#1B5E20"/>
+<circle cx="70" cy="14" r="2" fill="#1B5E20"/>
+<!-- eyes -->
+<circle cx="56" cy="20" r="5.5" fill="#0d2010"/>
+<circle cx="56" cy="20" r="4" fill="#1a3a18"/>
+<circle cx="56" cy="20" r="2.5" fill="#050e04"/>
+<circle cx="54.5" cy="18.5" r="1.8" fill="rgba(255,255,255,.85)"/>
+<circle cx="74" cy="20" r="5.5" fill="#0d2010"/>
+<circle cx="74" cy="20" r="4" fill="#1a3a18"/>
+<circle cx="74" cy="20" r="2.5" fill="#050e04"/>
+<circle cx="72.5" cy="18.5" r="1.8" fill="rgba(255,255,255,.85)"/>
+<!-- mouth line -->
+<path d="M56,26 Q65,30 74,26" fill="none" stroke="#2E7D32" stroke-width="1.8" stroke-linecap="round"/>
+<!-- tail -->
+<path d="M60,95 Q65,106 70,95Z" fill="#388E3C" stroke="#2E7D32" stroke-width="1"/>
+</svg>`,
+
+morayEel:`<svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="ee_body" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4E342E"/><stop offset="30%" stop-color="#6D4C41"/><stop offset="70%" stop-color="#5D4037"/><stop offset="100%" stop-color="#3E2723"/></linearGradient>
+  <filter id="ee_glow"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="0" dy="1"/><feComposite in2="SourceGraphic"/></filter>
+</defs>
+<!-- body undulation -->
+<path d="M148,40 Q128,16 108,40 Q88,64 68,40 Q48,16 28,28 Q14,32 6,36" fill="none" stroke="#2E1A17" stroke-width="28" stroke-linecap="round"/>
+<path d="M148,40 Q128,16 108,40 Q88,64 68,40 Q48,16 28,28 Q14,32 6,36" fill="none" stroke="url(#ee_body)" stroke-width="24" stroke-linecap="round"/>
+<!-- pattern - yellow spots/blotches -->
+<path d="M148,40 Q128,16 108,40 Q88,64 68,40 Q48,16 28,28 Q14,32 6,36" fill="none" stroke="rgba(220,180,80,.12)" stroke-width="12" stroke-linecap="round" stroke-dasharray="5 14"/>
+<!-- belly lighter streak -->
+<path d="M148,40 Q128,18 108,40 Q88,62 68,40 Q48,18 29,29 Q15,33 7,37" fill="none" stroke="rgba(200,150,80,.2)" stroke-width="5" stroke-linecap="round"/>
+<!-- subtle body highlight top -->
+<path d="M148,38 Q128,15 108,38 Q88,62 68,38 Q48,15 29,28" fill="none" stroke="rgba(255,200,140,.08)" stroke-width="4" stroke-linecap="round"/>
+<!-- dorsal fin membrane -->
+<path d="M120,24 Q134,10 148,22" fill="rgba(50,25,10,.55)" stroke="#4E342E" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M120,24 Q128,14 136,18" fill="none" stroke="#6D4C41" stroke-width=".8"/>
+<!-- head -->
+<ellipse cx="7" cy="36" rx="14" ry="18" fill="#5D4037"/>
+<ellipse cx="7" cy="36" rx="12" ry="16" fill="#6D4C41"/>
+<!-- head pattern -->
+<path d="M2,26 Q10,24 16,28" fill="none" stroke="#4E342E" stroke-width="1.2" opacity=".5"/>
+<path d="M1,32 Q10,30 17,34" fill="none" stroke="#4E342E" stroke-width="1" opacity=".4"/>
+<!-- eye with slit pupil -->
+<circle cx="7" cy="28" r="7" fill="#1a1200"/>
+<circle cx="7" cy="28" r="5.5" fill="#2a2000"/>
+<ellipse cx="7" cy="28" rx="2" ry="4.5" fill="#050300"/>
+<circle cx="5.5" cy="26" r="2.2" fill="rgba(255,255,240,.7)"/>
+<!-- nostril tubes (moray signature) -->
+<circle cx="2" cy="31" r="2.2" fill="#1a0800"/>
+<circle cx="6" cy="30" r="2" fill="#1a0800"/>
+<!-- open mouth with teeth -->
+<path d="M0,38 Q6,50 16,46 Q10,44 4,44Z" fill="#2E1A17"/>
+<path d="M2,40 L4,48 M6,39 L7,46 M10,38 L10,44 M14,38 L13,43" stroke="#8D6E63" stroke-width="1.3"/>
+<!-- upper teeth -->
+<path d="M2,38 L3,44 M6,37 L7,43 M10,37 L10,42 M14,38 L13,42" stroke="#A0896A" stroke-width="1.5"/>
+</svg>`,
+
+blueTang:`<svg viewBox="0 0 130 90" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="bt_body" cx="35%" cy="32%"><stop offset="0%" stop-color="#5BB8F5"/><stop offset="50%" stop-color="#1976D2"/><stop offset="100%" stop-color="#0D47A1"/></radialGradient>
+  <radialGradient id="bt_belly" cx="50%" cy="50%"><stop offset="0%" stop-color="#64B5F6"/><stop offset="100%" stop-color="#1565C0"/></radialGradient>
+  <filter id="bt_glow"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,50,180,.35)"/></filter>
+</defs>
+<!-- tail fin with detailed rays -->
+<path d="M106,45 Q122,26 132,20 Q128,36 126,45 Q128,54 132,70 Q122,64 106,45Z" fill="#1565C0"/>
+<path d="M106,45 Q120,30 128,24" fill="none" stroke="#42A5F5" stroke-width=".9" opacity=".7"/>
+<path d="M106,45 Q122,45 130,46" fill="none" stroke="#42A5F5" stroke-width=".8" opacity=".6"/>
+<path d="M106,45 Q120,60 128,66" fill="none" stroke="#42A5F5" stroke-width=".9" opacity=".7"/>
+<!-- body -->
+<ellipse cx="58" cy="45" rx="50" ry="28" fill="url(#bt_body)" filter="url(#bt_glow)"/>
+<!-- lateral belly area -->
+<ellipse cx="52" cy="52" rx="40" ry="14" fill="url(#bt_belly)" opacity=".45"/>
+<!-- scale arcs -->
+<path d="M30,32 Q58,25 86,31" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="1.8"/>
+<path d="M22,40 Q58,33 94,39" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1.5"/>
+<path d="M22,50 Q58,43 94,49" fill="none" stroke="rgba(255,255,255,.11)" stroke-width="1.5"/>
+<path d="M26,60 Q58,53 90,59" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="1.3"/>
+<!-- yellow tail stripe -->
+<path d="M92,18 Q100,45 92,72" fill="none" stroke="#FFD600" stroke-width="6" stroke-linecap="round"/>
+<path d="M92,22 Q99,45 92,68" fill="none" stroke="#FFF176" stroke-width="2" stroke-linecap="round" opacity=".5"/>
+<!-- body outline -->
+<ellipse cx="58" cy="45" rx="50" ry="28" fill="none" stroke="#0D47A1" stroke-width="2"/>
+<!-- dorsal fin with spines -->
+<path d="M28,18 Q58,5 88,16 Q82,20 58,18 Q32,18 28,18Z" fill="#1565C0"/>
+<path d="M32,18 L30,6"  stroke="#42A5F5" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M42,14 L42,2"  stroke="#42A5F5" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M52,11 L53,1"  stroke="#42A5F5" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M62,10 L64,0"  stroke="#42A5F5" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M72,12 L75,2"  stroke="#42A5F5" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M82,15 L86,6"  stroke="#42A5F5" stroke-width="1.5" stroke-linecap="round"/>
+<!-- pectoral fin -->
+<path d="M62,62 Q76,78 62,84 Q52,74 58,64Z" fill="#1976D2" stroke="#0D47A1" stroke-width="1.2"/>
+<path d="M62,64 L56,76" stroke="#42A5F5" stroke-width=".8" opacity=".5"/>
+<path d="M66,68 L62,80" stroke="#42A5F5" stroke-width=".8" opacity=".4"/>
+<!-- anal fin -->
+<path d="M50,70 Q64,82 78,72 Q70,72 58,70Z" fill="#1565C0"/>
+<!-- scalpel (yellow spine near tail) -->
+<path d="M95,56 L102,64" stroke="#FFD600" stroke-width="3" stroke-linecap="round"/>
+<!-- eye -->
+<circle cx="20" cy="40" r="11" fill="#0a1a40"/>
+<circle cx="20" cy="40" r="8.5" fill="#142a60"/>
+<circle cx="20" cy="40" r="6" fill="#08102a"/>
+<circle cx="20" cy="40" r="3.5" fill="#020810"/>
+<circle cx="17" cy="37" r="3" fill="rgba(255,255,255,.88)"/>
+<circle cx="22" cy="38.5" r="1.2" fill="rgba(255,255,255,.45)"/>
+<!-- white ring around eye -->
+<circle cx="20" cy="40" r="11" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+<!-- mouth -->
+<path d="M6,45 Q12,52 20,48" fill="none" stroke="#0D47A1" stroke-width="2" stroke-linecap="round"/>
+<path d="M6,45 Q12,40 18,40" fill="none" stroke="#1565C0" stroke-width="1.5" stroke-linecap="round"/>
+</svg>`,
+
+starfish:`<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="sf_arm" cx="50%" cy="30%"><stop offset="0%" stop-color="#FF8A65"/><stop offset="55%" stop-color="#E64A19"/><stop offset="100%" stop-color="#BF360C"/></radialGradient>
+  <radialGradient id="sf_center" cx="40%" cy="35%"><stop offset="0%" stop-color="#FF7043"/><stop offset="100%" stop-color="#D84315"/></radialGradient>
+  <filter id="sf_shadow"><feDropShadow dx="1" dy="3" stdDeviation="2.5" flood-color="rgba(0,0,0,.3)"/></filter>
+</defs>
+<!-- 5 arms with texture -->
+<g filter="url(#sf_shadow)">
+  <path d="M55,55 L46,18 Q55,10 64,18 Z" fill="url(#sf_arm)"/>
+  <path d="M55,55 L46,18 Q55,10 64,18 Z" fill="url(#sf_arm)" transform="rotate(72 55 55)"/>
+  <path d="M55,55 L46,18 Q55,10 64,18 Z" fill="url(#sf_arm)" transform="rotate(144 55 55)"/>
+  <path d="M55,55 L46,18 Q55,10 64,18 Z" fill="url(#sf_arm)" transform="rotate(216 55 55)"/>
+  <path d="M55,55 L46,18 Q55,10 64,18 Z" fill="url(#sf_arm)" transform="rotate(288 55 55)"/>
+</g>
+<!-- arm grooves -->
+<line x1="55" y1="55" x2="55" y2="14" stroke="#BF360C" stroke-width="1.5" opacity=".5"/>
+<line x1="55" y1="55" x2="55" y2="14" stroke="#BF360C" stroke-width="1.5" opacity=".5" transform="rotate(72 55 55)"/>
+<line x1="55" y1="55" x2="55" y2="14" stroke="#BF360C" stroke-width="1.5" opacity=".5" transform="rotate(144 55 55)"/>
+<line x1="55" y1="55" x2="55" y2="14" stroke="#BF360C" stroke-width="1.5" opacity=".5" transform="rotate(216 55 55)"/>
+<line x1="55" y1="55" x2="55" y2="14" stroke="#BF360C" stroke-width="1.5" opacity=".5" transform="rotate(288 55 55)"/>
+<!-- tube feet dots -->
+<circle cx="55" cy="32" r="2.5" fill="#FFAB91" opacity=".8"/>
+<circle cx="55" cy="22" r="2" fill="#FFAB91" opacity=".7"/>
+<circle cx="55" cy="32" r="2.5" fill="#FFAB91" opacity=".8" transform="rotate(72 55 55)"/>
+<circle cx="55" cy="22" r="2" fill="#FFAB91" opacity=".7" transform="rotate(72 55 55)"/>
+<circle cx="55" cy="32" r="2.5" fill="#FFAB91" opacity=".8" transform="rotate(144 55 55)"/>
+<circle cx="55" cy="32" r="2.5" fill="#FFAB91" opacity=".8" transform="rotate(216 55 55)"/>
+<circle cx="55" cy="32" r="2.5" fill="#FFAB91" opacity=".8" transform="rotate(288 55 55)"/>
+<!-- central disc -->
+<circle cx="55" cy="55" r="22" fill="url(#sf_center)"/>
+<circle cx="55" cy="55" r="22" fill="none" stroke="#BF360C" stroke-width="1.5"/>
+<!-- disc texture rings -->
+<circle cx="55" cy="55" r="16" fill="none" stroke="#D84315" stroke-width="1.2" opacity=".5"/>
+<circle cx="55" cy="55" r="10" fill="#FF5722" opacity=".6"/>
+<circle cx="55" cy="55" r="6"  fill="#FFAB91" opacity=".4"/>
+<!-- eyes -->
+<circle cx="48" cy="52" r="4.5" fill="#1a0800"/>
+<circle cx="48" cy="52" r="3" fill="#0a0400"/>
+<circle cx="47" cy="51" r="1.5" fill="rgba(255,255,255,.8)"/>
+<circle cx="62" cy="52" r="4.5" fill="#1a0800"/>
+<circle cx="62" cy="52" r="3" fill="#0a0400"/>
+<circle cx="61" cy="51" r="1.5" fill="rgba(255,255,255,.8)"/>
+<!-- mouth -->
+<path d="M46,59 Q55,67 64,59" fill="none" stroke="#BF360C" stroke-width="2.5" stroke-linecap="round"/>
+</svg>`,
+
+seahorse:`<svg viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="sh_body" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD54F"/><stop offset="50%" stop-color="#FFB300"/><stop offset="100%" stop-color="#E65100"/></linearGradient>
+  <filter id="sh_drop"><feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,.3)"/></filter>
+</defs>
+<!-- coiled tail -->
+<path d="M36,82 Q54,86 52,100 Q50,112 38,112 Q26,112 27,102 Q28,94 38,96 Q44,97 42,104 Q40,108 36,107" fill="none" stroke="#CC5500" stroke-width="9" stroke-linecap="round"/>
+<path d="M36,82 Q54,86 52,100 Q50,112 38,112 Q26,112 27,102 Q28,94 38,96" fill="none" stroke="#FFB300" stroke-width="3" stroke-linecap="round" opacity=".4"/>
+<!-- body segments (bony rings) -->
+<path d="M24,82 Q20,70 22,56 Q24,44 30,36 Q38,28 44,32 Q52,38 50,52 Q48,66 44,76 Q40,84 32,84Z" fill="url(#sh_body)" filter="url(#sh_drop)"/>
+<!-- segment lines (bony plates) -->
+<path d="M21,80 Q38,77 50,80" fill="none" stroke="#CC5500" stroke-width="1.5" opacity=".7"/>
+<path d="M21,74 Q38,71 50,74" fill="none" stroke="#CC5500" stroke-width="1.4" opacity=".65"/>
+<path d="M22,68 Q38,65 50,68" fill="none" stroke="#CC5500" stroke-width="1.4" opacity=".6"/>
+<path d="M22,62 Q38,59 49,62" fill="none" stroke="#CC5500" stroke-width="1.3" opacity=".55"/>
+<path d="M23,56 Q38,53 48,56" fill="none" stroke="#CC5500" stroke-width="1.3" opacity=".5"/>
+<path d="M24,50 Q37,47 47,50" fill="none" stroke="#CC5500" stroke-width="1.2" opacity=".5"/>
+<path d="M26,44 Q36,41 44,44" fill="none" stroke="#CC5500" stroke-width="1.2" opacity=".45"/>
+<!-- belly pale streak -->
+<path d="M30,36 Q36,60 34,82" fill="none" stroke="rgba(255,220,120,.35)" stroke-width="8" stroke-linecap="round"/>
+<!-- body highlight -->
+<path d="M30,40 Q34,58 32,78" fill="none" stroke="rgba(255,240,180,.2)" stroke-width="4" stroke-linecap="round"/>
+<!-- neck -->
+<path d="M28,35 Q26,26 30,20" fill="url(#sh_body)" stroke="#CC5500" stroke-width="1.2"/>
+<path d="M40,35 Q44,26 40,20" fill="url(#sh_body)" stroke="#CC5500" stroke-width="1.2"/>
+<!-- head -->
+<ellipse cx="34" cy="22" rx="14" ry="16" fill="#FFB300" filter="url(#sh_drop)"/>
+<!-- head plates -->
+<path d="M24,18 Q34,14 44,18" fill="none" stroke="#CC5500" stroke-width="1" opacity=".5"/>
+<path d="M22,23 Q34,18 46,23" fill="none" stroke="#CC5500" stroke-width="1" opacity=".45"/>
+<!-- snout -->
+<path d="M20,28 Q11,24 8,16 Q14,13 22,18Z" fill="#FFA000" stroke="#CC5500" stroke-width="1"/>
+<path d="M14,22 L8,16" stroke="rgba(255,200,80,.3)" stroke-width="2" stroke-linecap="round"/>
+<!-- crown spines -->
+<path d="M26,9 L24,1"  stroke="#FF6D00" stroke-width="2" stroke-linecap="round"/>
+<path d="M30,7 L30,0"  stroke="#FF6D00" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M34,6 L35,0"  stroke="#FF8F00" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M38,7 L40,1"  stroke="#FF6D00" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M42,9 L44,2"  stroke="#FF6D00" stroke-width="2" stroke-linecap="round"/>
+<!-- eye -->
+<circle cx="28" cy="20" r="7" fill="#1a0800"/>
+<circle cx="28" cy="20" r="5.5" fill="#2a1400"/>
+<circle cx="28" cy="20" r="3.5" fill="#080400"/>
+<circle cx="26" cy="18" r="2.5" fill="rgba(255,255,255,.85)"/>
+<circle cx="30" cy="19.5" r="1" fill="rgba(255,255,255,.45)"/>
+<!-- dorsal fin -->
+<path d="M42,38 Q58,34 56,48 Q48,48 42,44Z" fill="rgba(255,183,77,.55)" stroke="#CC5500" stroke-width="1"/>
+<path d="M44,40 L52,36" stroke="#FF8F00" stroke-width=".8" opacity=".5"/>
+<path d="M46,44 L54,40" stroke="#FF8F00" stroke-width=".8" opacity=".4"/>
+<!-- pectoral fin -->
+<path d="M32,42 Q24,48 26,54 Q32,52 34,46Z" fill="rgba(255,200,80,.45)" stroke="#CC5500" stroke-width=".8"/>
+</svg>`,
+
+crab:`<svg viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="cr_shell" cx="38%" cy="30%"><stop offset="0%" stop-color="#FF7043"/><stop offset="55%" stop-color="#E53935"/><stop offset="100%" stop-color="#B71C1C"/></radialGradient>
+  <radialGradient id="cr_claw" cx="35%" cy="30%"><stop offset="0%" stop-color="#FF5722"/><stop offset="100%" stop-color="#C62828"/></radialGradient>
+  <filter id="cr_shadow"><feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="rgba(0,0,0,.35)"/></filter>
+</defs>
+<!-- walking legs (3 pairs behind claw) -->
+<g stroke-linecap="round" filter="url(cr_shadow)">
+  <line x1="36" y1="56" x2="20" y2="46"/> <line x1="20" y1="46" x2="12" y2="40"/>
+  <line x1="36" y1="64" x2="18" y2="60"/> <line x1="18" y1="60" x2="8"  y2="58"/>
+  <line x1="38" y1="72" x2="22" y2="74"/> <line x1="22" y1="74" x2="12" y2="82"/>
+  <line x1="94" y1="56" x2="110" y2="46"/> <line x1="110" y1="46" x2="118" y2="40"/>
+  <line x1="94" y1="64" x2="112" y2="60"/> <line x1="112" y1="60" x2="122" y2="58"/>
+  <line x1="92" y1="72" x2="108" y2="74"/> <line x1="108" y1="74" x2="118" y2="82"/>
+</g>
+<g stroke="#C62828" stroke-width="5" stroke-linecap="round">
+  <line x1="36" y1="56" x2="20" y2="46"/> <line x1="20" y1="46" x2="12" y2="40"/>
+  <line x1="36" y1="64" x2="18" y2="60"/> <line x1="18" y1="60" x2="8"  y2="58"/>
+  <line x1="38" y1="72" x2="22" y2="74"/> <line x1="22" y1="74" x2="12" y2="82"/>
+  <line x1="94" y1="56" x2="110" y2="46"/> <line x1="110" y1="46" x2="118" y2="40"/>
+  <line x1="94" y1="64" x2="112" y2="60"/> <line x1="112" y1="60" x2="122" y2="58"/>
+  <line x1="92" y1="72" x2="108" y2="74"/> <line x1="108" y1="74" x2="118" y2="82"/>
+</g>
+<!-- large claws -->
+<ellipse cx="14" cy="38" rx="14" ry="9" fill="url(#cr_claw)" stroke="#B71C1C" stroke-width="1.3" transform="rotate(-30 14 38)"/>
+<ellipse cx="8"  cy="30" rx="12" ry="8" fill="#EF5350" stroke="#B71C1C" stroke-width="1" transform="rotate(25 8 30)"/>
+<path d="M10,26 Q8,22 12,24" stroke="#B71C1C" stroke-width="1.5"/>
+<ellipse cx="116" cy="38" rx="14" ry="9" fill="url(#cr_claw)" stroke="#B71C1C" stroke-width="1.3" transform="rotate(30 116 38)"/>
+<ellipse cx="122" cy="30" rx="12" ry="8" fill="#EF5350" stroke="#B71C1C" stroke-width="1" transform="rotate(-25 122 30)"/>
+<path d="M120,26 Q122,22 118,24" stroke="#B71C1C" stroke-width="1.5"/>
+<!-- carapace body -->
+<ellipse cx="65" cy="64" rx="36" ry="26" fill="url(#cr_shell)" filter="url(#cr_shadow)"/>
+<!-- carapace ridges -->
+<path d="M34,56 Q65,48 96,56" fill="none" stroke="#B71C1C" stroke-width="1.4" opacity=".6"/>
+<path d="M32,64 Q65,56 98,64" fill="none" stroke="#B71C1C" stroke-width="1.2" opacity=".5"/>
+<path d="M34,72 Q65,64 96,72" fill="none" stroke="#B71C1C" stroke-width="1.1" opacity=".45"/>
+<!-- carapace highlight -->
+<ellipse cx="55" cy="58" rx="18" ry="10" fill="rgba(255,200,160,.18)"/>
+<!-- carapace outline -->
+<ellipse cx="65" cy="64" rx="36" ry="26" fill="none" stroke="#8B0000" stroke-width="2"/>
+<!-- cephalothorax -->
+<ellipse cx="65" cy="44" rx="24" ry="17" fill="#EF5350"/>
+<ellipse cx="65" cy="44" rx="24" ry="17" fill="none" stroke="#C62828" stroke-width="1.5"/>
+<!-- rostrum -->
+<path d="M55,30 L48,18" fill="none" stroke="#D32F2F" stroke-width="3.5" stroke-linecap="round"/>
+<!-- eye stalks -->
+<line x1="52" y1="32" x2="46" y2="20" stroke="#C62828" stroke-width="3.5"/>
+<circle cx="45" cy="18" r="9" fill="#0a0a0a"/>
+<circle cx="45" cy="18" r="7" fill="#1a1a1a"/>
+<circle cx="45" cy="18" r="4" fill="#060606"/>
+<circle cx="43" cy="16" r="2.8" fill="rgba(255,255,255,.8)"/>
+<line x1="78" y1="32" x2="84" y2="20" stroke="#C62828" stroke-width="3.5"/>
+<circle cx="85" cy="18" r="9" fill="#0a0a0a"/>
+<circle cx="85" cy="18" r="7" fill="#1a1a1a"/>
+<circle cx="85" cy="18" r="4" fill="#060606"/>
+<circle cx="83" cy="16" r="2.8" fill="rgba(255,255,255,.8)"/>
+<!-- mouth -->
+<path d="M54,52 Q65,58 76,52" fill="none" stroke="#8B0000" stroke-width="2.5" stroke-linecap="round"/>
+</svg>`,
+
+pufferfish:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="pf_body" cx="36%" cy="30%"><stop offset="0%" stop-color="#FFE082"/><stop offset="50%" stop-color="#FFB300"/><stop offset="100%" stop-color="#E65100"/></radialGradient>
+  <radialGradient id="pf_belly" cx="50%" cy="50%"><stop offset="0%" stop-color="rgba(255,255,255,.55)"/><stop offset="100%" stop-color="rgba(255,255,255,.05)"/></radialGradient>
+  <filter id="pf_glow"><feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="rgba(200,100,0,.3)"/></filter>
+</defs>
+<!-- spines (before body so they appear from behind) -->
+<g stroke-linecap="round">
+  <line x1="60" y1="10" x2="60" y2="1"   stroke="#E65100" stroke-width="2.2"/>
+  <line x1="42" y1="14" x2="36" y2="5"   stroke="#E65100" stroke-width="2"/>
+  <line x1="78" y1="14" x2="84" y2="5"   stroke="#E65100" stroke-width="2"/>
+  <line x1="24" y1="28" x2="16" y2="20"  stroke="#E65100" stroke-width="2"/>
+  <line x1="96" y1="28" x2="104" y2="20" stroke="#E65100" stroke-width="2"/>
+  <line x1="14" y1="50" x2="5" y2="47"   stroke="#E65100" stroke-width="2"/>
+  <line x1="106" y1="50" x2="115" y2="47" stroke="#E65100" stroke-width="2"/>
+  <line x1="16" y1="72" x2="8" y2="78"   stroke="#E65100" stroke-width="2"/>
+  <line x1="104" y1="72" x2="112" y2="78" stroke="#E65100" stroke-width="2"/>
+  <line x1="32" y1="92" x2="26" y2="100" stroke="#E65100" stroke-width="2"/>
+  <line x1="88" y1="92" x2="94" y2="100" stroke="#E65100" stroke-width="2"/>
+  <line x1="60" y1="100" x2="60" y2="109" stroke="#E65100" stroke-width="2.2"/>
+</g>
+<!-- spine base bumps -->
+<circle cx="60" cy="12" r="3.5" fill="#FF8F00"/>
+<circle cx="43" cy="16" r="3" fill="#FF8F00"/>
+<circle cx="77" cy="16" r="3" fill="#FF8F00"/>
+<circle cx="26" cy="30" r="3" fill="#FF8F00"/>
+<circle cx="94" cy="30" r="3" fill="#FF8F00"/>
+<!-- body sphere -->
+<circle cx="60" cy="58" r="43" fill="url(#pf_body)" filter="url(#pf_glow)"/>
+<!-- spots (dark blotches) -->
+<circle cx="48" cy="46" r="7.5" fill="rgba(100,40,0,.22)"/>
+<circle cx="70" cy="40" r="6.5" fill="rgba(100,40,0,.18)"/>
+<circle cx="78" cy="60" r="7" fill="rgba(100,40,0,.2)"/>
+<circle cx="42" cy="68" r="6" fill="rgba(100,40,0,.18)"/>
+<circle cx="62" cy="54" r="5.5" fill="rgba(100,40,0,.15)"/>
+<circle cx="54" cy="76" r="6" fill="rgba(100,40,0,.16)"/>
+<!-- belly white -->
+<ellipse cx="60" cy="68" rx="28" ry="20" fill="url(#pf_belly)"/>
+<!-- body outline -->
+<circle cx="60" cy="58" r="43" fill="none" stroke="#E65100" stroke-width="2"/>
+<!-- eyes (very large, expressive) -->
+<circle cx="40" cy="48" r="13" fill="white"/>
+<circle cx="40" cy="48" r="10" fill="#1a1a0a"/>
+<circle cx="40" cy="48" r="7" fill="#0a0a00"/>
+<circle cx="40" cy="48" r="4" fill="#030300"/>
+<circle cx="36" cy="44" r="4" fill="rgba(255,255,255,.9)"/>
+<circle cx="42" cy="46" r="1.5" fill="rgba(255,255,255,.5)"/>
+<circle cx="80" cy="48" r="13" fill="white"/>
+<circle cx="80" cy="48" r="10" fill="#1a1a0a"/>
+<circle cx="80" cy="48" r="7" fill="#0a0a00"/>
+<circle cx="80" cy="48" r="4" fill="#030300"/>
+<circle cx="76" cy="44" r="4" fill="rgba(255,255,255,.9)"/>
+<circle cx="82" cy="46" r="1.5" fill="rgba(255,255,255,.5)"/>
+<!-- beak/mouth -->
+<path d="M46,64 Q60,74 74,64 Q68,70 52,70Z" fill="#CC4400"/>
+<path d="M48,65 Q60,72 72,65" fill="none" stroke="#FF6D00" stroke-width="1" opacity=".5"/>
+<!-- pectoral fins -->
+<path d="M20,72 Q10,82 15,92 Q28,84 20,72Z" fill="#E65100" stroke="#CC3300" stroke-width="1"/>
+<path d="M100,72 Q110,82 105,92 Q92,84 100,72Z" fill="#E65100" stroke="#CC3300" stroke-width="1"/>
+<!-- glare highlight -->
+<ellipse cx="42" cy="36" rx="20" ry="13" fill="rgba(255,255,255,.12)" transform="rotate(-25 42 36)"/>
+</svg>`,
+
+parrotfish:`<svg viewBox="0 0 140 95" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="pa_body" cx="36%" cy="32%"><stop offset="0%" stop-color="#4FC3F7"/><stop offset="45%" stop-color="#0288D1"/><stop offset="100%" stop-color="#01579B"/></radialGradient>
+  <radialGradient id="pa_belly" cx="50%" cy="60%"><stop offset="0%" stop-color="#64B5F6"/><stop offset="100%" stop-color="#0277BD"/></radialGradient>
+  <filter id="pa_glow"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,50,150,.3)"/></filter>
+</defs>
+<!-- tail fin -->
+<path d="M114,47 Q130,28 140,22 Q136,38 134,47 Q136,56 140,72 Q130,66 114,47Z" fill="#0277BD"/>
+<path d="M114,47 Q128,32 136,26" fill="none" stroke="#4FC3F7" stroke-width="1" opacity=".6"/>
+<path d="M114,47 Q130,47 138,48" fill="none" stroke="#4FC3F7" stroke-width=".9" opacity=".5"/>
+<path d="M114,47 Q128,62 136,68" fill="none" stroke="#4FC3F7" stroke-width="1" opacity=".6"/>
+<!-- body -->
+<ellipse cx="62" cy="47" rx="55" ry="30" fill="url(#pa_body)" filter="url(#pa_glow)"/>
+<!-- belly -->
+<ellipse cx="56" cy="56" rx="44" ry="15" fill="url(#pa_belly)" opacity=".4"/>
+<!-- scale pattern (grid arcs) -->
+<path d="M32,32 Q62,24 92,31" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.8"/>
+<path d="M22,40 Q62,32 102,39" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+<path d="M20,48 Q62,40 104,47" fill="none" stroke="rgba(255,255,255,.11)" stroke-width="1.5"/>
+<path d="M22,58 Q62,50 102,57" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="1.3"/>
+<!-- vertical scale columns -->
+<path d="M42,24 Q46,47 42,70" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1.2"/>
+<path d="M60,22 Q64,47 60,72" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1.2"/>
+<path d="M78,24 Q82,47 78,70" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1.2"/>
+<path d="M96,26 Q100,47 96,68" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1.2"/>
+<!-- pink/magenta accent stripe -->
+<path d="M86,18 Q92,47 86,76" fill="none" stroke="#F06292" stroke-width="5" opacity=".65"/>
+<path d="M86,22 Q91,47 86,72" fill="none" stroke="#F8BBD9" stroke-width="2" opacity=".4"/>
+<!-- body outline -->
+<ellipse cx="62" cy="47" rx="55" ry="30" fill="none" stroke="#01579B" stroke-width="2"/>
+<!-- dorsal fin with rays -->
+<path d="M32,18 Q62,5 92,16 Q86,20 62,18 Q36,18 32,18Z" fill="#0277BD"/>
+<path d="M36,18 L34,6"  stroke="#29B6F6" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M46,14 L46,2"  stroke="#29B6F6" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M56,11 L57,1"  stroke="#29B6F6" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M66,10 L68,0"  stroke="#29B6F6" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M76,12 L79,3"  stroke="#29B6F6" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M86,15 L90,6"  stroke="#29B6F6" stroke-width="1.5" stroke-linecap="round"/>
+<!-- pectoral fin -->
+<path d="M68,64 Q82,80 68,86 Q58,76 64,66Z" fill="#0288D1" stroke="#01579B" stroke-width="1.2"/>
+<!-- parrot beak -->
+<path d="M6,42 Q2,47 6,53 L26,51 L26,44Z" fill="#43A047" stroke="#2E7D32" stroke-width="1.2"/>
+<path d="M6,44 L22,46" fill="none" stroke="#1B5E20" stroke-width="1" opacity=".5"/>
+<path d="M6,50 L22,50" fill="none" stroke="#1B5E20" stroke-width="1" opacity=".4"/>
+<!-- eye -->
+<circle cx="26" cy="40" r="11" fill="#0a1a30"/>
+<circle cx="26" cy="40" r="8.5" fill="#142240"/>
+<circle cx="26" cy="40" r="6" fill="#080e20"/>
+<circle cx="26" cy="40" r="3.5" fill="#020610"/>
+<circle cx="22.5" cy="36.5" r="3" fill="rgba(255,255,255,.88)"/>
+<circle cx="28" cy="38.5" r="1.2" fill="rgba(255,255,255,.45)"/>
+<circle cx="26" cy="40" r="11" fill="none" stroke="rgba(200,240,255,.25)" stroke-width="1.5"/>
+</svg>`,
+
+anemone:`<svg viewBox="0 0 110 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="an_col" cx="50%" cy="80%"><stop offset="0%" stop-color="#FF7043"/><stop offset="100%" stop-color="#BF360C"/></radialGradient>
+  <filter id="an_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>
+</defs>
+<!-- column base -->
+<ellipse cx="55" cy="100" rx="30" ry="13" fill="#7B2D00"/>
+<rect x="28" y="78" width="54" height="26" rx="8" fill="url(#an_col)"/>
+<!-- ring groove on column -->
+<path d="M30,88 Q55,85 80,88" fill="none" stroke="#AA3000" stroke-width="1.5" opacity=".6"/>
+<path d="M30,94 Q55,91 80,94" fill="none" stroke="#AA3000" stroke-width="1.3" opacity=".5"/>
+<!-- oral disc -->
+<ellipse cx="55" cy="78" rx="30" ry="10" fill="#FF5722"/>
+<!-- tentacles (club-tipped) -->
+<path d="M55,72 Q44,56 40,38 Q48,32 50,48 Q58,32 64,38 Q62,54 55,72" fill="#FF7043" stroke="#BF360C" stroke-width="1"/>
+<path d="M36,74 Q24,58 18,40 Q26,36 28,52 Q36,38 40,44 Q36,60 36,74" fill="#FF7043" stroke="#BF360C" stroke-width="1"/>
+<path d="M74,74 Q86,58 92,40 Q84,36 82,52 Q74,38 70,44 Q74,60 74,74" fill="#FF7043" stroke="#BF360C" stroke-width="1"/>
+<path d="M22,78 Q8,66 4,46 Q12,42 16,58 Q24,46 28,52 Q24,66 22,78" fill="#FF8A65" stroke="#BF360C" stroke-width="1"/>
+<path d="M88,78 Q102,66 106,46 Q98,42 94,58 Q86,46 82,52 Q86,66 88,78" fill="#FF8A65" stroke="#BF360C" stroke-width="1"/>
+<!-- extra thin tentacles -->
+<path d="M44,74 Q36,60 34,48" fill="none" stroke="#FF7043" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M66,74 Q74,60 76,48" fill="none" stroke="#FF7043" stroke-width="3.5" stroke-linecap="round"/>
+<!-- bulb tips with glow -->
+<g filter="url(#an_glow)">
+  <circle cx="40" cy="36" r="6.5" fill="#FFCC80"/>
+  <circle cx="64" cy="36" r="6.5" fill="#FFCC80"/>
+  <circle cx="18" cy="38" r="5.5" fill="#FFCC80"/>
+  <circle cx="92" cy="38" r="5.5" fill="#FFCC80"/>
+  <circle cx="4"  cy="44" r="5"   fill="#FFE0B2"/>
+  <circle cx="106" cy="44" r="5"  fill="#FFE0B2"/>
+  <circle cx="34" cy="46" r="4.5" fill="#FFCC80"/>
+  <circle cx="76" cy="46" r="4.5" fill="#FFCC80"/>
+</g>
+<!-- inner bulb glow -->
+<circle cx="40" cy="36" r="3.5" fill="#FFF8E1" opacity=".7"/>
+<circle cx="64" cy="36" r="3.5" fill="#FFF8E1" opacity=".7"/>
+<!-- central mouth -->
+<ellipse cx="55" cy="78" rx="10" ry="7" fill="#1a0800"/>
+<ellipse cx="55" cy="78" rx="7"  ry="4.5" fill="#BF360C"/>
+<ellipse cx="55" cy="77" rx="4"  ry="2.5" fill="#880E00"/>
+</svg>`,
+
+shrimp:`<svg viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="sr_body" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FFCCBC"/><stop offset="40%" stop-color="#EF5350"/><stop offset="100%" stop-color="#B71C1C"/></linearGradient>
+  <filter id="sr_glow"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(180,0,0,.3)"/></filter>
+</defs>
+<!-- tail fan (uropods) -->
+<path d="M100,35 L116,22 L110,35 L116,48Z" fill="#EF5350"/>
+<path d="M100,35 L118,32 L112,37Z" fill="#FFAB91"/>
+<path d="M100,35 L116,50 L110,40Z" fill="#FFAB91"/>
+<!-- body segments with shading -->
+<path d="M10,35 Q30,20 55,35 Q78,48 98,35" fill="none" stroke="#8B0000" stroke-width="22" stroke-linecap="round"/>
+<path d="M10,35 Q30,20 55,35 Q78,48 98,35" fill="none" stroke="url(#sr_body)" stroke-width="19" stroke-linecap="round" filter="url(#sr_glow)"/>
+<!-- segment lines (joints) -->
+<path d="M10,35 Q30,20 55,35 Q78,48 98,35" fill="none" stroke="rgba(150,0,0,.5)" stroke-width="2" stroke-dasharray="6 10" stroke-linecap="round"/>
+<!-- carapace highlight -->
+<path d="M14,32 Q30,22 54,31" fill="none" stroke="rgba(255,230,220,.4)" stroke-width="6" stroke-linecap="round"/>
+<!-- sub-carapace line -->
+<path d="M14,36 Q30,24 54,35" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2" stroke-linecap="round"/>
+<!-- pleopods (swimming legs) -->
+<g stroke="#E57373" stroke-width="2" stroke-linecap="round">
+  <line x1="28" y1="40" x2="20" y2="52"/> <line x1="38" y1="45" x2="32" y2="56"/>
+  <line x1="50" y1="46" x2="46" y2="58"/> <line x1="62" y1="44" x2="60" y2="56"/>
+  <line x1="74" y1="40" x2="74" y2="52"/>
+</g>
+<!-- walking legs (pereopods) -->
+<g stroke="#EF9A9A" stroke-width="1.5" stroke-linecap="round">
+  <line x1="30" y1="38" x2="24" y2="48"/> <line x1="40" y1="42" x2="36" y2="52"/>
+  <line x1="52" y1="43" x2="50" y2="54"/> <line x1="63" y1="42" x2="63" y2="52"/>
+  <line x1="73" y1="39" x2="74" y2="50"/>
+</g>
+<!-- antennae (long pair) -->
+<path d="M12,26 Q4,14 2,2"   fill="none" stroke="#EF5350" stroke-width="2" stroke-linecap="round"/>
+<path d="M14,24 Q8,10 10,1"  fill="none" stroke="#FFCDD2" stroke-width="1.3" stroke-linecap="round"/>
+<!-- short antennules -->
+<path d="M12,26 Q6,22 4,18"  fill="none" stroke="#EF5350" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M12,26 Q8,20 8,15"  fill="none" stroke="#EF5350" stroke-width="1.5" stroke-linecap="round"/>
+<!-- head/rostrum -->
+<ellipse cx="13" cy="32" rx="12" ry="11" fill="#D32F2F"/>
+<!-- rostrum spine -->
+<path d="M4,26 L-6,20" fill="none" stroke="#C62828" stroke-width="3.5" stroke-linecap="round"/>
+<!-- eye on stalk -->
+<line x1="10" y1="24" x2="8" y2="18" stroke="#B71C1C" stroke-width="2.5"/>
+<circle cx="8"  cy="16" r="5.5" fill="#0a0a0a"/>
+<circle cx="8"  cy="16" r="4"   fill="#1a1a1a"/>
+<circle cx="6.5" cy="14.5" r="1.8" fill="rgba(255,255,255,.8)"/>
+</svg>`,
+
+dolphin:`<svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="dp_back" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#26C6DA"/><stop offset="45%" stop-color="#0097A7"/><stop offset="100%" stop-color="#006064"/></linearGradient>
+  <linearGradient id="dp_belly" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E0F7FA"/><stop offset="100%" stop-color="#B2EBF2"/></linearGradient>
+  <filter id="dp_shadow"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,.3)"/></filter>
+</defs>
+<!-- flukes -->
+<path d="M126,46 Q144,28 154,22 Q150,36 148,46 Q150,56 154,68 Q144,62 126,46Z" fill="#00838F"/>
+<path d="M126,46 Q140,32 150,26" fill="none" stroke="#26C6DA" stroke-width="1" opacity=".5"/>
+<path d="M126,46 Q142,46 152,47" fill="none" stroke="#26C6DA" stroke-width=".9" opacity=".45"/>
+<path d="M126,46 Q140,60 150,66" fill="none" stroke="#26C6DA" stroke-width="1" opacity=".5"/>
+<!-- body -->
+<ellipse cx="72" cy="50" rx="65" ry="28" fill="url(#dp_back)" filter="url(#dp_shadow)"/>
+<!-- belly (lighter counter-shading) -->
+<ellipse cx="62" cy="60" rx="56" ry="14" fill="url(#dp_belly)" opacity=".85"/>
+<!-- lateral stripe -->
+<path d="M10,42 Q70,34 126,42" fill="none" stroke="rgba(179,229,252,.3)" stroke-width="3"/>
+<!-- body outline -->
+<ellipse cx="72" cy="50" rx="65" ry="28" fill="none" stroke="#00695C" stroke-width="1.8"/>
+<!-- dorsal fin -->
+<path d="M80,24 Q92,6 108,20 Q100,22 88,22Z" fill="#00838F" stroke="#006064" stroke-width="1.5"/>
+<path d="M84,23 L80,14" stroke="#26C6DA" stroke-width=".8" opacity=".4"/>
+<path d="M92,22 L90,10" stroke="#26C6DA" stroke-width=".8" opacity=".4"/>
+<!-- pectoral fin with rays -->
+<path d="M90,64 Q106,80 90,86 Q78,76 84,66Z" fill="#0097A7" stroke="#00695C" stroke-width="1.2"/>
+<path d="M90,66 L82,78" stroke="#26C6DA" stroke-width=".9" opacity=".4"/>
+<path d="M94,70 L88,82" stroke="#26C6DA" stroke-width=".9" opacity=".35"/>
+<!-- melon/forehead bulge -->
+<ellipse cx="18" cy="42" rx="18" ry="12" fill="#26C6DA"/>
+<!-- rostrum -->
+<path d="M2,44 Q-2,50 2,56 L32,53 L32,44Z" fill="url(#dp_belly)" stroke="#80DEEA" stroke-width="1.2"/>
+<!-- rostrum outline top -->
+<path d="M2,44 Q18,40 32,42" fill="none" stroke="#00838F" stroke-width="1.2"/>
+<!-- eye -->
+<circle cx="34" cy="42" r="8"   fill="#0d1a0d"/>
+<circle cx="34" cy="42" r="6"   fill="#1a2a1a"/>
+<circle cx="34" cy="42" r="3.5" fill="#060e06"/>
+<circle cx="31.5" cy="39.5" r="2.8" fill="rgba(255,255,255,.88)"/>
+<circle cx="35.5" cy="41" r="1.1" fill="rgba(255,255,255,.45)"/>
+<!-- dark eye stripe (dolphin characteristic) -->
+<path d="M38,40 Q46,38 55,40" fill="none" stroke="#006064" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+<!-- smile -->
+<path d="M6,53 Q18,60 30,56" fill="none" stroke="#00838F" stroke-width="2" stroke-linecap="round"/>
+<!-- highlight on melon -->
+<ellipse cx="16" cy="38" rx="10" ry="6" fill="rgba(255,255,255,.12)" transform="rotate(-15 16 38)"/>
+</svg>`,
+
+mantaRay:`<svg viewBox="0 0 180 100" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="mr_top" cx="50%" cy="40%"><stop offset="0%" stop-color="#455A64"/><stop offset="55%" stop-color="#263238"/><stop offset="100%" stop-color="#1a2227"/></radialGradient>
+  <radialGradient id="mr_belly" cx="50%" cy="50%"><stop offset="0%" stop-color="#f1f8ff"/><stop offset="100%" stop-color="#CFD8DC"/></radialGradient>
+  <filter id="mr_shadow"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="rgba(0,0,0,.4)"/></filter>
+</defs>
+<!-- wing left with gradient -->
+<path d="M90,50 Q28,10 4,32 Q12,58 90,52Z" fill="url(#mr_top)" filter="url(#mr_shadow)"/>
+<!-- wing right -->
+<path d="M90,50 Q152,10 176,32 Q168,58 90,52Z" fill="url(#mr_top)" filter="url(#mr_shadow)"/>
+<!-- wing tips lighter -->
+<path d="M90,50 Q30,14 6,36 Q14,60 90,53Z" fill="rgba(120,160,180,.1)"/>
+<path d="M90,50 Q150,14 174,36 Q166,60 90,53Z" fill="rgba(120,160,180,.1)"/>
+<!-- body disc -->
+<ellipse cx="90" cy="50" rx="35" ry="24" fill="#2D3748"/>
+<!-- belly pale -->
+<ellipse cx="90" cy="56" rx="24" ry="16" fill="url(#mr_belly)" opacity=".85"/>
+<!-- belly markings (dark patches characteristic of manta) -->
+<ellipse cx="78" cy="54" rx="6" ry="4" fill="rgba(50,70,80,.4)"/>
+<ellipse cx="102" cy="54" rx="6" ry="4" fill="rgba(50,70,80,.4)"/>
+<!-- gill slits (5 pairs) -->
+<path d="M76,62 Q80,65 76,68" fill="none" stroke="#1a252c" stroke-width="1.5"/>
+<path d="M80,63 Q84,66 80,69" fill="none" stroke="#1a252c" stroke-width="1.4"/>
+<path d="M84,64 Q88,67 84,70" fill="none" stroke="#1a252c" stroke-width="1.3"/>
+<path d="M88,65 Q92,68 88,71" fill="none" stroke="#1a252c" stroke-width="1.3"/>
+<path d="M92,64 Q96,67 92,70" fill="none" stroke="#1a252c" stroke-width="1.3"/>
+<!-- cephalic fins (horns/lobes) -->
+<path d="M72,38 Q58,22 52,12" fill="none" stroke="#2D3748" stroke-width="7.5" stroke-linecap="round"/>
+<path d="M72,38 Q58,22 52,12" fill="none" stroke="#455A64" stroke-width="4" stroke-linecap="round"/>
+<path d="M108,38 Q122,22 128,12" fill="none" stroke="#2D3748" stroke-width="7.5" stroke-linecap="round"/>
+<path d="M108,38 Q122,22 128,12" fill="none" stroke="#455A64" stroke-width="4" stroke-linecap="round"/>
+<!-- tail -->
+<path d="M90,74 Q92,88 90,100" fill="none" stroke="#1a2227" stroke-width="5" stroke-linecap="round"/>
+<path d="M90,74 Q92,88 90,100" fill="none" stroke="#455A64" stroke-width="2.5" stroke-linecap="round"/>
+<!-- eyes -->
+<circle cx="74" cy="46" r="6.5" fill="#0a1218"/>
+<circle cx="74" cy="46" r="5"   fill="#142030"/>
+<circle cx="74" cy="46" r="3"   fill="#050a10"/>
+<circle cx="72" cy="44" r="2.2" fill="rgba(255,255,255,.8)"/>
+<circle cx="106" cy="46" r="6.5" fill="#0a1218"/>
+<circle cx="106" cy="46" r="5"   fill="#142030"/>
+<circle cx="106" cy="46" r="3"   fill="#050a10"/>
+<circle cx="104" cy="44" r="2.2" fill="rgba(255,255,255,.8)"/>
+<!-- mouth (wide filter feeder) -->
+<path d="M78,58 Q90,64 102,58" fill="none" stroke="#718096" stroke-width="3" stroke-linecap="round"/>
+<!-- wing texture lines -->
+<path d="M90,50 Q40,22 10,34" fill="none" stroke="rgba(100,150,170,.12)" stroke-width="1.5"/>
+<path d="M90,50 Q140,22 170,34" fill="none" stroke="rgba(100,150,170,.12)" stroke-width="1.5"/>
+</svg>`,
+
+whaleShark:`<svg viewBox="0 0 180 90" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="ws_back" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1565C0"/><stop offset="55%" stop-color="#1976D2"/><stop offset="100%" stop-color="#e3f2fd"/></linearGradient>
+  <filter id="ws_shadow"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,.3)"/></filter>
+</defs>
+<!-- tail flukes -->
+<path d="M148,45 Q166,24 176,18 Q172,34 170,45 Q172,56 176,66 Q166,60 148,45Z" fill="#1565C0"/>
+<!-- body massive -->
+<ellipse cx="78" cy="50" rx="76" ry="34" fill="url(#ws_back)" filter="url(#ws_shadow)"/>
+<!-- spots pattern (whale shark distinctive) -->
+<g fill="rgba(255,255,255,.25)">
+  <circle cx="55" cy="38" r="5.5"/><circle cx="72" cy="34" r="6.5"/><circle cx="90" cy="36" r="5.5"/>
+  <circle cx="110" cy="38" r="5.5"/><circle cx="126" cy="40" r="5"/>
+  <circle cx="62" cy="50" r="4.5"/><circle cx="80" cy="48" r="5.5"/><circle cx="98" cy="50" r="4.5"/>
+  <circle cx="116" cy="50" r="4.5"/><circle cx="132" cy="48" r="4"/>
+  <circle cx="48" cy="58" r="4"/><circle cx="66" cy="60" r="5"/><circle cx="84" cy="58" r="5"/>
+  <circle cx="102" cy="58" r="4.5"/><circle cx="120" cy="56" r="4.5"/>
+</g>
+<!-- pale lines between spots -->
+<g fill="rgba(255,255,255,.08)">
+  <line x1="55" y1="36" x2="72" y2="36" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+  <line x1="72" y1="36" x2="90" y2="36" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+  <line x1="90" y1="36" x2="110" y2="38" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+</g>
+<!-- belly pale -->
+<ellipse cx="70" cy="64" rx="62" ry="16" fill="#e3f2fd" opacity=".65"/>
+<!-- body outline -->
+<ellipse cx="78" cy="50" rx="76" ry="34" fill="none" stroke="#0D47A1" stroke-width="2"/>
+<!-- dorsal fin tall -->
+<path d="M98,18 Q110,3 128,16 Q120,20 108,18Z" fill="#1565C0" stroke="#0D47A1" stroke-width="1.5"/>
+<!-- pec fin long -->
+<path d="M94,72 Q114,88 94,92 Q82,80 90,74Z" fill="#1565C0" stroke="#0D47A1" stroke-width="1.2"/>
+<!-- gill slits (5 prominent ones) -->
+<path d="M44,32 Q42,44 44,56" fill="none" stroke="#0D47A1" stroke-width="2" stroke-linecap="round"/>
+<path d="M51,30 Q49,44 51,58" fill="none" stroke="#0D47A1" stroke-width="1.7" stroke-linecap="round"/>
+<path d="M57,28 Q55,44 57,60" fill="none" stroke="#0D47A1" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M63,28 Q61,44 63,60" fill="none" stroke="#0D47A1" stroke-width="1.3" stroke-linecap="round"/>
+<path d="M69,28 Q67,44 69,60" fill="none" stroke="#0D47A1" stroke-width="1.2" stroke-linecap="round"/>
+<!-- head wide blunt -->
+<ellipse cx="14" cy="48" rx="18" ry="22" fill="#1565C0"/>
+<!-- eye small (relative to huge head) -->
+<circle cx="16" cy="40" r="9"   fill="#0a0a1a"/>
+<circle cx="16" cy="40" r="7"   fill="#141428"/>
+<circle cx="16" cy="40" r="4"   fill="#04040c"/>
+<circle cx="13.5" cy="37.5" r="3" fill="rgba(255,255,255,.85)"/>
+<!-- wide mouth with filter -->
+<path d="M4,58 Q16,72 30,66" fill="#e3f2fd"/>
+<path d="M4,58 Q10,56 16,56" fill="none" stroke="#0D47A1" stroke-width="1.5"/>
+<!-- highlight on head -->
+<ellipse cx="12" cy="36" rx="10" ry="7" fill="rgba(255,255,255,.1)" transform="rotate(-15 12 36)"/>
+</svg>`,
+
+swordfish:`<svg viewBox="0 0 175 75" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="sw_back" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#37474F"/><stop offset="50%" stop-color="#546E7A"/><stop offset="100%" stop-color="#B0BEC5"/></linearGradient>
+  <filter id="sw_shadow"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,.3)"/></filter>
+</defs>
+<!-- tail -->
+<path d="M140,38 Q160,20 170,14 Q166,30 164,38 Q166,46 170,60 Q160,54 140,38Z" fill="#455A64"/>
+<path d="M140,38 Q158,22 166,18" fill="none" stroke="#78909C" stroke-width="1" opacity=".6"/>
+<path d="M140,38 Q158,46 166,58" fill="none" stroke="#78909C" stroke-width="1" opacity=".6"/>
+<!-- body streamlined -->
+<ellipse cx="80" cy="40" rx="68" ry="24" fill="url(#sw_back)" filter="url(#sw_shadow)"/>
+<!-- lateral line (prominent) -->
+<path d="M22,34 Q80,28 136,36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2.5"/>
+<!-- belly pale -->
+<ellipse cx="72" cy="52" rx="56" ry="11" fill="#CFD8DC" opacity=".7"/>
+<!-- body outline -->
+<ellipse cx="80" cy="40" rx="68" ry="24" fill="none" stroke="#37474F" stroke-width="2"/>
+<!-- dorsal fin (tall sail) -->
+<path d="M60,18 Q76,2 96,16 Q88,20 76,18Z" fill="#455A64" stroke="#37474F" stroke-width="1.5"/>
+<!-- fin rays -->
+<path d="M64,18 L60,6"  stroke="#607D8B" stroke-width="1.2"/>
+<path d="M70,14 L68,2"  stroke="#607D8B" stroke-width="1.2"/>
+<path d="M78,10 L78,0"  stroke="#607D8B" stroke-width="1.2"/>
+<path d="M86,12 L88,2"  stroke="#607D8B" stroke-width="1.2"/>
+<path d="M92,16 L94,6"  stroke="#607D8B" stroke-width="1.2"/>
+<!-- second dorsal fin (small) -->
+<path d="M110,30 Q118,24 126,28" fill="none" stroke="#546E7A" stroke-width="4" stroke-linecap="round"/>
+<!-- pectoral fin -->
+<path d="M90,54 Q106,68 90,72 Q80,62 86,56Z" fill="#546E7A" stroke="#455A64" stroke-width="1.2"/>
+<path d="M90,56 L82,66" stroke="#78909C" stroke-width=".9" opacity=".5"/>
+<!-- caudal peduncle keels -->
+<path d="M132,34 L144,30" stroke="#546E7A" stroke-width="3" stroke-linecap="round"/>
+<path d="M132,46 L144,50" stroke="#546E7A" stroke-width="3" stroke-linecap="round"/>
+<!-- eye -->
+<circle cx="20" cy="36" r="8"   fill="#0a0e18"/>
+<circle cx="20" cy="36" r="6"   fill="#141e28"/>
+<circle cx="20" cy="36" r="3.5" fill="#04060c"/>
+<circle cx="17" cy="33" r="2.5" fill="rgba(255,255,255,.85)"/>
+<circle cx="22" cy="35" r="1"   fill="rgba(255,255,255,.4)"/>
+<!-- sword bill (rostrum) -->
+<path d="M10,36 L-20,30" fill="none" stroke="#546E7A" stroke-width="6" stroke-linecap="round"/>
+<path d="M10,38 L-20,33" fill="none" stroke="#B0BEC5" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+<path d="M10,36 L-20,30" fill="none" stroke="#263238" stroke-width="1.2" stroke-linecap="round"/>
+</svg>`,
+
+stingray:`<svg viewBox="0 0 170 100" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="ry_top" cx="50%" cy="42%"><stop offset="0%" stop-color="#8D6E63"/><stop offset="55%" stop-color="#5D4037"/><stop offset="100%" stop-color="#3E2723"/></radialGradient>
+  <radialGradient id="ry_belly" cx="50%" cy="50%"><stop offset="0%" stop-color="#EFEBE9"/><stop offset="100%" stop-color="#D7CCC8"/></radialGradient>
+  <filter id="ry_shadow"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="rgba(0,0,0,.35)"/></filter>
+</defs>
+<!-- wing left -->
+<path d="M85,52 Q22,6 4,30 Q12,62 85,54Z"  fill="url(#ry_top)" filter="url(#ry_shadow)"/>
+<!-- wing right -->
+<path d="M85,52 Q148,6 166,30 Q158,62 85,54Z" fill="url(#ry_top)" filter="url(#ry_shadow)"/>
+<!-- wing edge detail -->
+<path d="M85,52 Q24,8 6,33 Q14,64 85,55Z"  fill="rgba(120,80,60,.15)"/>
+<path d="M85,52 Q146,8 164,33 Q156,64 85,55Z" fill="rgba(120,80,60,.15)"/>
+<!-- body disc -->
+<ellipse cx="85" cy="52" rx="33" ry="28" fill="#6D4C41"/>
+<!-- body disc outline -->
+<ellipse cx="85" cy="52" rx="33" ry="28" fill="none" stroke="#3E2723" stroke-width="1.8"/>
+<!-- belly (pale underside) -->
+<ellipse cx="85" cy="58" rx="22" ry="18" fill="url(#ry_belly)" opacity=".82"/>
+<!-- belly edge detail -->
+<ellipse cx="85" cy="58" rx="22" ry="18" fill="none" stroke="#8D6E63" stroke-width="1" opacity=".4"/>
+<!-- spiracle openings (on dorsal side) -->
+<ellipse cx="74" cy="42" rx="5.5" ry="3.5" fill="#2E1A10" transform="rotate(-18 74 42)"/>
+<ellipse cx="96" cy="42" rx="5.5" ry="3.5" fill="#2E1A10" transform="rotate(18 96 42)"/>
+<!-- spiracle inner -->
+<ellipse cx="74" cy="42" rx="3.5" ry="2" fill="#1a0e08" transform="rotate(-18 74 42)"/>
+<ellipse cx="96" cy="42" rx="3.5" ry="2" fill="#1a0e08" transform="rotate(18 96 42)"/>
+<!-- eyes (protruding) -->
+<circle cx="72" cy="40" r="6" fill="#0a0806"/>
+<circle cx="72" cy="40" r="4.5" fill="#141008"/>
+<circle cx="72" cy="40" r="2.8" fill="#040302"/>
+<circle cx="70.5" cy="38.5" r="2" fill="rgba(255,255,255,.78)"/>
+<circle cx="98" cy="40" r="6" fill="#0a0806"/>
+<circle cx="98" cy="40" r="4.5" fill="#141008"/>
+<circle cx="98" cy="40" r="2.8" fill="#040302"/>
+<circle cx="96.5" cy="38.5" r="2" fill="rgba(255,255,255,.78)"/>
+<!-- mouth (underside) -->
+<path d="M78,62 Q85,68 92,62" fill="none" stroke="#4E342E" stroke-width="2.5" stroke-linecap="round"/>
+<!-- gill slits (underside) -->
+<path d="M76,66 Q80,68 76,70" fill="none" stroke="#4E342E" stroke-width="1.2"/>
+<path d="M80,67 Q84,69 80,71" fill="none" stroke="#4E342E" stroke-width="1.1"/>
+<path d="M84,68 Q88,70 84,72" fill="none" stroke="#4E342E" stroke-width="1.1"/>
+<!-- tail with barb -->
+<path d="M85,80 Q88,95 85,115" fill="none" stroke="#3E2723" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M84,96 L79,104 L88,102Z" fill="#1a0a04"/>
+<!-- tail highlight -->
+<path d="M85,80 Q87,93 85,110" fill="none" stroke="rgba(140,100,80,.3)" stroke-width="1.5"/>
+</svg>`,
+
+hammerhead:`<svg viewBox="0 0 170 80" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="hh_back" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#607D8B"/><stop offset="55%" stop-color="#546E7A"/><stop offset="100%" stop-color="#eceff1"/></linearGradient>
+  <filter id="hh_shadow"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,.3)"/></filter>
+</defs>
+<!-- tail -->
+<path d="M132,40 Q150,22 160,16 Q156,30 154,40 Q156,50 160,60 Q150,54 132,40Z" fill="#607D8B"/>
+<!-- body -->
+<ellipse cx="76" cy="44" rx="66" ry="26" fill="url(#hh_back)" filter="url(#hh_shadow)"/>
+<!-- counter-shading belly -->
+<ellipse cx="68" cy="56" rx="52" ry="12" fill="#eceff1" opacity=".75"/>
+<!-- lateral line -->
+<path d="M24,38 Q76,32 130,38" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="2"/>
+<!-- body outline -->
+<ellipse cx="76" cy="44" rx="66" ry="26" fill="none" stroke="#455A64" stroke-width="2"/>
+<!-- dorsal fin (tall) -->
+<path d="M80,20 Q92,4 110,18 Q102,22 90,20Z" fill="#546E7A" stroke="#455A64" stroke-width="1.5"/>
+<!-- second dorsal (small) -->
+<path d="M118,34 Q126,28 134,32" fill="none" stroke="#546E7A" stroke-width="4" stroke-linecap="round"/>
+<!-- pectoral fin -->
+<path d="M92,58 Q110,72 92,76 Q80,66 88,60Z" fill="#607D8B" stroke="#455A64" stroke-width="1.2"/>
+<!-- gill slits (5) -->
+<path d="M36,30 Q34,42 36,54" fill="none" stroke="#455A64" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M42,28 Q40,42 42,56" fill="none" stroke="#455A64" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M48,26 Q46,42 48,58" fill="none" stroke="#455A64" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M54,26 Q52,42 54,58" fill="none" stroke="#455A64" stroke-width="1.3" stroke-linecap="round"/>
+<path d="M60,26 Q58,42 60,58" fill="none" stroke="#455A64" stroke-width="1.2" stroke-linecap="round"/>
+<!-- HAMMERHEAD cephalofoil (T-shaped head) -->
+<rect x="4" y="32" width="32" height="18" rx="8" fill="url(#hh_back)" stroke="#455A64" stroke-width="1.8"/>
+<!-- eye on each tip of the hammer -->
+<circle cx="9"  cy="41" r="7"   fill="#0a0e14"/>
+<circle cx="9"  cy="41" r="5.5" fill="#141e28"/>
+<circle cx="9"  cy="41" r="3"   fill="#04060c"/>
+<circle cx="7"  cy="39" r="2.5" fill="rgba(255,255,255,.85)"/>
+<circle cx="30" cy="41" r="7"   fill="#0a0e14"/>
+<circle cx="30" cy="41" r="5.5" fill="#141e28"/>
+<circle cx="30" cy="41" r="3"   fill="#04060c"/>
+<circle cx="28" cy="39" r="2.5" fill="rgba(255,255,255,.85)"/>
+<!-- mouth with teeth -->
+<path d="M8,48 Q20,58 32,48" fill="#eceff1"/>
+<path d="M10,49 L11,55 M15,48 L16,54 M20,48 L20,53 M25,48 L24,53 M29,49 L28,54" stroke="#607D8B" stroke-width="1.2"/>
+<!-- nostril -->
+<path d="M16,32 L16,26" stroke="#455A64" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M22,32 L22,26" stroke="#455A64" stroke-width="1.5" stroke-linecap="round"/>
+<!-- ampullae of Lorenzini (pores for sensing) -->
+<circle cx="8"  cy="35" r="1.2" fill="#263238" opacity=".5"/>
+<circle cx="12" cy="33" r="1"   fill="#263238" opacity=".4"/>
+<circle cx="28" cy="35" r="1.2" fill="#263238" opacity=".5"/>
+<circle cx="24" cy="33" r="1"   fill="#263238" opacity=".4"/>
+</svg>`,
+
+moonJelly:`<svg viewBox="0 0 110 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="mj_bell" cx="50%" cy="38%"><stop offset="0%" stop-color="rgba(200,120,220,.82)"/><stop offset="65%" stop-color="rgba(140,40,180,.55)"/><stop offset="100%" stop-color="rgba(80,0,120,.28)"/></radialGradient>
+  <radialGradient id="mj_glow" cx="36%" cy="28%"><stop offset="0%" stop-color="rgba(255,255,255,.5)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>
+  <filter id="mj_blur"><feGaussianBlur stdDeviation="1.5"/></filter>
+</defs>
+<!-- long tentacles -->
+<path d="M30,80 Q20,96 24,112" fill="none" stroke="rgba(216,157,226,.65)" stroke-width="3" stroke-linecap="round"/>
+<path d="M40,84 Q33,100 35,116" fill="none" stroke="rgba(196,127,206,.72)" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M55,87 Q54,104 57,118" fill="none" stroke="rgba(216,157,226,.65)" stroke-width="3.2" stroke-linecap="round"/>
+<path d="M70,84 Q76,100 74,116" fill="none" stroke="rgba(196,127,206,.72)" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M80,80 Q88,96 84,112" fill="none" stroke="rgba(216,157,226,.65)" stroke-width="3" stroke-linecap="round"/>
+<path d="M22,82 Q11,96 15,112"  fill="none" stroke="rgba(216,157,226,.28)" stroke-width="1.3" stroke-linecap="round"/>
+<path d="M88,82 Q98,96 94,112"  fill="none" stroke="rgba(216,157,226,.28)" stroke-width="1.3" stroke-linecap="round"/>
+<!-- bell translucent -->
+<path d="M9,50 Q9,8 55,8 Q101,8 101,50 Q101,82 55,86 Q9,82 9,50Z" fill="url(#mj_bell)"/>
+<!-- inner glow highlight -->
+<ellipse cx="55" cy="40" rx="30" ry="22" fill="url(#mj_glow)"/>
+<!-- bioluminescent ring -->
+<path d="M9,50 Q9,10 55,10 Q101,10 101,50" fill="none" stroke="rgba(220,160,255,.4)" stroke-width="2.5"/>
+<!-- 4 horseshoe gonads (moon jelly signature) -->
+<circle cx="40" cy="38" r="11" fill="rgba(240,110,195,.45)"/>
+<circle cx="40" cy="38" r="8"  fill="rgba(240,110,195,.3)"/>
+<circle cx="70" cy="38" r="11" fill="rgba(240,110,195,.45)"/>
+<circle cx="70" cy="38" r="8"  fill="rgba(240,110,195,.3)"/>
+<circle cx="40" cy="58" r="10" fill="rgba(240,110,195,.4)"/>
+<circle cx="40" cy="58" r="7"  fill="rgba(240,110,195,.28)"/>
+<circle cx="70" cy="58" r="10" fill="rgba(240,110,195,.4)"/>
+<circle cx="70" cy="58" r="7"  fill="rgba(240,110,195,.28)"/>
+<!-- radial canal lines -->
+<path d="M55,10 L55,84" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1.2"/>
+<path d="M22,16 L38,82" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+<path d="M88,16 L72,82" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+<path d="M12,38 L98,62"  fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+<path d="M98,38 L12,62"  fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+<!-- subumbrellar jelly texture -->
+<ellipse cx="55" cy="55" rx="36" ry="22" fill="rgba(255,200,255,.05)"/>
+<!-- oral arms (4 ribbon-like) -->
+<path d="M36,78 Q28,88 30,94" fill="none" stroke="rgba(196,127,206,.88)" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M74,78 Q82,88 80,94" fill="none" stroke="rgba(196,127,206,.88)" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M46,82 Q42,92 44,98" fill="none" stroke="rgba(216,157,226,.8)" stroke-width="4" stroke-linecap="round"/>
+<path d="M64,82 Q68,92 66,98" fill="none" stroke="rgba(216,157,226,.8)" stroke-width="4" stroke-linecap="round"/>
+<!-- bell edge scallops -->
+<path d="M9,50 Q12,60 9,70 Q16,64 20,72 Q24,64 28,72 Q32,62 36,70 Q40,62 44,70 Q48,62 52,70 Q56,62 60,70 Q64,62 68,70 Q72,62 76,70 Q80,62 84,70 Q88,64 92,72 Q96,64 101,70 Q98,60 101,50" fill="none" stroke="rgba(196,127,206,.5)" stroke-width="1.5"/>
+</svg>`,
+
+octopus:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="oc_mantle" cx="36%" cy="28%"><stop offset="0%" stop-color="#CE93D8"/><stop offset="55%" stop-color="#8E24AA"/><stop offset="100%" stop-color="#4A148C"/></radialGradient>
+  <radialGradient id="oc_arm" cx="30%" cy="30%"><stop offset="0%" stop-color="#BA68C8"/><stop offset="100%" stop-color="#7B1FA2"/></radialGradient>
+  <filter id="oc_glow"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="rgba(100,0,160,.35)"/></filter>
+</defs>
+<!-- arms (8) with tapered shape -->
+<path d="M38,80 Q24,96 18,112 Q26,108 30,96 Q32,106 28,118" fill="none" stroke="#8E24AA" stroke-width="8.5" stroke-linecap="round"/>
+<path d="M50,86 Q46,104 47,118"                                fill="none" stroke="#9C27B0" stroke-width="8" stroke-linecap="round"/>
+<path d="M62,88 Q62,106 63,120"                                fill="none" stroke="#8E24AA" stroke-width="8" stroke-linecap="round"/>
+<path d="M74,84 Q80,102 78,118"                                fill="none" stroke="#8E24AA" stroke-width="8" stroke-linecap="round"/>
+<path d="M84,76 Q96,90 92,108 Q86,102 82,92 Q80,102 76,110"   fill="none" stroke="#8E24AA" stroke-width="8" stroke-linecap="round"/>
+<path d="M30,74 Q18,84 14,100 Q22,96 26,86 Q22,94 18,102"     fill="none" stroke="#7B1FA2" stroke-width="7" stroke-linecap="round"/>
+<path d="M88,74 Q100,84 106,100 Q98,96 94,86 Q98,94 102,102"  fill="none" stroke="#7B1FA2" stroke-width="7" stroke-linecap="round"/>
+<path d="M58,90 Q50,106 48,120"                                fill="none" stroke="#AB47BC" stroke-width="6.5" stroke-linecap="round"/>
+<!-- suckers on arms (double row) -->
+<circle cx="22" cy="106" r="4.5" fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<circle cx="25" cy="96"  r="4"   fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<circle cx="46" cy="104" r="4"   fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<circle cx="48" cy="114" r="3.5" fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<circle cx="62" cy="104" r="4"   fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<circle cx="63" cy="114" r="3.5" fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<circle cx="78" cy="104" r="4"   fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<circle cx="80" cy="114" r="3.5" fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<circle cx="92" cy="102" r="4"   fill="#CE93D8" stroke="#7B1FA2" stroke-width="1"/>
+<!-- head mantle -->
+<ellipse cx="60" cy="48" rx="44" ry="38" fill="url(#oc_mantle)" filter="url(#oc_glow)"/>
+<!-- skin texture (chromatophores) -->
+<circle cx="46" cy="34" r="7"   fill="rgba(255,255,255,.1)"/>
+<circle cx="70" cy="30" r="6"   fill="rgba(255,255,255,.08)"/>
+<circle cx="80" cy="50" r="5"   fill="rgba(255,255,255,.09)"/>
+<circle cx="38" cy="54" r="6"   fill="rgba(255,255,255,.08)"/>
+<circle cx="58" cy="25" r="5"   fill="rgba(255,255,255,.1)"/>
+<!-- mantle outline -->
+<ellipse cx="60" cy="48" rx="44" ry="38" fill="none" stroke="#4A148C" stroke-width="2"/>
+<!-- eyes (large realistic) -->
+<circle cx="44" cy="52" r="13" fill="white"/>
+<circle cx="44" cy="52" r="10" fill="#1a0030"/>
+<circle cx="44" cy="52" r="7"  fill="#0a0018"/>
+<circle cx="44" cy="52" r="3.5" fill="#030009"/>
+<!-- W-shaped pupil hint -->
+<path d="M38,52 Q40,49 42,52 Q44,49 46,52 Q48,49 50,52" fill="none" stroke="rgba(100,50,150,.4)" stroke-width="1.2"/>
+<circle cx="40.5" cy="48.5" r="4" fill="rgba(255,255,255,.9)"/>
+<circle cx="76" cy="52" r="13" fill="white"/>
+<circle cx="76" cy="52" r="10" fill="#1a0030"/>
+<circle cx="76" cy="52" r="7"  fill="#0a0018"/>
+<circle cx="76" cy="52" r="3.5" fill="#030009"/>
+<path d="M70,52 Q72,49 74,52 Q76,49 78,52 Q80,49 82,52" fill="none" stroke="rgba(100,50,150,.4)" stroke-width="1.2"/>
+<circle cx="72.5" cy="48.5" r="4" fill="rgba(255,255,255,.9)"/>
+<!-- beak -->
+<path d="M52,66 Q60,74 68,66 Q64,72 56,72Z" fill="#2E0050"/>
+<path d="M54,67 Q60,72 66,67" fill="none" stroke="#7B1FA2" stroke-width="1" opacity=".5"/>
+</svg>`,
+
+lionsMane:`<svg viewBox="0 0 130 140" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="lm_bell" cx="50%" cy="36%"><stop offset="0%" stop-color="rgba(255,167,38,.88)"/><stop offset="60%" stop-color="rgba(220,70,0,.62)"/><stop offset="100%" stop-color="rgba(160,20,0,.3)"/></radialGradient>
+  <radialGradient id="lm_glow" cx="34%" cy="26%"><stop offset="0%" stop-color="rgba(255,240,180,.5)"/><stop offset="100%" stop-color="rgba(255,240,180,0)"/></radialGradient>
+</defs>
+<!-- long trailing tentacles (many) -->
+<g stroke-linecap="round">
+  <path d="M26,96 Q16,114 20,134" fill="none" stroke="rgba(255,130,0,.62)" stroke-width="2.8"/>
+  <path d="M36,100 Q28,118 30,136" fill="none" stroke="rgba(255,160,0,.68)" stroke-width="2.3"/>
+  <path d="M46,104 Q40,122 42,140" fill="none" stroke="rgba(255,130,0,.62)" stroke-width="2.8"/>
+  <path d="M65,107 Q64,126 67,140" fill="none" stroke="rgba(255,160,0,.68)" stroke-width="3.2"/>
+  <path d="M84,104 Q88,122 86,140" fill="none" stroke="rgba(255,130,0,.62)" stroke-width="2.8"/>
+  <path d="M94,100 Q102,118 100,136" fill="none" stroke="rgba(255,160,0,.68)" stroke-width="2.3"/>
+  <path d="M104,96 Q114,114 110,134" fill="none" stroke="rgba(255,130,0,.62)" stroke-width="2.8"/>
+  <!-- thin -->
+  <path d="M18,98 Q6,118 10,136"  fill="none" stroke="rgba(255,130,0,.28)" stroke-width="1.3"/>
+  <path d="M112,98 Q124,118 120,136" fill="none" stroke="rgba(255,130,0,.28)" stroke-width="1.3"/>
+</g>
+<!-- oral arms (thick, ribbon-like) -->
+<path d="M42,92 Q32,106 34,114" fill="none" stroke="rgba(255,120,0,.92)" stroke-width="6.5" stroke-linecap="round"/>
+<path d="M88,92 Q98,106 96,114"  fill="none" stroke="rgba(255,120,0,.92)" stroke-width="6.5" stroke-linecap="round"/>
+<path d="M60,98 Q56,112 58,118"  fill="none" stroke="rgba(255,150,0,.92)" stroke-width="6" stroke-linecap="round"/>
+<path d="M72,98 Q76,112 74,118"  fill="none" stroke="rgba(255,120,0,.9)"  stroke-width="5.5" stroke-linecap="round"/>
+<!-- bell -->
+<path d="M8,52 Q8,8 65,8 Q122,8 122,52 Q122,90 65,96 Q8,90 8,52Z" fill="url(#lm_bell)"/>
+<!-- inner glow -->
+<ellipse cx="65" cy="42" rx="36" ry="26" fill="url(#lm_glow)"/>
+<!-- radial canals -->
+<path d="M65,10 L65,94" fill="none" stroke="rgba(255,255,200,.1)" stroke-width="1.2"/>
+<path d="M28,16 L46,92" fill="none" stroke="rgba(255,255,200,.08)" stroke-width="1"/>
+<path d="M102,16 L84,92" fill="none" stroke="rgba(255,255,200,.08)" stroke-width="1"/>
+<path d="M10,52 L120,52"  fill="none" stroke="rgba(255,255,200,.06)" stroke-width="1"/>
+<!-- bell edge -->
+<path d="M8,52 Q8,10 65,10 Q122,10 122,52" fill="none" stroke="rgba(255,200,100,.3)" stroke-width="2"/>
+<!-- scalloped edge -->
+<path d="M8,52 Q12,64 8,76 Q16,70 22,78 Q28,68 34,78 Q40,68 46,78 Q52,68 58,78 Q64,68 70,78 Q76,68 82,78 Q88,68 94,78 Q100,68 106,78 Q112,70 118,76 Q114,64 122,52" fill="none" stroke="rgba(255,160,50,.5)" stroke-width="1.8"/>
+<!-- bioluminescent spots -->
+<circle cx="42" cy="34" r="6"  fill="rgba(255,230,100,.32)"/>
+<circle cx="76" cy="28" r="5"  fill="rgba(255,230,100,.26)"/>
+<circle cx="56" cy="54" r="7"  fill="rgba(255,230,100,.22)"/>
+<circle cx="90" cy="46" r="4"  fill="rgba(255,230,100,.2)"/>
+</svg>`,
+
+giantSquid:`<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="gs_mantle" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#90A4AE"/><stop offset="50%" stop-color="#CFDCE0"/><stop offset="100%" stop-color="#78909C"/></linearGradient>
+  <filter id="gs_shadow"><feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,.25)"/></filter>
+</defs>
+<!-- tail fin (rhomboid) -->
+<path d="M38,10 Q50,2 62,10 L58,28 L42,28Z" fill="#90A4AE"/>
+<path d="M38,10 Q50,4 62,10" fill="none" stroke="#CFD8DC" stroke-width="1.5" opacity=".5"/>
+<!-- mantle (torpedo-shaped) -->
+<ellipse cx="50" cy="60" rx="24" ry="52" fill="url(#gs_mantle)" filter="url(#gs_shadow)"/>
+<!-- mantle lines (chromatophore rows) -->
+<path d="M30,30 Q50,26 70,30" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="1.2"/>
+<path d="M28,42 Q50,38 72,42" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="1.1"/>
+<path d="M26,54 Q50,50 74,54" fill="none" stroke="rgba(0,0,0,.09)" stroke-width="1"/>
+<path d="M26,66 Q50,62 74,66" fill="none" stroke="rgba(0,0,0,.09)" stroke-width="1"/>
+<path d="M28,78 Q50,74 72,78" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+<!-- iridescent sheen -->
+<ellipse cx="42" cy="50" rx="12" ry="28" fill="rgba(150,200,220,.15)"/>
+<!-- 8 arms -->
+<g stroke-linecap="round">
+  <path d="M36,106 Q26,122 22,138" fill="none" stroke="#90A4AE" stroke-width="6.5"/>
+  <path d="M41,108 Q34,126 32,144" fill="none" stroke="#90A4AE" stroke-width="6"/>
+  <path d="M47,110 Q44,130 42,148" fill="none" stroke="#B0BEC5" stroke-width="6.5"/>
+  <path d="M55,110 Q57,132 57,150" fill="none" stroke="#B0BEC5" stroke-width="6.5"/>
+  <path d="M62,108 Q68,128 70,146" fill="none" stroke="#90A4AE" stroke-width="6"/>
+  <path d="M68,106 Q76,122 80,138" fill="none" stroke="#90A4AE" stroke-width="6.5"/>
+</g>
+<!-- 2 LONG tentacles -->
+<path d="M44,108 Q30,128 24,152" fill="none" stroke="#78909C" stroke-width="4" stroke-linecap="round"/>
+<path d="M56,108 Q70,128 76,152" fill="none" stroke="#78909C" stroke-width="4" stroke-linecap="round"/>
+<!-- tentacle clubs with suckers (toothed) -->
+<ellipse cx="24" cy="150" rx="7" ry="5" fill="#607D8B" transform="rotate(-20 24 150)"/>
+<circle cx="22" cy="148" r="2.5" fill="#455A64"/>
+<circle cx="26" cy="150" r="2"   fill="#455A64"/>
+<ellipse cx="76" cy="150" rx="7" ry="5" fill="#607D8B" transform="rotate(20 76 150)"/>
+<circle cx="74" cy="148" r="2.5" fill="#455A64"/>
+<circle cx="78" cy="150" r="2"   fill="#455A64"/>
+<!-- suckers along arms -->
+<circle cx="26" cy="130" r="3"   fill="#90A4AE" stroke="#607D8B" stroke-width="1"/>
+<circle cx="42" cy="132" r="3"   fill="#90A4AE" stroke="#607D8B" stroke-width="1"/>
+<circle cx="57" cy="132" r="3"   fill="#90A4AE" stroke="#607D8B" stroke-width="1"/>
+<circle cx="72" cy="130" r="3"   fill="#90A4AE" stroke="#607D8B" stroke-width="1"/>
+<!-- GIANT EYES (dinner plate sized) -->
+<circle cx="36" cy="92" r="16" fill="white" filter="url(#gs_shadow)"/>
+<circle cx="36" cy="92" r="13" fill="#1a1a1a"/>
+<circle cx="36" cy="92" r="9"  fill="#0a0a0a"/>
+<circle cx="36" cy="92" r="4"  fill="#030303"/>
+<circle cx="31" cy="87" r="5"  fill="rgba(255,255,255,.88)"/>
+<circle cx="36" cy="92" r="16" fill="none" stroke="#607D8B" stroke-width="1.5"/>
+<circle cx="64" cy="92" r="16" fill="white" filter="url(#gs_shadow)"/>
+<circle cx="64" cy="92" r="13" fill="#1a1a1a"/>
+<circle cx="64" cy="92" r="9"  fill="#0a0a0a"/>
+<circle cx="64" cy="92" r="4"  fill="#030303"/>
+<circle cx="59" cy="87" r="5"  fill="rgba(255,255,255,.88)"/>
+<circle cx="64" cy="92" r="16" fill="none" stroke="#607D8B" stroke-width="1.5"/>
+<!-- beak -->
+<path d="M42,104 Q50,112 58,104 Q55,110 45,110Z" fill="#37474F"/>
+</svg>`,
+
+anglerfish:`<svg viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="af_body" cx="38%" cy="32%"><stop offset="0%" stop-color="#37474F"/><stop offset="55%" stop-color="#1C2A30"/><stop offset="100%" stop-color="#0a0f14"/></radialGradient>
+  <radialGradient id="af_lure" cx="40%" cy="35%"><stop offset="0%" stop-color="rgba(180,255,120,.95)"/><stop offset="55%" stop-color="rgba(100,220,60,.75)"/><stop offset="100%" stop-color="rgba(40,160,20,.4)"/></radialGradient>
+  <filter id="af_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="4"/></filter>
+  <filter id="af_shadow"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,.6)"/></filter>
+</defs>
+<!-- tail -->
+<path d="M104,50 Q122,30 132,24 Q128,40 126,50 Q128,60 132,76 Q122,70 104,50Z" fill="#1C2A30"/>
+<!-- body bulbous -->
+<ellipse cx="56" cy="54" rx="52" ry="38" fill="url(#af_body)" filter="url(#af_shadow)"/>
+<!-- skin texture (faint ridges) -->
+<path d="M22,42 Q56,36 90,42" fill="none" stroke="rgba(100,150,160,.1)" stroke-width="2"/>
+<path d="M16,54 Q56,48 96,54" fill="none" stroke="rgba(100,150,160,.09)" stroke-width="1.8"/>
+<path d="M18,66 Q56,60 94,66" fill="none" stroke="rgba(100,150,160,.08)" stroke-width="1.5"/>
+<!-- body outline -->
+<ellipse cx="56" cy="54" rx="52" ry="38" fill="none" stroke="#263238" stroke-width="2"/>
+<!-- lure stalk (illicium) -->
+<path d="M46,16 Q38,6 44,0"    fill="none" stroke="#455A64" stroke-width="3.5" stroke-linecap="round"/>
+<!-- lure glow halo (behind bulb) -->
+<circle cx="44" cy="0" r="16" fill="url(#af_lure)" filter="url(#af_glow)" opacity=".7"/>
+<!-- lure bulb -->
+<circle cx="44" cy="0" r="10" fill="rgba(120,255,60,.3)"/>
+<circle cx="44" cy="0" r="7"  fill="rgba(160,255,80,.6)"/>
+<circle cx="44" cy="0" r="4.5" fill="rgba(230,255,180,.95)"/>
+<!-- second glow ring -->
+<circle cx="44" cy="0" r="14" fill="none" stroke="rgba(150,255,80,.22)" stroke-width="4"/>
+<!-- pec fins -->
+<path d="M74,72 Q90,88 74,94 Q62,82 70,74Z" fill="#37474F" stroke="#1C2A30" stroke-width="1.2"/>
+<path d="M36,72 Q20,88 36,94 Q48,82 40,74Z" fill="#37474F" stroke="#1C2A30" stroke-width="1.2"/>
+<!-- dorsal fin spines (neuromasts) -->
+<path d="M58,18 L60,30" stroke="#546E7A" stroke-width="3" stroke-linecap="round"/>
+<path d="M68,16 L70,28" stroke="#546E7A" stroke-width="3" stroke-linecap="round"/>
+<path d="M78,18 L80,30" stroke="#546E7A" stroke-width="3" stroke-linecap="round"/>
+<!-- huge mouth (gaping) -->
+<path d="M4,54 Q14,78 44,70 Q30,62 4,54Z" fill="#0a0f14"/>
+<path d="M6,56 L10,66 M14,54 L16,65 M20,53 L21,63 M26,53 L26,62 M32,54 L31,62" stroke="#455A64" stroke-width="1.8"/>
+<!-- upper jaw teeth -->
+<path d="M4,54 L8,48 L12,53 L16,46 L20,52 L24,46 L28,51" fill="none" stroke="#455A64" stroke-width="2"/>
+<!-- eye (large, bioluminescent tinge) -->
+<circle cx="22" cy="44" r="14" fill="#0a0e14"/>
+<circle cx="22" cy="44" r="11" fill="#142030"/>
+<circle cx="22" cy="44" r="7.5" fill="#08101a"/>
+<circle cx="22" cy="44" r="4"  fill="#030810"/>
+<circle cx="18" cy="40" r="4.5" fill="rgba(255,255,255,.85)"/>
+<circle cx="24" cy="42" r="1.5" fill="rgba(255,255,255,.4)"/>
+<!-- faint biolum ring on eye -->
+<circle cx="22" cy="44" r="14" fill="none" stroke="rgba(100,220,60,.15)" stroke-width="2"/>
+</svg>`,
+
+nautilus:`<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="nt_outer" cx="50%" cy="48%"><stop offset="0%" stop-color="#FFF8E1"/><stop offset="65%" stop-color="#DEB887"/><stop offset="100%" stop-color="#8B4513"/></radialGradient>
+  <filter id="nt_shadow"><feDropShadow dx="1" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,.3)"/></filter>
+</defs>
+<!-- outer shell -->
+<circle cx="55" cy="58" r="48" fill="url(#nt_outer)" filter="url(#nt_shadow)"/>
+<!-- shell stripe pattern (nautilus brown stripes) -->
+<path d="M55,10 Q90,10 103,58" fill="none" stroke="rgba(90,35,0,.3)" stroke-width="12"/>
+<path d="M55,10 Q22,12 10,42"  fill="none" stroke="rgba(255,255,200,.25)" stroke-width="8"/>
+<path d="M55,106 Q22,106 10,76" fill="none" stroke="rgba(255,255,200,.18)" stroke-width="6"/>
+<!-- spiral chambers -->
+<circle cx="55" cy="58" r="48" fill="none" stroke="#8B4513" stroke-width="1.8"/>
+<circle cx="55" cy="58" r="38" fill="#DEB887"/>
+<circle cx="55" cy="58" r="38" fill="none" stroke="#8B4513" stroke-width="1.5"/>
+<circle cx="55" cy="58" r="29" fill="#D2B48C"/>
+<circle cx="55" cy="58" r="29" fill="none" stroke="#8B4513" stroke-width="1.3"/>
+<circle cx="55" cy="58" r="20" fill="#C4A882"/>
+<circle cx="55" cy="58" r="20" fill="none" stroke="#8B4513" stroke-width="1.2"/>
+<circle cx="55" cy="58" r="13" fill="#B8965A"/>
+<circle cx="55" cy="58" r="13" fill="none" stroke="#8B4513" stroke-width="1"/>
+<circle cx="55" cy="58" r="7"  fill="#8B6914"/>
+<circle cx="55" cy="58" r="4"  fill="#5C3317"/>
+<!-- suture lines (septa) -->
+<path d="M55,10 Q76,24 96,46" fill="none" stroke="#7B3F00" stroke-width="1.5" opacity=".5"/>
+<path d="M96,46 Q103,58 96,70" fill="none" stroke="#7B3F00" stroke-width="1.5" opacity=".5"/>
+<path d="M55,106 Q34,92 14,70" fill="none" stroke="#7B3F00" stroke-width="1.4" opacity=".4"/>
+<!-- tentacles (many) emerging from aperture -->
+<g stroke="#DEB887" stroke-linecap="round">
+  <path d="M72,56 Q80,48 86,40" fill="none" stroke-width="2.8"/>
+  <path d="M74,62 Q84,56 90,52" fill="none" stroke-width="2.5"/>
+  <path d="M74,68 Q86,66 92,64" fill="none" stroke-width="2.5"/>
+  <path d="M72,74 Q84,76 90,78" fill="none" stroke-width="2.3"/>
+  <path d="M68,79 Q78,84 82,88" fill="none" stroke-width="2"/>
+</g>
+<!-- tentacle tips -->
+<circle cx="86" cy="40" r="3.5" fill="#C4A882"/>
+<circle cx="90" cy="52" r="3"   fill="#C4A882"/>
+<circle cx="92" cy="64" r="3"   fill="#C4A882"/>
+<circle cx="90" cy="78" r="2.8" fill="#C4A882"/>
+<!-- eye (simple pinhole camera) -->
+<circle cx="74" cy="46" r="7"  fill="#1a1a1a"/>
+<circle cx="74" cy="46" r="5"  fill="#0a0a0a"/>
+<circle cx="73" cy="45" r="1.8" fill="rgba(255,255,255,.6)"/>
+<!-- hood -->
+<path d="M62,40 Q82,34 90,48 Q82,44 72,46 Q64,44 62,40Z" fill="#D2B48C"/>
+<path d="M62,40 Q82,36 90,48" fill="none" stroke="#8B4513" stroke-width="1"/>
+<!-- aperture opening -->
+<ellipse cx="76" cy="60" rx="12" ry="20" fill="rgba(70,35,0,.35)" transform="rotate(-15 76 60)"/>
+</svg>`,
+
+deepCoral:`<svg viewBox="0 0 110 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="dc_branch" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#FF6F61"/><stop offset="100%" stop-color="#FF8A80"/></linearGradient>
+  <filter id="dc_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5"/></filter>
+</defs>
+<!-- base rock -->
+<ellipse cx="55" cy="116" rx="34" ry="10" fill="#2A2A4A"/>
+<ellipse cx="55" cy="116" rx="28" ry="7"  fill="#3A3A5A"/>
+<!-- main trunk -->
+<path d="M55,114 Q55,86 55,78" fill="none" stroke="#FF5252" stroke-width="11" stroke-linecap="round"/>
+<path d="M55,114 Q55,86 55,78" fill="none" stroke="#FF6F61" stroke-width="9" stroke-linecap="round"/>
+<!-- primary branches -->
+<path d="M55,88 Q38,74 26,58" fill="none" stroke="#FF6F61" stroke-width="8" stroke-linecap="round"/>
+<path d="M55,88 Q72,74 84,58" fill="none" stroke="#FF6F61" stroke-width="8" stroke-linecap="round"/>
+<path d="M55,80 Q46,64 40,50" fill="none" stroke="#FF8A80" stroke-width="6.5" stroke-linecap="round"/>
+<path d="M55,80 Q64,64 70,50" fill="none" stroke="#FF8A80" stroke-width="6.5" stroke-linecap="round"/>
+<!-- secondary branches -->
+<path d="M26,58 Q16,44 12,28" fill="none" stroke="#FF8A80" stroke-width="5" stroke-linecap="round"/>
+<path d="M26,58 Q28,44 32,30" fill="none" stroke="#FFAB91" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M84,58 Q94,44 98,28" fill="none" stroke="#FF8A80" stroke-width="5" stroke-linecap="round"/>
+<path d="M84,58 Q82,44 78,30" fill="none" stroke="#FFAB91" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M40,50 Q30,36 26,22" fill="none" stroke="#FFAB91" stroke-width="4" stroke-linecap="round"/>
+<path d="M70,50 Q80,36 84,22" fill="none" stroke="#FFAB91" stroke-width="4" stroke-linecap="round"/>
+<!-- branch highlights -->
+<path d="M55,88 Q39,76 28,60" fill="none" stroke="rgba(255,180,160,.25)" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M55,88 Q71,76 82,60" fill="none" stroke="rgba(255,180,160,.25)" stroke-width="2.5" stroke-linecap="round"/>
+<!-- tertiary tips glow (behind) -->
+<g filter="url(dc_glow)" opacity=".8">
+  <circle cx="12"  cy="24" r="9"  fill="#FFD54F"/>
+  <circle cx="32"  cy="28" r="8"  fill="#FFD54F"/>
+  <circle cx="24"  cy="20" r="7"  fill="#FFE082"/>
+  <circle cx="98"  cy="24" r="9"  fill="#FFD54F"/>
+  <circle cx="78"  cy="28" r="8"  fill="#FFD54F"/>
+  <circle cx="86"  cy="20" r="7"  fill="#FFE082"/>
+  <circle cx="26"  cy="20" r="7"  fill="#FFD54F"/>
+  <circle cx="84"  cy="20" r="7"  fill="#FFD54F"/>
+</g>
+<!-- polyp bulb tips -->
+<g fill="#FFD54F">
+  <circle cx="12"  cy="24" r="7"/><circle cx="32"  cy="28" r="6.5"/><circle cx="22" cy="18" r="5.5"/>
+  <circle cx="98"  cy="24" r="7"/><circle cx="78"  cy="28" r="6.5"/><circle cx="88" cy="18" r="5.5"/>
+  <circle cx="28"  cy="18" r="5.5"/><circle cx="82" cy="18" r="5.5"/>
+</g>
+<!-- inner polyp glow -->
+<g fill="rgba(255,255,220,.7)">
+  <circle cx="12" cy="24" r="3.5"/><circle cx="32" cy="28" r="3.5"/>
+  <circle cx="98" cy="24" r="3.5"/><circle cx="78" cy="28" r="3.5"/>
+</g>
+</svg>`,
+
+lobster:`<svg viewBox="0 0 130 88" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="lb_body" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E53935"/><stop offset="100%" stop-color="#B71C1C"/></linearGradient>
+  <filter id="lb_shadow"><feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="rgba(0,0,0,.3)"/></filter>
+</defs>
+<!-- walking legs (5 pairs including claws) -->
+<g stroke-linecap="round">
+  <line x1="40" y1="56" x2="28" y2="48"/> <line x1="28" y1="48" x2="18" y2="44"/>
+  <line x1="42" y1="62" x2="28" y2="60"/> <line x1="28" y1="60" x2="18" y2="60"/>
+  <line x1="44" y1="68" x2="30" y2="70"/> <line x1="30" y1="70" x2="20" y2="78"/>
+  <line x1="86" y1="56" x2="98" y2="48"/> <line x1="98" y1="48" x2="108" y2="44"/>
+  <line x1="84" y1="62" x2="98" y2="60"/> <line x1="98" y1="60" x2="108" y2="60"/>
+  <line x1="82" y1="68" x2="96" y2="70"/> <line x1="96" y1="70" x2="106" y2="78"/>
+</g>
+<g stroke="#C62828" stroke-width="4.5" stroke-linecap="round">
+  <line x1="40" y1="56" x2="28" y2="48"/> <line x1="28" y1="48" x2="18" y2="44"/>
+  <line x1="42" y1="62" x2="28" y2="60"/> <line x1="28" y1="60" x2="18" y2="60"/>
+  <line x1="44" y1="68" x2="30" y2="70"/> <line x1="30" y1="70" x2="20" y2="78"/>
+  <line x1="86" y1="56" x2="98" y2="48"/> <line x1="98" y1="48" x2="108" y2="44"/>
+  <line x1="84" y1="62" x2="98" y2="60"/> <line x1="98" y1="60" x2="108" y2="60"/>
+  <line x1="82" y1="68" x2="96" y2="70"/> <line x1="96" y1="70" x2="106" y2="78"/>
+</g>
+<!-- large claws (chelipeds) -->
+<ellipse cx="12" cy="38" rx="15" ry="10" fill="#E53935" stroke="#B71C1C" stroke-width="1.3" transform="rotate(-28 12 38)" filter="url(#lb_shadow)"/>
+<ellipse cx="7"  cy="30" rx="13" ry="8"  fill="#EF5350" stroke="#B71C1C" stroke-width="1" transform="rotate(22 7 30)"/>
+<path d="M8,27 Q6,22 10,24" stroke="#B71C1C" stroke-width="1.5"/>
+<ellipse cx="118" cy="38" rx="15" ry="10" fill="#E53935" stroke="#B71C1C" stroke-width="1.3" transform="rotate(28 118 38)" filter="url(#lb_shadow)"/>
+<ellipse cx="123" cy="30" rx="13" ry="8"  fill="#EF5350" stroke="#B71C1C" stroke-width="1" transform="rotate(-22 123 30)"/>
+<path d="M122,27 Q124,22 120,24" stroke="#B71C1C" stroke-width="1.5"/>
+<!-- tail fan -->
+<path d="M52,74 Q65,84 78,74 Q72,80 58,80Z" fill="#C62828"/>
+<path d="M46,72 Q48,82 54,80Z"              fill="#D32F2F"/>
+<path d="M80,72 Q78,82 72,80Z"              fill="#D32F2F"/>
+<path d="M42,70 Q42,80 48,78Z"              fill="#E53935" opacity=".7"/>
+<path d="M84,70 Q84,80 78,78Z"              fill="#E53935" opacity=".7"/>
+<!-- abdomen segments -->
+<ellipse cx="65" cy="60" rx="30" ry="22" fill="url(#lb_body)" filter="url(#lb_shadow)"/>
+<path d="M38,52 Q65,46 92,52" fill="none" stroke="#B71C1C" stroke-width="1.3" opacity=".65"/>
+<path d="M36,60 Q65,54 94,60" fill="none" stroke="#B71C1C" stroke-width="1.1" opacity=".55"/>
+<path d="M38,68 Q65,62 92,68" fill="none" stroke="#B71C1C" stroke-width="1" opacity=".5"/>
+<!-- abdomen highlight -->
+<ellipse cx="56" cy="56" rx="16" ry="10" fill="rgba(255,200,180,.15)"/>
+<!-- cephalothorax -->
+<ellipse cx="65" cy="40" rx="26" ry="19" fill="#EF5350" filter="url(#lb_shadow)"/>
+<ellipse cx="65" cy="40" rx="26" ry="19" fill="none" stroke="#C62828" stroke-width="1.5"/>
+<!-- carapace lines -->
+<path d="M46,34 Q65,28 84,34" fill="none" stroke="#C62828" stroke-width="1.2" opacity=".5"/>
+<!-- rostrum (spike) -->
+<path d="M56,24 L48,12" fill="none" stroke="#E53935" stroke-width="3.5" stroke-linecap="round"/>
+<!-- eye stalks -->
+<line x1="52" y1="26" x2="46" y2="16" stroke="#B71C1C" stroke-width="3.5"/>
+<circle cx="45" cy="14" r="9" fill="#0a0a0a"/>
+<circle cx="45" cy="14" r="7" fill="#1a1a1a"/>
+<circle cx="45" cy="14" r="4" fill="#060606"/>
+<circle cx="43" cy="12" r="2.8" fill="rgba(255,255,255,.82)"/>
+<line x1="78" y1="26" x2="84" y2="16" stroke="#B71C1C" stroke-width="3.5"/>
+<circle cx="85" cy="14" r="9" fill="#0a0a0a"/>
+<circle cx="85" cy="14" r="7" fill="#1a1a1a"/>
+<circle cx="85" cy="14" r="4" fill="#060606"/>
+<circle cx="83" cy="12" r="2.8" fill="rgba(255,255,255,.82)"/>
+<!-- antennae -->
+<path d="M52,22 Q40,10 30,2"  fill="none" stroke="#E53935" stroke-width="2" stroke-linecap="round"/>
+<path d="M78,22 Q90,10 100,2" fill="none" stroke="#E53935" stroke-width="2" stroke-linecap="round"/>
+<!-- shorter antennules -->
+<path d="M54,24 Q48,16 46,10" fill="none" stroke="#EF5350" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M76,24 Q82,16 84,10" fill="none" stroke="#EF5350" stroke-width="1.4" stroke-linecap="round"/>
+</svg>`,
+
+cuttlefish:`<svg viewBox="0 0 140 88" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="cu_body" cx="36%" cy="32%"><stop offset="0%" stop-color="#90A4AE"/><stop offset="55%" stop-color="#455A64"/><stop offset="100%" stop-color="#1C313A"/></radialGradient>
+  <filter id="cu_shadow"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,.35)"/></filter>
+</defs>
+<!-- fin frill (lateral fin) -->
+<path d="M22,30 Q36,18 50,26 Q64,14 78,24 Q92,14 106,24 Q118,18 124,30 Q120,52 124,64 Q110,70 98,64 Q84,72 70,64 Q56,72 42,64 Q28,70 16,64 Q20,52 22,30Z" fill="rgba(100,140,160,.3)" stroke="#78909C" stroke-width="1.5"/>
+<!-- fin ripples -->
+<path d="M22,30 Q38,22 52,30 Q66,18 80,26 Q94,18 108,26 Q118,22 124,30" fill="none" stroke="rgba(140,180,200,.4)" stroke-width="1.2"/>
+<!-- body oval -->
+<ellipse cx="72" cy="48" rx="58" ry="30" fill="url(#cu_body)" filter="url(#cu_shadow)"/>
+<!-- skin pattern: chromatophores + iridophores -->
+<ellipse cx="55" cy="40" rx="9"  ry="5.5" fill="rgba(255,210,60,.28)" transform="rotate(-14 55 40)"/>
+<ellipse cx="76" cy="36" rx="8"  ry="5"   fill="rgba(255,160,60,.22)" transform="rotate(10 76 36)"/>
+<ellipse cx="92" cy="44" rx="9"  ry="5.5" fill="rgba(255,210,60,.25)" transform="rotate(-10 92 44)"/>
+<ellipse cx="66" cy="54" rx="10" ry="5.5" fill="rgba(80,200,255,.2)"/>
+<ellipse cx="84" cy="54" rx="8"  ry="4.5" fill="rgba(80,200,255,.18)"/>
+<ellipse cx="48" cy="52" rx="7"  ry="4"   fill="rgba(80,200,255,.16)"/>
+<!-- zebra stripes (iridescent white) -->
+<path d="M38,24 Q38,70 38,72" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="3.5"/>
+<path d="M52,20 Q52,70 52,74" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="3.5"/>
+<path d="M66,18 Q66,72 66,76" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="3.5"/>
+<path d="M80,20 Q80,70 80,74" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="3.5"/>
+<path d="M94,22 Q94,68 94,72" fill="none" stroke="rgba(255,255,255,.1)"  stroke-width="3.5"/>
+<path d="M108,24 Q108,66 108,70" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="3"/>
+<!-- body outline -->
+<ellipse cx="72" cy="48" rx="58" ry="30" fill="none" stroke="#1C313A" stroke-width="2"/>
+<!-- eye (W-pupil) -->
+<circle cx="22" cy="44" r="13" fill="white"/>
+<circle cx="22" cy="44" r="10" fill="#0a1a1a"/>
+<ellipse cx="22" cy="44" rx="8" ry="7.5" fill="#131e1e"/>
+<!-- W-shaped pupil (cuttlefish signature) -->
+<path d="M15,44 Q17.5,40 20,44 Q22,40 24,44 Q26.5,40 29,44" fill="none" stroke="rgba(255,255,200,.75)" stroke-width="2.2"/>
+<circle cx="18" cy="40" r="2.5" fill="rgba(255,255,255,.55)"/>
+<circle cx="22" cy="44" r="13" fill="none" stroke="rgba(100,200,200,.2)" stroke-width="1.5"/>
+<!-- mantle tip (pointed) -->
+<path d="M126,48 Q135,44 138,48 Q135,52 126,48Z" fill="#455A64"/>
+<!-- tentacles (8 arms) -->
+<g stroke="#78909C" stroke-linecap="round">
+  <path d="M10,46 Q2,38 0,28"  fill="none" stroke-width="4"/>
+  <path d="M10,52 Q2,50 0,44"  fill="none" stroke-width="3.5"/>
+  <path d="M10,58 Q2,58 0,54"  fill="none" stroke-width="3.5"/>
+  <path d="M10,64 Q2,66 2,62"  fill="none" stroke-width="3"/>
+</g>
+<!-- 2 longer feeding tentacles with clubs -->
+<path d="M8,50 Q-10,44 -16,34" fill="none" stroke="#607D8B" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M8,56 Q-10,56 -16,52" fill="none" stroke="#607D8B" stroke-width="2.5" stroke-linecap="round"/>
+<ellipse cx="-16" cy="34" rx="5" ry="3.5" fill="#546E7A"/>
+<ellipse cx="-16" cy="52" rx="5" ry="3.5" fill="#546E7A"/>
+</svg>`,
+
+blueJelly:`<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="bj_bell" cx="50%" cy="38%"><stop offset="0%" stop-color="rgba(100,195,255,.88)"/><stop offset="60%" stop-color="rgba(21,101,192,.58)"/><stop offset="100%" stop-color="rgba(13,71,161,.3)"/></radialGradient>
+  <radialGradient id="bj_glow" cx="34%" cy="26%"><stop offset="0%" stop-color="rgba(255,255,255,.48)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>
+  <filter id="bj_gblur"><feGaussianBlur stdDeviation="2"/></filter>
+</defs>
+<!-- tentacles -->
+<path d="M25,72 Q16,86 20,100" fill="none" stroke="rgba(100,195,255,.65)" stroke-width="3" stroke-linecap="round"/>
+<path d="M35,76 Q28,90 30,104" fill="none" stroke="rgba(66,165,245,.75)"  stroke-width="2.5" stroke-linecap="round"/>
+<path d="M50,78 Q49,94 51,106" fill="none" stroke="rgba(100,195,255,.65)" stroke-width="3.2" stroke-linecap="round"/>
+<path d="M65,76 Q70,90 68,104" fill="none" stroke="rgba(66,165,245,.75)"  stroke-width="2.5" stroke-linecap="round"/>
+<path d="M75,72 Q84,86 80,100" fill="none" stroke="rgba(100,195,255,.65)" stroke-width="3" stroke-linecap="round"/>
+<path d="M18,74 Q8,90 12,104"  fill="none" stroke="rgba(100,195,255,.3)"  stroke-width="1.3" stroke-linecap="round"/>
+<path d="M82,74 Q92,90 88,104" fill="none" stroke="rgba(100,195,255,.3)"  stroke-width="1.3" stroke-linecap="round"/>
+<!-- bell glow behind -->
+<path d="M7,44 Q7,6 50,6 Q93,6 93,44 Q93,72 50,76 Q7,72 7,44Z" fill="rgba(50,130,255,.15)" filter="url(#bj_gblur)"/>
+<!-- bell -->
+<path d="M7,44 Q7,6 50,6 Q93,6 93,44 Q93,72 50,76 Q7,72 7,44Z" fill="url(#bj_bell)"/>
+<!-- inner highlight -->
+<ellipse cx="50" cy="34" rx="28" ry="20" fill="url(#bj_glow)"/>
+<!-- bioluminescent ring -->
+<path d="M7,44 Q7,8 50,8 Q93,8 93,44" fill="none" stroke="rgba(120,220,255,.38)" stroke-width="2.5"/>
+<!-- radial canal pattern -->
+<path d="M50,8  L50,74" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1.2"/>
+<path d="M22,12 L36,72" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+<path d="M78,12 L64,72" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+<path d="M10,44 L90,44"  fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+<!-- subumbrella texture -->
+<ellipse cx="50" cy="50" rx="34" ry="20" fill="rgba(100,200,255,.06)"/>
+<!-- biolum glow spots -->
+<circle cx="34" cy="28" r="5.5" fill="rgba(140,230,255,.32)"/>
+<circle cx="58" cy="24" r="4.5" fill="rgba(140,230,255,.26)"/>
+<circle cx="48" cy="44" r="6"   fill="rgba(140,230,255,.2)"/>
+<circle cx="70" cy="36" r="4"   fill="rgba(140,230,255,.18)"/>
+<!-- scalloped bell edge -->
+<path d="M7,44 Q10,56 7,68 Q16,62 22,70 Q28,60 34,70 Q40,60 46,70 Q52,60 58,70 Q64,60 70,70 Q76,60 82,70 Q88,62 93,68 Q90,56 93,44" fill="none" stroke="rgba(66,165,245,.45)" stroke-width="1.8"/>
+<!-- oral arms -->
+<path d="M33,68 Q26,78 28,84" fill="none" stroke="rgba(66,165,245,.9)" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M67,68 Q74,78 72,84" fill="none" stroke="rgba(66,165,245,.9)" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M44,72 Q40,82 42,88" fill="none" stroke="rgba(100,195,255,.8)" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M58,72 Q62,82 60,88" fill="none" stroke="rgba(100,195,255,.8)" stroke-width="4.5" stroke-linecap="round"/>
+</svg>`
+
+};
+
+/* ════════════════════════════════════════════════════
+   DATA
+════════════════════════════════════════════════════ */
 var TRANSLATIONS = {
   en: {
-    title: 'Underwater Explorer',
-    langBtn: 'മലയാളം',
-    closeBtn: 'Got it!',
-    zones: {
-      reef: { label: '🏝️ Coral Reef', desc: 'Coral Reef -- Tap any creature to learn about it!' },
-      open: { label: '🌊 Open Ocean', desc: 'Open Ocean -- Discover amazing sea animals!' },
-      deep: { label: '🌑 Deep Sea', desc: 'Deep Sea -- Explore the mysterious depths!' }
+    title:'Underwater Explorer', langBtn:'മലയാളം', closeBtn:'Got it!',
+    zones:{
+      reef:{ label:'Coral Reef',  desc:'Coral Reef — Tap any creature to learn about it!' },
+      open:{ label:'Open Ocean',  desc:'Open Ocean — Discover amazing sea animals!' },
+      deep:{ label:'Deep Sea',    desc:'Deep Sea — Explore the mysterious depths!' }
     }
   },
   ml: {
-    title: 'വെള്ളത്തിനടിയിലെ പര്യവേക്ഷണം',
-    langBtn: 'English',
-    closeBtn: 'മനസ്സിലായി!',
-    zones: {
-      reef: { label: '🏝️ പവിഴപ്പുറ്റ്', desc: 'പവിഴപ്പുറ്റ് -- കൂടുതൽ അറിയാൻ ജീവികളിൽ ടാപ്പ് ചെയ്യുക!' },
-      open: { label: '🌊 തുറന്ന സമുദ്രം', desc: 'തുറന്ന സമുദ്രം -- അതിശയകരമായ കടൽ മൃഗങ്ങളെ കണ്ടെത്തൂ!' },
-      deep: { label: '🌑 ആഴക്കടൽ', desc: 'ആഴക്കടൽ -- നിഗൂഢമായ ആഴങ്ങൾ പര്യവേക്ഷണം ചെയ്യൂ!' }
+    title:'വെള്ളത്തിനടിയിലെ പര്യവേക്ഷണം', langBtn:'English', closeBtn:'മനസ്സിലായി!',
+    zones:{
+      reef:{ label:'പവിഴപ്പുറ്റ്',    desc:'പവിഴപ്പുറ്റ് — കൂടുതൽ അറിയാൻ ജീവികളിൽ ടാപ്പ് ചെയ്യുക!' },
+      open:{ label:'തുറന്ന സമുദ്രം',  desc:'തുറന്ന സമുദ്രം — അതിശയകരമായ കടൽ മൃഗങ്ങളെ കണ്ടെത്തൂ!' },
+      deep:{ label:'ആഴക്കടൽ',          desc:'ആഴക്കടൽ — നിഗൂഢമായ ആഴങ്ങൾ പര്യവേക്ഷണം ചെയ്യൂ!' }
     }
   }
 };
 
 var ZONE_CFG = {
-  reef: {
-    ids: ['clownfish','seaTurtle','morayEel','blueTang','starfish','seahorse','crab','pufferfish','parrotfish','anemone','shrimp']
-  },
-  open: {
-    ids: ['dolphin','mantaRay','whaleShark','swordfish','stingray','hammerhead','seaLion','flyingFish','barracuda','marlin']
-  },
-  deep: {
-    ids: ['moonJelly','octopus','lionsMane','giantSquid','blueJelly','anglerfish','nautilus','deepCoral','lobster','cuttlefish']
-  }
+  reef:['clownfish','seaTurtle','morayEel','blueTang','starfish','seahorse','crab','pufferfish','parrotfish','anemone','shrimp'],
+  open:['dolphin','mantaRay','whaleShark','swordfish','stingray','hammerhead'],
+  deep:['moonJelly','octopus','lionsMane','giantSquid','blueJelly','anglerfish','nautilus','deepCoral','lobster','cuttlefish']
 };
 
 var DATA = {
-  clownfish: {
-    emoji: '🐠',
-    name: { en: 'Clownfish', ml: 'കോമാളി മത്സ്യം' },
-    latin: 'Amphiprioninae',
-    sz: 72, spd: 1.8,
-    facts: {
-      en: [
-        {i:'🐠', t:'Lives safely inside stinging sea anemones that protect it from predators'},
-        {i:'🐣', t:'All clownfish are born male -- the biggest one becomes female!'},
-        {i:'🎥', t:'Made famous as "Nemo" in the movie Finding Nemo'}
-      ],
-      ml: [
-        {i:'🐠', t:'വേട്ടക്കാരിൽ നിന്ന് സംരക്ഷണം നൽകുന്ന കുത്തുന്ന കടൽ അനെമോണുകൾക്കുള്ളിൽ സുരക്ഷിതമായി ജീവിക്കുന്നു'},
-        {i:'🐣', t:'എല്ലാ കോമാളി മത്സ്യങ്ങളും ആണായിട്ടാണ് ജനിക്കുന്നത് -- ഏറ്റവും വലുത് പെണ്ണായി മാറുന്നു!'},
-        {i:'🎥', t:'ഫൈൻഡിംഗ് നെമോ സിനിമയിലെ "നെമോ" എന്ന കഥാപാത്രത്തിലൂടെ പ്രസിദ്ധമായി'}
-      ]
-    }
-  },
-  seaTurtle: {
-    emoji: '🐢',
-    name: { en: 'Green Sea Turtle', ml: 'പച്ച കടലാമ' },
-    latin: 'Chelonia mydas',
-    sz: 105, spd: .75,
-    facts: {
-      en: [
-        {i:'🐢', t:'Can live over 100 years -- older than your great-grandparents!'},
-        {i:'🌍', t:'Travels thousands of miles across entire oceans every year'},
-        {i:'💨', t:'Must swim to the surface to breathe air, just like us'}
-      ],
-      ml: [
-        {i:'🐢', t:'100 വർഷത്തിലധികം ജീവിക്കാൻ കഴിയും -- നിങ്ങളുടെ മുത്തച്ഛന്മാരേക്കാൾ പ്രായമുള്ളത്!'},
-        {i:'🌍', t:'ഓരോ വർഷും സമുദ്രങ്ങളിലൂടെ ആയിരക്കണക്കിന് മൈലുകൾ സഞ്ചരിക്കുന്നു'},
-        {i:'💨', t:'നമ്മളെപ്പോലെ തന്നെ വായു ശ്വസിക്കാൻ ഉപരിതലത്തിലേക്ക് നീന്തണം'}
-      ]
-    }
-  },
-  morayEel: {
-    emoji: '🐍',
-    name: { en: 'Moray Eel', ml: 'മൊറേ ഈൽ' },
-    latin: 'Muraenidae',
-    sz: 85, spd: .55,
-    facts: {
-      en: [
-        {i:'😮', t:'Has a secret second set of jaws hiding inside its throat!'},
-        {i:'🐚', t:'Hides in dark holes and crevices in the coral reef'},
-        {i:'🤝', t:'Sometimes teams up with grouper fish to hunt together'}
-      ],
-      ml: [
-        {i:'😮', t:'തൊണ്ടയിൽ മറഞ്ഞിരിക്കുന്ന രണ്ടാമത്തെ രഹസ്യ താടിയെല്ലുകളുണ്ട്!'},
-        {i:'🐚', t:'പവിഴപ്പുറ്റിലെ ഇരുണ്ട ദ്വാരങ്ങളിലും വിള്ളലുകളിലും ഒളിക്കുന്നു'},
-        {i:'🤝', t:'ചിലപ്പോൾ ഗ്രൂപ്പർ മത്സ്യങ്ങളുമായി ചേർന്ന് വേട്ടയാടുന്നു'}
-      ]
-    }
-  },
-  blueTang: {
-    emoji: '🐟',
-    name: { en: 'Blue Tang', ml: 'നീല ടാങ്' },
-    latin: 'Paracanthurus hepatus',
-    sz: 68, spd: 2.1,
-    facts: {
-      en: [
-        {i:'🐠', t:'This stunning blue fish is also called a Regal Tang'},
-        {i:'🎥', t:'Famous as "Dory" from the movie Finding Dory!'},
-        {i:'⚠️', t:'Has a razor-sharp spine near its tail for self-defense'}
-      ],
-      ml: [
-        {i:'🐠', t:'ഈ അതിശയകരമായ നീല മത്സ്യത്തെ റീഗൽ ടാങ് എന്നും വിളിക്കുന്നു'},
-        {i:'🎥', t:'ഫൈൻഡിംഗ് ഡോറി സിനിമയിലെ "ഡോറി" എന്ന കഥാപാത്രത്തിലൂടെ പ്രസിദ്ധമായി!'},
-        {i:'⚠️', t:'സ്വയം പ്രതിരോധത്തിനായി വാലിന് സമീപം റേസർ മൂർച്ചയുള്ള നട്ടെല്ലുണ്ട്'}
-      ]
-    }
-  },
-  starfish: {
-    emoji: '⭐',
-    name: { en: 'Starfish', ml: 'നക്ഷത്രമത്സ്യം' },
-    latin: 'Asteroidea',
-    sz: 65, spd: .25,
-    facts: {
-      en: [
-        {i:'💪', t:'Can regrow a lost arm -- some regrow their entire body from just one arm!'},
-        {i:'🧠', t:'Has no brain and no blood -- uses seawater instead of blood'},
-        {i:'👁️', t:'Has a tiny eye at the tip of each arm that can sense light'}
-      ],
-      ml: [
-        {i:'💪', t:'നഷ്ടപ്പെട്ട കൈ വീണ്ടും വളർത്താൻ കഴിയും -- ചിലത് ഒരു കൈയിൽ നിന്ന് മുഴുവൻ ശരീരവും വീണ്ടും വളർത്തുന്നു!'},
-        {i:'🧠', t:'തലച്ചോറോ രക്തമോ ഇല്ല -- രക്തത്തിന് പകരം കടൽ വെള്ളം ഉപയോഗിക്കുന്നു'},
-        {i:'👁️', t:'ഓരോ കൈയുടെയും അഗ്രത്തിൽ പ്രകാശം തിരിച്ചറിയാൻ കഴിയുന്ന ചെറിയ കണ്ണുണ്ട്'}
-      ]
-    }
-  },
-  seahorse: {
-    emoji: '🐠',
-    name: { en: 'Seahorse', ml: 'കടൽക്കുതിര' },
-    latin: 'Hippocampus',
-    sz: 58, spd: .35,
-    facts: {
-      en: [
-        {i:'👨', t:'The father carries and gives birth to the babies, not the mother!'},
-        {i:'👀', t:'Each eye moves independently, like a chameleon'},
-        {i:'💕', t:'Pairs greet each other every morning with a special dance'}
-      ],
-      ml: [
-        {i:'👨', t:'അമ്മയല്ല, അച്ഛൻ കുഞ്ഞുങ്ങളെ ചുമന്ന് പ്രസവിക്കുന്നു!'},
-        {i:'👀', t:'ഓരോ കണ്ണും സ്വതന്ത്രമായി ചലിക്കുന്നു, ഒരു ഗിരഗിട്ടി പോലെ'},
-        {i:'💕', t:'ജോഡികൾ എല്ലാ ദിവസവും രാവിലെ പ്രത്യേക നൃത്തത്തിലൂടെ പരസ്പരം അഭിവാദ്യം ചെയ്യുന്നു'}
-      ]
-    }
-  },
-  crab: {
-    emoji: '🦀',
-    name: { en: 'Hermit Crab', ml: 'ഹെർമിറ്റ് ഞണ്ട്' },
-    latin: 'Paguroidea',
-    sz: 60, spd: .4,
-    facts: {
-      en: [
-        {i:'🦀', t:'Carries its home on its back and moves to a bigger shell as it grows'},
-        {i:'👀', t:'Can see in almost every direction thanks to eyes on stalks'},
-        {i:'💪', t:'Has one claw much bigger than the other for defense'}
-      ],
-      ml: [
-        {i:'🦀', t:'മുതുകിൽ വീട് ചുമന്നു കൊണ്ടുപോകുന്നു, വളരുമ്പോൾ വലിയ ഷെല്ലിലേക്ക് മാറുന്നു'},
-        {i:'👀', t:'തണ്ടുകളിലുള്ള കണ്ണുകൾ കാരണം മിക്കവാറും എല്ലാ ദിശകളിലും കാണാൻ കഴിയും'},
-        {i:'💪', t:'പ്രതിരോധത്തിനായി ഒരു നഖം മറ്റേതിനേക്കാൾ വളരെ വലുതാണ്'}
-      ]
-    }
-  },
-  pufferfish: {
-    emoji: '🐡',
-    name: { en: 'Pufferfish', ml: 'പഫർ മത്സ്യം' },
-    latin: 'Tetraodontidae',
-    sz: 70, spd: .6,
-    facts: {
-      en: [
-        {i:'🐡', t:'Puffs up to 3 times its size when scared to look bigger to predators'},
-        {i:'☠️', t:'Contains enough poison to be dangerous -- 1200 times more toxic than cyanide'},
-        {i:'🎨', t:'Males create beautiful sand patterns on the ocean floor to attract mates'}
-      ],
-      ml: [
-        {i:'🐡', t:'ഭയപ്പെടുമ്പോൾ വേട്ടക്കാർക്ക് വലുതായി കാണാൻ 3 ഇരട്ടി വലുപ്പത്തിൽ വീർക്കുന്നു'},
-        {i:'☠️', t:'അപകടകരമായ വിഷം അടങ്ങിയിരിക്കുന്നു -- സയനൈഡിനേക്കാൾ 1200 മടങ്ങ് വിഷാംശമുള്ളത്'},
-        {i:'🎨', t:'ഇണകളെ ആകർഷിക്കാൻ ആൺമത്സ്യങ്ങൾ സമുദ്രത്തിന്റെ അടിത്തട്ടിൽ മനോഹരമായ മണൽ പാറ്റേണുകൾ സൃഷ്ടിക്കുന്നു'}
-      ]
-    }
-  },
-  parrotfish: {
-    emoji: '🐟',
-    name: { en: 'Parrotfish', ml: 'തത്ത മത്സ്യം' },
-    latin: 'Scaridae',
-    sz: 80, spd: 1.4,
-    facts: {
-      en: [
-        {i:'🐟', t:'Named for its beak-like teeth that crunch coral for food'},
-        {i:'🏖️', t:'Creates white sand beaches -- one fish makes 200 pounds of sand a year!'},
-        {i:'😴', t:'Sleeps inside a bubble of its own mucus for protection at night'}
-      ],
-      ml: [
-        {i:'🐟', t:'ഭക്ഷണത്തിനായി പവിഴം കടിച്ചുതകർക്കുന്ന കൊക്ക് പോലെയുള്ള പല്ലുകൾ കാരണം ഈ പേര്'},
-        {i:'🏖️', t:'വെള്ള മണൽ കടൽത്തീരങ്ങൾ സൃഷ്ടിക്കുന്നു -- ഒരു മത്സ്യം വർഷത്തിൽ 200 പൗണ്ട് മണൽ ഉണ്ടാക്കുന്നു!'},
-        {i:'😴', t:'രാത്രിയിൽ സംരക്ഷണത്തിനായി സ്വന്തം കഫത്തിന്റെ കുമിളയ്ക്കുള്ളിൽ ഉറങ്ങുന്നു'}
-      ]
-    }
-  },
-  anemone: {
-    emoji: '🪸',
-    name: { en: 'Sea Anemone', ml: 'കടൽ അനെമോൺ' },
-    latin: 'Actiniaria',
-    sz: 55, spd: .1,
-    facts: {
-      en: [
-        {i:'🪸', t:'Looks like a beautiful flower but is actually a predatory animal'},
-        {i:'🐠', t:'Best friends with clownfish -- they protect each other'},
-        {i:'⏳', t:'Some sea anemones can live for over 80 years'}
-      ],
-      ml: [
-        {i:'🪸', t:'സുന്ദരമായ ഒരു പുഷ്പം പോലെ കാണപ്പെടുന്നു, പക്ഷേ യഥാർത്ഥത്തിൽ വേട്ടയാടുന്ന ഒരു മൃഗമാണ്'},
-        {i:'🐠', t:'കോമാളി മത്സ്യവുമായി ഉറ്റ സുഹൃത്തുക്കൾ -- അവർ പരസ്പരം സംരക്ഷിക്കുന്നു'},
-        {i:'⏳', t:'ചില കടൽ അനെമോണുകൾക്ക് 80 വർഷത്തിലധികം ജീവിക്കാൻ കഴിയും'}
-      ]
-    }
-  },
-  shrimp: {
-    emoji: '🦐',
-    name: { en: 'Cleaner Shrimp', ml: 'ക്ലീനർ ചെമ്മീൻ' },
-    latin: 'Lysmata amboinensis',
-    sz: 48, spd: .7,
-    facts: {
-      en: [
-        {i:'🦐', t:'Runs a "cleaning station" where fish line up to get parasites removed'},
-        {i:'💃', t:'Does a special dance to advertise its cleaning services to passing fish'},
-        {i:'🔬', t:'Has such good eyesight it can see colors invisible to humans'}
-      ],
-      ml: [
-        {i:'🦐', t:'പരാന്നഭോജികളെ നീക്കം ചെയ്യാൻ മത്സ്യങ്ങൾ വരിവരിയായി നിൽക്കുന്ന "ക്ലീനിംഗ് സ്റ്റേഷൻ" നടത്തുന്നു'},
-        {i:'💃', t:'കടന്നുപോകുന്ന മത്സ്യങ്ങൾക്ക് അതിന്റെ ക്ലീനിംഗ് സേവനങ്ങൾ പരസ്യം ചെയ്യാൻ പ്രത്യേക നൃത്തം ചെയ്യുന്നു'},
-        {i:'🔬', t:'മനുഷ്യർക്ക് അദൃശ്യമായ നിറങ്ങൾ കാണാൻ കഴിയുന്ന മികച്ച കാഴ്ചശക്തിയുണ്ട്'}
-      ]
-    }
-  },
-  dolphin: {
-    emoji: '🐬',
-    name: { en: 'Bottlenose Dolphin', ml: 'ബോട്ടിൽനോസ് ഡോൾഫിൻ' },
-    latin: 'Tursiops truncatus',
-    sz: 120, spd: 2.4,
-    facts: {
-      en: [
-        {i:'🐬', t:'One of the smartest animals on Earth -- they have names for each other!'},
-        {i:'🔊', t:'Uses echolocation (sound waves) to find food in dark water'},
-        {i:'😴', t:'Sleeps with only half its brain -- one eye stays open!'}
-      ],
-      ml: [
-        {i:'🐬', t:'ഭൂമിയിലെ ഏറ്റവും മിടുക്കരായ മൃഗങ്ങളിൽ ഒന്ന് -- അവർ പരസ്പരം പേരുകളുണ്ട്!'},
-        {i:'🔊', t:'ഇരുണ്ട വെള്ളത്തിൽ ഭക്ഷണം കണ്ടെത്താൻ എക്കോലൊക്കേഷൻ (ശബ്ദ തരംഗങ്ങൾ) ഉപയോഗിക്കുന്നു'},
-        {i:'😴', t:'തലച്ചോറിന്റെ പകുതി മാത്രം ഉപയോഗിച്ച് ഉറങ്ങുന്നു -- ഒരു കണ്ണ് തുറന്നിരിക്കുന്നു!'}
-      ]
-    }
-  },
-  mantaRay: {
-    emoji: '🦈',
-    name: { en: 'Manta Ray', ml: 'മാന്ത റേ' },
-    latin: 'Mobula birostris',
-    sz: 130, spd: 1.1,
-    facts: {
-      en: [
-        {i:'📏', t:'Can grow up to 23 feet wide -- wider than most cars!'},
-        {i:'🧠', t:'Has the largest brain of any fish and is extremely intelligent'},
-        {i:'🤗', t:'Completely harmless to humans -- a gentle giant of the sea'}
-      ],
-      ml: [
-        {i:'📏', t:'23 അടി വരെ വീതിയിൽ വളരാൻ കഴിയും -- മിക്ക കാറുകളേക്കാളും വീതിയുള്ളത്!'},
-        {i:'🧠', t:'ഏതൊരു മത്സ്യത്തിന്റെയും ഏറ്റവും വലിയ തലച്ചോറുണ്ട്, അത്യന്തം ബുദ്ധിമാനാണ്'},
-        {i:'🤗', t:'മനുഷ്യർക്ക് പൂർണ്ണമായും ദോഷകരമല്ല -- കടലിലെ സൗമ്യമായ ഭീമൻ'}
-      ]
-    }
-  },
-  whaleShark: {
-    emoji: '🦈',
-    name: { en: 'Whale Shark', ml: 'തിമിംഗില സ്രാവ്' },
-    latin: 'Rhincodon typus',
-    sz: 140, spd: .65,
-    facts: {
-      en: [
-        {i:'🐋', t:'The biggest fish in the entire ocean -- up to 40 feet long!'},
-        {i:'🍽️', t:'Despite its huge size, it only eats tiny plankton and small fish'},
-        {i:'🐠', t:'Each whale shark has a unique spot pattern, like human fingerprints'}
-      ],
-      ml: [
-        {i:'🐋', t:'സമുദ്രത്തിലെ ഏറ്റവും വലിയ മത്സ്യം -- 40 അടി വരെ നീളമുള്ളത്!'},
-        {i:'🍽️', t:'വലിയ വലിപ്പമാണെങ്കിലും ചെറിയ പ്ലാങ്ക്ടണുകളും ചെറിയ മത്സ്യങ്ങളും മാത്രമേ കഴിക്കുകയുള്ളൂ'},
-        {i:'🐠', t:'മനുഷ്യ വിരലടയാളം പോലെ ഓരോ തിമിംഗില സ്രാവിനും തനതായ പാട് പാറ്റേൺ ഉണ്ട്'}
-      ]
-    }
-  },
-  swordfish: {
-    emoji: '🐟',
-    name: { en: 'Swordfish', ml: 'വാൾമത്സ്യം' },
-    latin: 'Xiphias gladius',
-    sz: 100, spd: 2.8,
-    facts: {
-      en: [
-        {i:'⚔️', t:'Has a long flat bill shaped like a sword used to slash prey'},
-        {i:'🏃', t:'One of the fastest fish in the ocean -- up to 60 mph!'},
-        {i:'🌡️', t:'Has special organs that heat its eyes and brain for better hunting'}
-      ],
-      ml: [
-        {i:'⚔️', t:'ഇരയെ വെട്ടിക്കൊല്ലാൻ ഉപയോഗിക്കുന്ന വാൾ പോലെയുള്ള നീണ്ട പരന്ന ബിൽ ഉണ്ട്'},
-        {i:'🏃', t:'സമുദ്രത്തിലെ ഏറ്റവും വേഗതയേറിയ മത്സ്യങ്ങളിൽ ഒന്ന് -- മണിക്കൂറിൽ 60 മൈൽ വരെ!'},
-        {i:'🌡️', t:'മികച്ച വേട്ടയാട്ടത്തിനായി കണ്ണുകളും തലച്ചോറും ചൂടാക്കുന്ന പ്രത്യേക അവയവങ്ങളുണ്ട്'}
-      ]
-    }
-  },
-  stingray: {
-    emoji: '🐟',
-    name: { en: 'Stingray', ml: 'സ്റ്റിംഗ്‌റേ' },
-    latin: 'Myliobatoidei',
-    sz: 105, spd: 1.3,
-    facts: {
-      en: [
-        {i:'👀', t:'Has eyes on top of its flat body and mouth underneath'},
-        {i:'⚡', t:'Can sense the electrical signals of animals hiding in the sand'},
-        {i:'🦈', t:'Related to sharks -- both have skeletons made of bendy cartilage'}
-      ],
-      ml: [
-        {i:'👀', t:'പരന്ന ശരീരത്തിന്റെ മുകളിൽ കണ്ണുകളും താഴെ വായും ഉണ്ട്'},
-        {i:'⚡', t:'മണലിൽ ഒളിച്ചിരിക്കുന്ന മൃഗങ്ങളുടെ വൈദ്യുത സിഗ്നലുകൾ തിരിച്ചറിയാൻ കഴിയും'},
-        {i:'🦈', t:'സ്രാവുകളുമായി ബന്ധപ്പെട്ടിരിക്കുന്നു -- രണ്ടിനും വളയുന്ന തരുണാസ്ഥികൊണ്ട് നിർമ്മിച്ച അസ്ഥികൂടമുണ്ട്'}
-      ]
-    }
-  },
-  hammerhead: {
-    emoji: '🦈',
-    name: { en: 'Hammerhead Shark', ml: 'ഹാമർഹെഡ് സ്രാവ്' },
-    latin: 'Sphyrnidae',
-    sz: 125, spd: 2.0,
-    facts: {
-      en: [
-        {i:'🦈', t:'Hammer-shaped head gives it 360-degree vision to spot prey everywhere'},
-        {i:'⚡', t:'Head is packed with sensors that detect electrical fields of hidden prey'},
-        {i:'🐟', t:'Hunts in schools of up to 500 sharks during the day'}
-      ],
-      ml: [
-        {i:'🦈', t:'ചുറ്റികയുടെ ആകൃതിയിലുള്ള തല എല്ലായിടത്തും ഇരയെ കണ്ടെത്താൻ 360 ഡിഗ്രി കാഴ്ച നൽകുന്നു'},
-        {i:'⚡', t:'മറഞ്ഞിരിക്കുന്ന ഇരയുടെ വൈദ്യുത മണ്ഡലങ്ങൾ കണ്ടെത്തുന്ന സെൻസറുകൾ കൊണ്ട് തല നിറഞ്ഞിരിക്കുന്നു'},
-        {i:'🐟', t:'പകൽ സമയത്ത് 500 സ്രാവുകൾ വരെയുള്ള കൂട്ടങ്ങളായി വേട്ടയാടുന്നു'}
-      ]
-    }
-  },
-  seaLion: {
-    emoji: '🦭',
-    name: { en: 'Sea Lion', ml: 'കടൽ സിംഹം' },
-    latin: 'Otariinae',
-    sz: 110, spd: 1.8,
-    facts: {
-      en: [
-        {i:'🫁', t:'Can hold its breath for up to 20 minutes while diving for food'},
-        {i:'🗣️', t:'Barks and honks loudly to communicate with its colony'},
-        {i:'🏃', t:'Swims up to 25 mph and can walk on land using its flippers'}
-      ],
-      ml: [
-        {i:'🫁', t:'ഭക്ഷണത്തിനായി മുങ്ങുമ്പോൾ 20 മിനിറ്റ് വരെ ശ്വാസം പിടിച്ചുനിർത്താൻ കഴിയും'},
-        {i:'🗣️', t:'തന്റെ കോളനിയുമായി ആശയവിനിമയം നടത്താൻ ഉച്ചത്തിൽ കുരയ്ക്കുകയും ഹോൺ മുഴക്കുകയും ചെയ്യുന്നു'},
-        {i:'🏃', t:'മണിക്കൂറിൽ 25 മൈൽ വരെ നീന്തുന്നു, ചിറകുകൾ ഉപയോഗിച്ച് കരയിൽ നടക്കാനും കഴിയും'}
-      ]
-    }
-  },
-  flyingFish: {
-    emoji: '🐟',
-    name: { en: 'Flying Fish', ml: 'പറക്കുന്ന മത്സ്യം' },
-    latin: 'Exocoetidae',
-    sz: 70, spd: 3.0,
-    facts: {
-      en: [
-        {i:'🐟', t:'Leaps out of the water and glides through the air for over 600 feet!'},
-        {i:'🪶', t:'Uses its large wing-like fins to glide and escape predators'},
-        {i:'💨', t:'Can reach speeds of 35 mph and stay airborne for 45 seconds'}
-      ],
-      ml: [
-        {i:'🐟', t:'വെള്ളത്തിൽ നിന്ന് കുതിച്ചുയർന്ന് 600 അടിയിലധികം വായുവിലൂടെ തെറിച്ചുപറക്കുന്നു!'},
-        {i:'🪶', t:'വേട്ടക്കാരിൽ നിന്ന് രക്ഷപ്പെടാനും തെറിച്ചുപറക്കാനും വലിയ ചിറക് പോലെയുള്ള ചിറകുകൾ ഉപയോഗിക്കുന്നു'},
-        {i:'💨', t:'മണിക്കൂറിൽ 35 മൈൽ വേഗത കൈവരിക്കാനും 45 സെക്കൻഡ് വായുവിൽ നിലനിൽക്കാനും കഴിയും'}
-      ]
-    }
-  },
-  barracuda: {
-    emoji: '🐟',
-    name: { en: 'Great Barracuda', ml: 'ഗ്രേറ്റ് ബാരാക്കുഡ' },
-    latin: 'Sphyraena barracuda',
-    sz: 95, spd: 2.5,
-    facts: {
-      en: [
-        {i:'🦈', t:'Lightning-fast predator that strikes at speeds up to 36 mph'},
-        {i:'👁️', t:'Has excellent eyesight and is attracted to shiny, reflective objects'},
-        {i:'🦷', t:'Has razor-sharp teeth arranged in two rows like a set of daggers'}
-      ],
-      ml: [
-        {i:'🦈', t:'മണിക്കൂറിൽ 36 മൈൽ വേഗതയിൽ ആക്രമിക്കുന്ന മിന്നൽ വേഗത്തിലുള്ള വേട്ടക്കാരൻ'},
-        {i:'👁️', t:'മികച്ച കാഴ്ചശക്തിയുണ്ട്, തിളങ്ങുന്ന, പ്രതിഫലിക്കുന്ന വസ്തുക്കളിലേക്ക് ആകർഷിക്കപ്പെടുന്നു'},
-        {i:'🦷', t:'കഠാരകളുടെ ഒരു കൂട്ടം പോലെ രണ്ട് വരികളിൽ ക്രമീകരിച്ചിരിക്കുന്ന റേസർ മൂർച്ചയുള്ള പല്ലുകൾ ഉണ്ട്'}
-      ]
-    }
-  },
-  marlin: {
-    emoji: '🐟',
-    name: { en: 'Blue Marlin', ml: 'നീല മാർലിൻ' },
-    latin: 'Makaira nigricans',
-    sz: 115, spd: 2.6,
-    facts: {
-      en: [
-        {i:'🐟', t:'One of the fastest fish alive -- can swim up to 68 mph!'},
-        {i:'📏', t:'Can grow over 14 feet long and weigh over 1,800 pounds'},
-        {i:'🌡️', t:'Changes color from blue to silver when excited or hunting prey'}
-      ],
-      ml: [
-        {i:'🐟', t:'ജീവിച്ചിരിക്കുന്ന ഏറ്റവും വേഗതയേറിയ മത്സ്യങ്ങളിൽ ഒന്ന് -- മണിക്കൂറിൽ 68 മൈൽ വരെ നീന്താൻ കഴിയും!'},
-        {i:'📏', t:'14 അടിയിലധികം നീളവും 1,800 പൗണ്ടിലധികം ഭാരവും വരാം'},
-        {i:'🌡️', t:'ആവേശത്തിലോ ഇര വേട്ടയാടുമ്പോഴോ നീലയിൽ നിന്ന് വെള്ളിയിലേക്ക് നിറം മാറുന്നു'}
-      ]
-    }
-  },
-  moonJelly: {
-    emoji: '🪼',
-    name: { en: 'Moon Jellyfish', ml: 'ചന്ദ്ര ജെല്ലിഫിഷ്' },
-    latin: 'Aurelia aurita',
-    sz: 90, spd: .4,
-    facts: {
-      en: [
-        {i:'💧', t:'Made of 95% water -- almost invisible in the ocean!'},
-        {i:'🧠', t:'Has no brain, no heart, and no blood at all'},
-        {i:'⏳', t:'Jellyfish have existed for over 500 million years -- before dinosaurs!'}
-      ],
-      ml: [
-        {i:'💧', t:'95% വെള്ളം കൊണ്ടാണ് നിർമ്മിച്ചിരിക്കുന്നത് -- സമുദ്രത്തിൽ മിക്കവാറും അദൃശ്യമാണ്!'},
-        {i:'🧠', t:'തലച്ചോറോ ഹൃദയമോ രക്തമോ ഒന്നും തന്നെയില്ല'},
-        {i:'⏳', t:'ജെല്ലിഫിഷുകൾ 500 ദശലക്ഷം വർഷത്തിലേറെയായി നിലവിലുണ്ട് -- ദിനോസറുകൾക്ക് മുമ്പ്!'}
-      ]
-    }
-  },
-  octopus: {
-    emoji: '🐙',
-    name: { en: 'Giant Pacific Octopus', ml: 'ജയന്റ് പസഫിക് നീരാളി' },
-    latin: 'Enteroctopus dofleini',
-    sz: 108, spd: .9,
-    facts: {
-      en: [
-        {i:'🐙', t:'Has THREE hearts and BLUE blood!'},
-        {i:'🧠', t:'Super smart -- can solve puzzles, open jars, and use tools'},
-        {i:'🎨', t:'Changes color and texture in milliseconds to camouflage'}
-      ],
-      ml: [
-        {i:'🐙', t:'മൂന്ന് ഹൃദയങ്ങളും നീല രക്തവും ഉണ്ട്!'},
-        {i:'🧠', t:'അതീവ ബുദ്ധിമാൻ -- പസിലുകൾ പരിഹരിക്കാനും പാത്രങ്ങൾ തുറക്കാനും ഉപകരണങ്ങൾ ഉപയോഗിക്കാനും കഴിയും'},
-        {i:'🎨', t:'മറച്ചുവയ്ക്കാൻ മില്ലിസെക്കൻഡിൽ നിറവും ഘടനയും മാറ്റുന്നു'}
-      ]
-    }
-  },
-  lionsMane: {
-    emoji: '🪼',
-    name: { en: "Lion's Mane Jellyfish", ml: 'സിംഹ മേനി ജെല്ലിഫിഷ്' },
-    latin: 'Cyanea capillata',
-    sz: 100, spd: .3,
-    facts: {
-      en: [
-        {i:'🪼', t:'The largest jellyfish species in the entire world!'},
-        {i:'📏', t:'Tentacles can stretch over 100 feet -- longer than a blue whale'},
-        {i:'❄️', t:'Prefers cold arctic waters where it grows to enormous sizes'}
-      ],
-      ml: [
-        {i:'🪼', t:'ലോകത്തിലെ ഏറ്റവും വലിയ ജെല്ലിഫിഷ് ഇനം!'},
-        {i:'📏', t:'ടെന്റക്കിളുകൾ 100 അടിയിലേറെ നീളാൻ കഴിയും -- ഒരു നീല തിമിംഗലത്തേക്കാൾ നീളമുള്ളത്'},
-        {i:'❄️', t:'തണുത്ത ആർട്ടിക് വെള്ളമാണ് ഇഷ്ടപ്പെടുന്നത്, അവിടെ ഭീമാകാരമായി വളരുന്നു'}
-      ]
-    }
-  },
-  giantSquid: {
-    emoji: '🦑',
-    name: { en: 'Giant Squid', ml: 'ഭീമൻ കണവ' },
-    latin: 'Architeuthis dux',
-    sz: 115, spd: 1.2,
-    facts: {
-      en: [
-        {i:'🦑', t:'Has the largest eyes of any animal -- the size of dinner plates!'},
-        {i:'📏', t:'Can grow over 40 feet long -- longer than a school bus'},
-        {i:'🕵️', t:'So mysterious that a live one was only first filmed in 2004'}
-      ],
-      ml: [
-        {i:'🦑', t:'ഏതൊരു മൃഗത്തിന്റെയും ഏറ്റവും വലിയ കണ്ണുകളുണ്ട് -- അത്താഴ പ്ലേറ്റുകളുടെ വലുപ്പം!'},
-        {i:'📏', t:'40 അടിയിലധികം നീളത്തിൽ വളരാൻ കഴിയും -- സ്കൂൾ ബസിനേക്കാൾ നീളമുള്ളത്'},
-        {i:'🕵️', t:'വളരെ നിഗൂഢമായത് ജീവിച്ചിരിക്കുന്ന ഒന്ന് ആദ്യമായി ചിത്രീകരിച്ചത് 2004 ലാണ്'}
-      ]
-    }
-  },
-  blueJelly: {
-    emoji: '🪼',
-    name: { en: 'Blue Jellyfish', ml: 'നീല ജെല്ലിഫിഷ്' },
-    latin: 'Cyanea lamarckii',
-    sz: 80, spd: .35,
-    facts: {
-      en: [
-        {i:'🪼', t:'Its beautiful blue glow helps it blend into the deep ocean'},
-        {i:'🌊', t:'Drifts with ocean currents -- an expert ocean traveler'},
-        {i:'💡', t:'Some jellyfish are bioluminescent and glow in the dark!'}
-      ],
-      ml: [
-        {i:'🪼', t:'അതിന്റെ മനോഹരമായ നീല തിളക്കം ആഴമേറിയ സമുദ്രത്തിൽ കലരാൻ സഹായിക്കുന്നു'},
-        {i:'🌊', t:'സമുദ്ര പ്രവാഹങ്ങളോടൊപ്പം ഒഴുകുന്നു -- വിദഗ്ദ്ധ സമുദ്ര യാത്രികൻ'},
-        {i:'💡', t:'ചില ജെല്ലിഫിഷുകൾ ബയോലുമിനെസെന്റ് ആണ്, ഇരുട്ടിൽ തിളങ്ങുന്നു!'}
-      ]
-    }
-  },
-  anglerfish: {
-    emoji: '🐟',
-    name: { en: 'Anglerfish', ml: 'ആംഗ്ലർ ഫിഷ്' },
-    latin: 'Lophiiformes',
-    sz: 75, spd: .5,
-    facts: {
-      en: [
-        {i:'💡', t:'Has a glowing lure on its head to attract prey in total darkness'},
-        {i:'🌑', t:'Lives in pitch-black water up to 5,000 feet below the surface'},
-        {i:'😱', t:'Females are 10 times larger than males -- males fuse to the female!'}
-      ],
-      ml: [
-        {i:'💡', t:'പൂർണ്ണ ഇരുട്ടിൽ ഇരയെ ആകർഷിക്കാൻ തലയിൽ തിളങ്ങുന്ന ചൂണ്ടയുണ്ട്'},
-        {i:'🌑', t:'ഉപരിതലത്തിൽ നിന്ന് 5,000 അടി താഴെയുള്ള കൃഷ്ണകായ വെള്ളത്തിൽ ജീവിക്കുന്നു'},
-        {i:'😱', t:'പെൺമത്സ്യങ്ങൾ ആണിനേക്കാൾ 10 മടങ്ങ് വലുതാണ് -- ആൺമത്സ്യങ്ങൾ പെണ്ണുമായി ലയിക്കുന്നു!'}
-      ]
-    }
-  },
-  nautilus: {
-    emoji: '🐚',
-    name: { en: 'Chambered Nautilus', ml: 'ചേംബേർഡ് നോട്ടിലസ്' },
-    latin: 'Nautilus pompilius',
-    sz: 70, spd: .45,
-    facts: {
-      en: [
-        {i:'🐚', t:'A living fossil -- been around for 500 million years, unchanged!'},
-        {i:'🏠', t:'Lives in a spiral shell with up to 30 chambers filled with gas to float'},
-        {i:'👀', t:'Has up to 90 tentacles but no suckers -- uses a sticky grip instead'}
-      ],
-      ml: [
-        {i:'🐚', t:'ജീവിച്ചിരിക്കുന്ന ഫോസിൽ -- 500 ദശലക്ഷം വർഷമായി മാറ്റമില്ലാതെ നിലവിലുണ്ട്!'},
-        {i:'🏠', t:'പൊങ്ങാൻ വാതകം നിറച്ച 30 അറകൾ വരെയുള്ള സർപ്പിള ഷെല്ലിൽ ജീവിക്കുന്നു'},
-        {i:'👀', t:'90 ടെന്റക്കിളുകൾ വരെ ഉണ്ട്, പക്ഷേ ഊറ്റകളില്ല -- പകരം ഒട്ടിപ്പിടിക്കുന്ന ഗ്രിപ്പ് ഉപയോഗിക്കുന്നു'}
-      ]
-    }
-  },
-  deepCoral: {
-    emoji: '🪸',
-    name: { en: 'Deep Sea Coral', ml: 'ആഴക്കടൽ പവിഴം' },
-    latin: 'Lophelia pertusa',
-    sz: 65, spd: .08,
-    facts: {
-      en: [
-        {i:'🪸', t:'Grows in total darkness thousands of feet below the surface'},
-        {i:'⏳', t:'Grows extremely slowly -- just a few millimeters per year'},
-        {i:'🌍', t:'Deep sea coral reefs can be thousands of years old'}
-      ],
-      ml: [
-        {i:'🪸', t:'ഉപരിതലത്തിൽ നിന്ന് ആയിരക്കണക്കിന് അടി താഴെ പൂർണ്ണ ഇരുട്ടിൽ വളരുന്നു'},
-        {i:'⏳', t:'വളരെ സാവധാനത്തിൽ വളരുന്നു -- വർഷത്തിൽ ഏതാനും മില്ലിമീറ്റർ മാത്രം'},
-        {i:'🌍', t:'ആഴക്കടൽ പവിഴപ്പുറ്റുകൾക്ക് ആയിരക്കണക്കിന് വർഷം പഴക്കമുണ്ടാകാം'}
-      ]
-    }
-  },
-  lobster: {
-    emoji: '🦞',
-    name: { en: 'Deep Sea Lobster', ml: 'ആഴക്കടൽ കൊഞ്ച്' },
-    latin: 'Homarus gammarus',
-    sz: 80, spd: .35,
-    facts: {
-      en: [
-        {i:'🦞', t:'Can live for over 100 years and never stops growing!'},
-        {i:'🦷', t:'Crushes shells with one claw and cuts with the other like scissors'},
-        {i:'💧', t:'Tastes food with its feet and chews with its stomach'}
-      ],
-      ml: [
-        {i:'🦞', t:'100 വർഷത്തിലേറെ ജീവിക്കാനും വളർച്ച നിർത്താതെയും ഇരിക്കാം!'},
-        {i:'🦷', t:'ഒരു നഖം കൊണ്ട് ഷെല്ലുകൾ തകർക്കുകയും മറ്റേത് കത്രിക പോലെ മുറിക്കുകയും ചെയ്യുന്നു'},
-        {i:'💧', t:'കാലുകൾ കൊണ്ട് ഭക്ഷണം രുചിക്കുകയും വയറുകൊണ്ട് ച��യ്യുകയും ചെയ്യുന്നു'}
-      ]
-    }
-  },
-  cuttlefish: {
-    emoji: '🐙',
-    name: { en: 'Cuttlefish', ml: 'കട്ടിൽഫിഷ്' },
-    latin: 'Sepiida',
-    sz: 85, spd: .7,
-    facts: {
-      en: [
-        {i:'🎨', t:'The ultimate master of disguise -- changes color, pattern, and even shape'},
-        {i:'🧠', t:'Has one of the largest brain-to-body ratios of all invertebrates'},
-        {i:'👀', t:'Has W-shaped pupils that give it incredible vision in murky water'}
-      ],
-      ml: [
-        {i:'🎨', t:'വേഷംമാറ്റത്തിന്റെ പരമ ഗുരു -- നിറം, പാറ്റേൺ, ആകൃതി പോലും മാറ്റുന്നു'},
-        {i:'🧠', t:'എല്ലാ അകശേരുക്കളിലും ഏറ്റവും വലിയ മസ്തിഷ്ക-ശരീര അനുപാതങ്ങളിൽ ഒന്നാണ്'},
-        {i:'👀', t:'മങ്ങിയ വെള്ളത്തിൽ അവിശ്വസനീയമായ കാഴ്ച നൽകുന്ന W-ആകൃതിയിലുള്ള കൃഷ്ണമണികളുണ്ട്'}
-      ]
-    }
-  }
+  clownfish:{svgKey:'clownfish',name:{en:'Clownfish',ml:'കോമാളി മത്സ്യം'},latin:'Amphiprioninae',sz:88,spd:1.8,
+    facts:{en:[{i:'🐠',t:'Lives safely inside stinging sea anemones that protect it from predators'},{i:'🐣',t:'All clownfish are born male — the biggest one becomes female!'},{i:'🎥',t:'Made famous as "Nemo" in Finding Nemo'}],
+           ml:[{i:'🐠',t:'വേട്ടക്കാരിൽ നിന്ന് സംരക്ഷണം നൽകുന്ന കടൽ അനെമോണുകൾക്കുള്ളിൽ ജീവിക്കുന്നു'},{i:'🐣',t:'എല്ലാ കോമാളി മത്സ്യങ്ങളും ആണായിട്ടാണ് ജനിക്കുന്നത്!'},{i:'🎥',t:'ഫൈൻഡിംഗ് നെമോ സിനിമയിലൂടെ പ്രസിദ്ധമായി'}]}},
+  seaTurtle:{svgKey:'seaTurtle',name:{en:'Green Sea Turtle',ml:'പച്ച കടലാമ'},latin:'Chelonia mydas',sz:105,spd:.75,
+    facts:{en:[{i:'🐢',t:'Can live over 100 years — older than your great-grandparents!'},{i:'🌍',t:'Travels thousands of miles across entire oceans every year'},{i:'💨',t:'Must swim to the surface to breathe air, just like us'}],
+           ml:[{i:'🐢',t:'100 വർഷത്തിലധികം ജീവിക്കാൻ കഴിയും!'},{i:'🌍',t:'ഓരോ വർഷവും ആയിരക്കണക്കിന് മൈലുകൾ സഞ്ചരിക്കുന്നു'},{i:'💨',t:'നമ്മളെപ്പോലെ വായു ശ്വസിക്കാൻ ഉപരിതലത്തിലേക്ക് നീന്തണം'}]}},
+  morayEel:{svgKey:'morayEel',name:{en:'Moray Eel',ml:'മൊറേ ഈൽ'},latin:'Muraenidae',sz:120,spd:.55,
+    facts:{en:[{i:'😮',t:'Has a secret second set of jaws hiding inside its throat!'},{i:'🐚',t:'Hides in dark holes and crevices in coral reefs'},{i:'🤝',t:'Sometimes teams up with grouper fish to hunt together'}],
+           ml:[{i:'😮',t:'തൊണ്ടയിൽ മറഞ്ഞിരിക്കുന്ന രണ്ടാമത്തെ രഹസ്യ താടിയെല്ലുകളുണ്ട്!'},{i:'🐚',t:'പവിഴപ്പുറ്റിലെ ഇരുണ്ട ദ്വാരങ്ങളിൽ ഒളിക്കുന്നു'},{i:'🤝',t:'ചിലപ്പോൾ ഗ്രൂപ്പർ മത്സ്യങ്ങളുമായി ചേർന്ന് വേട്ടയാടുന്നു'}]}},
+  blueTang:{svgKey:'blueTang',name:{en:'Blue Tang',ml:'നീല ടാങ്'},latin:'Paracanthurus hepatus',sz:90,spd:2.1,
+    facts:{en:[{i:'🐠',t:'This stunning blue fish is also called a Regal Tang'},{i:'🎥',t:'Famous as "Dory" from Finding Dory!'},{i:'⚠️',t:'Has a razor-sharp spine near its tail for self-defense'}],
+           ml:[{i:'🐠',t:'ഈ അതിശയകരമായ നീല മത്സ്യത്തെ റീഗൽ ടാങ് എന്നും വിളിക്കുന്നു'},{i:'🎥',t:'ഫൈൻഡിംഗ് ഡോറി സിനിമയിലെ "ഡോറി"!'},{i:'⚠️',t:'സ്വയം പ്രതിരോധത്തിനായി വാലിന് സമീപം മൂർച്ചയുള്ള നട്ടെല്ലുണ്ട്'}]}},
+  starfish:{svgKey:'starfish',name:{en:'Starfish',ml:'നക്ഷത്രമത്സ്യം'},latin:'Asteroidea',sz:80,spd:.25,
+    facts:{en:[{i:'💪',t:"Can regrow a lost arm — some regrow their entire body from one arm!"},{i:'🧠',t:'Has no brain and no blood — uses seawater instead'},{i:'👁️',t:'Has a tiny eye at the tip of each arm that senses light'}],
+           ml:[{i:'💪',t:'നഷ്ടപ്പെട്ട കൈ വീണ്ടും വളർത്താൻ കഴിയും!'},{i:'🧠',t:'തലച്ചോറോ രക്തമോ ഇല്ല — കടൽ വെള്ളം ഉപയോഗിക്കുന്നു'},{i:'👁️',t:'ഓരോ കൈയുടെ അഗ്രത്തിൽ ചെറിയ കണ്ണുണ്ട്'}]}},
+  seahorse:{svgKey:'seahorse',name:{en:'Seahorse',ml:'കടൽക്കുതിര'},latin:'Hippocampus',sz:80,spd:.35,
+    facts:{en:[{i:'👨',t:'The father carries and gives birth to the babies, not the mother!'},{i:'👀',t:'Each eye moves independently, like a chameleon'},{i:'💕',t:'Pairs greet each other every morning with a special dance'}],
+           ml:[{i:'👨',t:'അമ്മയല്ല, അച്ഛൻ കുഞ്ഞുങ്ങളെ ചുമന്ന് പ്രസവിക്കുന്നു!'},{i:'👀',t:'ഓരോ കണ്ണും സ്വതന്ത്രമായി ചലിക്കുന്നു'},{i:'💕',t:'ജോഡികൾ എല്ലാ ദിവസവും പ്രത്യേക നൃത്തത്തിലൂടെ അഭിവാദ്യം ചെയ്യുന്നു'}]}},
+  crab:{svgKey:'crab',name:{en:'Hermit Crab',ml:'ഹെർമിറ്റ് ഞണ്ട്'},latin:'Paguroidea',sz:90,spd:.4,
+    facts:{en:[{i:'🦀',t:'Carries its home on its back and moves to a bigger shell as it grows'},{i:'👀',t:'Can see in almost every direction thanks to eyes on stalks'},{i:'💪',t:'Has one claw much bigger than the other for defense'}],
+           ml:[{i:'🦀',t:'മുതുകിൽ വീട് ചുമന്നു കൊണ്ടുപോകുന്നു'},{i:'👀',t:'തണ്ടുകളിലുള്ള കണ്ണുകൾ കൊണ്ട് എല്ലാ ദിശകളിലും കാണാം'},{i:'💪',t:'പ്രതിരോധത്തിനായി ഒരു നഖം വളരെ വലുതാണ്'}]}},
+  pufferfish:{svgKey:'pufferfish',name:{en:'Pufferfish',ml:'പഫർ മത്സ്യം'},latin:'Tetraodontidae',sz:90,spd:.6,
+    facts:{en:[{i:'🐡',t:'Puffs up to 3× its size when scared to look bigger to predators'},{i:'☠️',t:'Contains enough poison — 1200 times more toxic than cyanide!'},{i:'🎨',t:'Males create beautiful sand patterns on the ocean floor to attract mates'}],
+           ml:[{i:'🐡',t:'ഭയപ്പെടുമ്പോൾ 3 ഇരട്ടി വലുപ്പത്തിൽ വീർക്കുന്നു'},{i:'☠️',t:'സയനൈഡിനേക്കാൾ 1200 മടങ്ങ് വിഷം!'},{i:'🎨',t:'ആൺമത്സ്യങ്ങൾ മണൽ പാറ്റേണുകൾ സൃഷ്ടിക്കുന്നു'}]}},
+  parrotfish:{svgKey:'parrotfish',name:{en:'Parrotfish',ml:'തത്ത മത്സ്യം'},latin:'Scaridae',sz:100,spd:1.4,
+    facts:{en:[{i:'🐟',t:'Named for beak-like teeth that crunch coral for food'},{i:'🏖️',t:'Creates white sand beaches — one fish makes 200 lb of sand a year!'},{i:'😴',t:'Sleeps inside a bubble of its own mucus for protection at night'}],
+           ml:[{i:'🐟',t:'കൊക്ക് പോലെയുള്ള പല്ലുകൾ ഉള്ള ഈ മത്സ്യം'},{i:'🏖️',t:'ഒരു മത്സ്യം വർഷത്തിൽ 200 പൗണ്ട് മണൽ ഉണ്ടാക്കുന്നു!'},{i:'😴',t:'രാത്രിയിൽ സ്വന്തം കഫത്തിന്റെ കുമിളയ്ക്കുള്ളിൽ ഉറങ്ങുന്നു'}]}},
+  anemone:{svgKey:'anemone',name:{en:'Sea Anemone',ml:'കടൽ അനെമോൺ'},latin:'Actiniaria',sz:75,spd:.1,
+    facts:{en:[{i:'🪸',t:'Looks like a beautiful flower but is actually a predatory animal'},{i:'🐠',t:'Best friends with clownfish — they protect each other'},{i:'⏳',t:'Some sea anemones can live for over 80 years'}],
+           ml:[{i:'🪸',t:'സുന്ദരമായ ഒരു പുഷ്പം പോലെ കാണപ്പെടുന്നു, പക്ഷേ ഒരു വേട്ടക്കാരൻ'},{i:'🐠',t:'കോമാളി മത്സ്യവുമായി ഉറ്റ സുഹൃത്തുക്കൾ'},{i:'⏳',t:'80 വർഷത്തിലധികം ജീവിക്കാൻ കഴിയും'}]}},
+  shrimp:{svgKey:'shrimp',name:{en:'Cleaner Shrimp',ml:'ക്ലീനർ ചെമ്മീൻ'},latin:'Lysmata amboinensis',sz:80,spd:.7,
+    facts:{en:[{i:'🦐',t:'Runs a "cleaning station" where fish line up to get parasites removed'},{i:'💃',t:'Does a special dance to advertise cleaning services to passing fish'},{i:'🔬',t:'Has such good eyesight it can see colors invisible to humans'}],
+           ml:[{i:'🦐',t:'"ക്ലീനിംഗ് സ്റ്റേഷൻ" നടത്തുന്നു'},{i:'💃',t:'പ്രത്യേക നൃത്തം ചെയ്ത് സേവനങ്ങൾ പരസ്യം ചെയ്യുന്നു'},{i:'🔬',t:'മനുഷ്യർക്ക് അദൃശ്യമായ നിറങ്ങൾ കാണാം'}]}},
+  dolphin:{svgKey:'dolphin',name:{en:'Bottlenose Dolphin',ml:'ബോട്ടിൽനോസ് ഡോൾഫിൻ'},latin:'Tursiops truncatus',sz:130,spd:2.4,
+    facts:{en:[{i:'🐬',t:'One of the smartest animals on Earth — they have names for each other!'},{i:'🔊',t:'Uses echolocation (sound waves) to find food in dark water'},{i:'😴',t:'Sleeps with only half its brain — one eye stays open!'}],
+           ml:[{i:'🐬',t:'ഭൂമിയിലെ ഏറ്റവും മിടുക്കരായ മൃഗങ്ങളിൽ ഒന്ന്!'},{i:'🔊',t:'ഇരുണ്ട വെള്ളത്തിൽ ഭക്ഷണം കണ്ടെത്താൻ എക്കോലൊക്കേഷൻ'},{i:'😴',t:'തലച്ചോറിന്റെ പകുതി മാത്രം ഉപയോഗിച്ച് ഉറങ്ങുന്നു!'}]}},
+  mantaRay:{svgKey:'mantaRay',name:{en:'Manta Ray',ml:'മാന്ത റേ'},latin:'Mobula birostris',sz:140,spd:1.1,
+    facts:{en:[{i:'📏',t:"Can grow up to 23 feet wide — wider than most cars!"},{i:'🧠',t:'Has the largest brain of any fish and is extremely intelligent'},{i:'🤗',t:'Completely harmless to humans — a gentle giant of the sea'}],
+           ml:[{i:'📏',t:'23 അടി വരെ വീതിയിൽ വളരാൻ കഴിയും!'},{i:'🧠',t:'ഏതൊരു മത്സ്യത്തിന്റെയും ഏറ്റവും വലിയ തലച്ചോറ്'},{i:'🤗',t:'മനുഷ്യർക്ക് പൂർണ്ണമായും ദോഷകരമല്ല'}]}},
+  whaleShark:{svgKey:'whaleShark',name:{en:'Whale Shark',ml:'തിമിംഗില സ്രാവ്'},latin:'Rhincodon typus',sz:150,spd:.65,
+    facts:{en:[{i:'🐋',t:'The biggest fish in the entire ocean — up to 40 feet long!'},{i:'🍽️',t:'Despite its huge size, it only eats tiny plankton and small fish'},{i:'🐠',t:'Each whale shark has a unique spot pattern, like human fingerprints'}],
+           ml:[{i:'🐋',t:'സമുദ്രത്തിലെ ഏറ്റവും വലിയ മത്സ്യം!'},{i:'🍽️',t:'ചെറിയ പ്ലാങ്ക്ടണുകൾ മാത്രം കഴിക്കുന്നു'},{i:'🐠',t:'ഓരോ തിമിംഗില സ്രാവിനും തനതായ പാട് പാറ്റേൺ ഉണ്ട്'}]}},
+  swordfish:{svgKey:'swordfish',name:{en:'Swordfish',ml:'വാൾമത്സ്യം'},latin:'Xiphias gladius',sz:130,spd:2.8,
+    facts:{en:[{i:'⚔️',t:'Has a long flat bill shaped like a sword used to slash prey'},{i:'🏃',t:'One of the fastest fish — up to 60 mph!'},{i:'🌡️',t:'Has special organs that heat its eyes and brain for better hunting'}],
+           ml:[{i:'⚔️',t:'ഇരയെ വെട്ടിക്കൊല്ലാൻ വാൾ പോലെയുള്ള ബിൽ'},{i:'🏃',t:'മണിക്കൂറിൽ 60 മൈൽ വരെ!'},{i:'🌡️',t:'കണ്ണുകളും തലച്ചോറും ചൂടാക്കുന്ന പ്രത്യേക അവയവങ്ങൾ'}]}},
+  stingray:{svgKey:'stingray',name:{en:'Stingray',ml:'സ്റ്റിംഗ്‌റേ'},latin:'Myliobatoidei',sz:130,spd:1.3,
+    facts:{en:[{i:'👀',t:'Has eyes on top of its flat body and mouth underneath'},{i:'⚡',t:'Can sense the electrical signals of animals hiding in the sand'},{i:'🦈',t:'Related to sharks — both have skeletons made of bendy cartilage'}],
+           ml:[{i:'👀',t:'പരന്ന ശരീരത്തിന്റെ മുകളിൽ കണ്ണുകളും താഴെ വായും'},{i:'⚡',t:'മണലിൽ ഒളിച്ചിരിക്കുന്ന മൃഗങ്ങളുടെ വൈദ്യുത സിഗ്നലുകൾ തിരിച്ചറിയും'},{i:'🦈',t:'സ്രാവുകളുമായി ബന്ധപ്പെട്ടിരിക്കുന്നു'}]}},
+  hammerhead:{svgKey:'hammerhead',name:{en:'Hammerhead Shark',ml:'ഹാമർഹെഡ് സ്രാവ്'},latin:'Sphyrnidae',sz:135,spd:2.0,
+    facts:{en:[{i:'🦈',t:'Hammer-shaped head gives 360-degree vision to spot prey everywhere'},{i:'⚡',t:'Head is packed with sensors that detect electrical fields of hidden prey'},{i:'🐟',t:'Hunts in schools of up to 500 sharks during the day'}],
+           ml:[{i:'🦈',t:'360 ഡിഗ്രി കാഴ്ച നൽകുന്ന ചുറ്റിക ആകൃതിയിലുള്ള തല'},{i:'⚡',t:'ഇരയുടെ വൈദ്യുത മണ്ഡലങ്ങൾ കണ്ടെത്തുന്ന സെൻസറുകൾ'},{i:'🐟',t:'500 സ്രാവുകൾ വരെ കൂട്ടങ്ങളായി വേട്ടയാടുന്നു'}]}},
+  moonJelly:{svgKey:'moonJelly',name:{en:'Moon Jellyfish',ml:'ചന്ദ്ര ജെല്ലിഫിഷ്'},latin:'Aurelia aurita',sz:95,spd:.4,
+    facts:{en:[{i:'💧',t:'Made of 95% water — almost invisible in the ocean!'},{i:'🧠',t:'Has no brain, no heart, and no blood at all'},{i:'⏳',t:'Jellyfish have existed for over 500 million years — before dinosaurs!'}],
+           ml:[{i:'💧',t:'95% വെള്ളം — സമുദ്രത്തിൽ മിക്കവാറും അദൃശ്യം!'},{i:'🧠',t:'തലച്ചോറോ ഹൃദയമോ രക്തമോ ഒന്നും ഇല്ല'},{i:'⏳',t:'500 ദശലക്ഷം വർഷത്തിലേറെ നിലവിലുണ്ട്!'}]}},
+  octopus:{svgKey:'octopus',name:{en:'Giant Pacific Octopus',ml:'ജയന്റ് പസഫിക് നീരാളി'},latin:'Enteroctopus dofleini',sz:110,spd:.9,
+    facts:{en:[{i:'🐙',t:'Has THREE hearts and BLUE blood!'},{i:'🧠',t:'Super smart — can solve puzzles, open jars, and use tools'},{i:'🎨',t:'Changes color and texture in milliseconds to camouflage'}],
+           ml:[{i:'🐙',t:'മൂന്ന് ഹൃദയങ്ങളും നീല രക്തവും!'},{i:'🧠',t:'പസിലുകൾ പരിഹരിക്കാനും ഉപകരണങ്ങൾ ഉപയോഗിക്കാനും കഴിയും'},{i:'🎨',t:'മില്ലിസെക്കൻഡിൽ നിറവും ഘടനയും മാറ്റുന്നു'}]}},
+  lionsMane:{svgKey:'lionsMane',name:{en:"Lion's Mane Jellyfish",ml:'സിംഹ മേനി ജെല്ലിഫിഷ്'},latin:'Cyanea capillata',sz:105,spd:.3,
+    facts:{en:[{i:'🪼',t:'The largest jellyfish species in the entire world!'},{i:'📏',t:'Tentacles can stretch over 100 feet — longer than a blue whale'},{i:'❄️',t:'Prefers cold arctic waters where it grows to enormous sizes'}],
+           ml:[{i:'🪼',t:'ലോകത്തിലെ ഏറ്റവും വലിയ ജെല്ലിഫിഷ്!'},{i:'📏',t:'ടെന്റക്കിളുകൾ 100 അടിയിലേറെ നീളാം'},{i:'❄️',t:'തണുത്ത ആർട്ടിക് വെള്ളത്തിൽ ഭീമാകാരമായി വളരുന്നു'}]}},
+  giantSquid:{svgKey:'giantSquid',name:{en:'Giant Squid',ml:'ഭീമൻ കണവ'},latin:'Architeuthis dux',sz:100,spd:1.2,
+    facts:{en:[{i:'🦑',t:'Has the largest eyes of any animal — the size of dinner plates!'},{i:'📏',t:'Can grow over 40 feet long — longer than a school bus'},{i:'🕵️',t:'So mysterious that a live one was only first filmed in 2004'}],
+           ml:[{i:'🦑',t:'ഏതൊരു മൃഗത്തിന്റെയും ഏറ്റവും വലിയ കണ്ണുകൾ!'},{i:'📏',t:'40 അടിയിലധികം നീളം'},{i:'🕵️',t:'ജീവിക്കുന്ന ഒന്ന് ആദ്യമായി ചിത്രീകരിച്ചത് 2004 ൽ'}]}},
+  blueJelly:{svgKey:'blueJelly',name:{en:'Blue Jellyfish',ml:'നീല ജെല്ലിഫിഷ്'},latin:'Cyanea lamarckii',sz:90,spd:.35,
+    facts:{en:[{i:'🪼',t:'Its beautiful blue glow helps it blend into the deep ocean'},{i:'🌊',t:'Drifts with ocean currents — an expert ocean traveler'},{i:'💡',t:'Some jellyfish are bioluminescent and glow in the dark!'}],
+           ml:[{i:'🪼',t:'നീല തിളക്കം ആഴ കടലിൽ കലരാൻ സഹായിക്കുന്നു'},{i:'🌊',t:'സമുദ്ര പ്രവാഹങ്ങളോടൊപ്പം ഒഴുകുന്നു'},{i:'💡',t:'ഇരുട്ടിൽ തിളങ്ങുന്നു!'}]}},
+  anglerfish:{svgKey:'anglerfish',name:{en:'Anglerfish',ml:'ആംഗ്ലർ ഫിഷ്'},latin:'Lophiiformes',sz:95,spd:.5,
+    facts:{en:[{i:'💡',t:'Has a glowing lure on its head to attract prey in total darkness'},{i:'🌑',t:'Lives in pitch-black water up to 5,000 feet below the surface'},{i:'😱',t:'Females are 10× larger than males — males fuse to the female!'}],
+           ml:[{i:'💡',t:'പൂർണ്ണ ഇരുട്ടിൽ ഇരയെ ആകർഷിക്കാൻ തലയിൽ തിളങ്ങുന്ന ചൂണ്ട'},{i:'🌑',t:'5,000 അടി താഴെ ജീവിക്കുന്നു'},{i:'😱',t:'പെൺമത്സ്യങ്ങൾ ആണിനേക്കാൾ 10 മടങ്ങ് വലുതാണ്!'}]}},
+  nautilus:{svgKey:'nautilus',name:{en:'Chambered Nautilus',ml:'ചേംബേർഡ് നോട്ടിലസ്'},latin:'Nautilus pompilius',sz:90,spd:.45,
+    facts:{en:[{i:'🐚',t:'A living fossil — been around for 500 million years, unchanged!'},{i:'🏠',t:'Lives in a spiral shell with up to 30 chambers filled with gas to float'},{i:'👀',t:'Has up to 90 tentacles but no suckers — uses a sticky grip instead'}],
+           ml:[{i:'🐚',t:'ജീവിച്ചിരിക്കുന്ന ഫോസിൽ — 500 ദശലക്ഷം വർഷം!'},{i:'🏠',t:'30 അറകൾ വരെയുള്ള സർപ്പിള ഷെല്ലിൽ ജീവിക്കുന്നു'},{i:'👀',t:'90 ടെന്റക്കിളുകൾ ഉണ്ട്'}]}},
+  deepCoral:{svgKey:'deepCoral',name:{en:'Deep Sea Coral',ml:'ആഴക്കടൽ പവിഴം'},latin:'Lophelia pertusa',sz:90,spd:.08,
+    facts:{en:[{i:'🪸',t:'Grows in total darkness thousands of feet below the surface'},{i:'⏳',t:'Grows extremely slowly — just a few millimeters per year'},{i:'🌍',t:'Deep sea coral reefs can be thousands of years old'}],
+           ml:[{i:'🪸',t:'ഉപരിതലത്തിൽ നിന്ന് ആയിരക്കണക്കിന് അടി താഴെ ജീവിക്കുന്നു'},{i:'⏳',t:'വർഷത്തിൽ ഏതാനും മില്ലിമീറ്റർ മാത്രം'},{i:'🌍',t:'ആയിരക്കണക്കിന് വർഷം പഴക്കം'}]}},
+  lobster:{svgKey:'lobster',name:{en:'Deep Sea Lobster',ml:'ആഴക്കടൽ കൊഞ്ച്'},latin:'Homarus gammarus',sz:100,spd:.35,
+    facts:{en:[{i:'🦞',t:"Can live for over 100 years and never stops growing!"},{i:'🦷',t:'Crushes shells with one claw and cuts with the other like scissors'},{i:'💧',t:'Tastes food with its feet and chews with its stomach'}],
+           ml:[{i:'🦞',t:'100 വർഷത്തിലേറെ ജീവിക്കാം!'},{i:'🦷',t:'ഒരു നഖം ഷെല്ലുകൾ തകർക്കുന്നു, മറ്റേത് കത്രിക പോലെ'},{i:'💧',t:'കാലുകൾ കൊണ്ട് ഭക്ഷണം രുചിക്കുന്നു'}]}},
+  cuttlefish:{svgKey:'cuttlefish',name:{en:'Cuttlefish',ml:'കട്ടിൽഫിഷ്'},latin:'Sepiida',sz:110,spd:.7,
+    facts:{en:[{i:'🎨',t:'The ultimate master of disguise — changes color, pattern, and even shape'},{i:'🧠',t:'Has one of the largest brain-to-body ratios of all invertebrates'},{i:'👀',t:'Has W-shaped pupils giving incredible vision in murky water'}],
+           ml:[{i:'🎨',t:'വേഷംമാറ്റത്തിന്റെ പരമ ഗുരു — നിറം, പാറ്റേൺ, ആകൃതി'},{i:'🧠',t:'എല്ലാ അകശേരുക്കളിലും ഏറ്റവും വലിയ മസ്തിഷ്ക-ശരീര അനുപാതം'},{i:'👀',t:'W-ആകൃതിയിലുള്ള കൃഷ്ണമണികൾ'}]}}
 };
 
-function buildRays() {
-  var el = document.getElementById('light-rays');
-  for (var i = 0; i < 8; i++) {
-    var r = document.createElement('div');
-    r.className = 'ray';
-    r.style.left = (3 + Math.random() * 94) + '%';
-    r.style.width = (30 + Math.random() * 100) + 'px';
-    r.style.height = '120%';
-    r.style.setProperty('--r', (-18 + Math.random() * 36) + 'deg');
-    r.style.setProperty('--dur', (5 + Math.random() * 7) + 's');
-    r.style.animationDelay = (Math.random() * 8) + 's';
+/* ════════════════════════════════════════════════════
+   ENGINE
+════════════════════════════════════════════════════ */
+var W=window.innerWidth, H=window.innerHeight;
+var zone='reef', currentLang='en';
+var layer=document.getElementById('creatures');
+var alive=[], raf;
+var ZONE_ORDER=['reef','open','deep'];
+var transitioning=false;
+
+function buildRays(){
+  var el=document.getElementById('light-rays');
+  for(var i=0;i<9;i++){
+    var r=document.createElement('div'); r.className='ray';
+    r.style.left=(3+Math.random()*94)+'%';
+    r.style.width=(25+Math.random()*90)+'px'; r.style.height='120%';
+    r.style.setProperty('--r',(-20+Math.random()*40)+'deg');
+    r.style.setProperty('--dur',(5+Math.random()*7)+'s');
+    r.style.animationDelay=(Math.random()*8)+'s';
     el.appendChild(r);
   }
 }
-
-function buildKelp() {
-  var container = document.getElementById('kelp-container');
-  var kelpColors = ['#1a6b3c','#0d5c2e','#2d8a4e','#145530','#1f7a3f'];
-  for (var i = 0; i < 12; i++) {
-    var kelp = document.createElement('div');
-    kelp.className = 'kelp';
-    kelp.style.left = (2 + Math.random() * 96) + '%';
-    var numStrands = 2 + Math.floor(Math.random() * 3);
-    for (var j = 0; j < numStrands; j++) {
-      var strand = document.createElement('div');
-      strand.className = 'kelp-strand';
-      var h = 80 + Math.random() * 160;
-      strand.style.height = h + 'px';
-      strand.style.left = (j * 10 - 8) + 'px';
-      strand.style.background = 'linear-gradient(180deg,' + kelpColors[Math.floor(Math.random() * kelpColors.length)] + ' 0%,rgba(10,60,30,.3) 100%)';
-      strand.style.setProperty('--dur', (4 + Math.random() * 5) + 's');
-      strand.style.animationDelay = (Math.random() * 4) + 's';
-      strand.style.opacity = .3 + Math.random() * .3;
+function buildKelp(){
+  var container=document.getElementById('kelp-container');
+  for(var i=0;i<12;i++){
+    var kelp=document.createElement('div'); kelp.className='kelp';
+    kelp.style.left=(2+Math.random()*96)+'%';
+    var ns=2+Math.floor(Math.random()*3);
+    for(var j=0;j<ns;j++){
+      var strand=document.createElement('div'); strand.className='kelp-strand';
+      strand.style.height=(80+Math.random()*160)+'px';
+      strand.style.left=(j*10-8)+'px';
+      strand.style.background='linear-gradient(180deg,#1a6b3c 0%,rgba(10,60,30,.3) 100%)';
+      strand.style.setProperty('--dur',(4+Math.random()*5)+'s');
+      strand.style.animationDelay=(Math.random()*4)+'s';
+      strand.style.opacity=.3+Math.random()*.3;
       kelp.appendChild(strand);
     }
     container.appendChild(kelp);
   }
 }
-
-function buildSeagrass() {
-  var container = document.getElementById('seagrass-container');
-  for (var i = 0; i < 40; i++) {
-    var grass = document.createElement('div');
-    grass.className = 'seagrass';
-    grass.style.left = Math.random() * 100 + '%';
-    var blade = document.createElement('div');
-    blade.className = 'grass-blade';
-    var h = 30 + Math.random() * 70;
-    blade.style.height = h + 'px';
-    blade.style.background = 'linear-gradient(180deg,rgba(20,100,50,' + (.15 + Math.random() * .2) + ') 0%,rgba(10,60,30,.05) 100%)';
-    blade.style.setProperty('--dur', (3 + Math.random() * 4) + 's');
-    blade.style.animationDelay = (Math.random() * 5) + 's';
-    grass.appendChild(blade);
-    container.appendChild(grass);
+function buildSeagrass(){
+  var container=document.getElementById('seagrass-container');
+  for(var i=0;i<40;i++){
+    var grass=document.createElement('div'); grass.className='seagrass';
+    grass.style.left=Math.random()*100+'%';
+    var blade=document.createElement('div'); blade.className='grass-blade';
+    blade.style.height=(30+Math.random()*70)+'px';
+    blade.style.background='linear-gradient(180deg,rgba(20,100,50,.18) 0%,rgba(10,60,30,.05) 100%)';
+    blade.style.setProperty('--dur',(3+Math.random()*4)+'s');
+    blade.style.animationDelay=(Math.random()*5)+'s';
+    grass.appendChild(blade); container.appendChild(grass);
   }
 }
-
-function buildParticles() {
-  for (var i = 0; i < 18; i++) {
-    var p = document.createElement('div');
-    p.className = 'floating-particle';
-    var sz = 3 + Math.random() * 8;
-    p.style.width = sz + 'px';
-    p.style.height = sz + 'px';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.top = (20 + Math.random() * 70) + '%';
-    p.style.setProperty('--t', (7 + Math.random() * 10) + 's');
-    p.style.setProperty('--dy', (-200 - Math.random() * 400) + 'px');
-    p.style.setProperty('--sx', (-20 + Math.random() * 40) + 'px');
-    p.style.animationDelay = (Math.random() * 10) + 's';
+function buildParticles(){
+  for(var i=0;i<20;i++){
+    var p=document.createElement('div'); p.className='floating-particle';
+    var sz=3+Math.random()*8; p.style.width=sz+'px'; p.style.height=sz+'px';
+    p.style.left=Math.random()*100+'%'; p.style.top=(20+Math.random()*70)+'%';
+    p.style.setProperty('--t',(7+Math.random()*10)+'s');
+    p.style.setProperty('--dy',(-200-Math.random()*400)+'px');
+    p.style.setProperty('--sx',(-20+Math.random()*40)+'px');
+    p.style.animationDelay=(Math.random()*10)+'s';
     document.body.appendChild(p);
   }
 }
 
-function buildGlowOrbs() {
-  var colors = ['rgba(0,200,255,.06)','rgba(100,255,200,.04)','rgba(200,100,255,.05)','rgba(255,200,50,.03)'];
-  for (var i = 0; i < 6; i++) {
-    var o = document.createElement('div');
-    o.className = 'glow-orb';
-    var sz = 80 + Math.random() * 200;
-    o.style.width = sz + 'px';
-    o.style.height = sz + 'px';
-    o.style.borderRadius = '50%';
-    o.style.left = Math.random() * 90 + '%';
-    o.style.top = (10 + Math.random() * 70) + '%';
-    o.style.background = 'radial-gradient(circle,' + colors[i % colors.length] + ',transparent 70%)';
-    o.style.animation = 'pFloat ' + (12 + Math.random() * 8) + 's ease-in-out infinite alternate';
-    o.style.zIndex = '4';
-    document.body.appendChild(o);
-  }
+// Bubbles
+var bCv=document.getElementById('bubble-cv');
+var bCtx=bCv.getContext('2d');
+var bubbles=[];
+function resizeBubbles(){bCv.width=window.innerWidth;bCv.height=window.innerHeight;}
+function addBubble(){
+  if(bubbles.length>55)return;
+  bubbles.push({x:Math.random()*W,y:H+10,r:1.5+Math.random()*5,v:.4+Math.random()*1.2,w:Math.random()*Math.PI*2,ws:.008+Math.random()*.025,a:.1+Math.random()*.18});
 }
-
-var bCv = document.getElementById('bubble-cv');
-var bCtx = bCv.getContext('2d');
-var bubbles = [];
-
-function resizeBubbles() { bCv.width = window.innerWidth; bCv.height = window.innerHeight; }
-
-function addBubble() {
-  if (bubbles.length > 50) return;
-  bubbles.push({
-    x: Math.random() * W, y: H + 10,
-    r: 1.5 + Math.random() * 5,
-    v: .4 + Math.random() * 1.2,
-    w: Math.random() * Math.PI * 2,
-    ws: .008 + Math.random() * .025,
-    a: .12 + Math.random() * .2
-  });
-}
-
-function drawBubbles() {
-  bCtx.clearRect(0, 0, bCv.width, bCv.height);
-  bubbles = bubbles.filter(function(b) {
-    b.y -= b.v;
-    b.w += b.ws;
-    b.x += Math.sin(b.w) * .35;
-    if (b.y < -15) return false;
-    bCtx.beginPath();
-    bCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    bCtx.fillStyle = 'rgba(170,215,255,' + b.a + ')';
-    bCtx.fill();
-    bCtx.beginPath();
-    bCtx.arc(b.x - b.r * .28, b.y - b.r * .28, b.r * .18, 0, Math.PI * 2);
-    bCtx.fillStyle = 'rgba(255,255,255,' + (b.a + .08) + ')';
-    bCtx.fill();
+function drawBubbles(){
+  bCtx.clearRect(0,0,bCv.width,bCv.height);
+  bubbles=bubbles.filter(function(b){
+    b.y-=b.v; b.w+=b.ws; b.x+=Math.sin(b.w)*.35;
+    if(b.y<-15)return false;
+    bCtx.beginPath(); bCtx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    bCtx.fillStyle='rgba(170,215,255,'+b.a+')'; bCtx.fill();
+    bCtx.beginPath(); bCtx.arc(b.x-b.r*.28,b.y-b.r*.28,b.r*.18,0,Math.PI*2);
+    bCtx.fillStyle='rgba(255,255,255,'+(b.a+.08)+')'; bCtx.fill();
     return true;
   });
 }
 
-function updateLanguage() {
-  var t = TRANSLATIONS[currentLang];
-  document.getElementById('main-title').textContent = t.title;
-  document.getElementById('lang-btn').textContent = t.langBtn;
-  document.getElementById('ip-close').textContent = t.closeBtn;
-  document.getElementById('zone-desc').textContent = t.zones[zone].desc;
-  
-  document.querySelectorAll('.zone-tab').forEach(function(tab) {
-    var z = tab.dataset.z;
-    tab.querySelector('.zone-label').textContent = t.zones[z].label;
+function updateLanguage(){
+  var t=TRANSLATIONS[currentLang];
+  document.getElementById('main-title').textContent=t.title;
+  document.getElementById('lang-btn').innerHTML=t.langBtn==='English'?'EN':'മല<br>യാളം';
+  document.getElementById('ip-close').textContent=t.closeBtn;
+  document.getElementById('zone-desc').textContent=t.zones[zone].desc;
+  document.querySelectorAll('.tb-zone-btn').forEach(function(tab){
+    tab.querySelector('.tb-zone-label').textContent=t.zones[tab.dataset.z].label;
   });
 }
-
-function toggleLanguage() {
-  currentLang = currentLang === 'en' ? 'ml' : 'en';
-  updateLanguage();
-  spawnCreatures();
+function toggleLanguage(){
+  currentLang=currentLang==='en'?'ml':'en';
+  updateLanguage(); spawnCreatures();
 }
 
-function spawnCreatures() {
-  layer.innerHTML = '';
-  alive = [];
-  var ids = ZONE_CFG[zone].ids;
-  ids.forEach(function(id) {
-    var d = DATA[id];
-    if (!d) return;
-    var el = document.createElement('div');
-    el.className = 'creature';
-    el.style.width = d.sz + 'px';
-    el.style.height = d.sz + 'px';
-
-    var emoji = document.createElement('div');
-    emoji.className = 'creature-emoji';
-    emoji.textContent = d.emoji;
-    el.appendChild(emoji);
-
-    var lbl = document.createElement('div');
-    lbl.className = 'creature-name';
-    lbl.textContent = d.name[currentLang];
+function spawnCreatures(){
+  layer.innerHTML=''; alive=[];
+  var ids=ZONE_CFG[zone];
+  ids.forEach(function(id){
+    var d=DATA[id]; if(!d)return;
+    var svgMarkup=SVGS[d.svgKey]||'';
+    var el=document.createElement('div');
+    el.className='creature';
+    el.style.width=d.sz+'px'; el.style.height=d.sz+'px';
+    var svgWrap=document.createElement('div');
+    svgWrap.className='creature-svg'; svgWrap.innerHTML=svgMarkup;
+    el.appendChild(svgWrap);
+    var lbl=document.createElement('div');
+    lbl.className='creature-name'; lbl.textContent=d.name[currentLang];
     el.appendChild(lbl);
-
-    var pad = 70;
-    var sx = pad + Math.random() * (W - d.sz - pad * 2);
-    var sy = pad + Math.random() * (H - d.sz - pad * 2 - 140);
-
-    el.style.left = sx + 'px';
-    el.style.top = sy + 'px';
-
-    el.addEventListener('pointerdown', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openInfo(id);
-    });
-
+    var pad=80, rightPad=100;
+    var sx=pad+Math.random()*(W-d.sz-pad-rightPad);
+    var sy=pad+Math.random()*(H-d.sz-pad*2-80);
+    el.style.left=sx+'px'; el.style.top=sy+'px';
+    el.addEventListener('pointerdown',function(e){e.preventDefault();e.stopPropagation();openInfo(id);});
     layer.appendChild(el);
-
-    alive.push({
-      el: el, x: sx, y: sy,
-      sz: d.sz, spd: d.spd,
-      phaseOffset: Math.random() * Math.PI * 2,
-      dp: 0.7 + Math.random() * 0.3
-    });
+    alive.push({el:el,x:sx,y:sy,sz:d.sz,spd:d.spd,phaseOffset:Math.random()*Math.PI*2,dp:.7+Math.random()*.3});
   });
 }
 
-var globalAngle = 0;
-var globalWave = 0;
-var globalDir = 1;
-var turnTimer = 0;
-
-function tick() {
-  var mx = W - 40;
-  var my = H - 170;
-
-  globalWave += 0.025;
-  turnTimer++;
-
-  if (turnTimer > 180 + Math.random() * 120) {
-    globalAngle += (Math.random() - 0.5) * 0.8;
-    if (globalAngle > Math.PI / 4) globalAngle = Math.PI / 4;
-    if (globalAngle < -Math.PI / 4) globalAngle = -Math.PI / 4;
-    turnTimer = 0;
+var globalAngle=0,globalWave=0,globalDir=1,turnTimer=0;
+function tick(){
+  var mx=W-90,my=H-100;
+  globalWave+=0.025; turnTimer++;
+  if(turnTimer>180+Math.random()*120){
+    globalAngle+=(Math.random()-.5)*.8;
+    if(globalAngle>Math.PI/4)globalAngle=Math.PI/4;
+    if(globalAngle<-Math.PI/4)globalAngle=-Math.PI/4;
+    turnTimer=0;
   }
-
-  var baseVx = Math.cos(globalAngle) * 0.6 * globalDir;
-  var baseVy = Math.sin(globalAngle) * 0.3;
-
-  alive.forEach(function(c, i) {
-    var phase = globalWave + c.phaseOffset;
-    var waveY = Math.sin(phase) * 12;
-    var waveX = Math.cos(phase * 0.5) * 4;
-
-    c.x += baseVx * c.spd + waveX * 0.08;
-    c.y += baseVy * c.spd * 0.5 + Math.sin(phase) * 0.15;
-
-    if (c.x < 30) {
-      c.x = 30;
-      if (globalDir > 0) { globalDir = -1; globalAngle = Math.PI + (Math.random() - 0.5) * 0.5; }
-    }
-    if (c.x > mx - c.sz) {
-      c.x = mx - c.sz;
-      if (globalDir < 0) { globalDir = 1; globalAngle = (Math.random() - 0.5) * 0.5; }
-    }
-    if (c.y < 80) { c.y = 80; globalAngle = Math.abs(globalAngle) * 0.5; }
-    if (c.y > my - c.sz) { c.y = my - c.sz; globalAngle = -Math.abs(globalAngle) * 0.5; }
-
-    c.el.style.left = c.x + 'px';
-    c.el.style.top = c.y + 'px';
-    var dir = globalDir;
-    c.el.style.transform = 'scaleX(' + dir + ') translateY(' + waveY + 'px)';
-    c.el.style.opacity = c.dp;
+  var baseVx=Math.cos(globalAngle)*.6*globalDir;
+  var baseVy=Math.sin(globalAngle)*.3;
+  alive.forEach(function(c){
+    var phase=globalWave+c.phaseOffset;
+    c.x+=baseVx*c.spd+Math.cos(phase*.5)*.08;
+    c.y+=baseVy*c.spd*.5+Math.sin(phase)*.15;
+    if(c.x<30){c.x=30;if(globalDir>0){globalDir=-1;globalAngle=Math.PI+(Math.random()-.5)*.5;}}
+    if(c.x>mx-c.sz){c.x=mx-c.sz;if(globalDir<0){globalDir=1;globalAngle=(Math.random()-.5)*.5;}}
+    if(c.y<85){c.y=85;globalAngle=Math.abs(globalAngle)*.5;}
+    if(c.y>my-c.sz){c.y=my-c.sz;globalAngle=-Math.abs(globalAngle)*.5;}
+    c.el.style.left=c.x+'px'; c.el.style.top=c.y+'px';
+    c.el.style.transform='scaleX('+globalDir+') translateY('+Math.sin(phase)*10+'px)';
+    c.el.style.opacity=c.dp;
   });
 }
 
-function openInfo(id) {
-  var d = DATA[id];
-  if (!d) return;
-  document.getElementById('ip-emoji').textContent = d.emoji;
-  document.getElementById('ip-name').textContent = d.name[currentLang];
-  document.getElementById('ip-latin').textContent = d.latin;
-  var ul = document.getElementById('ip-facts');
-  ul.innerHTML = '';
-  d.facts[currentLang].forEach(function(f) {
-    var li = document.createElement('li');
-    var ic = document.createElement('span');
-    ic.className = 'fact-ic';
-    ic.textContent = f.i;
-    var tx = document.createElement('span');
-    tx.textContent = f.t;
-    li.appendChild(ic);
-    li.appendChild(tx);
-    ul.appendChild(li);
+function openInfo(id){
+  var d=DATA[id]; if(!d)return;
+  document.getElementById('ip-svg').innerHTML=SVGS[d.svgKey]||'';
+  document.getElementById('ip-name').textContent=d.name[currentLang];
+  document.getElementById('ip-latin').textContent=d.latin;
+  var ul=document.getElementById('ip-facts'); ul.innerHTML='';
+  d.facts[currentLang].forEach(function(f){
+    var li=document.createElement('li');
+    var ic=document.createElement('span'); ic.className='fact-ic'; ic.textContent=f.i;
+    var tx=document.createElement('span'); tx.textContent=f.t;
+    li.appendChild(ic); li.appendChild(tx); ul.appendChild(li);
   });
   document.getElementById('info-panel').classList.add('open');
   playPop();
 }
+function closeInfo(){document.getElementById('info-panel').classList.remove('open');}
+document.getElementById('ip-close').addEventListener('click',closeInfo);
+document.getElementById('info-panel').addEventListener('click',function(e){if(e.target===this)closeInfo();});
+document.getElementById('lang-btn').addEventListener('click',toggleLanguage);
 
-function closeInfo() { document.getElementById('info-panel').classList.remove('open'); }
+function switchZone(z){
+  if(z===zone||transitioning)return;
+  transitioning=true;
+  var oldIdx=ZONE_ORDER.indexOf(zone),newIdx=ZONE_ORDER.indexOf(z);
+  var deeper=newIdx>oldIdx;
+  document.body.classList.add(deeper?'dive-down':'dive-up');
+  setTimeout(function(){
+    zone=z; globalAngle=0; globalDir=1; turnTimer=0;
+    document.body.className='zone-'+z+' '+(deeper?'dive-enter-down':'dive-enter-up');
+    document.getElementById('zone-desc').textContent=TRANSLATIONS[currentLang].zones[z].desc;
+    document.querySelectorAll('.tb-zone-btn').forEach(function(t){t.classList.toggle('active',t.dataset.z===z);});
+    updateDepthFill(z); spawnCreatures();
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      document.body.className='zone-'+z; transitioning=false;
+    });});
+  },700);
+}
+function updateDepthFill(z){
+  var f1=document.getElementById('depth-fill-1');
+  var f2=document.getElementById('depth-fill-2');
+  if(z==='reef'){f1.style.height='0%';f2.style.height='0%';}
+  else if(z==='open'){f1.style.height='100%';f2.style.height='0%';}
+  else{f1.style.height='100%';f2.style.height='100%';}
+}
+document.querySelectorAll('.tb-zone-btn').forEach(function(b){b.addEventListener('click',function(){switchZone(this.dataset.z);});});
+document.getElementById('globalBackBtn').addEventListener('click',function(){
+  if(window.history.length>1)history.back();
+  else window.location.href='../index.html';
+});
 
-document.getElementById('ip-close').addEventListener('click', closeInfo);
-document.getElementById('info-panel').addEventListener('click', function(e) { if (e.target === this) closeInfo(); });
-document.getElementById('lang-btn').addEventListener('click', toggleLanguage);
-
-var transitioning = false;
-
-function switchZone(z) {
-  if (z === zone || transitioning) return;
-  transitioning = true;
-
-  var oldIdx = ZONE_ORDER.indexOf(zone);
-  var newIdx = ZONE_ORDER.indexOf(z);
-  var goingDeeper = newIdx > oldIdx;
-
-  document.body.classList.add(goingDeeper ? 'dive-down' : 'dive-up');
-
-  setTimeout(function() {
-    zone = z;
-    globalAngle = 0;
-    globalDir = 1;
-    turnTimer = 0;
-    document.body.className = 'zone-' + z + ' ' + (goingDeeper ? 'dive-enter-down' : 'dive-enter-up');
-    document.getElementById('zone-desc').textContent = TRANSLATIONS[currentLang].zones[z].desc;
-    document.querySelectorAll('.zone-tab').forEach(function(t) { t.classList.toggle('active', t.dataset.z === z); });
-    document.querySelectorAll('.d-dot').forEach(function(d) { d.classList.toggle('on', d.dataset.z === z); });
-    updateDepthFill(z);
-    spawnCreatures();
-
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        document.body.className = 'zone-' + z;
-        transitioning = false;
-      });
-    });
-  }, 700);
+function playPop(){
+  try{
+    var ac=new(window.AudioContext||window.webkitAudioContext)();
+    var o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.frequency.setValueAtTime(380,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(760,ac.currentTime+.12);
+    o.type='sine';
+    g.gain.setValueAtTime(.1,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.25);
+    o.start();o.stop(ac.currentTime+.25);
+  }catch(e){}
 }
 
-function updateDepthFill(z) {
-  var fills = document.querySelectorAll('.depth-fill');
-  if (z === 'reef') {
-    fills[0].style.height = '0%';
-    fills[1].style.height = '0%';
-  } else if (z === 'open') {
-    fills[0].style.height = '100%';
-    fills[1].style.height = '0%';
-  } else {
-    fills[0].style.height = '100%';
-    fills[1].style.height = '100%';
-  }
-}
+function loop(){tick();drawBubbles();if(Math.random()<.16)addBubble();raf=requestAnimationFrame(loop);}
+window.addEventListener('resize',function(){W=window.innerWidth;H=window.innerHeight;resizeBubbles();});
 
-document.querySelectorAll('.zone-tab').forEach(function(b) { b.addEventListener('click', function() { switchZone(this.dataset.z); }); });
-document.querySelectorAll('.d-dot').forEach(function(b) { b.addEventListener('click', function() { switchZone(this.dataset.z); }); });
-
-function playPop() {
-  try {
-    var ac = new (window.AudioContext || window.webkitAudioContext)();
-    var o = ac.createOscillator(), g = ac.createGain();
-    o.connect(g); g.connect(ac.destination);
-    o.frequency.setValueAtTime(380, ac.currentTime);
-    o.frequency.exponentialRampToValueAtTime(760, ac.currentTime + .12);
-    o.type = 'sine';
-    g.gain.setValueAtTime(.12, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + .25);
-    o.start(); o.stop(ac.currentTime + .25);
-  } catch(e){}
-}
-
-function loop() {
-  tick();
-  drawBubbles();
-  if (Math.random() < .16) addBubble();
-  raf = requestAnimationFrame(loop);
-}
-
-function onResize() {
-  W = window.innerWidth;
-  H = window.innerHeight;
-  resizeBubbles();
-}
-
-window.addEventListener('resize', onResize);
-
-buildRays();
-buildKelp();
-buildSeagrass();
-buildParticles();
-buildGlowOrbs();
-resizeBubbles();
-updateLanguage();
-spawnCreatures();
-loop();
-
-})();
+buildRays(); buildKelp(); buildSeagrass(); buildParticles();
+resizeBubbles(); updateLanguage(); spawnCreatures(); loop();
 </script>
-<script>
-  (function(){
-    var audio = document.getElementById('underwater-explorer-music');
-    if(!audio) return;
-    window.addEventListener('load', function(){ setTimeout(function(){ try{ audio.volume = 0.5; audio.play().catch(function(){}); }catch(e){} }, 500); });
-    function stopAudio(){ try{ audio.pause(); audio.currentTime = 0; }catch(e){} }
-    window.addEventListener('beforeunload', stopAudio);
-    window.addEventListener('pagehide', stopAudio);
-    document.addEventListener('click', function(e){
-      var t = e.target;
-      if(!t) return;
-      if(t.tagName === 'A' && t.getAttribute('href') && t.getAttribute('href').indexOf('index.html') !== -1) stopAudio();
-      if(t.id && (t.id.indexOf('menu')!==-1 || t.id.indexOf('back')!==-1)) stopAudio();
-      if(t.className && (t.className.indexOf('menu')!==-1 || t.className.indexOf('back')!==-1)) stopAudio();
-    }, true);
-  })();
-</script>
-    <script src="../js/audio-manager.js"></script>
 </body>
 </html>
