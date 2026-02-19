@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Alphabet Explorer - Multiplayer</title>
+<title>Alphabet Explorer – Multiplayer (menu right)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a1a0a;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none}
@@ -19,20 +19,99 @@ body{background:#0a1a0a;color:white;font-family:-apple-system,BlinkMacSystemFont
 .back-btn:hover{background:rgba(74,222,128,.2)}
 .game-container{position:fixed;inset:0;display:none;flex-direction:column}
 .game-container.active{display:flex}
-.game-panels{display:flex;flex:1;min-height:0}
+.game-panels{display:flex;flex:1;min-height:0;position:relative}
 .game-panels iframe{border:none;flex:1;height:100%}
 .divider{width:3px;background:rgba(74,222,128,.3);flex-shrink:0}
 .player-label{position:absolute;top:4px;font-size:11px;font-weight:700;color:#4ade80;background:rgba(0,0,0,.6);padding:2px 10px;border-radius:0 0 8px 8px;z-index:5;pointer-events:none}
-.game-back-bar{flex-shrink:0;display:flex;justify-content:center;padding:8px;background:rgba(0,0,0,.85);border-top:1px solid rgba(74,222,128,.2)}
-.game-back-btn{padding:8px 32px;font-size:13px;font-weight:700;background:rgba(74,222,128,.1);border:2px solid rgba(74,222,128,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s}
-.game-back-btn:hover{background:rgba(74,222,128,.2);transform:scale(1.05)}
-.game-back-btn:active{transform:scale(.95)}
+
+/* ── Centre-bottom sound menu ── */
+.game-menu-center {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  background: rgba(10, 20, 10, 0.85);
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(74, 222, 128, 0.3);
+  border-radius: 60px;
+  padding: 10px 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+/* ── Right-side back button ── */
+.game-menu-right {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  background: rgba(10, 20, 10, 0.85);
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(74, 222, 128, 0.3);
+  border-radius: 60px;
+  padding: 14px 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.menu-btn {
+  background: rgba(74, 222, 128, 0.15);
+  border: 2px solid rgba(74, 222, 128, 0.4);
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 10px 22px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 20, 0, 0.6);
+  letter-spacing: 0.5px;
+}
+
+.menu-btn:hover {
+  background: rgba(74, 222, 128, 0.3);
+  border-color: rgba(74, 222, 128, 0.8);
+  transform: scale(1.05);
+}
+
+.menu-btn:active {
+  transform: scale(0.98);
+}
+
+.menu-divider {
+  width: 2px;
+  height: 28px;
+  background: rgba(74, 222, 128, 0.25);
+  border-radius: 2px;
+}
+
+.game-back-bar { display: none; }
+
+@media (max-width: 480px) {
+  .game-menu-center {
+    bottom: 12px;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .menu-btn {
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+}
 </style>
 </head>
 <body>
 <audio id="alphabet-explorer-multi-music" preload="auto" loop>
   <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
 </audio>
+
 <div class="setup" id="setup">
   <h1>Alphabet Explorer</h1>
   <p>Choose number of players</p>
@@ -43,15 +122,19 @@ body{background:#0a1a0a;color:white;font-family:-apple-system,BlinkMacSystemFont
   </div>
   <button class="back-btn" id="backBtn">Back to Menu</button>
 </div>
+
 <div class="game-container" id="gameContainer"></div>
+
 <script>
 function startGame(count) {
   document.getElementById('setup').style.display = 'none';
   var container = document.getElementById('gameContainer');
   container.className = 'game-container active';
   container.innerHTML = '';
+
   var panels = document.createElement('div');
   panels.className = 'game-panels';
+
   for (var i = 0; i < count; i++) {
     if (i > 0) {
       var div = document.createElement('div');
@@ -69,37 +152,94 @@ function startGame(count) {
     var iframe = document.createElement('iframe');
     iframe.src = count === 1 ? 'alphabet-explorer.html' : 'alphabet-explorer.html?embed=1';
     iframe.style.cssText = 'border:none;width:100%;height:100%';
+    iframe.setAttribute('allowfullscreen', 'false');
     wrapper.appendChild(iframe);
     panels.appendChild(wrapper);
   }
+
   container.appendChild(panels);
-  var bar = document.createElement('div');
-  bar.className = 'game-back-bar';
-  var btn = document.createElement('button');
-  btn.className = 'game-back-btn';
-  btn.textContent = 'Back to Menu';
-  btn.addEventListener('click', function() { location.href = '../index.html'; });
-  btn.addEventListener('touchend', function(e) { e.preventDefault(); location.href = '../index.html'; });
-  bar.appendChild(btn);
-  container.appendChild(bar);
+
+  // ── Right-side ↩ Menu button ──
+  var rightMenu = document.createElement('div');
+  rightMenu.className = 'game-menu-right';
+
+  var backBtn = document.createElement('div');
+  backBtn.className = 'menu-btn';
+  backBtn.textContent = '↩ Menu';
+  backBtn.setAttribute('aria-label', 'Back to main menu');
+
+  function goToIndex() {
+    try {
+      var audio = document.getElementById('alphabet-explorer-multi-music');
+      if (audio) { audio.pause(); audio.currentTime = 0; }
+    } catch(e) {}
+    location.href = '../index.html';
+  }
+
+  backBtn.addEventListener('click', goToIndex);
+  backBtn.addEventListener('touchend', function(e) { e.preventDefault(); goToIndex(); });
+
+  rightMenu.appendChild(backBtn);
+  panels.appendChild(rightMenu);
+
+  // ── Centre-bottom 🔊 Sound button ──
+  var centerMenu = document.createElement('div');
+  centerMenu.className = 'game-menu-center';
+
+  var soundBtn = document.createElement('div');
+  soundBtn.className = 'menu-btn';
+  soundBtn.textContent = '🔊 Sound';
+
+  var soundOn = true;
+  soundBtn.addEventListener('click', function() {
+    var audio = document.getElementById('alphabet-explorer-multi-music');
+    if (!audio) return;
+    if (soundOn) {
+      audio.pause();
+      soundBtn.textContent = '🔇 Muted';
+    } else {
+      audio.play().catch(function(){});
+      soundBtn.textContent = '🔊 Sound';
+    }
+    soundOn = !soundOn;
+  });
+  soundBtn.addEventListener('touchend', function(e) { e.preventDefault(); soundBtn.click(); });
+
+  centerMenu.appendChild(soundBtn);
+  panels.appendChild(centerMenu);
 }
+
 document.querySelectorAll('.p-btn').forEach(function(btn) {
   btn.addEventListener('click', function() { startGame(parseInt(btn.dataset.count)); });
   btn.addEventListener('touchend', function(e) { e.preventDefault(); startGame(parseInt(btn.dataset.count)); });
 });
-document.getElementById('backBtn').addEventListener('click', function() { location.href = '../index.html'; });
-document.getElementById('backBtn').addEventListener('touchend', function(e) { e.preventDefault(); location.href = '../index.html'; });
+
+document.getElementById('backBtn').addEventListener('click', function() {
+  location.href = '../index.html';
+});
+document.getElementById('backBtn').addEventListener('touchend', function(e) {
+  e.preventDefault(); location.href = '../index.html';
+});
 </script>
+
 <script>
   (function(){
     var audio = document.getElementById('alphabet-explorer-multi-music');
     if(!audio) return;
-    window.addEventListener('load', function(){ setTimeout(function(){ try{ audio.volume = 0.5; audio.play().catch(function(){}); }catch(e){} }, 500); });
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        try{ audio.volume = 0.5; audio.play().catch(function(){}); }catch(e){}
+      }, 500);
+    });
     function stop(){ try{ audio.pause(); audio.currentTime = 0; }catch(e){} }
-    document.addEventListener('click', function(e){ var t = e.target; if(!t) return; if(t.id === 'backBtn' || t.classList && t.classList.contains('game-back-btn')) stop(); }, true);
+    document.addEventListener('click', function(e){
+      var t = e.target;
+      if(!t) return;
+      if(t.id === 'backBtn' || (t.classList && t.classList.contains('game-back-btn'))) stop();
+    }, true);
     window.addEventListener('beforeunload', stop);
   })();
 </script>
-    <script src="../js/audio-manager.js"></script>
+<script src="../js/audio-manager.js"></script>
 </body>
 </html>

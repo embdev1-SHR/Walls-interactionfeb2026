@@ -124,7 +124,7 @@ body::after {
 /* ── BACK BUTTON ── */
 #back-btn {
   position: fixed;
-  left: 14px;
+  right: 14px;   /* changed from left */
   top: 50%;
   transform: translateY(-50%);
   z-index: 500;
@@ -178,7 +178,7 @@ body::after {
 
 @media (max-width: 480px) {
   #back-btn {
-    left: 6px;
+    right: 6px;  /* changed from left */
   }
   #back-btn .back-arrow {
     width: 36px;
@@ -186,6 +186,7 @@ body::after {
     font-size: 16px;
   }
 }
+
 
 /* ── INSTRUMENT GRID ── */
 #grid {
@@ -779,7 +780,7 @@ const AE = (() => {
 
   // ── SAX ──
   const SAX_NOTES = [174.61,196,220,246.94,261.63,293.66];
-  function saxStart(id, vol=1) {
+  function saxStart(id, vol=3) {
     if(sustains[id]) return;
     const freq = SAX_NOTES[Math.floor(Math.random()*SAX_NOTES.length)];
     const o=ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=freq;
@@ -1286,6 +1287,6 @@ setInterval(()=>{ crowdEnergy=Math.max(0,crowdEnergy-0.5); updateCrowd(); }, 200
 [0,1,2,3].forEach(i=>{ loopState[i]='idle'; });
 
 </script>
-    <script src="../js/audio-manager.js"></script>
+    
 </body>
 </html>

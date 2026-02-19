@@ -7,58 +7,303 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#1a0f00 0%,#2d1a06 50%,#1a0f00 100%);color:white;-webkit-user-select:none;user-select:none}
-.app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
-.header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
-.header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#fb923c}
-.stats{display:flex;gap:14px;font-size:clamp(11px,1.2vw,15px);font-weight:600}
-.stat-val{color:#4ade80;font-weight:800;font-size:clamp(20px,2.5vw,28px)}
-.round-info{flex-shrink:0;text-align:center;padding:0 20px 6px}
-.category-badge{display:inline-block;padding:4px 16px;font-size:clamp(11px,1.1vw,14px);font-weight:700;background:rgba(251,146,60,.15);border:2px solid rgba(251,146,60,.3);border-radius:50px;color:#fb923c}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(135deg,#1a0f00 0%,#2d1a06 50%,#1a0f00 100%);
+  color:white;
+  -webkit-user-select:none;
+  user-select:none;
+}
 
-.game-area{flex:1;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,1.5vh,16px);padding:8px 16px;min-height:0;overflow-y:auto}
-.word-rows{display:flex;flex-direction:column;gap:clamp(8px,1.2vh,14px);width:100%;max-width:500px}
-.word-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,.03);border:2px solid rgba(251,146,60,.1);border-radius:12px;transition:all .3s;cursor:pointer}
-.word-row.selected{border-color:rgba(251,146,60,.5);background:rgba(251,146,60,.06);box-shadow:0 0 12px rgba(251,146,60,.1)}
-.word-row.completed{border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.06)}
-.word-emoji{font-size:clamp(28px,4vw,40px);flex-shrink:0}
-.word-boxes{display:flex;gap:4px;flex:1;justify-content:center}
-.letter-box{width:clamp(28px,4vw,40px);height:clamp(32px,4.5vw,44px);display:flex;align-items:center;justify-content:center;font-size:clamp(16px,2vw,22px);font-weight:800;background:rgba(255,255,255,.04);border:2px solid rgba(251,146,60,.12);border-radius:8px;color:transparent;transition:all .3s}
-.letter-box.filled{color:#fbbf24;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.06)}
-.letter-box.correct{color:#4ade80;border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.08)}
-.letter-box.wrong{border-color:#ef4444;animation:boxShake .4s ease}
-.letter-box.next{border-color:rgba(251,146,60,.5);box-shadow:0 0 8px rgba(251,146,60,.2)}
-@keyframes boxShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-.word-status{flex-shrink:0;width:24px;text-align:center;font-size:16px}
+/* ===== MAIN LAYOUT ===== */
+.app{
+  position:relative;
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  overflow:hidden;
+}
 
-.letter-pack{flex-shrink:0;padding:10px 16px 16px;background:rgba(0,0,0,.2);border-top:1px solid rgba(251,146,60,.1)}
-.pack-label{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
-.pack-tiles{display:flex;gap:clamp(5px,.8vw,8px);justify-content:center;flex-wrap:wrap;max-width:500px;margin:0 auto}
-.pack-tile{width:clamp(38px,4.5vw,52px);height:clamp(38px,4.5vw,52px);display:flex;align-items:center;justify-content:center;font-size:clamp(18px,2.2vw,26px);font-weight:800;background:rgba(251,146,60,.08);border:2px solid rgba(251,146,60,.2);border-radius:10px;cursor:pointer;transition:all .25s;color:rgba(255,255,255,.7)}
-.pack-tile:hover{background:rgba(251,146,60,.15);border-color:rgba(251,146,60,.5);transform:scale(1.08)}
-.pack-tile:active{transform:scale(.93)}
-.pack-tile.used{opacity:.2;pointer-events:none;transform:scale(.8)}
-.controls{display:flex;justify-content:center;gap:10px;margin-top:8px}
-.ctrl-btn{padding:6px 20px;font-size:12px;font-weight:700;background:rgba(251,146,60,.1);border:2px solid rgba(251,146,60,.25);color:rgba(255,255,255,.6);border-radius:50px;cursor:pointer;transition:all .3s}
-.ctrl-btn:hover{background:rgba(251,146,60,.2);color:white}
+/* ===== HEADER ===== */
+.header{
+  width:90%;
+  max-width:1200px;
+  padding:20px 0 10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-shrink:0;
+}
+
+.header h1{
+  font-size:28px;
+  font-weight:800;
+  color:#fb923c;
+}
+
+.stats{
+  display:flex;
+  gap:24px;
+  font-size:16px;
+}
+
+.stat-val{
+  color:#4ade80;
+  font-size:24px;
+  font-weight:800;
+}
+
+/* ===== CATEGORY ===== */
+.round-info{
+  flex-shrink:0;
+  margin-bottom:12px;
+}
+
+.category-badge{
+  padding:6px 20px;
+  font-size:16px;
+  font-weight:700;
+  background:rgba(251,146,60,.15);
+  border:2px solid rgba(251,146,60,.4);
+  border-radius:50px;
+  color:#fb923c;
+}
+
+/* ===== WORD ROWS ===== */
+.word-rows{
+  width:90%;
+  max-width:700px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  flex-shrink:0;
+}
+
+.word-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  padding:14px 28px;
+  background:rgba(255,255,255,.03);
+  border:3px solid rgba(251,146,60,.15);
+  border-radius:16px;
+  transition:.3s;
+  cursor:pointer;
+}
+
+.word-row.selected{
+  border-color:rgba(251,146,60,.6);
+  box-shadow:0 0 20px rgba(251,146,60,.2);
+}
+
+.word-row.completed{
+  border-color:rgba(74,222,128,.5);
+}
+
+.word-emoji{
+  font-size:40px;
+  flex-shrink:0;
+}
+
+.word-boxes{
+  display:flex;
+  gap:10px;
+}
+
+.letter-box{
+  width:60px;
+  height:68px;
+  font-size:28px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.05);
+  border:3px solid rgba(251,146,60,.2);
+  border-radius:12px;
+  transition:.3s;
+  color:rgba(255,255,255,.15);
+}
+
+.letter-box.filled{
+  color:#fbbf24;
+  border-color:#fbbf24;
+}
+
+.letter-box.correct{
+  color:#4ade80;
+  border-color:#4ade80;
+}
+
+.letter-box.next{
+  border-color:#fb923c;
+  box-shadow:0 0 12px rgba(251,146,60,.4);
+}
+
+.word-status{
+  font-size:24px;
+  margin-left:8px;
+  width:28px;
+  flex-shrink:0;
+}
+
+/* ===== DIVIDER ===== */
+.section-divider{
+  width:80%;
+  max-width:600px;
+  height:1px;
+  background:rgba(251,146,60,.15);
+  flex-shrink:0;
+  margin:14px 0;
+}
+
+/* ===== LETTER PACK ===== */
+.letter-pack{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  flex-shrink:0;
+  width:90%;
+  max-width:700px;
+}
+
+.pack-label{
+  font-size:13px;
+  letter-spacing:4px;
+  color:rgba(255,255,255,.35);
+}
+
+.pack-tiles{
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+  justify-content:center;
+  max-width:560px;
+}
+
+.pack-tile{
+  width:72px;
+  height:72px;
+  font-size:32px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(251,146,60,.1);
+  border:3px solid rgba(251,146,60,.4);
+  border-radius:16px;
+  transition:.25s;
+  cursor:pointer;
+}
+
+.pack-tile:hover{
+  transform:scale(1.08);
+  background:rgba(251,146,60,.2);
+}
+
+.pack-tile.used{
+  opacity:.2;
+  pointer-events:none;
+}
+
+/* ===== BOTTOM SECTION (pack + side controls) ===== */
+.bottom-section{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  width:90%;
+  max-width:800px;
+  flex-shrink:0;
+}
+
+/* ===== LETTER PACK WRAPPER (hint on top, tiles below) ===== */
+.letter-pack{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  flex:1;
+}
+
+.pack-header{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.pack-label{
+  font-size:13px;
+  letter-spacing:4px;
+  color:rgba(255,255,255,.35);
+}
+
+.hint-btn{
+  padding:7px 18px;
+  font-size:14px;
+  font-weight:700;
+  border-radius:50px;
+  background:rgba(251,146,60,.15);
+  border:2px solid rgba(251,146,60,.5);
+  cursor:pointer;
+  transition:.3s;
+  color:white;
+}
+
+.hint-btn:hover{
+  background:rgba(251,146,60,.35);
+  transform:scale(1.05);
+}
+
+/* ===== SIDE CONTROLS (undo + menu, right of pack) ===== */
+.side-controls{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  flex-shrink:0;
+}
+
+.ctrl-btn{
+  padding:10px 24px;
+  font-size:16px;
+  font-weight:700;
+  border-radius:50px;
+  background:rgba(251,146,60,.15);
+  border:2px solid rgba(251,146,60,.5);
+  cursor:pointer;
+  transition:.3s;
+  color:white;
+}
+
+.ctrl-btn:hover{
+  background:rgba(251,146,60,.35);
+  transform:scale(1.05);
+}
+
+/* ===== EFFECTS ===== */
+.bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-dot{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(251,146,60,.2);animation:float var(--dur) ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
 
 .celebration{position:fixed;inset:0;pointer-events:none;z-index:100}
 .confetti{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall var(--dur) ease-in forwards}
 @keyframes confettiFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
-.round-complete{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:clamp(32px,5vw,56px);font-weight:900;color:#4ade80;opacity:0;pointer-events:none;z-index:100;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+.round-complete{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:52px;font-weight:900;color:#4ade80;opacity:0;pointer-events:none;z-index:100;text-align:center}
 .round-complete.show{animation:roundPop 1.5s ease forwards}
 @keyframes roundPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}40%{transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
 .overlay.active{display:flex}
-.overlay h2{font-size:clamp(28px,4vw,48px);font-weight:800;color:#fb923c}
-.overlay .big-txt{font-size:clamp(48px,8vw,80px);font-weight:800;color:#fbbf24}
-.overlay .sub-txt{font-size:clamp(14px,1.5vw,18px);color:rgba(255,255,255,.5)}
-.overlay-btn{padding:12px 32px;font-size:16px;font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(251,146,60,.4);background:rgba(251,146,60,.15);color:white}
-.overlay-btn:hover{background:rgba(251,146,60,.3)}
+.overlay h2{font-size:48px;font-weight:800;color:#fb923c}
+.overlay .big-txt{font-size:80px;font-weight:800;color:#fbbf24}
+.overlay .sub-txt{font-size:18px;color:rgba(255,255,255,.5)}
+.overlay-btn{padding:12px 32px;font-size:16px;font-weight:700;border-radius:50px;cursor:pointer;border:2px solid rgba(251,146,60,.4);background:rgba(251,146,60,.15);color:white}
 
-.bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.bg-dot{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(251,146,60,.2);animation:float var(--dur) ease-in-out infinite}
-@keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
 .touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(251,146,60,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:ringPop .6s ease forwards}
 @keyframes ringPop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
 </style>
@@ -72,6 +317,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="round-complete" id="roundComplete"></div>
 
 <div class="app">
+  <!-- Header -->
   <div class="header">
     <h1>Word Creator</h1>
     <div class="stats">
@@ -79,19 +325,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="stat">Round: <span class="stat-val" id="roundNum">1</span></div>
     </div>
   </div>
+
+  <!-- Category Badge -->
   <div class="round-info">
     <span class="category-badge" id="categoryBadge">Animals</span>
   </div>
-  <div class="game-area">
-    <div class="word-rows" id="wordRows"></div>
-  </div>
-  <div class="letter-pack">
-    <div class="pack-label">Letter Pack</div>
-    <div class="pack-tiles" id="packTiles"></div>
-    <div class="controls">
-      <div class="ctrl-btn" id="btnUndo">Undo</div>
-      <div class="ctrl-btn" id="btnHint">Hint</div>
-      <div class="ctrl-btn" id="btnBack">Menu</div>
+
+  <!-- Word Rows -->
+  <div class="word-rows" id="wordRows"></div>
+
+  <!-- Divider -->
+  <div class="section-divider"></div>
+
+  <!-- Bottom section: letter pack + side controls -->
+  <div class="bottom-section">
+    <div class="letter-pack">
+      <div class="pack-header">
+        <div class="pack-label">LETTER PACK</div>
+        <div class="hint-btn" id="btnHint">💡 Hint</div>
+      </div>
+      <div class="pack-tiles" id="packTiles"></div>
+    </div>
+    <div class="side-controls">
+      <div class="ctrl-btn" id="btnUndo">↩ Undo</div>
+      <div class="ctrl-btn" id="btnBack">☰ Menu</div>
     </div>
   </div>
 </div>
@@ -107,28 +364,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <script>
 var ROUNDS = [
   {category:'Animals', words:[
-    {word:'CAT',emoji:'\uD83D\uDC31'},{word:'DOG',emoji:'\uD83D\uDC36'},{word:'FISH',emoji:'\uD83D\uDC1F'}
+    {word:'CAT',emoji:'🐱'},{word:'DOG',emoji:'🐶'},{word:'FISH',emoji:'🐟'}
   ]},
   {category:'Fruits', words:[
-    {word:'APPLE',emoji:'\uD83C\uDF4E'},{word:'MANGO',emoji:'\uD83E\uDD6D'},{word:'GRAPE',emoji:'\uD83C\uDF47'}
+    {word:'APPLE',emoji:'🍎'},{word:'MANGO',emoji:'🥭'},{word:'GRAPE',emoji:'🍇'}
   ]},
   {category:'Animals', words:[
-    {word:'LION',emoji:'\uD83E\uDD81'},{word:'BEAR',emoji:'\uD83D\uDC3B'},{word:'FROG',emoji:'\uD83D\uDC38'}
+    {word:'LION',emoji:'🦁'},{word:'BEAR',emoji:'🐻'},{word:'FROG',emoji:'🐸'}
   ]},
   {category:'Fruits', words:[
-    {word:'LEMON',emoji:'\uD83C\uDF4B'},{word:'PEACH',emoji:'\uD83C\uDF51'},{word:'PLUM',emoji:'\uD83E\uDED0'}
+    {word:'LEMON',emoji:'🍋'},{word:'PEACH',emoji:'🍑'},{word:'PLUM',emoji:'🫐'}
   ]},
   {category:'Animals', words:[
-    {word:'DUCK',emoji:'\uD83E\uDD86'},{word:'GOAT',emoji:'\uD83D\uDC10'},{word:'DEER',emoji:'\uD83E\uDD8C'}
+    {word:'DUCK',emoji:'🦆'},{word:'GOAT',emoji:'🐐'},{word:'DEER',emoji:'🦌'}
   ]},
   {category:'Fruits', words:[
-    {word:'PEAR',emoji:'\uD83C\uDF50'},{word:'FIG',emoji:'\uD83E\uDED2'},{word:'KIWI',emoji:'\uD83E\uDD5D'}
+    {word:'PEAR',emoji:'🍐'},{word:'FIG',emoji:'🫒'},{word:'KIWI',emoji:'🥝'}
   ]},
   {category:'Animals', words:[
-    {word:'CRAB',emoji:'\uD83E\uDD80'},{word:'MOTH',emoji:'\uD83E\uDEB3'},{word:'SWAN',emoji:'\uD83E\uDDA2'}
+    {word:'CRAB',emoji:'🦀'},{word:'MOTH',emoji:'🪳'},{word:'SWAN',emoji:'🦢'}
   ]},
   {category:'Fruits & Animals', words:[
-    {word:'TIGER',emoji:'\uD83D\uDC2F'},{word:'MELON',emoji:'\uD83C\uDF48'},{word:'HORSE',emoji:'\uD83D\uDC0E'},{word:'BERRY',emoji:'\uD83C\uDF53'}
+    {word:'TIGER',emoji:'🐯'},{word:'MELON',emoji:'🍈'},{word:'HORSE',emoji:'🐎'},{word:'BERRY',emoji:'🍓'}
   ]}
 ];
 
@@ -201,22 +458,22 @@ function renderWords() {
       if (ws.completed) {
         box.classList.add('correct');
         box.textContent = ws.word[i];
-        box.style.color = '#4ade80';
       } else if (ch) {
         box.classList.add('filled');
         box.textContent = ch;
-        box.style.color = '#fbbf24';
       } else if (wi === selectedWordIdx && i === ws.filled.length) {
         box.classList.add('next');
+        box.textContent = ws.word[i];
+      } else {
+        box.textContent = ws.word[i];
       }
-      box.textContent = ch || ws.word[i];
       boxes.appendChild(box);
     }
     row.appendChild(boxes);
 
     var status = document.createElement('div');
     status.className = 'word-status';
-    status.textContent = ws.completed ? '\u2714' : '';
+    status.textContent = ws.completed ? '✔' : '';
     row.appendChild(status);
 
     container.appendChild(row);
@@ -286,11 +543,8 @@ function placeLetter(tileIdx) {
     }
   } else {
     playTone(200, 0.15);
+    // flash wrong
     renderAll();
-    setTimeout(function() {
-      var boxes = document.querySelectorAll('.word-row.selected .letter-box.next');
-      if (boxes.length) boxes[0].classList.add('wrong');
-    }, 10);
     return;
   }
   renderAll();
@@ -322,7 +576,7 @@ function giveHint() {
 
 function showRoundComplete() {
   var el = document.getElementById('roundComplete');
-  el.textContent = 'Round Complete!';
+  el.textContent = '🎉 Round Complete!';
   el.classList.remove('show');
   void el.offsetWidth;
   el.classList.add('show');
@@ -420,6 +674,7 @@ bindTouch(document.getElementById('btnBackOver'), function() { location.href = '
 
 loadRound();
 
+// Background particles
 var bgP = document.getElementById('bgP');
 for (var i = 0; i < 30; i++) {
   var d = document.createElement('div'); d.className = 'bg-dot';
@@ -432,17 +687,5 @@ for (var i = 0; i < 30; i++) {
 
 document.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];var r=document.createElement('div');r.className='touch-ring';r.style.left=t.clientX+'px';r.style.top=t.clientY+'px';document.body.appendChild(r);r.addEventListener('animationend',function(){this.remove()})}},{passive:true});
 </script>
-<script>
-  (function(){
-    var audio = document.getElementById('word-creator-music');
-    if(!audio) return;
-    window.addEventListener('load', function(){ setTimeout(function(){ audio.volume = 0.5; audio.play().catch(function(){ }); }, 500); });
-    function stopMusic(){ try{ audio.pause(); audio.currentTime = 0; }catch(e){} }
-    var el = document.getElementById('btnBack'); if(el) el.addEventListener('click', stopMusic);
-    var el2 = document.getElementById('btnBackOver'); if(el2) el2.addEventListener('click', stopMusic);
-    window.addEventListener('pagehide', stopMusic);
-  })();
-</script>
-    <script src="../js/audio-manager.js"></script>
 </body>
 </html>

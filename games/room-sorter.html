@@ -33,6 +33,7 @@ body{-webkit-user-select:none;user-select:none;touch-action:none;background:#111
   border-color:rgba(140,220,140,.9);
   background:rgba(140,220,140,.1);
   box-shadow:0 0 24px rgba(140,220,140,.25), inset 0 0 20px rgba(140,220,140,.05);
+  cursor:pointer;
 }
 .target-zone.filled{
   border-color:rgba(140,220,140,.4);
@@ -50,26 +51,29 @@ body{-webkit-user-select:none;user-select:none;touch-action:none;background:#111
 .target-zone.filled .target-label,.target-zone.filled .target-ghost{display:none}
 
 .drag-item{
-  position:absolute;cursor:grab;z-index:100;
+  position:absolute;cursor:pointer;z-index:100;
   font-size:clamp(44px,5.5vw,68px);line-height:1;
-  /* Strong explicit shadow — Electron needs high values */
-  filter:drop-shadow(0 8px 0px rgba(0,0,0,0.0))
-         drop-shadow(0 4px 8px rgba(0,0,0,0.85))
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,0.85))
          drop-shadow(0 8px 16px rgba(0,0,0,0.65))
          drop-shadow(0 1px 2px rgba(0,0,0,0.95));
-  transition:transform .2s ease,filter .2s ease;
+  transition:transform .18s ease,filter .18s ease;
+  user-select:none;
 }
 .drag-item:hover{
+  transform:scale(1.08);
   filter:drop-shadow(0 10px 20px rgba(0,0,0,0.85))
          drop-shadow(0 3px 6px rgba(0,0,0,0.9))
-         brightness(1.06);
+         brightness(1.08);
 }
-.drag-item.dragging{
-  z-index:500;cursor:grabbing;
+/* Selected state — pulsing ring + lifted look */
+.drag-item.selected{
+  z-index:500;cursor:pointer;
+  transform:scale(1.18) translateY(-6px);
   filter:drop-shadow(0 22px 30px rgba(0,0,0,0.85))
          drop-shadow(0 6px 12px rgba(0,0,0,0.9))
          drop-shadow(0 2px 4px rgba(0,0,0,1))
-         brightness(1.08);
+         brightness(1.12);
+  animation:selectedPulse 1s ease-in-out infinite;
   transition:none;
 }
 .drag-item.placed{
@@ -77,6 +81,11 @@ body{-webkit-user-select:none;user-select:none;touch-action:none;background:#111
   animation:snapIn .4s cubic-bezier(.34,1.56,.64,1);
 }
 .drag-item.wrong{animation:reject .42s ease}
+
+@keyframes selectedPulse{
+  0%,100%{filter:drop-shadow(0 22px 30px rgba(0,0,0,0.85)) drop-shadow(0 6px 12px rgba(0,0,0,0.9)) brightness(1.12);}
+  50%{filter:drop-shadow(0 22px 40px rgba(255,220,80,0.6)) drop-shadow(0 6px 16px rgba(255,200,0,0.5)) brightness(1.22);}
+}
 
 @keyframes snapIn{
   0%{transform:scale(.4) translateY(10px);opacity:.4}
@@ -1427,7 +1436,8 @@ function randomFloorPos(){
 
 function reshuffleItems(){
   if(gameOver)return;
-  clearHighlights();activeDrags.clear();
+  deselectItem();
+  clearHighlights();
   var used=[];
   itemEls.forEach(function(el){
     if(el.dataset.placed==='true')return;
@@ -1580,11 +1590,10 @@ function endGame(){
   },500);
 }
 
-function highlightTargets(x,y){
+function highlightTargets(){
+  // Highlight all unfilled target zones (called when item is selected)
   targetEls.forEach(function(tz){
-    if(tz.classList.contains('filled'))return;
-    var tr=tz.getBoundingClientRect(),cx=tr.left+tr.width/2,cy=tr.top+tr.height/2;
-    tz.classList.toggle('active',Math.hypot(x-cx,y-cy)<Math.max(tr.width,tr.height)*0.9);
+    if(!tz.classList.contains('filled')) tz.classList.add('active');
   });
 }
 function clearHighlights(){targetEls.forEach(function(tz){tz.classList.remove('active');});}
@@ -1598,57 +1607,105 @@ function getItemAt(x,y){
 }
 
 var activeDrags=new Map(),mouseDrag=null;
+var selectedEl=null; // currently selected item
 
-gameLayer.addEventListener('touchstart',function(e){
-  if(gameOver)return;e.preventDefault();
-  for(var i=0;i<e.changedTouches.length;i++){
-    var t=e.changedTouches[i],el=getItemAt(t.clientX,t.clientY);if(!el)continue;
-    el.classList.add('dragging');el.style.transform='rotate(0deg) scale(1.12)';
-    var r=el.getBoundingClientRect();
-    activeDrags.set(t.identifier,{el:el,offX:t.clientX-r.left,offY:t.clientY-r.top});
+function selectItem(el){
+  if(selectedEl&&selectedEl!==el) deselectItem();
+  selectedEl=el;
+  el.classList.add('selected');
+  // Highlight all unfilled targets to guide the player
+  targetEls.forEach(function(tz){
+    if(!tz.classList.contains('filled')) tz.classList.add('active');
+  });
+}
+
+function deselectItem(){
+  if(!selectedEl)return;
+  selectedEl.classList.remove('selected');
+  selectedEl=null;
+  clearHighlights();
+}
+
+function getTargetAt(x,y){
+  // Returns the closest unfilled target zone if click lands inside or near it
+  var best=null,bestDist=Infinity;
+  targetEls.forEach(function(tz,i){
+    if(tz.classList.contains('filled'))return;
+    var tr=tz.getBoundingClientRect();
+    var cx=tr.left+tr.width/2,cy=tr.top+tr.height/2;
+    var dist=Math.hypot(x-cx,y-cy);
+    var threshold=Math.max(tr.width,tr.height)*0.75;
+    if(dist<threshold&&dist<bestDist){best=i;bestDist=dist;}
+  });
+  return best; // returns index or null
+}
+
+// Unified click/tap handler
+function handleTap(x,y){
+  if(gameOver)return;
+
+  // If something is selected, try to place it
+  if(selectedEl){
+    var targetIdx=getTargetAt(x,y);
+    var elIdx=parseInt(selectedEl.dataset.index);
+
+    if(targetIdx!==null&&targetIdx===elIdx){
+      // ✅ Correct target — place it
+      var it=selectedItems[elIdx];
+      var tz=targetEls[elIdx];
+      selectedEl.classList.remove('selected');
+      selectedEl.classList.add('placed');
+      selectedEl.style.left=(remapTargetX(it.targetX)*W-selectedEl.offsetWidth/2)+'px';
+      selectedEl.style.top=(remapTargetY(it.targetY)*H-selectedEl.offsetHeight/2)+'px';
+      selectedEl.style.transform='scale(1)';
+      selectedEl.dataset.placed='true';
+      tz.classList.add('filled');
+      placedCount++;updateProgress();
+      spawnSparkles(remapTargetX(it.targetX)*W,remapTargetY(it.targetY)*H);
+      playSound(true);
+      selectedEl=null;clearHighlights();
+      if(placedCount>=totalItems)endGame();
+      return;
+    }
+
+    if(targetIdx!==null&&targetIdx!==elIdx){
+      // ❌ Wrong target — shake and keep selected
+      selectedEl.classList.add('wrong');playSound(false);
+      setTimeout(function(){if(selectedEl)selectedEl.classList.remove('wrong');},420);
+      return;
+    }
+
+    // Clicked an item — switch selection or deselect
+    var clickedEl=getItemAt(x,y);
+    if(clickedEl&&clickedEl!==selectedEl&&clickedEl.dataset.placed!=='true'){
+      selectItem(clickedEl);return;
+    }
+
+    // Clicked empty space — deselect
+    deselectItem();
+    return;
   }
-},{passive:false});
 
-gameLayer.addEventListener('touchmove',function(e){
-  if(gameOver)return;e.preventDefault();
-  for(var i=0;i<e.changedTouches.length;i++){
-    var t=e.changedTouches[i],d=activeDrags.get(t.identifier);if(!d)continue;
-    d.el.style.left=(t.clientX-d.offX)+'px';d.el.style.top=(t.clientY-d.offY)+'px';
-    highlightTargets(t.clientX,t.clientY);
-  }
-},{passive:false});
+  // Nothing selected — try to select an item
+  var el=getItemAt(x,y);
+  if(el&&el.dataset.placed!=='true') selectItem(el);
+}
 
+// Mouse
+gameLayer.addEventListener('click',function(e){
+  handleTap(e.clientX,e.clientY);
+});
+
+// Touch — use touchend so there's no 300ms delay
 gameLayer.addEventListener('touchend',function(e){
-  for(var i=0;i<e.changedTouches.length;i++){
-    var t=e.changedTouches[i],d=activeDrags.get(t.identifier);
-    if(!d){activeDrags.delete(t.identifier);continue;}
-    clearHighlights();checkDrop(d.el,t.clientX,t.clientY);activeDrags.delete(t.identifier);
-  }
-});
+  e.preventDefault();
+  var t=e.changedTouches[0];
+  handleTap(t.clientX,t.clientY);
+},{passive:false});
 
-gameLayer.addEventListener('touchcancel',function(e){
-  for(var i=0;i<e.changedTouches.length;i++){
-    var t=e.changedTouches[i],d=activeDrags.get(t.identifier);
-    if(d){d.el.classList.remove('dragging');d.el.style.left=d.el.dataset.homeX+'px';d.el.style.top=d.el.dataset.homeY+'px';d.el.style.transform='rotate('+d.el.dataset.homeRot+'deg)';}
-    activeDrags.delete(t.identifier);
-  }clearHighlights();
-});
-
-gameLayer.addEventListener('mousedown',function(e){
-  if(gameOver||e.button!==0)return;
-  var el=getItemAt(e.clientX,e.clientY);if(!el)return;
-  el.classList.add('dragging');el.style.transform='rotate(0deg) scale(1.12)';
-  var r=el.getBoundingClientRect();
-  mouseDrag={el:el,offX:e.clientX-r.left,offY:e.clientY-r.top};
-});
-window.addEventListener('mousemove',function(e){
-  if(!mouseDrag)return;
-  mouseDrag.el.style.left=(e.clientX-mouseDrag.offX)+'px';mouseDrag.el.style.top=(e.clientY-mouseDrag.offY)+'px';
-  highlightTargets(e.clientX,e.clientY);
-});
-window.addEventListener('mouseup',function(e){
-  if(!mouseDrag)return;clearHighlights();checkDrop(mouseDrag.el,e.clientX,e.clientY);mouseDrag=null;
-});
+// Suppress context menu and default touch behaviors
+gameLayer.addEventListener('touchstart',function(e){e.preventDefault();},{passive:false});
+gameLayer.addEventListener('touchmove',function(e){e.preventDefault();},{passive:false});
 
 function navTo(url){location.href=url;}
 function navReload(){location.reload();}

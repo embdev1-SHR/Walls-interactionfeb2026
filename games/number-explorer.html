@@ -3,37 +3,222 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Number Explorer.</title>
+<title>Number Explorer · back middle right</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#0a1628 0%,#0d2137 50%,#0a1628 100%);color:white;-webkit-user-select:none;user-select:none}
 .app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
-.header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
-.header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#38bdf8}
-.btn-back{padding:8px 22px;font-size:13px;font-weight:600;background:rgba(56,189,248,.1);border:2px solid rgba(56,189,248,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s}
-.btn-back:hover{background:rgba(56,189,248,.2)}
 
-.center-display{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.5vh,16px);padding:0 20px;min-height:0}
-.big-number{font-size:clamp(120px,22vw,220px);font-weight:900;line-height:1;color:#38bdf8;text-shadow:0 0 60px rgba(56,189,248,.3);transition:all .4s;animation:numIn .4s ease}
+/* header now only contains the title, back button is absolutely positioned */
+.header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  /* keeps title left, but we remove button from here */
+  padding: 12px 20px;
+  position: relative;
+  z-index: 10;
+}
+.header h1 {
+  font-size: clamp(18px, 2.5vw, 28px);
+  font-weight: 800;
+  color: #38bdf8;
+  margin-right: auto; /* push to left */
+}
+
+/* ----- BACK BUTTON – MIDDLE RIGHT (floating vertical center) ----- */
+.btn-back {
+  position: fixed;                  /* relative to viewport */
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 14px 22px;
+  font-size: 15px;
+  font-weight: 700;
+  background: rgba(10, 30, 50, 0.8);
+  border: 2px solid rgba(56, 189, 248, 0.5);
+  color: white;
+  border-radius: 60px;
+  cursor: pointer;
+  transition: all 0.25s;
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  letter-spacing: 0.5px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.5);
+  border-left: 4px solid #38bdf8;   /* stylish accent */
+  writing-mode: horizontal-tb;
+  white-space: nowrap;
+}
+.btn-back:hover {
+  background: #1e3a5f;
+  border-color: #38bdf8;
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 0 24px #38bdf8;
+}
+
+/* center display remains similar, but with more room because header is simpler */
+.center-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  min-height: 0;
+}
+
+.number-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 24px);
+  width: 100%;
+}
+
+.big-number {
+  font-size: clamp(120px, 22vw, 220px);
+  font-weight: 900;
+  line-height: 1;
+  color: #38bdf8;
+  text-shadow: 0 0 60px rgba(56,189,248,.3);
+  animation: numIn 0.4s ease;
+  min-width: 2.2em;
+  text-align: center;
+}
 @keyframes numIn{0%{transform:scale(.5) rotateY(90deg);opacity:0}100%{transform:scale(1) rotateY(0);opacity:1}}
-.number-word{font-size:clamp(24px,4vw,44px);font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:4px;transition:all .4s}
-.dots-row{display:flex;flex-wrap:wrap;gap:clamp(6px,1vw,12px);justify-content:center;max-width:clamp(200px,40vw,400px);min-height:clamp(30px,5vh,60px);align-items:center}
-.dot{width:clamp(16px,2.5vw,28px);height:clamp(16px,2.5vw,28px);border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);animation:dotPop .3s ease backwards;box-shadow:0 2px 8px rgba(251,191,36,.3)}
+
+.inline-arrow {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 600;
+  background: rgba(56, 189, 248, 0.15);
+  border: 2px solid rgba(56, 189, 248, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: rgba(255,255,255,0.8);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+  flex-shrink: 0;
+}
+.inline-arrow:hover {
+  background: rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
+  color: white;
+  transform: scale(1.1);
+}
+
+.number-word {
+  font-size: clamp(24px, 4vw, 44px);
+  font-weight: 700;
+  color: rgba(255,255,255,.6);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  transition: all 0.4s;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+.dots-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(6px, 1vw, 12px);
+  justify-content: center;
+  max-width: clamp(200px, 40vw, 400px);
+  min-height: clamp(30px, 5vh, 60px);
+  align-items: center;
+}
+.dot{
+  width:clamp(16px,2.5vw,28px);height:clamp(16px,2.5vw,28px);border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);animation:dotPop .3s ease backwards;box-shadow:0 2px 8px rgba(251,191,36,.3)
+}
 @keyframes dotPop{0%{transform:scale(0)}100%{transform:scale(1)}}
 .fun-fact{font-size:clamp(11px,1.2vw,15px);color:rgba(255,255,255,.35);max-width:400px;text-align:center;min-height:2em}
 
-.number-list{flex-shrink:0;padding:8px 16px 12px;background:rgba(0,0,0,.2);border-top:1px solid rgba(56,189,248,.1);display:flex;flex-direction:column;align-items:center}
-.list-label{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
-.list-scroll{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:4px 0;scrollbar-width:none;-ms-overflow-style:none;justify-content:center;max-width:100%}
-.list-scroll::-webkit-scrollbar{display:none}
-.num-btn{flex-shrink:0;width:clamp(44px,5vw,56px);height:clamp(44px,5vw,56px);display:flex;align-items:center;justify-content:center;font-size:clamp(16px,2vw,22px);font-weight:800;background:rgba(56,189,248,.08);border:2px solid rgba(56,189,248,.15);border-radius:12px;cursor:pointer;transition:all .25s;color:rgba(255,255,255,.6)}
-.num-btn:hover{background:rgba(56,189,248,.15);border-color:rgba(56,189,248,.4);transform:scale(1.08)}
-.num-btn.active{background:rgba(56,189,248,.25);border-color:#38bdf8;color:#38bdf8;box-shadow:0 0 16px rgba(56,189,248,.25);transform:scale(1.1)}
-.nav-arrows{display:flex;justify-content:center;gap:16px;margin-top:8px}
-.arrow-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;background:rgba(56,189,248,.1);border:2px solid rgba(56,189,248,.2);border-radius:50%;cursor:pointer;transition:all .25s;color:rgba(255,255,255,.5)}
-.arrow-btn:hover{background:rgba(56,189,248,.2);color:white}
+/* FLOATING NUMBER LIST – pill style, moved upward */
+.number-list {
+  flex-shrink: 0;
+  margin-top: -16px;
+  padding: 4px 16px 24px;
+  background: transparent;
+  border-top: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 5;
+}
 
+.list-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: rgba(0,0,0,0.25);
+  padding: 4px 14px;
+  border-radius: 40px;
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(56,189,248,0.2);
+}
+
+.list-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  justify-content: center;
+  max-width: 100%;
+  background: rgba(10, 22, 40, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 80px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.7);
+}
+.list-scroll::-webkit-scrollbar{display:none}
+
+.num-btn {
+  flex-shrink: 0;
+  width: clamp(48px, 6.5vw, 64px);
+  height: clamp(48px, 6.5vw, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(18px, 2.5vw, 26px);
+  font-weight: 800;
+  background: rgba(20, 40, 65, 0.7);
+  border: 2px solid rgba(56, 189, 248, 0.4);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: rgba(255,255,255,0.9);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 8px 14px rgba(0,0,0,0.6);
+}
+.num-btn:hover {
+  background: rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
+  transform: scale(1.1);
+  color: white;
+}
+.num-btn.active {
+  background: #38bdf8;
+  border-color: #ffffff;
+  color: #0a1628;
+  box-shadow: 0 0 24px #38bdf8;
+  transform: scale(1.18);
+}
+
+/* bg particles untouched */
 .bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .bg-dot{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(56,189,248,.2);animation:float var(--dur) ease-in-out infinite}
 @keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
@@ -50,23 +235,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="app">
   <div class="header">
     <h1>Number Explorer</h1>
-    <button class="btn-back" id="btnBack">Back to Menu</button>
+    <!-- button removed from here, now fixed middle-right -->
   </div>
 
+  <!-- Back button now appears as fixed element on the right middle -->
+  <button class="btn-back" id="btnBack">← Back to Menu</button>
+
   <div class="center-display">
-    <div class="big-number" id="bigNumber">1</div>
+    <!-- inline arrows left & right of big number -->
+    <div class="number-row">
+      <div class="inline-arrow" id="prevInline">←</div>
+      <div class="big-number" id="bigNumber">1</div>
+      <div class="inline-arrow" id="nextInline">→</div>
+    </div>
     <div class="number-word" id="numberWord">ONE</div>
     <div class="dots-row" id="dotsRow"></div>
     <div class="fun-fact" id="funFact"></div>
   </div>
 
+  <!-- floating number list (moved upward) -->
   <div class="number-list">
     <div class="list-label">Tap a number to explore</div>
     <div class="list-scroll" id="numList"></div>
-    <div class="nav-arrows">
-      <div class="arrow-btn" id="prevBtn">&larr;</div>
-      <div class="arrow-btn" id="nextBtn">&rarr;</div>
-    </div>
   </div>
 </div>
 
@@ -160,10 +350,12 @@ function playTone(freq, dur) {
 }
 
 function bindTouch(el, fn) {
+  if (!el) return;
   el.addEventListener('click', function(e) { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; fn(); });
   el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); });
 }
 
+// number list clicks
 document.getElementById('numList').addEventListener('click', function(e) {
   if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
   var btn = e.target.closest('.num-btn');
@@ -174,14 +366,17 @@ document.getElementById('numList').addEventListener('touchend', function(e) {
   if (btn) { e.preventDefault(); showNumber(parseInt(btn.dataset.num)); }
 });
 
-bindTouch(document.getElementById('prevBtn'), function() {
+// inline arrows (next to big number)
+bindTouch(document.getElementById('prevInline'), function() {
   var n = currentNum > 1 ? currentNum - 1 : 20;
   showNumber(n);
 });
-bindTouch(document.getElementById('nextBtn'), function() {
+bindTouch(document.getElementById('nextInline'), function() {
   var n = currentNum < 20 ? currentNum + 1 : 1;
   showNumber(n);
 });
+
+// back button (now fixed middle-right)
 bindTouch(document.getElementById('btnBack'), function() { location.href = '../index.html'; });
 
 buildList();

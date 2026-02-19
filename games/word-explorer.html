@@ -15,11 +15,97 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#fbbf24}
 .stats{display:flex;gap:14px;font-size:clamp(11px,1.2vw,15px);font-weight:600}
 .stat-val{color:#4ade80;font-weight:800;font-size:clamp(20px,2.5vw,28px)}
-.lang-bar{flex-shrink:0;display:flex;justify-content:center;gap:8px;padding:0 20px 10px}
-.lang-btn{padding:6px 20px;font-size:clamp(11px,1.1vw,14px);font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;border:2px solid rgba(251,191,36,.2);background:rgba(251,191,36,.06);color:rgba(255,255,255,.5)}
-.lang-btn:hover{background:rgba(251,191,36,.1)}
-.lang-btn.active{background:rgba(251,191,36,.2);border-color:#fbbf24;color:#fbbf24}
-.game-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.5vh,28px);padding:0 20px;min-height:0}
+/* Right panel container for back button + language buttons (side by side) */
+.right-panel {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;     /* place back button and language options side by side */
+  align-items: center;
+  gap: 12px;
+  z-index: 30;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(8px);
+  padding: 10px 16px;
+  border-radius: 60px;
+  border: 1px solid rgba(251,191,36,0.3);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+/* Back button styling */
+.btn-back {
+  padding: 10px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  background: rgba(251,191,36,.2);
+  border: 2px solid #fbbf24;
+  color: white;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all .3s;
+  white-space: nowrap;
+}
+.btn-back:hover { background: rgba(251,191,36,.35); }
+/* Language buttons container (horizontal) */
+.lang-row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+.lang-btn {
+  padding: 8px 16px;
+  font-size: clamp(13px, 1.2vw, 16px);
+  font-weight: 700;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all .2s;
+  border: 2px solid rgba(251,191,36,.2);
+  background: rgba(251,191,36,.06);
+  color: rgba(255,255,255,.6);
+  text-align: center;
+  min-width: 85px;
+}
+.lang-btn:hover { background: rgba(251,191,36,.15); }
+.lang-btn.active { background: rgba(251,191,36,.25); border-color: #fbbf24; color: #fbbf24; }
+
+/* Main game area - adjust right padding for the panel */
+.game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px,2.5vh,28px);
+  padding: 0 220px 0 20px; /* extra right padding so content not hidden behind panel */
+  min-height: 0;
+}
+/* Skip button at bottom center */
+.footer {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  z-index: 20;
+}
+.btn-skip {
+  padding: 10px 36px;
+  font-size: 16px;
+  font-weight: 600;
+  background: rgba(251,191,36,.1);
+  border: 2px solid rgba(251,191,36,.3);
+  color: white;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all .3s;
+}
+.btn-skip:hover { background: rgba(251,191,36,.2); }
+
+/* rest unchanged */
 .hint-area{text-align:center}
 .hint-emoji{font-size:clamp(48px,7vw,80px)}
 .hint-text{font-size:clamp(12px,1.3vw,16px);color:rgba(255,255,255,.45);margin-top:4px}
@@ -56,14 +142,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .word-complete{font-size:clamp(28px,4vw,48px);font-weight:800;color:#4ade80;text-align:center;min-height:1.2em;transition:all .3s}
 .word-complete.show{animation:wordPop .5s ease}
 @keyframes wordPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
-.footer{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 20px 14px}
-.btn-back,.btn-skip{padding:8px 26px;font-size:14px;font-weight:600;background:rgba(251,191,36,.1);border:2px solid rgba(251,191,36,.3);color:white;border-radius:50px;cursor:pointer;transition:all .3s}
-.btn-back:hover,.btn-skip:hover{background:rgba(251,191,36,.2)}
 .bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .bg-dot{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(251,191,36,.25);animation:float var(--dur) ease-in-out infinite}
 @keyframes float{0%,100%{transform:translate(0,0);opacity:.15}50%{transform:translate(var(--dx),var(--dy));opacity:.5}}
 .touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(251,191,36,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%) scale(0);animation:ringPop .6s ease forwards}
 @keyframes ringPop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
+@media (max-width: 800px) {
+  .right-panel { right: 10px; padding: 8px 12px; gap: 8px; }
+  .lang-btn { min-width: 70px; padding: 6px 10px; font-size: 12px; }
+  .btn-back { padding: 8px 16px; font-size: 14px; }
+  .game-area { padding-right: 190px; }
+}
+@media (max-width: 600px) {
+  .right-panel { flex-direction: column; align-items: stretch; border-radius: 30px; }
+  .lang-row { justify-content: center; }
+  .game-area { padding-right: 130px; }
+}
 </style>
 </head>
 <body>
@@ -81,6 +175,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="stat">Words: <span class="stat-val" id="wordCount">0</span></div>
     </div>
   </div>
+
+  <!-- Right panel: back button + language buttons side by side (right middle) -->
+  <div class="right-panel">
+    <button class="btn-back" id="btnBack">← Back</button>
+    <div class="lang-row">
+      <div class="lang-btn active" data-lang="en">English</div>
+      <div class="lang-btn" data-lang="ml">Malayalam</div>
+    </div>
+  </div>
+
   <div class="game-area">
     <div class="hint-area">
       <div class="hint-emoji" id="hintEmoji"></div>
@@ -90,13 +194,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="word-complete" id="wordComplete"></div>
     <div class="letter-tiles" id="letterTiles"></div>
   </div>
-  <div class="lang-bar">
-    <div class="lang-btn active" data-lang="en">English</div>
-    <div class="lang-btn" data-lang="ml">Malayalam</div>
-  </div>
+
+  <!-- Footer now only contains Skip (centered bottom) -->
   <div class="footer">
     <button class="btn-skip" id="btnSkip">Skip</button>
-    <button class="btn-back" id="btnBack">Back to Menu</button>
   </div>
 </div>
 
@@ -336,6 +437,7 @@ document.getElementById('letterTiles').addEventListener('touchend', function(e) 
   if (tile) { e.preventDefault(); handleTileTap(tile); }
 });
 
+// Language buttons now in .lang-row inside right panel
 document.querySelectorAll('.lang-btn').forEach(function(btn) {
   bindTouch(btn, function() {
     lang = btn.dataset.lang;
