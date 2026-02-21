@@ -1,496 +1,760 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360° Video Player</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="utf-8">
+<title>World Tour 360°</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Chewy&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --white: #ffffff;
+    --offwhite: #f5f8ff;
+    --card: rgba(255,255,255,0.85);
+    --blue: #4f8cff;
+    --sky: #b3d8ff;
+    --green: #3ecf7a;
+    --orange: #ff8c42;
+    --pink: #ff5fa0;
+    --yellow: #ffe14d;
+    --purple: #a78bfa;
+    --text: #1a2340;
+    --muted: #8898b0;
+    --border: rgba(80,120,255,0.13);
+    --radius: 18px;
+  }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: 'Nunito', 'Segoe UI', sans-serif;
-            background: #000;
-            touch-action: none;
-        }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        #container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--offwhite);
+    color: var(--text);
+    overflow: hidden;
+    height: 100dvh;
+    width: 100dvw;
+  }
 
-        #canvas {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
+  /* ─── GLOBE CANVAS ─── */
+  #globeCanvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
 
-        .controls-container {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px 25px;
-            border-radius: 50px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+  /* ─── CONFETTI ─── */
+  .confetti-piece {
+    position: fixed;
+    pointer-events: none;
+    z-index: 5;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(-20px) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
+  }
 
-        .video-select {
-            padding: 10px 15px;
-            border-radius: 25px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+  /* ─── FLOATING DECO ─── */
+  .deco {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 50%;
+    animation: decoFloat linear infinite;
+  }
+  @keyframes decoFloat {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateY(-105vh) rotate(360deg); opacity: 0; }
+  }
 
-        .video-select:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.6);
-        }
+  /* ─── WELCOME ─── */
+  #welcomeMenu {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.55s ease, visibility 0.55s;
+  }
+  #welcomeMenu.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-        .play-btn, .pause-btn, .back-btn {
-            padding: 10px 20px;
-            border-radius: 25px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-block;
-        }
+  .welcome-bubble {
+    position: relative;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(28px);
+    border: 2.5px solid rgba(255,255,255,0.98);
+    border-radius: 34px;
+    padding: 48px 52px 44px;
+    max-width: 760px;
+    width: 92vw;
+    box-shadow: 0 10px 70px rgba(80,120,255,0.13), 0 2px 12px rgba(80,120,255,0.07);
+    text-align: center;
+    animation: floatIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes floatIn {
+    from { transform: scale(0.85) translateY(30px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
 
-        .play-btn:hover, .pause-btn:hover, .back-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-            border-color: rgba(255, 255, 255, 0.6);
-        }
+  .globe-emoji {
+    font-size: 68px;
+    display: block;
+    animation: spinBob 3s ease-in-out infinite;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 8px 20px rgba(80,180,255,0.28));
+  }
+  @keyframes spinBob {
+    0%,100% { transform: translateY(0) rotate(-6deg); }
+    50%      { transform: translateY(-12px) rotate(6deg); }
+  }
 
-        .play-btn:active, .pause-btn:active, .back-btn:active {
-            transform: scale(0.95);
-        }
+  .welcome-tag {
+    font-family: 'Chewy', cursive;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
 
-        .progress-container {
-            width: 150px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-            overflow: hidden;
-            cursor: pointer;
-        }
+  .welcome-title {
+    font-family: 'Chewy', cursive;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 34px;
+  }
+  .welcome-title .hi { background: linear-gradient(110deg, var(--blue), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            width: 0%;
-            transition: width 0.1s;
-        }
+  .portal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  @media (min-width: 560px) { .portal-grid { grid-template-columns: repeat(4, 1fr); } }
 
-        .time-display {
-            color: white;
-            font-size: 12px;
-            font-weight: 600;
-            min-width: 60px;
-            text-align: center;
-        }
+  .portal-btn {
+    padding: 22px 12px 18px;
+    background: white;
+    border: 2.5px solid transparent;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s, border-color 0.2s;
+    text-align: center;
+    box-shadow: 0 4px 18px rgba(80,120,255,0.08);
+    user-select: none;
+  }
+  .portal-btn:hover { transform: translateY(-7px) scale(1.05); box-shadow: 0 16px 40px rgba(80,120,255,0.18); }
+  .portal-btn:active { transform: scale(0.97); }
+  .portal-btn:nth-child(1) { border-color: #c5f5dc; } .portal-btn:nth-child(1):hover { border-color: var(--green); }
+  .portal-btn:nth-child(2) { border-color: #c0daff; } .portal-btn:nth-child(2):hover { border-color: var(--blue); }
+  .portal-btn:nth-child(3) { border-color: #ffd6f5; } .portal-btn:nth-child(3):hover { border-color: var(--pink); }
+  .portal-btn:nth-child(4) { border-color: #ffe2cc; } .portal-btn:nth-child(4):hover { border-color: var(--orange); }
 
-        .info-panel {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 15px;
-            font-size: 14px;
-            max-width: 300px;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
+  .portal-icon { font-size: 38px; display: block; margin-bottom: 10px; }
+  .portal-num  { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; }
+  .portal-name { font-size: 14px; font-weight: 900; color: var(--text); margin-bottom: 3px; }
+  .portal-sub  { font-size: 11px; color: var(--muted); font-weight: 600; }
 
-        .info-title {
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #667eea;
-        }
+  /* ─── HUD ─── */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 22px;
+    background: linear-gradient(180deg, rgba(245,248,255,0.97) 0%, transparent 100%);
+    pointer-events: none;
+  }
+  #hud.active { display: flex; }
 
-        .info-text {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.5;
-        }
+  .hud-brand { display: flex; align-items: center; gap: 10px; }
+  .hud-globe { font-size: 28px; animation: spinBob 3s ease-in-out infinite; display: inline-block; }
+  .hud-title { font-family: 'Chewy', cursive; font-size: 22px; color: var(--blue); }
+  .hud-badge {
+    padding: 7px 18px;
+    background: white;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+    box-shadow: 0 2px 14px rgba(80,120,255,0.13);
+    border: 2px solid var(--border);
+  }
 
-        .instructions {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 15px;
-            font-size: 12px;
-            max-width: 250px;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
+  /* ─── TOOLBAR ─── */
+  #toolbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px 20px;
+    background: linear-gradient(0deg, rgba(245,248,255,0.98) 50%, transparent 100%);
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #toolbar.active { display: flex; }
+  .tb-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-        .instructions-title {
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #667eea;
-        }
+  .tool-btn {
+    padding: 9px 20px;
+    background: white;
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 2px 10px rgba(80,120,255,0.08);
+    white-space: nowrap;
+  }
+  .tool-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 22px rgba(80,120,255,0.18); border-color: var(--blue); color: var(--blue); }
+  .tool-btn.exit:hover { border-color: var(--pink); color: var(--pink); }
+  .tool-btn:active { transform: scale(0.97); }
 
-        .instruction-item {
-            margin-bottom: 5px;
-            color: rgba(255, 255, 255, 0.8);
-        }
+  .world-pill {
+    padding: 8px 16px;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 2px 8px rgba(80,120,255,0.06);
+  }
+  .world-pill:hover { transform: translateY(-2px) scale(1.07); }
+  #pill-0.active { background: #e6fff3; border-color: var(--green); color: var(--green); }
+  #pill-1.active { background: #e8f2ff; border-color: var(--blue); color: var(--blue); }
+  #pill-2.active { background: #fff0fa; border-color: var(--pink); color: var(--pink); }
+  #pill-3.active { background: #fff5ec; border-color: var(--orange); color: var(--orange); }
 
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 30px 50px;
-            border-radius: 20px;
-            color: white;
-            font-size: 16px;
-            z-index: 200;
-            display: none;
-            text-align: center;
-        }
+  /* ─── LOADER ─── */
+  #loader {
+    position: fixed; inset: 0; z-index: 80;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    background: rgba(245,248,255,0.85);
+    backdrop-filter: blur(10px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  #loader.visible { opacity: 1; pointer-events: all; }
+  .loader-globe { font-size: 58px; animation: spinGlobe 1s linear infinite; display: inline-block; }
+  @keyframes spinGlobe { to { transform: rotate(360deg); } }
+  .loader-text { font-family: 'Chewy', cursive; font-size: 22px; color: var(--blue); }
 
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
+  /* ─── HOTSPOT PANEL ─── */
+  #hotspotPanel {
+    position: fixed; top: 50%; left: 20px;
+    transform: translateY(-50%);
+    z-index: 50; display: none;
+    flex-direction: column; gap: 10px;
+    pointer-events: none;
+  }
+  #hotspotPanel.active { display: flex; pointer-events: all; }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+  .hs-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px;
+    background: rgba(255,255,255,0.92);
+    border: 2px solid var(--border);
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 800;
+    color: var(--muted);
+    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    min-width: 175px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 3px 14px rgba(80,120,255,0.08);
+  }
+  .hs-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    animation: dotBop 2s ease-in-out infinite;
+  }
+  @keyframes dotBop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.5); box-shadow: 0 0 0 4px rgba(80,120,255,0.15); } }
+  .hs-btn:hover { transform: translateX(6px) scale(1.04); box-shadow: 0 8px 26px rgba(80,120,255,0.16); border-color: var(--blue); color: var(--text); }
+  .hs-btn.active-hs { border-color: var(--blue); background: #eef4ff; color: var(--text); }
+
+  /* ─── INFO CARD ─── */
+  #infoCard {
+    position: fixed; top: 50%; right: 20px;
+    transform: translateY(-50%) translateX(20px);
+    width: 268px; z-index: 60;
+    background: rgba(255,255,255,0.96);
+    border: 2.5px solid var(--border);
+    border-radius: 26px; padding: 28px 24px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 14px 52px rgba(80,120,255,0.14);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #infoCard.visible { opacity: 1; pointer-events: all; transform: translateY(-50%) translateX(0); }
+  .card-emoji { font-size: 38px; display: block; margin-bottom: 10px; }
+  .card-tag {
+    display: inline-block; padding: 3px 13px;
+    border-radius: 50px; font-size: 10px; font-weight: 800;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 10px; background: #eef4ff; color: var(--blue);
+  }
+  .card-title { font-family: 'Chewy', cursive; font-size: 23px; margin-bottom: 10px; color: var(--text); }
+  .card-desc { font-size: 13px; color: var(--muted); line-height: 1.78; font-weight: 600; }
+  .card-close {
+    position: absolute; top: 14px; right: 14px;
+    background: #f0f4ff; border: none;
+    width: 30px; height: 30px; border-radius: 50%;
+    font-size: 15px; cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-weight: 900; line-height: 1;
+  }
+  .card-close:hover { background: #ffe0ea; color: var(--pink); transform: scale(1.15) rotate(12deg); }
+
+  /* ─── FULLSCREEN ─── */
+  #fsBtn {
+    position: fixed; bottom: 80px; right: 20px; z-index: 50;
+    display: none; width: 46px; height: 46px;
+    background: white; border: 2px solid var(--border);
+    border-radius: 14px; cursor: pointer;
+    align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 3px 14px rgba(80,120,255,0.1);
+  }
+  #fsBtn.active { display: flex; }
+  #fsBtn:hover { border-color: var(--blue); transform: scale(1.12); box-shadow: 0 8px 26px rgba(80,120,255,0.2); }
+
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed; bottom: 90px; left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: white; border: 2px solid var(--border);
+    color: var(--text); padding: 10px 24px;
+    border-radius: 50px; font-size: 13px; font-weight: 800;
+    z-index: 200; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 4px 22px rgba(80,120,255,0.13);
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
 </head>
 <body>
-    <div id="container">
-        <canvas id="canvas"></canvas>
+
+<!-- Three.js Globe Canvas -->
+<canvas id="globeCanvas"></canvas>
+
+<!-- A-Frame (behind UI, above globe) -->
+<a-scene vr-mode-ui="enabled: false" embedded style="position:fixed;inset:0;z-index:2;">
+  <a-assets>
+    <video id="video360" preload="auto" loop muted crossorigin="anonymous" playsinline webkit-playsinline></video>
+  </a-assets>
+  <a-videosphere id="sphere" src="#video360" rotation="0 -90 0"></a-videosphere>
+  <a-entity id="cameraRig" position="0 1.6 0">
+    <a-camera id="mainCamera" fov="75"
+      look-controls="touchEnabled: true; mouseEnabled: true; magicWindowTrackingEnabled: true"
+      wasd-controls="enabled: false">
+    </a-camera>
+  </a-entity>
+</a-scene>
+
+<!-- Welcome -->
+<div id="welcomeMenu">
+  <div class="welcome-bubble">
+    <span class="globe-emoji">🌍</span>
+    <p class="welcome-tag">✨ Virtual World Tour ✨</p>
+    <h1 class="welcome-title">Explore the <span class="hi">World</span><br>in 360°!</h1>
+    <div class="portal-grid">
+      <div class="portal-btn" onclick="loadWorld(0)">
+        <span class="portal-icon">🌲</span>
+        <div class="portal-num">World 01</div>
+        <div class="portal-name">Forest Walk</div>
+        <div class="portal-sub">Nature & Trails</div>
+      </div>
+      <div class="portal-btn" onclick="loadWorld(1)">
+        <span class="portal-icon">🏛️</span>
+        <div class="portal-num">World 02</div>
+        <div class="portal-name">Modern Lobby</div>
+        <div class="portal-sub">Architecture</div>
+      </div>
+      <div class="portal-btn" onclick="loadWorld(2)">
+        <span class="portal-icon">💎</span>
+        <div class="portal-num">World 03</div>
+        <div class="portal-name">LED Cave</div>
+        <div class="portal-sub">Underground</div>
+      </div>
+      <div class="portal-btn" onclick="loadWorld(3)">
+        <span class="portal-icon">🌇</span>
+        <div class="portal-num">World 04</div>
+        <div class="portal-name">Rooftop View</div>
+        <div class="portal-sub">City Skyline</div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div class="info-panel">
-        <div class="info-title">🌐 360° Video Player</div>
-        <div class="info-text" id="currentVideoName">Select a video to start</div>
-    </div>
+<!-- Loader -->
+<div id="loader">
+  <span class="loader-globe">🌍</span>
+  <div class="loader-text">Teleporting you there…</div>
+</div>
 
-    <div class="instructions">
-        <div class="instructions-title">Controls</div>
-        <div class="instruction-item">🖱️ Drag to rotate</div>
-        <div class="instruction-item">⬆️⬇️⬅️➡️ Arrow keys</div>
-        <div class="instruction-item">🔢 Scroll to zoom</div>
-        <div class="instruction-item">Space = Play/Pause</div>
-    </div>
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-brand">
+    <span class="hud-globe">🌍</span>
+    <span class="hud-title">World Tour</span>
+  </div>
+  <div class="hud-badge" id="worldName">—</div>
+</div>
 
-    <div class="controls-container">
-        <select class="video-select" id="videoSelect" onchange="changeVideo(this.value)">
-            <option value="">Choose a video...</option>
-            <option value="nature">🌲 Nature Trail (Demo)</option>
-            <option value="space">🚀 Space Journey (Demo)</option>
-            <option value="ocean">🌊 Ocean Exploration (Demo)</option>
-        </select>
+<!-- Fullscreen -->
+<button id="fsBtn" onclick="toggleFullscreen()">⛶</button>
 
-        <button class="play-btn" id="playBtn" onclick="togglePlayPause()">▶ Play</button>
-        <button class="pause-btn" id="pauseBtn" onclick="togglePlayPause()" style="display:none;">⏸ Pause</button>
+<!-- Toolbar -->
+<div id="toolbar">
+  <div class="tb-group">
+    <button class="tool-btn exit" onclick="goBack()">🏠 Home</button>
+    <button class="tool-btn" onclick="resetView()">🔄 Reset View</button>
+  </div>
+  <div class="tb-group" id="worldSwitchers"></div>
+</div>
 
-        <div class="progress-container" id="progressContainer" onclick="seekVideo(event)">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
+<!-- Hotspots -->
+<div id="hotspotPanel"></div>
 
-        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+<!-- Info Card -->
+<div id="infoCard">
+  <button class="card-close" onclick="closeCard()">✕</button>
+  <span class="card-emoji" id="cardEmoji"></span>
+  <div class="card-tag" id="cardTag"></div>
+  <div class="card-title" id="cardTitle"></div>
+  <div class="card-desc" id="cardDesc"></div>
+</div>
 
-        <button class="back-btn" onclick="goBack()">← Back to Menu</button>
-    </div>
+<!-- Toast -->
+<div id="toast"></div>
 
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <div>Loading 360° video...</div>
-    </div>
+<script>
+// ─── ANIMATED THREE.JS GLOBE ─────────────────────────────────
+(function () {
+  const canvas = document.getElementById("globeCanvas");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        // Scene setup
-        const canvas = document.getElementById('canvas');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+  const scene = new THREE.Scene();
+  const W = window.innerWidth, H = window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+  camera.position.z = 4.2;
 
-        // Video player state
-        let video, videoTexture, videoMaterial, sphere;
-        let isPlaying = false;
-        let currentVideo = null;
-        let mouseDown = false;
-        let mouseX = 0, mouseY = 0;
-        let sphereRotationX = 0, sphereRotationY = 0;
+  function resize() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener("resize", resize);
+  resize();
 
-        // Demo videos configuration (using placeholder data URIs or external URLs)
-        const videos = {
-            nature: {
-                name: '🌲 Nature Trail',
-                description: 'Experience a peaceful walk through a forest',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerBlazes.mp4'
-            },
-            space: {
-                name: '🚀 Space Journey',
-                description: 'Explore the vast universe in 360°',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4'
-            },
-            ocean: {
-                name: '🌊 Ocean Exploration',
-                description: 'Dive into the beautiful underwater world',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ElephantsDream.mp4'
-            }
-        };
+  const R = 1.6;
+  const globeGroup = new THREE.Group();
+  scene.add(globeGroup);
 
-        // Initialize video
-        function initializeVideo() {
-            video = document.createElement('video');
-            video.crossOrigin = 'anonymous';
-            video.loop = false;
-            video.addEventListener('timeupdate', updateProgress);
-            video.addEventListener('loadedmetadata', updateTimeDisplay);
-            video.addEventListener('play', () => {
-                document.getElementById('playBtn').style.display = 'none';
-                document.getElementById('pauseBtn').style.display = 'inline-block';
-                isPlaying = true;
-            });
-            video.addEventListener('pause', () => {
-                document.getElementById('playBtn').style.display = 'inline-block';
-                document.getElementById('pauseBtn').style.display = 'none';
-                isPlaying = false;
-            });
-        }
+  // Lat lines
+  for (let i = 0; i <= 14; i++) {
+    const lat = (i / 14) * Math.PI - Math.PI / 2;
+    const r = Math.cos(lat) * R;
+    const y = Math.sin(lat) * R;
+    const pts = [];
+    for (let j = 0; j <= 72; j++) {
+      const a = (j / 72) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({ color: 0x4f8cff, transparent: true, opacity: 0.13 });
+    globeGroup.add(new THREE.Line(geo, mat));
+  }
 
-        // Change video
-        function changeVideo(videoKey) {
-            if (!videoKey || !videos[videoKey]) return;
+  // Lon lines
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
+    const pts = [];
+    for (let j = 0; j <= 72; j++) {
+      const lat = (j / 72) * Math.PI - Math.PI / 2;
+      const r = Math.cos(lat) * R;
+      const y = Math.sin(lat) * R;
+      pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({ color: 0x4f8cff, transparent: true, opacity: 0.1 });
+    globeGroup.add(new THREE.Line(geo, mat));
+  }
 
-            currentVideo = videoKey;
-            const videoData = videos[videoKey];
-            document.getElementById('currentVideoName').textContent = videoData.description;
-            document.getElementById('loading').style.display = 'block';
+  // Surface dots
+  const dotPositions = [];
+  for (let i = 0; i < 80; i++) {
+    const phi = Math.random() * Math.PI * 2;
+    const theta = Math.random() * Math.PI;
+    const r = R + 0.02;
+    dotPositions.push(r * Math.sin(theta) * Math.cos(phi), r * Math.cos(theta), r * Math.sin(theta) * Math.sin(phi));
+  }
+  const dotGeo = new THREE.BufferGeometry();
+  dotGeo.setAttribute("position", new THREE.Float32BufferAttribute(dotPositions, 3));
+  const dotMat = new THREE.PointsMaterial({ color: 0x4f8cff, size: 0.045, transparent: true, opacity: 0.65 });
+  globeGroup.add(new THREE.Points(dotGeo, dotMat));
 
-            video.src = videoData.url;
-            video.load();
+  // Soft glow sphere
+  const glowGeo = new THREE.SphereGeometry(R + 0.05, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0x4f8cff, transparent: true, opacity: 0.035, side: THREE.BackSide });
+  globeGroup.add(new THREE.Mesh(glowGeo, glowMat));
 
-            video.addEventListener('canplay', () => {
-                document.getElementById('loading').style.display = 'none';
-                createSphere();
-            }, { once: true });
+  let t = 0;
+  (function animate() {
+    requestAnimationFrame(animate);
+    t += 0.004;
+    globeGroup.rotation.y = t;
+    globeGroup.rotation.x = Math.sin(t * 0.35) * 0.12;
+    renderer.render(scene, camera);
+  })();
+})();
 
-            video.addEventListener('error', () => {
-                document.getElementById('loading').style.display = 'none';
-                alert('Error loading video. Please check the video source.');
-            });
-        }
+// ─── FLOATING DECO SHAPES ────────────────────────────────────
+const DECO_COLORS = ["#b3d8ff","#ffe14d","#ffd6f5","#b3efcc","#ffcba8","#e4d4ff"];
+for (let i = 0; i < 16; i++) {
+  const el = document.createElement("div");
+  el.className = "deco";
+  const size = 5 + Math.random() * 12;
+  const dur = 10 + Math.random() * 18;
+  const delay = -Math.random() * 25;
+  el.style.cssText = `width:${size}px;height:${size}px;background:${DECO_COLORS[i % DECO_COLORS.length]};left:${Math.random() * 100}vw;bottom:-${size}px;animation-duration:${dur}s;animation-delay:${delay}s;opacity:${0.3 + Math.random() * 0.4};`;
+  document.body.appendChild(el);
+}
 
-        // Create sphere for 360 video
-        function createSphere() {
-            if (sphere) {
-                scene.remove(sphere);
-            }
+// ─── CONFETTI ────────────────────────────────────────────────
+const CONF_COLORS = ["#4f8cff","#ff5fa0","#3ecf7a","#ffe14d","#ff8c42","#a78bfa","#ff4d6d"];
+function spawnConfetti() {
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti-piece";
+    const size = 6 + Math.random() * 9;
+    const dur = 1.6 + Math.random() * 2.2;
+    const delay = Math.random() * 0.9;
+    el.style.cssText = `width:${size}px;height:${size}px;border-radius:${Math.random()>0.5?'50%':'3px'};background:${CONF_COLORS[Math.floor(Math.random()*CONF_COLORS.length)]};left:${5+Math.random()*90}vw;top:-12px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), (dur + delay + 0.6) * 1000);
+  }
+}
 
-            videoTexture = new THREE.VideoTexture(video);
-            videoMaterial = new THREE.MeshBasicMaterial({ map: videoTexture });
-            const geometry = new THREE.SphereGeometry(500, 64, 64);
-            geometry.scale(-1, 1, 1); // Invert for inside view
+// ─── WORLD DATA ──────────────────────────────────────────────
+// ─── ELECTRON / BROWSER PATH RESOLVER ───────────────────────
+// Works in Electron (file://) and regular browsers alike.
+function assetPath(rel) {
+  if (typeof window !== "undefined" && window.location.protocol === "file:") {
+    // Electron: build absolute file:// path relative to this HTML file's directory
+    const base = window.location.pathname.replace(/\/[^/]*$/, "");
+    return "file://" + base + "/" + rel;
+  }
+  return rel; // normal browser — relative path works fine
+}
 
-            sphere = new THREE.Mesh(geometry, videoMaterial);
-            scene.add(sphere);
+const WORLDS = [
+  {
+    id: 0, name: "🌲 Forest Walk", src: assetPath("assets/1.mp4"), pill: "🌲 W1",
+    hotspots: [
+      { label: "Ancient Oak",     tag: "Flora",    emoji: "🌳", desc: "Estimated at over 300 years old. Its canopy spans 18 metres, sheltering rich understorey ferns and mosses." },
+      { label: "Creek Crossing",  tag: "Landmark", emoji: "🌊", desc: "Seasonal stream flowing east. Water quality monitored monthly — home to three native fish species." },
+      { label: "Viewpoint Trail", tag: "Route",    emoji: "🥾", desc: "Marked trail 1.2km to the hilltop clearing. Moderate difficulty, about 25 minutes of hiking." }
+    ]
+  },
+  {
+    id: 1, name: "🏛️ Modern Lobby", src: assetPath("assets/2.mp4"), pill: "🏛️ W2",
+    hotspots: [
+      { label: "Reception",        tag: "Service",  emoji: "🪪", desc: "Staffed Mon–Fri, 08:00–18:00. Visitor badges and access cards issued here." },
+      { label: "Atrium Garden",    tag: "Feature",  emoji: "🌿", desc: "2,400 plants across 47 species. Maintained by automated drip irrigation and natural skylight." },
+      { label: "Conference Suite", tag: "Facility", emoji: "📽️", desc: "Three bookable rooms seating 8–40 guests. Full AV and catering available." }
+    ]
+  },
+  {
+    id: 2, name: "💎 LED Cave", src: assetPath("assets/3.mp4"), pill: "💎 W3",
+    hotspots: [
+      { label: "Crystal Formation", tag: "Geology",  emoji: "🔮", desc: "Calcite stalactites formed over 12,000 years. Colours shift with LED arrays on a 90-min cycle." },
+      { label: "Echo Chamber",      tag: "Acoustic", emoji: "🎵", desc: "Natural reverb of 4.2 seconds — one of the longest in the region. Sound installations nightly." },
+      { label: "Underground Lake",  tag: "Wonder",   emoji: "🪸", desc: "34m deep subterranean lake. Rare translucent shrimp species discovered here in 2018." }
+    ]
+  },
+  {
+    id: 3, name: "🌇 Rooftop View", src: assetPath("assets/4.mp4"), pill: "🌇 W4",
+    hotspots: [
+      { label: "City Skyline", tag: "Panorama", emoji: "🏙️", desc: "On clear days visibility extends 60km. Twelve landmark towers identifiable from here." },
+      { label: "Helipad",      tag: "Infra",    emoji: "🚁", desc: "ICAO-certified H-pad rated for aircraft up to 8,600 kg MTOW. Emergency services only." },
+      { label: "Rooftop Bar",  tag: "Amenity",  emoji: "🍹", desc: "Open dusk–midnight. Seasonal cocktail menu by resident mixologist. Reservations recommended." }
+    ]
+  }
+];
 
-            camera.position.set(0, 0, 0);
-        }
+let currentWorldIndex = -1;
+const DOT_COLORS = ["#3ecf7a","#4f8cff","#a78bfa"];
 
-        // Play/Pause toggle
-        function togglePlayPause() {
-            if (!currentVideo) {
-                alert('Please select a video first');
-                return;
-            }
+const video          = document.getElementById("video360");
+const sphere         = document.getElementById("sphere");
+const welcome        = document.getElementById("welcomeMenu");
+const hud            = document.getElementById("hud");
+const toolbar        = document.getElementById("toolbar");
+const hotspotPanel   = document.getElementById("hotspotPanel");
+const infoCard       = document.getElementById("infoCard");
+const loader         = document.getElementById("loader");
+const fsBtn          = document.getElementById("fsBtn");
+const worldName      = document.getElementById("worldName");
+const worldSwitchers = document.getElementById("worldSwitchers");
+const toast          = document.getElementById("toast");
 
-            if (isPlaying) {
-                video.pause();
-            } else {
-                video.play();
-            }
-        }
+// Build pills
+WORLDS.forEach((w, i) => {
+  const pill = document.createElement("button");
+  pill.className = "world-pill";
+  pill.id = `pill-${i}`;
+  pill.textContent = w.pill;
+  pill.onclick = () => loadWorld(i);
+  worldSwitchers.appendChild(pill);
+});
 
-        // Seek video
-        function seekVideo(event) {
-            if (!currentVideo) return;
+function loadWorld(index) {
+  const world = WORLDS[index];
+  currentWorldIndex = index;
+  loader.classList.add("visible");
+  closeCard();
 
-            const rect = event.currentTarget.getBoundingClientRect();
-            const percent = (event.clientX - rect.left) / rect.width;
-            video.currentTime = percent * video.duration;
-        }
+  // Step 1: fully detach current video
+  video.pause();
+  sphere.setAttribute("src", "");
+  video.removeAttribute("src");
+  video.load();
 
-        // Update progress bar
-        function updateProgress() {
-            if (video.duration) {
-                const percent = (video.currentTime / video.duration) * 100;
-                document.getElementById('progressBar').style.width = percent + '%';
-            }
-        }
+  // Step 2: assign new source
+  video.src = world.src;
 
-        // Update time display
-        function updateTimeDisplay() {
-            const current = formatTime(video.currentTime);
-            const duration = formatTime(video.duration);
-            document.getElementById('timeDisplay').textContent = `${current} / ${duration}`;
-        }
+  function onCanPlay() {
+    // Re-bind A-Frame texture — set directly to avoid Electron asset system issues
+    sphere.setAttribute("src", "#video360");
+    // Force A-Frame texture refresh
+    const mesh = sphere.getObject3D("mesh");
+    if (mesh && mesh.material && mesh.material.map) {
+      mesh.material.map.needsUpdate = true;
+    }
+    video.play().catch(() => {});
+    loader.classList.remove("visible");
+    afterLoad(world);
+    spawnConfetti();
+  }
+  function onError(e) {
+    loader.classList.remove("visible");
+    showToast("⚠️ Cannot load: " + world.src.split("/").pop());
+    afterLoad(world);
+  }
 
-        // Format time
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return '0:00';
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
+  video.addEventListener("canplay", onCanPlay, { once: true });
+  video.addEventListener("error",   onError,   { once: true });
+  video.load();
+  setTimeout(() => loader.classList.remove("visible"), 6000);
 
-        // Go back to menu
-        function goBack() {
-            video.pause();
-            window.location.href = 'index.html';
-        }
+  welcome.classList.add("hidden");
+  hud.classList.add("active");
+  toolbar.classList.add("active");
+  hotspotPanel.classList.add("active");
+  fsBtn.classList.add("active");
+}
 
-        // Mouse controls
-        document.addEventListener('mousedown', (e) => {
-            mouseDown = true;
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
+function afterLoad(world) {
+  worldName.textContent = world.name;
+  WORLDS.forEach((_, i) => document.getElementById(`pill-${i}`).classList.toggle("active", i === currentWorldIndex));
+  buildHotspots(world);
+}
 
-        document.addEventListener('mousemove', (e) => {
-            if (mouseDown && sphere) {
-                const deltaX = e.clientX - mouseX;
-                const deltaY = e.clientY - mouseY;
-                sphereRotationY += deltaX * 0.005;
-                sphereRotationX += deltaY * 0.005;
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            }
-        });
+function buildHotspots(world) {
+  hotspotPanel.innerHTML = "";
+  world.hotspots.forEach((hs, i) => {
+    const btn = document.createElement("button");
+    btn.className = "hs-btn";
+    btn.innerHTML = `<span class="hs-dot" style="background:${DOT_COLORS[i % DOT_COLORS.length]}"></span>${hs.emoji} ${hs.label}`;
+    btn.onclick = () => openCard(hs, btn);
+    hotspotPanel.appendChild(btn);
+  });
+}
 
-        document.addEventListener('mouseup', () => {
-            mouseDown = false;
-        });
+function openCard(hs, btn) {
+  const isSame = infoCard.classList.contains("visible") && document.getElementById("cardTitle").textContent === hs.label;
+  if (isSame) { closeCard(); return; }
+  document.getElementById("cardEmoji").textContent = hs.emoji;
+  document.getElementById("cardTag").textContent   = hs.tag;
+  document.getElementById("cardTitle").textContent = hs.label;
+  document.getElementById("cardDesc").textContent  = hs.desc;
+  infoCard.classList.add("visible");
+  document.querySelectorAll(".hs-btn").forEach(b => b.classList.remove("active-hs"));
+  btn.classList.add("active-hs");
+}
 
-        // Keyboard controls
-        const keys = {};
-        document.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
+function closeCard() {
+  infoCard.classList.remove("visible");
+  document.querySelectorAll(".hs-btn").forEach(b => b.classList.remove("active-hs"));
+}
 
-            if (e.key === ' ') {
-                e.preventDefault();
-                togglePlayPause();
-            }
-            if (e.key === 'Escape') {
-                goBack();
-            }
-        });
+function goBack() {
+  video.pause();
+  sphere.setAttribute("src", "");
+  video.removeAttribute("src");
+  video.load();
+  hud.classList.remove("active"); toolbar.classList.remove("active");
+  hotspotPanel.classList.remove("active"); fsBtn.classList.remove("active");
+  welcome.classList.remove("hidden"); closeCard();
+  currentWorldIndex = -1;
+}
 
-        document.addEventListener('keyup', (e) => {
-            keys[e.key] = false;
-        });
+function resetView() {
+  const cam = document.getElementById("mainCamera");
+  cam.setAttribute("rotation", "0 0 0");
+  const lc = cam.components["look-controls"];
+  if (lc) { lc.pitchObject.rotation.x = 0; lc.yawObject.rotation.y = 0; }
+  showToast("🔄 View reset!");
+}
 
-        // Arrow key movement
-        function handleKeyboardMovement() {
-            const rotationSpeed = 0.03;
-            if (keys['ArrowLeft']) sphereRotationY += rotationSpeed;
-            if (keys['ArrowRight']) sphereRotationY -= rotationSpeed;
-            if (keys['ArrowUp']) sphereRotationX += rotationSpeed;
-            if (keys['ArrowDown']) sphereRotationX -= rotationSpeed;
-        }
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => showToast("Fullscreen unavailable"));
+    fsBtn.textContent = "✕";
+  } else { document.exitFullscreen(); fsBtn.textContent = "⛶"; }
+}
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) fsBtn.textContent = "⛶"; });
 
-        // Mouse wheel for zoom
-        let fov = 75;
-        document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            fov += e.deltaY * 0.05;
-            fov = Math.max(10, Math.min(120, fov));
-            camera.fov = fov;
-            camera.updateProjectionMatrix();
-        }, { passive: false });
+let toastTimer;
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+}
 
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Touch controls for mobile
-        let touchStartX = 0, touchStartY = 0;
-        document.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
-
-        document.addEventListener('touchmove', (e) => {
-            if (sphere) {
-                const deltaX = e.touches[0].clientX - touchStartX;
-                const deltaY = e.touches[0].clientY - touchStartY;
-                sphereRotationY += deltaX * 0.005;
-                sphereRotationX += deltaY * 0.005;
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-            }
-        });
-
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-
-            handleKeyboardMovement();
-
-            if (sphere) {
-                sphere.rotation.x = sphereRotationX;
-                sphere.rotation.y = sphereRotationY;
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        // Initialize
-        initializeVideo();
-        animate();
-    </script>
-    <script src="../js/audio-manager.js"></script>
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { if (infoCard.classList.contains("visible")) closeCard(); else if (currentWorldIndex >= 0) goBack(); }
+  if (e.key === "f" || e.key === "F") toggleFullscreen();
+  if (e.key === "r" || e.key === "R") resetView();
+  if (["1","2","3","4"].includes(e.key) && currentWorldIndex >= 0) loadWorld(+e.key - 1);
+});
+document.addEventListener("click", () => { if (video.paused && video.src) video.play().catch(() => {}); }, { once: true });
+</script>
 </body>
 </html>
