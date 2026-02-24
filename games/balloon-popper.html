@@ -504,8 +504,20 @@ function updateSpeed(val) {
 function goBack() {
     AC.resume().then(() => {
         playBackSound();
-        setTimeout(() => location.reload(), 280);
+        setTimeout(() => { location.href = '../index.html'; }, 280);
     });
+}
+
+// Global back — works the same way as other games in the suite
+const globalBack = document.getElementById('global-back');
+if (globalBack) {
+    globalBack.addEventListener('click', function() {
+        location.href = '../index.html';
+    });
+    globalBack.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        location.href = '../index.html';
+    }, { passive: false });
 }
 
 // ── Letter pool ───────────────────────────────────────────────────
