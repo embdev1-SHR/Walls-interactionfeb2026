@@ -85,6 +85,52 @@ body{overflow:hidden;font-family:Arial,sans-serif;background:#1a1a2e;touch-actio
   90%{transform:translate(-2px,2px)}
 }
 .shaking{animation:screenShake .5s ease-out}
+.control-panel{
+  position:fixed;right:150px;top:50%;transform:translateY(-50%);
+  background:rgba(0,0,0,.8);padding:28px 24px;border-radius:18px;
+  backdrop-filter:blur(12px);border:2px solid rgba(255,215,0,.3);
+  z-index:60;pointer-events:auto;min-width:240px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.control-group{margin-bottom:32px}
+.control-group:last-child{margin-bottom:0}
+.control-label{
+  font-size:13px;font-weight:700;color:#ffd700;
+  text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;
+  display:block;
+}
+.control-value{
+  font-size:22px;color:#fff;font-weight:700;
+  text-align:center;margin-bottom:12px;
+  text-shadow:0 2px 4px rgba(0,0,0,.5);
+}
+.slider{
+  -webkit-appearance:none;appearance:none;width:100%;height:10px;
+  border-radius:5px;background:rgba(255,255,255,.15);
+  outline:none;cursor:pointer;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.3);
+}
+.slider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#ffd700,#ffaa00);
+  cursor:pointer;box-shadow:0 3px 10px rgba(255,215,0,.5);
+  transition:all .2s ease;border:3px solid rgba(255,255,255,.9);
+}
+.slider::-webkit-slider-thumb:hover{
+  transform:scale(1.2);box-shadow:0 4px 16px rgba(255,215,0,.7);
+}
+.slider::-webkit-slider-thumb:active{transform:scale(1)}
+.slider::-moz-range-thumb{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#ffd700,#ffaa00);
+  cursor:pointer;box-shadow:0 3px 10px rgba(255,215,0,.5);
+  transition:all .2s ease;border:3px solid rgba(255,255,255,.9);
+}
+.slider::-moz-range-thumb:hover{
+  transform:scale(1.2);box-shadow:0 4px 16px rgba(255,215,0,.7);
+}
+.slider::-moz-range-thumb:active{transform:scale(1)}
 </style>
 </head>
 <body>
@@ -111,6 +157,19 @@ body{overflow:hidden;font-family:Arial,sans-serif;background:#1a1a2e;touch-actio
         <span class="heart">&#10084;&#65039;</span>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="control-panel">
+  <div class="control-group">
+    <div class="control-label">Fruit Count</div>
+    <div class="control-value" id="fruitCountValue">3</div>
+    <input type="range" min="1" max="8" value="3" class="slider" id="fruitCountSlider">
+  </div>
+  <div class="control-group">
+    <div class="control-label">Fruit Speed</div>
+    <div class="control-value" id="speedValue">0.7x</div>
+    <input type="range" min="10" max="200" value="70" class="slider" id="speedSlider">
   </div>
 </div>
 
@@ -145,6 +204,10 @@ var combo = 0, comboTimer = 0;
 var fruits = [], particles = [], sliceTrails = {};
 var spawnTimer = null, clockTimer = null;
 
+// Control settings
+var fruitCountPerWave = 3;
+var speedMultiplier = 0.7;
+
 var fruitTypes = [
   {name:'apple',color:'#ff4444',emoji:'\uD83C\uDF4E',points:10},
   {name:'orange',color:'#ff8844',emoji:'\uD83C\uDF4A',points:10},
@@ -157,28 +220,33 @@ var fruitTypes = [
 ];
 var bombType = {name:'bomb',color:'#333',emoji:'\uD83D\uDCA3',points:-50};
 
-// Calculate the launch velocity needed to reach near the top of the screen
-// Using kinematics: v^2 = 2 * g * h  =>  v = sqrt(2 * g * h)
-// We target ~90% of screen height so fruits nearly kiss the top
+// Setup slider controls
+document.getElementById('fruitCountSlider').addEventListener('input', function(e) {
+  fruitCountPerWave = parseInt(e.target.value);
+  document.getElementById('fruitCountValue').textContent = fruitCountPerWave;
+});
+
+document.getElementById('speedSlider').addEventListener('input', function(e) {
+  speedMultiplier = parseInt(e.target.value) / 100;
+  document.getElementById('speedValue').textContent = speedMultiplier.toFixed(1) + 'x';
+});
+
 function getLaunchVY() {
   var gravity = 0.38;
-  // Target height: from bottom of screen to ~top 8% (just peeks past the top)
   var targetHeight = canvas.height * 0.95;
-  // v = sqrt(2 * g * h), negative because upward
   var vy = -Math.sqrt(2 * gravity * targetHeight);
-  // Add slight random variation: ±15% so not every fruit hits exactly the same apex
   var variation = 0.85 + Math.random() * 0.30;
-  return vy * variation;
+  return vy * variation * speedMultiplier;
 }
 
 function Fruit(x, y, type) {
   this.x = x; this.y = y; this.type = type;
   this.size = type.name === 'bomb' ? 150 : 180;
-  this.vx = (Math.random() - 0.5) * 7;
+  this.vx = (Math.random() - 0.5) * 7 * speedMultiplier;
   this.vy = getLaunchVY();
   this.rotation = Math.random() * Math.PI * 2;
-  this.rotationSpeed = (Math.random() - 0.5) * 0.2;
-  this.gravity = 0.38;
+  this.rotationSpeed = (Math.random() - 0.5) * 0.2 * speedMultiplier;
+  this.gravity = 0.38 * (speedMultiplier * speedMultiplier);
   this.sliced = false; this.alpha = 1;
 }
 Fruit.prototype.update=function(){
@@ -266,10 +334,9 @@ function triggerScreenShake(){
   setTimeout(function(){canvas.classList.remove('shaking')},500);
 }
 
-// Spawn a wave of 2–4 fruits at once from different x positions
 function spawnWave() {
   if (!gameRunning) return;
-  var count = 2 + Math.floor(Math.random() * 3); // 2, 3, or 4 fruits per wave
+  var count = fruitCountPerWave;
   for (var i = 0; i < count; i++) {
     (function(delay) {
       setTimeout(function() {
@@ -280,7 +347,7 @@ function spawnWave() {
         var type = isBomb ? bombType : fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
         fruits.push(new Fruit(x, y, type));
       }, delay);
-    })(i * 120); // stagger each fruit by 120ms so they don't all overlap
+    })(i * 120);
   }
 }
 
@@ -310,7 +377,6 @@ function endGame(){
 function startGame(){
   gameRunning=true;gameStarted=true;
   document.getElementById('startMessage').style.display='none';
-  // Spawn a wave every 600ms (was 750ms single fruit — now faster and more fruits)
   spawnTimer=setInterval(function(){if(gameRunning)spawnWave();else clearInterval(spawnTimer)},600);
   clockTimer=setInterval(function(){
     if(!gameRunning){clearInterval(clockTimer);return}

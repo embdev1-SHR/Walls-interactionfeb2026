@@ -5,879 +5,688 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Jungle Wall · Separate Layers</title>
 <style>
-  /* ----- RESET & GLOBAL ----- */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #1e3a1e;
-  }
-  body {
-    font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
-    touch-action: none;
-  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#1e3a1e; }
+  body { font-family:'Comic Sans MS','Chalkboard SE',cursive; touch-action:none; }
 
-  /* ----- DECORATIVE JUNGLE BG ----- */
-  .jungle-bg {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.15;
-    background: repeating-linear-gradient(45deg, 
-      #2a5a2a 0px, #2a5a2a 40px,
-      #3a6e3a 40px, #3a6e3a 80px);
-    background-size: 80px 80px;
-  }
-  .floating-leaf {
-    position: absolute;
-    font-size: 90px;
-    opacity: 0.2;
-    animation: floatLeaf 20s infinite linear;
-    pointer-events: none;
-  }
+  .jungle-bg { position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.15;
+    background:repeating-linear-gradient(45deg,#2a5a2a 0px,#2a5a2a 40px,#3a6e3a 40px,#3a6e3a 80px);
+    background-size:80px 80px; }
+  .floating-leaf { position:absolute; font-size:90px; opacity:0.2;
+    animation:floatLeaf 20s infinite linear; pointer-events:none; }
   @keyframes floatLeaf {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    100% { transform: translate(120px, -120px) rotate(180deg); }
+    0%   { transform:translate(0,0) rotate(0deg); }
+    100% { transform:translate(120px,-120px) rotate(180deg); }
   }
 
-  /* ----- MODAL POPUP ----- */
-  #playerModal {
-    position: fixed;
-    inset: 0;
-    background: rgba(10, 20, 5, 0.85);
-    backdrop-filter: blur(12px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-  }
-  .modal-card {
-    background: #2d6a2d;
-    padding: 40px 30px;
-    border-radius: 80px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-    display: flex;
-    gap: 50px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .player-choice {
-    background: #fff0a0;
-    width: 220px;
-    height: 220px;
-    border-radius: 60px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    box-shadow: 0 12px 0 #5a3e1e;
-    cursor: pointer;
-  }
-  .player-choice:active {
-    transform: scale(0.9);
-    box-shadow: 0 6px 0 #5a3e1e;
-  }
-  .player-choice span { font-size: 70px; }
-  .player-choice p {
-    font-size: 32px;
-    font-weight: 800;
-    color: #1e3a1e;
-    text-shadow: 2px 2px 0 #ffd966;
-  }
-  .hidden-modal { display: none !important; }
+  /* modal */
+  #playerModal { position:fixed; inset:0; background:rgba(10,20,5,0.85);
+    backdrop-filter:blur(12px); display:flex; align-items:center;
+    justify-content:center; z-index:10000; }
+  .modal-card { background:#2d6a2d; padding:40px 30px; border-radius:80px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.6); display:flex; gap:50px;
+    flex-wrap:wrap; justify-content:center; }
+  .player-choice { background:#fff0a0; width:220px; height:220px; border-radius:60px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px; box-shadow:0 12px 0 #5a3e1e; cursor:pointer; }
+  .player-choice:active { transform:scale(0.9); box-shadow:0 6px 0 #5a3e1e; }
+  .player-choice span { font-size:70px; }
+  .player-choice p { font-size:32px; font-weight:800; color:#1e3a1e; text-shadow:2px 2px 0 #ffd966; }
+  .hidden-modal { display:none !important; }
 
-  /* ----- CANVAS GRID – 3 EQUAL COLUMNS ----- */
-  #canvas-grid {
-    position: fixed;
-    inset: 0;
-    display: none;
-    grid-template-columns: 1fr 1fr 1fr;
-    background: #1e3a1e;
-    gap: 2px;
-    padding: 0;
-    z-index: 10;
-  }
-  .grid-1 {
-    grid-template-columns: 1fr !important;
-    gap: 0 !important;
-  }
-  .grid-1 .canvas-panel:first-child {
-    grid-column: 1 / -1;
-  }
+  /* grid */
+  #canvas-grid { position:fixed; inset:0; display:none;
+    grid-template-columns:1fr 1fr 1fr; background:#1e3a1e; gap:2px; z-index:10; }
+  .grid-1 { grid-template-columns:1fr !important; gap:0 !important; }
+  .grid-1 .canvas-panel:first-child { grid-column:1/-1; }
 
-  /* ----- EACH PANEL – canvas fills full area, toolbar floats on top ----- */
-  .canvas-panel {
-    position: relative;
-    background: #f5ffe0;
-    display: block;        /* panel is just a block container */
-    overflow: hidden;
-    border: none;
-    outline: none;
-    box-shadow: none;
-    isolation: isolate;
-  }
+  /* panel */
+  .canvas-panel { position:relative; background:#f5ffe0; display:block; overflow:hidden; isolation:isolate; }
+  .canvas-holder { position:absolute; inset:0; }
+  .draw-canvas { position:absolute; top:0; left:0; width:100%; height:100%; display:block; cursor:crosshair; isolation:isolate; }
+  .line-canvas  { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; isolation:isolate; }
 
-  .canvas-holder {
-    position: absolute;
-    inset: 0;
-    background: transparent;
-  }
-
-  /* canvas elements */
-  .draw-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    cursor: crosshair;
-    isolation: isolate;
-  }
-  .line-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    isolation: isolate;
-  }
-
-  /* ----- FLOATING TOOLBAR – grid layout, right side with padding ----- */
+  /* ── FLOATING TOOLBAR: wider (4-col), shorter, touch-safe ── */
   .inside-toolbar {
     position: absolute;
     top: 50%;
-    right: 150px;
+    right: 14px;
     transform: translateY(-50%);
-    z-index: 100;
+    z-index: 200;
 
-    /* Grid: 2 columns for swatches/buttons */
     display: grid;
-    grid-template-columns: 36px 36px;
+    grid-template-columns: repeat(4, 32px);
     gap: 5px;
     align-items: center;
     justify-items: center;
 
-    background: rgba(30, 70, 30, 0.88);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 2px solid rgba(255,255,180,0.25);
-    border-radius: 20px;
-    padding: 12px 8px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
+    background: rgba(20, 55, 20, 0.93);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1.5px solid rgba(255,255,180,0.2);
+    border-radius: 18px;
+    padding: 10px 8px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3);
 
-    max-height: calc(100% - 24px);
+    max-height: calc(100% - 28px);
     overflow-y: auto;
     overflow-x: hidden;
-    isolation: isolate;
+
+    /* Allow toolbar's own touch events without being swallowed by canvas */
+    touch-action: auto;
+    pointer-events: auto;
 
     scrollbar-width: thin;
-    scrollbar-color: #5a8a5a transparent;
+    scrollbar-color: #4a7a4a transparent;
   }
-  .inside-toolbar::-webkit-scrollbar { width: 3px; }
-  .inside-toolbar::-webkit-scrollbar-track { background: transparent; }
-  .inside-toolbar::-webkit-scrollbar-thumb { background: #5a8a5a; border-radius: 4px; }
+  .inside-toolbar::-webkit-scrollbar { width:3px; }
+  .inside-toolbar::-webkit-scrollbar-thumb { background:#4a7a4a; border-radius:4px; }
 
-  /* Full-width items span both columns */
+  /* spans all 4 cols */
   .inside-toolbar .full-row {
     grid-column: 1 / -1;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 5px;
   }
-
-  /* TOOL STYLES */
-  .inside-toolbar .color-swatch {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.6);
-    cursor: pointer;
-    transition: transform 0.1s, outline 0.1s;
-  }
-  .inside-toolbar .color-swatch:active { transform: scale(0.82); }
-
-  .inside-toolbar .tpl-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 22px;
-    background: rgba(255,250,220,0.15);
-    border: 1.5px solid rgba(255,255,255,0.35);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: transform 0.1s, background 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .inside-toolbar .tpl-btn:active { transform: scale(0.82); }
-
-  .inside-toolbar .tool-btn {
-    width: 36px;
-    height: 36px;
-    background: rgba(255,255,255,0.18);
-    border: 1.5px solid rgba(255,255,255,0.4);
-    border-radius: 10px;
-    font-size: 20px;
-    cursor: pointer;
-    transition: transform 0.1s, background 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .inside-toolbar .tool-btn:active { transform: scale(0.82); }
-  .inside-toolbar .tool-btn.active {
-    background: #FFD700;
-    border-color: #FF8C00;
-    box-shadow: 0 0 0 3px rgba(255,215,0,0.35);
-  }
-
-  /* Horizontal size slider spans full row */
-  .inside-toolbar .size-slider {
-    width: 62px;
-    height: 6px;
-    background: #ffb347;
-    border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.4);
-    cursor: pointer;
-    -webkit-appearance: auto;
-    appearance: auto;
-  }
-
-  .inside-toolbar .ctrl-btn {
-    width: 62px;
-    padding: 6px 4px;
-    background: rgba(61, 46, 26, 0.85);
-    border: 1.5px solid #ffc085;
-    border-radius: 10px;
-    color: white;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: pointer;
+  .inside-toolbar .sec-label {
+    grid-column: 1 / -1;
+    color: rgba(255,255,160,0.7);
+    font-size: 9.5px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    width: 100%;
     text-align: center;
-    line-height: 1.3;
-    transition: transform 0.1s;
   }
-  .inside-toolbar .ctrl-btn:active { transform: scale(0.9); }
-
-  /* Divider spans full width */
   .inside-toolbar .bar-divider {
     grid-column: 1 / -1;
-    width: 100%;
-    height: 1px;
-    background: rgba(255,255,180,0.3);
-    margin: 2px 0;
+    width: 100%; height: 1px;
+    background: rgba(255,255,180,0.18);
+    margin: 1px 0;
   }
 
-  /* no headers */
-  .panel-header { display: none; }
+  /* color swatches */
+  .inside-toolbar .color-swatch {
+    width:28px; height:28px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.5);
+    cursor:pointer; touch-action:auto;
+    transition:transform .1s;
+  }
+  .inside-toolbar .color-swatch:active { transform:scale(0.78); }
 
-  /* pointer dot */
-  .pointer-dot {
-    position: fixed;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%,-50%);
-    border: 2px solid white;
-    filter: drop-shadow(0 0 2px black);
+  /* template btns */
+  .inside-toolbar .tpl-btn {
+    width:32px; height:32px; font-size:19px;
+    background:rgba(255,250,220,0.1);
+    border:1.5px solid rgba(255,255,255,0.28);
+    border-radius:9px; cursor:pointer; touch-action:auto;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .1s;
   }
-  .animal-label {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 90px;
-    color: #FFD700;
-    text-shadow: 4px 4px 0 #2a4a1a;
-    pointer-events: none;
-    z-index: 10001;
-    animation: popFade 1.6s ease-out forwards;
+  .inside-toolbar .tpl-btn:active { transform:scale(0.8); }
+
+  /* tool btns */
+  .inside-toolbar .tool-btn {
+    width:32px; height:32px;
+    background:rgba(255,255,255,0.15);
+    border:1.5px solid rgba(255,255,255,0.35);
+    border-radius:9px; font-size:18px;
+    cursor:pointer; touch-action:auto;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .1s, background .12s;
   }
+  .inside-toolbar .tool-btn:active { transform:scale(0.8); }
+  .inside-toolbar .tool-btn.active {
+    background:#FFD700; border-color:#FF8C00;
+    box-shadow:0 0 0 3px rgba(255,215,0,0.3);
+  }
+
+  /* sliders – touch-action:auto is CRITICAL for drag on touch */
+  .inside-toolbar .size-slider,
+  .inside-toolbar .pos-slider {
+    width:118px; height:6px;
+    background:#ffb347; border-radius:6px;
+    border:1px solid rgba(255,255,255,0.3);
+    cursor:pointer; touch-action:auto;
+    -webkit-appearance:auto; appearance:auto;
+    flex-shrink:0;
+  }
+  .inside-toolbar .pos-slider { background:#74c0fc; }
+
+  .inside-toolbar .slider-lbl {
+    color:rgba(255,255,160,0.75);
+    font-size:10px; white-space:nowrap; flex-shrink:0;
+  }
+
+  /* ctrl btns */
+  .inside-toolbar .ctrl-btn {
+    padding:5px 6px;
+    background:rgba(61,46,26,0.9);
+    border:1.5px solid #ffc085;
+    border-radius:9px; color:white;
+    font-size:11px; font-weight:bold;
+    cursor:pointer; touch-action:auto;
+    text-align:center; line-height:1.3;
+    transition:transform .1s;
+  }
+  .inside-toolbar .ctrl-btn:active { transform:scale(0.9); }
+
+  /* misc */
+  .pointer-dot { position:fixed; border-radius:50%; pointer-events:none; z-index:9999;
+    transform:translate(-50%,-50%); border:2px solid white; filter:drop-shadow(0 0 2px black); }
+  .animal-label { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-size:90px; color:#FFD700; text-shadow:4px 4px 0 #2a4a1a;
+    pointer-events:none; z-index:10001; animation:popFade 1.6s ease-out forwards; }
   @keyframes popFade {
-    0% { opacity:0; transform:translate(-50%,-50%) scale(0.2); }
-    30% { opacity:1; transform:translate(-50%,-50%) scale(1.2); }
+    0%   { opacity:0; transform:translate(-50%,-50%) scale(0.2); }
+    30%  { opacity:1; transform:translate(-50%,-50%) scale(1.2); }
     100% { opacity:0; transform:translate(-50%,-60%) scale(0.8); }
   }
 </style>
 </head>
 <body>
-  <div class="jungle-bg" id="jungleBg"></div>
+<div class="jungle-bg" id="jungleBg"></div>
 
-  <!-- PLAYER POPUP -->
-  <div id="playerModal">
-    <div class="modal-card">
-      <div id="choose1" class="player-choice">
-        <span>👤</span>
-        <p>1 Player</p>
-      </div>
-      <div id="choose3" class="player-choice">
-        <span>👥</span>
-        <p>3 Players</p>
-      </div>
-    </div>
+<div id="playerModal">
+  <div class="modal-card">
+    <div id="choose1" class="player-choice"><span>👤</span><p>1 Player</p></div>
+    <div id="choose3" class="player-choice"><span>👥</span><p>3 Players</p></div>
   </div>
+</div>
 
-  <!-- CANVAS GRID -->
-  <div id="canvas-grid" class="grid-3">
-    <!-- LAYER 1 -->
-    <div id="panel1" class="canvas-panel">
-      <div class="canvas-holder" id="holder1">
-        <canvas id="paintCanvas1" class="draw-canvas"></canvas>
-        <canvas id="lineCanvas1" class="line-canvas"></canvas>
-      </div>
-      <div id="toolbar1" class="inside-toolbar"></div>
+<div id="canvas-grid" class="grid-3">
+  <div id="panel1" class="canvas-panel">
+    <div class="canvas-holder" id="holder1">
+      <canvas id="paintCanvas1" class="draw-canvas"></canvas>
+      <canvas id="lineCanvas1"  class="line-canvas"></canvas>
     </div>
-    <!-- LAYER 2 -->
-    <div id="panel2" class="canvas-panel">
-      <div class="canvas-holder" id="holder2">
-        <canvas id="paintCanvas2" class="draw-canvas"></canvas>
-        <canvas id="lineCanvas2" class="line-canvas"></canvas>
-      </div>
-      <div id="toolbar2" class="inside-toolbar"></div>
-    </div>
-    <!-- LAYER 3 -->
-    <div id="panel3" class="canvas-panel">
-      <div class="canvas-holder" id="holder3">
-        <canvas id="paintCanvas3" class="draw-canvas"></canvas>
-        <canvas id="lineCanvas3" class="line-canvas"></canvas>
-      </div>
-      <div id="toolbar3" class="inside-toolbar"></div>
-    </div>
+    <div id="toolbar1" class="inside-toolbar"></div>
   </div>
+  <div id="panel2" class="canvas-panel">
+    <div class="canvas-holder" id="holder2">
+      <canvas id="paintCanvas2" class="draw-canvas"></canvas>
+      <canvas id="lineCanvas2"  class="line-canvas"></canvas>
+    </div>
+    <div id="toolbar2" class="inside-toolbar"></div>
+  </div>
+  <div id="panel3" class="canvas-panel">
+    <div class="canvas-holder" id="holder3">
+      <canvas id="paintCanvas3" class="draw-canvas"></canvas>
+      <canvas id="lineCanvas3"  class="line-canvas"></canvas>
+    </div>
+    <div id="toolbar3" class="inside-toolbar"></div>
+  </div>
+</div>
 
 <script>
-  (function() {
-    const MASTER_COLORS = [
-      '#FF6B6B','#FF1493','#FF6347','#FFA07A','#FFD700','#F7DC6F',
-      '#4ECDC4','#45B7D1','#20B2AA','#98D8C8','#52B788','#BB8FCE',
-      '#fff','#888','#333'
-    ];
+(function(){
+  const MASTER_COLORS=[
+    '#FF6B6B','#FF1493','#FF6347','#FFA07A',
+    '#FFD700','#F7DC6F','#4ECDC4','#45B7D1',
+    '#20B2AA','#98D8C8','#52B788','#BB8FCE',
+    '#fff','#aaa','#555','#000'
+  ];
+  const TEMPLATES={
+    elephant:{emoji:'🐘',draw:drawElephant},
+    lion:    {emoji:'🦁',draw:drawLion},
+    monkey:  {emoji:'🐵',draw:drawMonkey},
+    parrot:  {emoji:'🦜',draw:drawParrot},
+    snake:   {emoji:'🐍',draw:drawSnake},
+    tiger:   {emoji:'🐯',draw:drawTiger},
+    giraffe: {emoji:'🦒',draw:drawGiraffe},
+    frog:    {emoji:'🐸',draw:drawFrog}
+  };
 
-    const TEMPLATES = {
-      elephant: {emoji:'🐘', draw: drawElephant},
-      lion:     {emoji:'🦁', draw: drawLion},
-      monkey:   {emoji:'🐵', draw: drawMonkey},
-      parrot:   {emoji:'🦜', draw: drawParrot},
-      snake:    {emoji:'🐍', draw: drawSnake},
-      tiger:    {emoji:'🐯', draw: drawTiger},
-      giraffe:  {emoji:'🦒', draw: drawGiraffe},
-      frog:     {emoji:'🐸', draw: drawFrog}
-    };
+  const PANEL_IDS   =['panel1','panel2','panel3'];
+  const PAINT_IDS   =['paintCanvas1','paintCanvas2','paintCanvas3'];
+  const LINE_IDS    =['lineCanvas1','lineCanvas2','lineCanvas3'];
+  const TOOLBAR_IDS =['toolbar1','toolbar2','toolbar3'];
+  const HOLDER_IDS  =['holder1','holder2','holder3'];
 
-    const panelState = {};
-    const PANEL_IDS = ['panel1', 'panel2', 'panel3'];
-    const PAINT_IDS = ['paintCanvas1', 'paintCanvas2', 'paintCanvas3'];
-    const LINE_IDS = ['lineCanvas1', 'lineCanvas2', 'lineCanvas3'];
-    const TOOLBAR_IDS = ['toolbar1', 'toolbar2', 'toolbar3'];
-    const HOLDER_IDS = ['holder1', 'holder2', 'holder3'];
+  const panelState={};
+  const panels={};
 
-    function createInitialLayerState() {
-      return {
-        currentColor: MASTER_COLORS[0],
-        brushSize: 26,
-        activeTool: 'brush',
-        currentTemplate: 'elephant',
-      };
+  function createInitialLayerState(){
+    return {currentColor:MASTER_COLORS[0],brushSize:26,activeTool:'brush',
+            currentTemplate:'elephant',contentOffsetY:0};
+  }
+
+  function hexToRgb(hex){
+    let c=document.createElement('canvas').getContext('2d');
+    c.fillStyle=hex;c.fillRect(0,0,1,1);return c.getImageData(0,0,1,1).data;
+  }
+
+  function dilateMask(mask,w,h,iter){
+    let cur=new Uint8Array(mask);
+    for(let it=0;it<iter;it++){
+      let nxt=new Uint8Array(w*h);
+      for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+        let i=y*w+x;
+        if(cur[i]){nxt[i]=1;continue;}
+        if(x>0&&cur[i-1])nxt[i]=1;
+        else if(x<w-1&&cur[i+1])nxt[i]=1;
+        else if(y>0&&cur[i-w])nxt[i]=1;
+        else if(y<h-1&&cur[i+w])nxt[i]=1;
+      }
+      cur=nxt;
+    }
+    return cur;
+  }
+
+  function buildMasksForPanel(pid,templateKey){
+    let p=panels[pid];if(!p)return;
+    let {paintCtx,lineCtx,width,height}=p;
+    let state=panelState[pid];
+    let offsetY=state?(state.contentOffsetY||0):0;
+
+    paintCtx.fillStyle='#fff';
+    paintCtx.fillRect(0,0,width,height);
+
+    let off=document.createElement('canvas');
+    off.width=width;off.height=height;
+    let offCtx=off.getContext('2d');
+    offCtx.fillStyle='#fff';
+    offCtx.fillRect(0,0,width,height);
+    offCtx.save();
+    offCtx.translate(0,offsetY);
+    TEMPLATES[templateKey].draw(offCtx,width,height);
+    offCtx.restore();
+
+    let img=offCtx.getImageData(0,0,width,height);
+    let d=img.data;
+    let outlineMask=new Uint8Array(width*height);
+    for(let i=0;i<width*height;i++){
+      let lum=d[i*4]*0.299+d[i*4+1]*0.587+d[i*4+2]*0.114;
+      if(lum<180)outlineMask[i]=1;
     }
 
-    let panels = {};
-
-    function hexToRgb(hex) {
-      let c = document.createElement('canvas').getContext('2d');
-      c.fillStyle = hex;
-      c.fillRect(0,0,1,1);
-      return c.getImageData(0,0,1,1).data;
+    let dilated=dilateMask(outlineMask,width,height,3);
+    let exterior=new Uint8Array(width*height);
+    let stack=[];
+    for(let x=0;x<width;x++){
+      if(!dilated[x]){exterior[x]=1;stack.push(x,0);}
+      let bi=(height-1)*width+x;
+      if(!dilated[bi]){exterior[bi]=1;stack.push(x,height-1);}
+    }
+    for(let y=1;y<height-1;y++){
+      let li=y*width;if(!dilated[li]){exterior[li]=1;stack.push(0,y);}
+      let ri=y*width+width-1;if(!dilated[ri]){exterior[ri]=1;stack.push(width-1,y);}
+    }
+    while(stack.length){
+      let sy=stack.pop(),sx=stack.pop(),idx=sy*width+sx;
+      if(sx+1<width&&!exterior[idx+1]&&!dilated[idx+1]){exterior[idx+1]=1;stack.push(sx+1,sy);}
+      if(sx-1>=0&&!exterior[idx-1]&&!dilated[idx-1]){exterior[idx-1]=1;stack.push(sx-1,sy);}
+      if(sy+1<height&&!exterior[idx+width]&&!dilated[idx+width]){exterior[idx+width]=1;stack.push(sx,sy+1);}
+      if(sy-1>=0&&!exterior[idx-width]&&!dilated[idx-width]){exterior[idx-width]=1;stack.push(sx,sy-1);}
     }
 
-    function dilateMask(mask, w, h, iter) {
-      let cur = new Uint8Array(mask);
-      for (let it=0; it<iter; it++) {
-        let nxt = new Uint8Array(w*h);
-        for (let y=0; y<h; y++) for (let x=0; x<w; x++) {
-          let i = y*w + x;
-          if (cur[i]) { nxt[i]=1; continue; }
-          if (x>0 && cur[i-1]) nxt[i]=1;
-          else if (x<w-1 && cur[i+1]) nxt[i]=1;
-          else if (y>0 && cur[i-w]) nxt[i]=1;
-          else if (y<h-1 && cur[i+w]) nxt[i]=1;
-        }
-        cur = nxt;
-      }
-      return cur;
+    let paintableMask=new Uint8Array(width*height);
+    for(let i=0;i<width*height;i++){
+      if(!outlineMask[i]&&!exterior[i])paintableMask[i]=1;
     }
 
-    function buildMasksForPanel(panelId, templateKey) {
-      let p = panels[panelId];
-      if (!p) return;
-      let { paintCtx, lineCtx, width, height } = p;
-
-      paintCtx.fillStyle = '#fff';
-      paintCtx.fillRect(0, 0, width, height);
-
-      let off = document.createElement('canvas');
-      off.width = width; off.height = height;
-      let offCtx = off.getContext('2d');
-      offCtx.fillStyle = '#fff';
-      offCtx.fillRect(0,0,width,height);
-      TEMPLATES[templateKey].draw(offCtx, width, height);
-
-      let img = offCtx.getImageData(0,0,width,height);
-      let d = img.data;
-      let outlineMask = new Uint8Array(width*height);
-      for (let i=0; i<width*height; i++) {
-        let lum = d[i*4]*0.299 + d[i*4+1]*0.587 + d[i*4+2]*0.114;
-        if (lum < 180) outlineMask[i] = 1;
+    let lineData=new Uint8ClampedArray(width*height*4);
+    for(let i=0;i<width*height;i++){
+      if(outlineMask[i]){
+        lineData[i*4]=d[i*4];lineData[i*4+1]=d[i*4+1];
+        lineData[i*4+2]=d[i*4+2];lineData[i*4+3]=255;
       }
-
-      let dilated = dilateMask(outlineMask, width, height, 3);
-      let exterior = new Uint8Array(width*height);
-      let stack = [];
-      for (let x=0; x<width; x++) {
-        if (!dilated[x]) { exterior[x]=1; stack.push(x,0); }
-        let bi = (height-1)*width + x;
-        if (!dilated[bi]) { exterior[bi]=1; stack.push(x,height-1); }
-      }
-      for (let y=1; y<height-1; y++) {
-        let li = y*width;
-        if (!dilated[li]) { exterior[li]=1; stack.push(0,y); }
-        let ri = y*width + width-1;
-        if (!dilated[ri]) { exterior[ri]=1; stack.push(width-1,y); }
-      }
-      while (stack.length) {
-        let sy = stack.pop(), sx = stack.pop();
-        let idx = sy*width + sx;
-        if (sx+1<width && !exterior[idx+1] && !dilated[idx+1]) { exterior[idx+1]=1; stack.push(sx+1,sy); }
-        if (sx-1>=0 && !exterior[idx-1] && !dilated[idx-1]) { exterior[idx-1]=1; stack.push(sx-1,sy); }
-        if (sy+1<height && !exterior[idx+width] && !dilated[idx+width]) { exterior[idx+width]=1; stack.push(sx,sy+1); }
-        if (sy-1>=0 && !exterior[idx-width] && !dilated[idx-width]) { exterior[idx-width]=1; stack.push(sx,sy-1); }
-      }
-
-      let paintableMask = new Uint8Array(width*height);
-      for (let i=0; i<width*height; i++) {
-        if (!outlineMask[i] && !exterior[i]) paintableMask[i] = 1;
-      }
-
-      let lineData = new Uint8ClampedArray(width*height*4);
-      for (let i=0; i<width*height; i++) {
-        if (outlineMask[i]) {
-          lineData[i*4] = d[i*4];
-          lineData[i*4+1] = d[i*4+1];
-          lineData[i*4+2] = d[i*4+2];
-          lineData[i*4+3] = 255;
-        }
-      }
-      lineCtx.clearRect(0,0,width,height);
-      lineCtx.putImageData(new ImageData(lineData, width, height), 0,0);
-
-      let pImg = paintCtx.getImageData(0,0,width,height);
-      let pd = pImg.data;
-      for (let i=0; i<width*height; i++) {
-        if (exterior[i] || outlineMask[i]) {
-          pd[i*4] = 210; pd[i*4+1]=220; pd[i*4+2]=200; pd[i*4+3]=255;
-        } else {
-          pd[i*4]=255; pd[i*4+1]=255; pd[i*4+2]=255; pd[i*4+3]=255;
-        }
-      }
-      paintCtx.putImageData(pImg, 0,0);
-      p.outlineMask = outlineMask;
-      p.paintableMask = paintableMask;
     }
+    lineCtx.clearRect(0,0,width,height);
+    lineCtx.putImageData(new ImageData(lineData,width,height),0,0);
 
-    function constrainPaint(pid, x0, y0, x1, y1) {
-      let p = panels[pid];
-      if (!p) return;
-      let { paintCtx, paintableMask, width, height } = p;
-      let ix0 = Math.max(0, Math.floor(x0)), iy0 = Math.max(0, Math.floor(y0));
-      let ix1 = Math.min(width, Math.ceil(x1)), iy1 = Math.min(height, Math.ceil(y1));
-      if (ix1<=ix0 || iy1<=iy0) return;
-      let reg = paintCtx.getImageData(ix0, iy0, ix1-ix0, iy1-iy0);
-      let d = reg.data, changed = false;
-      for (let row=0; row<iy1-iy0; row++) {
-        for (let col=0; col<ix1-ix0; col++) {
-          let gx = ix0+col, gy = iy0+row;
-          let mi = gy * width + gx;
-          if (!paintableMask[mi]) {
-            let pi = (row*(ix1-ix0) + col)*4;
-            d[pi] = 210; d[pi+1]=220; d[pi+2]=200; d[pi+3]=255;
-            changed = true;
+    let pImg=paintCtx.getImageData(0,0,width,height);
+    let pd=pImg.data;
+    for(let i=0;i<width*height;i++){
+      if(exterior[i]||outlineMask[i]){pd[i*4]=210;pd[i*4+1]=220;pd[i*4+2]=200;pd[i*4+3]=255;}
+      else{pd[i*4]=255;pd[i*4+1]=255;pd[i*4+2]=255;pd[i*4+3]=255;}
+    }
+    paintCtx.putImageData(pImg,0,0);
+    p.outlineMask=outlineMask;
+    p.paintableMask=paintableMask;
+  }
+
+  function constrainPaint(pid,x0,y0,x1,y1){
+    let p=panels[pid];if(!p)return;
+    let {paintCtx,paintableMask,width,height}=p;
+    let ix0=Math.max(0,Math.floor(x0)),iy0=Math.max(0,Math.floor(y0));
+    let ix1=Math.min(width,Math.ceil(x1)),iy1=Math.min(height,Math.ceil(y1));
+    if(ix1<=ix0||iy1<=iy0)return;
+    let reg=paintCtx.getImageData(ix0,iy0,ix1-ix0,iy1-iy0);
+    let dta=reg.data,changed=false;
+    for(let row=0;row<iy1-iy0;row++) for(let col=0;col<ix1-ix0;col++){
+      let mi=(iy0+row)*width+(ix0+col);
+      if(!paintableMask[mi]){
+        let pi=(row*(ix1-ix0)+col)*4;
+        dta[pi]=210;dta[pi+1]=220;dta[pi+2]=200;dta[pi+3]=255;changed=true;
+      }
+    }
+    if(changed)paintCtx.putImageData(reg,ix0,iy0);
+  }
+
+  function brushStroke(pid,x1,y1,x2,y2,color,size){
+    let p=panels[pid];if(!p)return;
+    let ctx=p.paintCtx;
+    ctx.save();ctx.lineWidth=size;ctx.strokeStyle=color;
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();
+    let pad=Math.ceil(size/2)+2;
+    constrainPaint(pid,Math.min(x1,x2)-pad,Math.min(y1,y2)-pad,Math.max(x1,x2)+pad,Math.max(y1,y2)+pad);
+  }
+
+  function brushDot(pid,cx,cy,color,size){
+    let p=panels[pid];if(!p)return;
+    let ctx=p.paintCtx;
+    ctx.save();ctx.fillStyle=color;
+    ctx.beginPath();ctx.arc(cx,cy,size/2,0,2*Math.PI);ctx.fill();ctx.restore();
+    let pad=Math.ceil(size/2)+2;
+    constrainPaint(pid,cx-pad,cy-pad,cx+pad,cy+pad);
+  }
+
+  function floodFill(pid,sx,sy,color){
+    let p=panels[pid];if(!p)return;
+    let {paintCtx,paintableMask,width,height}=p;
+    sx=Math.round(sx);sy=Math.round(sy);
+    if(sx<0||sx>=width||sy<0||sy>=height)return;
+    if(!paintableMask[sy*width+sx])return;
+    let img=paintCtx.getImageData(0,0,width,height);
+    let data=img.data;
+    let si=(sy*width+sx)*4;
+    let sr=data[si],sg=data[si+1],sb=data[si+2];
+    let fc=hexToRgb(color);
+    let fr=fc[0],fg=fc[1],fb=fc[2];
+    if(Math.abs(sr-fr)<3&&Math.abs(sg-fg)<3&&Math.abs(sb-fb)<3)return;
+    let visited=new Uint8Array(width*height);
+    let stack=[sx,sy];
+    while(stack.length){
+      let y=stack.pop(),x=stack.pop();
+      if(x<0||x>=width||y<0||y>=height)continue;
+      let vi=y*width+x;
+      if(visited[vi]||!paintableMask[vi])continue;
+      let pi=vi*4;
+      if(Math.abs(data[pi]-sr)>32||Math.abs(data[pi+1]-sg)>32||Math.abs(data[pi+2]-sb)>32)continue;
+      visited[vi]=1;
+      data[pi]=fr;data[pi+1]=fg;data[pi+2]=fb;data[pi+3]=255;
+      stack.push(x+1,y,x-1,y,x,y+1,x,y-1);
+    }
+    paintCtx.putImageData(img,0,0);
+  }
+
+  // ── INIT PANELS ──
+  function initPanels(){
+    PANEL_IDS.forEach((pid,idx)=>{
+      let canvas    =document.getElementById(PAINT_IDS[idx]);
+      let lineCanvas=document.getElementById(LINE_IDS[idx]);
+      let holder    =document.getElementById(HOLDER_IDS[idx]);
+      if(!canvas||!holder)return;
+
+      let w=holder.clientWidth||600, h=holder.clientHeight||500;
+      canvas.width=w;canvas.height=h;
+      lineCanvas.width=w;lineCanvas.height=h;
+
+      let paintCtx=canvas.getContext('2d',{willReadFrequently:true});
+      let lineCtx =lineCanvas.getContext('2d');
+
+      if(!panelState[pid])panelState[pid]=createInitialLayerState();
+      panels[pid]={canvas,paintCtx,lineCanvas,lineCtx,width:w,height:h,activePointers:{}};
+      buildMasksForPanel(pid,panelState[pid].currentTemplate);
+
+      function getCoords(e){
+        let rect=canvas.getBoundingClientRect();
+        return{x:(e.clientX-rect.left)*(canvas.width/rect.width),
+               y:(e.clientY-rect.top)*(canvas.height/rect.height)};
+      }
+
+      // Only draw when the touch did NOT start in the toolbar
+      function handleDown(e){
+        if(e.target.closest('.inside-toolbar'))return;
+        e.preventDefault();
+        let state=panelState[pid];
+        let c=getCoords(e);
+        if(state.activeTool==='fill'){floodFill(pid,c.x,c.y,state.currentColor);return;}
+        let color=(state.activeTool==='eraser')?'#FFFFFF':state.currentColor;
+        panels[pid].activePointers[e.pointerId]={x:c.x,y:c.y,color};
+        brushDot(pid,c.x,c.y,color,state.brushSize);
+        let dot=document.createElement('div');
+        dot.className='pointer-dot';dot.id=`dot-${pid}-${e.pointerId}`;
+        dot.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;background:${color};`+
+          `width:${Math.min(state.brushSize,36)}px;height:${Math.min(state.brushSize,36)}px;`;
+        document.body.appendChild(dot);
+      }
+      function handleMove(e){
+        if(e.target.closest('.inside-toolbar'))return;
+        e.preventDefault();
+        let ptr=panels[pid].activePointers[e.pointerId];if(!ptr)return;
+        let c=getCoords(e);
+        brushStroke(pid,ptr.x,ptr.y,c.x,c.y,ptr.color,panelState[pid].brushSize);
+        ptr.x=c.x;ptr.y=c.y;
+        let dot=document.getElementById(`dot-${pid}-${e.pointerId}`);
+        if(dot){dot.style.left=e.clientX+'px';dot.style.top=e.clientY+'px';}
+      }
+      function handleUp(e){
+        delete panels[pid].activePointers[e.pointerId];
+        let dot=document.getElementById(`dot-${pid}-${e.pointerId}`);
+        if(dot)dot.remove();
+      }
+
+      canvas.removeEventListener('pointerdown',  handleDown);
+      canvas.removeEventListener('pointermove',  handleMove);
+      canvas.removeEventListener('pointerup',    handleUp);
+      canvas.removeEventListener('pointercancel',handleUp);
+      canvas.addEventListener('pointerdown',  handleDown);
+      canvas.addEventListener('pointermove',  handleMove);
+      canvas.addEventListener('pointerup',    handleUp);
+      canvas.addEventListener('pointercancel',handleUp);
+    });
+  }
+
+  // ── BUILD TOOLBARS ──
+  function buildPanelToolbars(){
+    PANEL_IDS.forEach((pid,idx)=>{
+      let toolbar=document.getElementById(TOOLBAR_IDS[idx]);
+      if(!toolbar)return;
+      toolbar.innerHTML='';
+      if(!panelState[pid])panelState[pid]=createInitialLayerState();
+      let state=panelState[pid];
+
+      // Prevent canvas from stealing toolbar pointer events
+      ['pointerdown','pointermove','pointerup','touchstart','touchmove','touchend']
+        .forEach(ev=>toolbar.addEventListener(ev,e=>e.stopPropagation(),{passive:false}));
+
+      function addLabel(txt){
+        let el=document.createElement('div');el.className='sec-label';el.textContent=txt;
+        toolbar.appendChild(el);
+      }
+      function addDivider(){
+        let el=document.createElement('div');el.className='bar-divider';toolbar.appendChild(el);
+      }
+
+      // ── COLORS ──
+      addLabel('🎨 Colors');
+      MASTER_COLORS.forEach(c=>{
+        let sw=document.createElement('div');
+        sw.className='color-swatch';sw.style.background=c;
+        if(c==='#fff')sw.style.border='2px solid #aaa';
+        sw.dataset.color=c;
+        sw.addEventListener('pointerdown',e=>{
+          e.stopPropagation();state.currentColor=c;refreshLayerUI(pid);
+        });
+        toolbar.appendChild(sw);
+      });
+
+      addDivider();
+
+      // ── TOOLS ──
+      addLabel('🛠 Tools');
+      [['brush','✏️'],['fill','💧'],['eraser','🧽']].forEach(([tool,emoji])=>{
+        let btn=document.createElement('button');
+        btn.className='tool-btn';btn.dataset.tool=tool;btn.textContent=emoji;
+        btn.addEventListener('pointerdown',e=>{
+          e.stopPropagation();state.activeTool=tool;refreshLayerUI(pid);
+        });
+        toolbar.appendChild(btn);
+      });
+      // 4th cell placeholder
+      toolbar.appendChild(document.createElement('div'));
+
+      addDivider();
+
+      // ── BRUSH SIZE ──
+      let szRow=document.createElement('div');szRow.className='full-row';
+      let szLbl=document.createElement('span');szLbl.className='slider-lbl';szLbl.textContent='🖌';
+      let szSlider=document.createElement('input');
+      szSlider.type='range';szSlider.className='size-slider';
+      szSlider.min=5;szSlider.max=60;szSlider.value=state.brushSize;
+      szSlider.addEventListener('pointerdown',e=>e.stopPropagation());
+      szSlider.addEventListener('touchstart', e=>e.stopPropagation(),{passive:false});
+      szSlider.addEventListener('input',e=>{state.brushSize=parseInt(e.target.value);});
+      szRow.appendChild(szLbl);szRow.appendChild(szSlider);
+      toolbar.appendChild(szRow);
+
+      addDivider();
+
+      // ── CONTENT POSITION ADJUSTER ──
+      addLabel('↕ Content Position');
+      let posRow=document.createElement('div');posRow.className='full-row';
+      let posUp=document.createElement('span');posUp.className='slider-lbl';posUp.textContent='▲';
+      let posSlider=document.createElement('input');
+      posSlider.type='range';posSlider.className='pos-slider';
+      posSlider.min=-100;posSlider.max=100;posSlider.step=1;posSlider.value=0;
+      posSlider.title='Move drawing up / down';
+      posSlider.addEventListener('pointerdown',e=>e.stopPropagation());
+      posSlider.addEventListener('touchstart', e=>e.stopPropagation(),{passive:false});
+      posSlider.addEventListener('input',e=>{
+        let p=panels[pid];if(!p)return;
+        // map -100..100 → -38%..+38% of canvas height
+        let frac=parseInt(e.target.value)/100;
+        state.contentOffsetY=Math.round(frac*p.height*0.38);
+        buildMasksForPanel(pid,state.currentTemplate);
+      });
+      let posDn=document.createElement('span');posDn.className='slider-lbl';posDn.textContent='▼';
+      posRow.appendChild(posUp);posRow.appendChild(posSlider);posRow.appendChild(posDn);
+      toolbar.appendChild(posRow);
+
+      addDivider();
+
+      // ── ANIMALS ──
+      addLabel('🐾 Animals');
+      Object.keys(TEMPLATES).forEach(key=>{
+        let btn=document.createElement('button');
+        btn.className='tpl-btn';btn.dataset.template=key;
+        btn.textContent=TEMPLATES[key].emoji;btn.title=key;
+        btn.addEventListener('pointerdown',e=>{
+          e.stopPropagation();
+          state.currentTemplate=key;
+          posSlider.value=0;state.contentOffsetY=0;
+          buildMasksForPanel(pid,key);refreshLayerUI(pid);
+          let lbl=document.createElement('div');
+          lbl.className='animal-label';lbl.textContent=TEMPLATES[key].emoji;
+          document.body.appendChild(lbl);
+          setTimeout(()=>lbl.remove(),1600);
+        });
+        toolbar.appendChild(btn);
+      });
+
+      addDivider();
+
+      // ── CLEAR + MENU ──
+      let ctrlRow=document.createElement('div');ctrlRow.className='full-row';
+      let clearBtn=document.createElement('button');clearBtn.className='ctrl-btn';
+      clearBtn.textContent='🧹 Clear';
+      clearBtn.addEventListener('pointerdown',e=>{
+        e.stopPropagation();buildMasksForPanel(pid,state.currentTemplate);
+      });
+      let backBtn=document.createElement('button');backBtn.className='ctrl-btn';
+      backBtn.textContent='🔙 Menu';
+      backBtn.addEventListener('pointerdown',e=>{e.stopPropagation();location.href='../index.html';});
+      ctrlRow.appendChild(clearBtn);ctrlRow.appendChild(backBtn);
+      toolbar.appendChild(ctrlRow);
+
+      refreshLayerUI(pid);
+    });
+  }
+
+  function refreshLayerUI(pid){
+    let state=panelState[pid];if(!state)return;
+    let panel=document.getElementById(pid);if(!panel)return;
+    panel.querySelectorAll('.color-swatch').forEach(s=>{
+      s.style.outline=(s.dataset.color===state.currentColor)?'3px solid #FFD700':'';
+      s.style.outlineOffset='2px';
+    });
+    panel.querySelectorAll('.tool-btn').forEach(b=>{
+      b.classList.toggle('active',b.dataset.tool===state.activeTool);
+    });
+    panel.querySelectorAll('.tpl-btn').forEach(b=>{
+      b.style.outline=(b.dataset.template===state.currentTemplate)?'3px solid #FFD700':'';
+      b.style.outlineOffset='2px';
+    });
+  }
+
+  function buildJungle(){
+    let bg=document.getElementById('jungleBg');
+    for(let i=0;i<24;i++){
+      let leaf=document.createElement('div');leaf.className='floating-leaf';
+      leaf.textContent=['🌿','🍃','🌴','🍀','🌱'][Math.floor(Math.random()*5)];
+      leaf.style.left=Math.random()*100+'%';leaf.style.top=Math.random()*100+'%';
+      leaf.style.animationDelay=Math.random()*10+'s';
+      leaf.style.animationDuration=(15+Math.random()*20)+'s';
+      bg.appendChild(leaf);
+    }
+  }
+
+  function setupModal(){
+    const modal=document.getElementById('playerModal');
+    const grid =document.getElementById('canvas-grid');
+    function startGame(playerCount){
+      modal.classList.add('hidden-modal');
+      grid.style.display='grid';
+      if(playerCount===1){
+        grid.className='grid-1';
+        document.getElementById('panel2').style.display='none';
+        document.getElementById('panel3').style.display='none';
+      }else{
+        grid.className='grid-3';
+        document.getElementById('panel2').style.display='block';
+        document.getElementById('panel3').style.display='block';
+      }
+      PANEL_IDS.forEach(pid=>{panelState[pid]=createInitialLayerState();});
+      initPanels();
+      buildPanelToolbars();
+      window.addEventListener('resize',()=>{
+        PANEL_IDS.forEach(pid=>{
+          let p=panels[pid];if(!p)return;
+          let idx=PANEL_IDS.indexOf(pid);
+          let holder=document.getElementById(HOLDER_IDS[idx]);
+          if(holder&&holder.clientWidth>0){
+            let nw=holder.clientWidth,nh=holder.clientHeight;
+            p.canvas.width=nw;p.canvas.height=nh;
+            p.lineCanvas.width=nw;p.lineCanvas.height=nh;
+            p.width=nw;p.height=nh;
+            let s=panelState[pid];if(s)buildMasksForPanel(pid,s.currentTemplate);
           }
-        }
-      }
-      if (changed) paintCtx.putImageData(reg, ix0, iy0);
-    }
-
-    function brushStroke(pid, x1,y1,x2,y2,color,size) {
-      let p = panels[pid];
-      if (!p) return;
-      let ctx = p.paintCtx;
-      ctx.save();
-      ctx.lineWidth = size;
-      ctx.strokeStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(x1,y1);
-      ctx.lineTo(x2,y2);
-      ctx.stroke();
-      ctx.restore();
-      let pad = Math.ceil(size/2)+2;
-      constrainPaint(pid, Math.min(x1,x2)-pad, Math.min(y1,y2)-pad, Math.max(x1,x2)+pad, Math.max(y1,y2)+pad);
-    }
-
-    function brushDot(pid, cx,cy,color,size) {
-      let p = panels[pid];
-      if (!p) return;
-      let ctx = p.paintCtx;
-      ctx.save();
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(cx,cy,size/2,0,2*Math.PI);
-      ctx.fill();
-      ctx.restore();
-      let pad = Math.ceil(size/2)+2;
-      constrainPaint(pid, cx-pad, cy-pad, cx+pad, cy+pad);
-    }
-
-    function floodFill(pid, sx,sy,color) {
-      let p = panels[pid];
-      if (!p) return;
-      let { paintCtx, paintableMask, width, height } = p;
-      sx = Math.round(sx); sy = Math.round(sy);
-      if (sx<0||sx>=width||sy<0||sy>=height) return;
-      if (!paintableMask[sy*width+sx]) return;
-      let img = paintCtx.getImageData(0,0,width,height);
-      let data = img.data;
-      let si = (sy*width+sx)*4;
-      let sr=data[si], sg=data[si+1], sb=data[si+2];
-      let fc = hexToRgb(color);
-      let fr=fc[0], fg=fc[1], fb=fc[2];
-      if (Math.abs(sr-fr)<3 && Math.abs(sg-fg)<3 && Math.abs(sb-fb)<3) return;
-      let visited = new Uint8Array(width*height);
-      let stack = [sx,sy];
-      while(stack.length) {
-        let y = stack.pop(), x = stack.pop();
-        if (x<0||x>=width||y<0||y>=height) continue;
-        let vi = y*width + x;
-        if (visited[vi] || !paintableMask[vi]) continue;
-        let pi = vi*4;
-        if (Math.abs(data[pi]-sr)>32||Math.abs(data[pi+1]-sg)>32||Math.abs(data[pi+2]-sb)>32) continue;
-        visited[vi]=1;
-        data[pi]=fr; data[pi+1]=fg; data[pi+2]=fb; data[pi+3]=255;
-        stack.push(x+1,y, x-1,y, x,y+1, x,y-1);
-      }
-      paintCtx.putImageData(img,0,0);
-    }
-
-    function initPanels() {
-      PANEL_IDS.forEach((pid, idx) => {
-        let canvas = document.getElementById(PAINT_IDS[idx]);
-        let lineCanvas = document.getElementById(LINE_IDS[idx]);
-        let holder = document.getElementById(HOLDER_IDS[idx]);
-        if (!canvas || !holder) return;
-
-        let w = holder.clientWidth || 600;
-        let h = holder.clientHeight || 500;
-        canvas.width = w; canvas.height = h;
-        lineCanvas.width = w; lineCanvas.height = h;
-
-        let paintCtx = canvas.getContext('2d', {willReadFrequently: true});
-        let lineCtx = lineCanvas.getContext('2d');
-
-        if (!panelState[pid]) {
-          panelState[pid] = createInitialLayerState();
-        }
-
-        panels[pid] = {
-          canvas, paintCtx, lineCanvas, lineCtx,
-          width: w, height: h,
-          activePointers: {}
-        };
-
-        buildMasksForPanel(pid, panelState[pid].currentTemplate);
-
-        function getCoords(e) {
-          let rect = canvas.getBoundingClientRect();
-          let scaleX = canvas.width / rect.width;
-          let scaleY = canvas.height / rect.height;
-          return {
-            x: (e.clientX - rect.left) * scaleX,
-            y: (e.clientY - rect.top) * scaleY
-          };
-        }
-
-        function handleDown(e) {
-          e.preventDefault();
-          let state = panelState[pid];
-          let c = getCoords(e);
-          
-          if (state.activeTool === 'fill') {
-            floodFill(pid, c.x, c.y, state.currentColor);
-            return;
-          }
-          let color = (state.activeTool === 'eraser') ? '#FFFFFF' : state.currentColor;
-          panels[pid].activePointers[e.pointerId] = {x: c.x, y: c.y, color: color};
-          brushDot(pid, c.x, c.y, color, state.brushSize);
-
-          let dot = document.createElement('div');
-          dot.className = 'pointer-dot';
-          dot.id = `dot-${pid}-${e.pointerId}`;
-          dot.style.left = e.clientX+'px';
-          dot.style.top = e.clientY+'px';
-          dot.style.background = color;
-          dot.style.width = dot.style.height = Math.min(state.brushSize, 36)+'px';
-          document.body.appendChild(dot);
-        }
-
-        function handleMove(e) {
-          e.preventDefault();
-          let ptr = panels[pid].activePointers[e.pointerId];
-          if (!ptr) return;
-          let c = getCoords(e);
-          let state = panelState[pid];
-          brushStroke(pid, ptr.x, ptr.y, c.x, c.y, ptr.color, state.brushSize);
-          ptr.x = c.x; ptr.y = c.y;
-          let dot = document.getElementById(`dot-${pid}-${e.pointerId}`);
-          if (dot) { dot.style.left = e.clientX+'px'; dot.style.top = e.clientY+'px'; }
-        }
-
-        function handleUp(e) {
-          delete panels[pid].activePointers[e.pointerId];
-          let dot = document.getElementById(`dot-${pid}-${e.pointerId}`);
-          if (dot) dot.remove();
-        }
-
-        canvas.removeEventListener('pointerdown', handleDown);
-        canvas.removeEventListener('pointermove', handleMove);
-        canvas.removeEventListener('pointerup', handleUp);
-        canvas.removeEventListener('pointercancel', handleUp);
-        
-        canvas.addEventListener('pointerdown', handleDown);
-        canvas.addEventListener('pointermove', handleMove);
-        canvas.addEventListener('pointerup', handleUp);
-        canvas.addEventListener('pointercancel', handleUp);
+        });
       });
     }
+    document.getElementById('choose1').addEventListener('click',()=>startGame(1));
+    document.getElementById('choose3').addEventListener('click',()=>startGame(3));
+  }
 
-    function buildPanelToolbars() {
-      PANEL_IDS.forEach((pid, idx) => {
-        let toolbar = document.getElementById(TOOLBAR_IDS[idx]);
-        if (!toolbar) return;
-        toolbar.innerHTML = '';
+  // ── DRAWING FUNCTIONS ──
+  function drawElephant(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(cx,cy+50,180,150,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx,cy-120,130,120,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx-150,cy-120,70,100,-0.3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+150,cy-120,70,100,0.3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy-60);ctx.quadraticCurveTo(cx-50,cy+50,cx-40,cy+150);ctx.quadraticCurveTo(cx-30,cy+180,cx-10,cy+190);ctx.quadraticCurveTo(cx+10,cy+180,cx+20,cy+150);ctx.quadraticCurveTo(cx+30,cy+50,cx,cy-60);ctx.fill();ctx.stroke();for(var i=0;i<4;i++){var lx=cx-100+i*70;ctx.fillRect(lx-25,cy+150,50,120);ctx.strokeRect(lx-25,cy+150,50,120);}ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx-50,cy-140,15,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+50,cy-140,15,0,Math.PI*2);ctx.fill();}
+  function drawLion(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';for(var i=0;i<16;i++){var a=(i/16)*Math.PI*2;ctx.beginPath();ctx.arc(cx+Math.cos(a)*140,cy-80+Math.sin(a)*140,50,0,Math.PI*2);ctx.fill();ctx.stroke();}ctx.beginPath();ctx.ellipse(cx,cy-80,110,100,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx,cy+80,140,120,0,0,Math.PI*2);ctx.fill();ctx.stroke();for(var i=0;i<4;i++){var lx=cx-90+i*60;ctx.fillRect(lx-20,cy+150,40,110);ctx.strokeRect(lx-20,cy+150,40,110);}ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx-40,cy-90,15,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+40,cy-90,15,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(cx,cy-50);ctx.lineTo(cx-15,cy-30);ctx.lineTo(cx+15,cy-30);ctx.closePath();ctx.fill();}
+  function drawMonkey(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(cx,cy+20,120,140,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(cx,cy-120,100,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(cx-90,cy-120,40,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(cx+90,cy-120,40,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx,cy-100,60,70,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx-130,cy+50,30,100,-0.3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+130,cy+50,30,100,0.3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx-30,cy-110,12,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+30,cy-110,12,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx,cy-90,30,0.2,Math.PI-0.2);ctx.stroke();}
+  function drawParrot(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(cx,cy+30,100,130,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(cx,cy-80,80,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(cx+40,cy-70);ctx.quadraticCurveTo(cx+100,cy-60,cx+90,cy-40);ctx.lineTo(cx+50,cy-50);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx-80,cy+20,50,100,-0.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+80,cy+20,50,100,0.5,0,Math.PI*2);ctx.fill();ctx.stroke();for(var i=0;i<5;i++){ctx.beginPath();ctx.ellipse(cx-40+i*20,cy+160,20,80,0,0,Math.PI*2);ctx.fill();ctx.stroke();}ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx+20,cy-90,12,0,Math.PI*2);ctx.fill();}
+  function drawSnake(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';var bodyW=38,pts=[],segs=80;for(var i=0;i<=segs;i++){var t=i/segs;pts.push({x:cx+Math.sin(t*Math.PI*3)*140,y:cy-180+t*480});}ctx.beginPath();ctx.moveTo(pts[0].x-bodyW,pts[0].y);for(var i=1;i<=segs;i++){var dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y,len=Math.sqrt(dx*dx+dy*dy);ctx.lineTo(pts[i].x+(-dy/len)*bodyW,pts[i].y+(dx/len)*bodyW);}ctx.lineTo(pts[segs].x,pts[segs].y+15);for(var i=segs;i>=0;i--){var dx=i>0?pts[i].x-pts[i-1].x:pts[1].x-pts[0].x,dy=i>0?pts[i].y-pts[i-1].y:pts[1].y-pts[0].y,len=Math.sqrt(dx*dx+dy*dy);ctx.lineTo(pts[i].x-(-dy/len)*bodyW,pts[i].y-(dx/len)*bodyW);}ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=5;var hx=pts[0].x,hy=pts[0].y-35;ctx.beginPath();ctx.ellipse(hx,hy,55,45,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#333';ctx.beginPath();ctx.arc(hx-20,hy-8,10,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(hx+20,hy-8,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(hx-18,hy-10,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(hx+22,hy-10,3,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=4;ctx.beginPath();ctx.arc(hx,hy+10,18,0.2,Math.PI-0.2);ctx.stroke();ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(hx,hy+28);ctx.lineTo(hx-8,hy+42);ctx.moveTo(hx,hy+28);ctx.lineTo(hx+8,hy+42);ctx.stroke();}
+  function drawTiger(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(cx,cy+50,160,130,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx,cy-100,120,110,0,0,Math.PI*2);ctx.fill();ctx.stroke();for(var i=0;i<4;i++){var lx=cx-100+i*70;ctx.fillRect(lx-20,cy+130,40,120);ctx.strokeRect(lx-20,cy+130,40,120);}ctx.lineWidth=8;for(var i=0;i<6;i++){ctx.beginPath();ctx.moveTo(cx-120,cy+20+i*25);ctx.lineTo(cx+120,cy+20+i*25);ctx.stroke();}ctx.lineWidth=5;ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx-40,cy-110,15,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+40,cy-110,15,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(cx,cy-70);ctx.lineTo(cx-15,cy-50);ctx.lineTo(cx+15,cy-50);ctx.closePath();ctx.fill();}
+  function drawGiraffe(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(cx,cy+100,140,120,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillRect(cx-30,cy-300,60,400);ctx.strokeRect(cx-30,cy-300,60,400);ctx.beginPath();ctx.ellipse(cx,cy-330,60,50,0,0,Math.PI*2);ctx.fill();ctx.stroke();for(var i=0;i<4;i++){var lx=cx-90+i*60;ctx.fillRect(lx-15,cy+180,30,150);ctx.strokeRect(lx-15,cy+180,30,150);}[[cx-80,cy+80],[cx-40,cy+60],[cx,cy+100],[cx+40,cy+70],[cx+80,cy+90],[cx-20,cy-100],[cx+10,cy-150]].forEach(function(s){ctx.beginPath();ctx.ellipse(s[0],s[1],25,30,0,0,Math.PI*2);ctx.fill();ctx.stroke();});ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx+20,cy-340,12,0,Math.PI*2);ctx.fill();}
+  function drawFrog(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(cx,cy+30,130,110,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx,cy-50,120,80,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx-60,cy-90,45,50,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+60,cy-90,45,50,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx-60,cy-85,20,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+60,cy-85,20,0,Math.PI*2);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(cx,cy-20,60,0.1,Math.PI-0.1);ctx.stroke();ctx.beginPath();ctx.ellipse(cx-110,cy+80,30,60,-0.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+110,cy+80,30,60,0.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx-130,cy+20,50,80,-0.8,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+130,cy+20,50,80,0.8,0,Math.PI*2);ctx.fill();ctx.stroke();}
 
-        let state = panelState[pid];
-        if (!state) {
-          panelState[pid] = createInitialLayerState();
-          state = panelState[pid];
-        }
-
-        // ---- Color swatches ----
-        MASTER_COLORS.forEach(c => {
-          let sw = document.createElement('div');
-          sw.className = 'color-swatch';
-          sw.style.background = c;
-          if (c === '#fff') sw.style.border = '2px solid #ccc';
-          sw.dataset.color = c;
-          sw.addEventListener('click', () => { 
-            state.currentColor = c; 
-            refreshLayerUI(pid); 
-          });
-          toolbar.appendChild(sw);
-        });
-
-        let div1 = document.createElement('div'); div1.className = 'bar-divider'; toolbar.appendChild(div1);
-
-        // ---- Tools: brush, fill, eraser ----
-        let brushBtn = document.createElement('button');
-        brushBtn.className = 'tool-btn'; brushBtn.dataset.tool = 'brush'; brushBtn.textContent = '✏️';
-        brushBtn.title = 'Brush';
-        brushBtn.addEventListener('click', () => { state.activeTool = 'brush'; refreshLayerUI(pid); });
-        toolbar.appendChild(brushBtn);
-
-        let fillBtn = document.createElement('button');
-        fillBtn.className = 'tool-btn'; fillBtn.dataset.tool = 'fill'; fillBtn.textContent = '💧';
-        fillBtn.title = 'Fill';
-        fillBtn.addEventListener('click', () => { state.activeTool = 'fill'; refreshLayerUI(pid); });
-        toolbar.appendChild(fillBtn);
-
-        let eraserBtn = document.createElement('button');
-        eraserBtn.className = 'tool-btn'; eraserBtn.dataset.tool = 'eraser'; eraserBtn.textContent = '🧽';
-        eraserBtn.title = 'Eraser';
-        eraserBtn.addEventListener('click', () => { state.activeTool = 'eraser'; refreshLayerUI(pid); });
-        toolbar.appendChild(eraserBtn);
-
-        let div2 = document.createElement('div'); div2.className = 'bar-divider'; toolbar.appendChild(div2);
-
-        // ---- Brush size slider (horizontal, full-row) ----
-        let sliderWrap = document.createElement('div'); sliderWrap.className = 'full-row';
-        let slider = document.createElement('input');
-        slider.type = 'range'; slider.className = 'size-slider';
-        slider.min = 5; slider.max = 60; slider.value = state.brushSize;
-        slider.title = 'Brush Size';
-        slider.addEventListener('input', (e) => { state.brushSize = parseInt(e.target.value); });
-        sliderWrap.appendChild(slider);
-        toolbar.appendChild(sliderWrap);
-
-        let div3 = document.createElement('div'); div3.className = 'bar-divider'; toolbar.appendChild(div3);
-
-        // ---- Animal templates ----
-        let tmplKeys = Object.keys(TEMPLATES).slice(0,6);
-        tmplKeys.forEach(key => {
-          let btn = document.createElement('button');
-          btn.className = 'tpl-btn';
-          btn.textContent = TEMPLATES[key].emoji;
-          btn.dataset.template = key;
-          btn.title = key.charAt(0).toUpperCase() + key.slice(1);
-          btn.addEventListener('click', () => {
-            state.currentTemplate = key;
-            buildMasksForPanel(pid, state.currentTemplate);
-            refreshLayerUI(pid);
-            let lbl = document.createElement('div');
-            lbl.className = 'animal-label';
-            lbl.textContent = TEMPLATES[key].emoji;
-            document.body.appendChild(lbl);
-            setTimeout(()=>lbl.remove(), 1600);
-          });
-          toolbar.appendChild(btn);
-        });
-
-        let div4 = document.createElement('div'); div4.className = 'bar-divider'; toolbar.appendChild(div4);
-
-        // ---- Clear ----
-        let clearWrap = document.createElement('div'); clearWrap.className = 'full-row';
-        let clearBtn = document.createElement('button');
-        clearBtn.className = 'ctrl-btn'; clearBtn.textContent = '🧹 Clear';
-        clearBtn.addEventListener('click', () => { 
-          buildMasksForPanel(pid, state.currentTemplate); 
-        });
-        clearWrap.appendChild(clearBtn);
-        toolbar.appendChild(clearWrap);
-
-        // ---- Back ----
-        let backWrap = document.createElement('div'); backWrap.className = 'full-row';
-        let backBtn = document.createElement('button');
-        backBtn.className = 'ctrl-btn'; backBtn.textContent = '🔙 Menu';
-        backBtn.addEventListener('click', () => { location.href = '../index.html'; });
-        backWrap.appendChild(backBtn);
-        toolbar.appendChild(backWrap);
-
-        refreshLayerUI(pid);
-      });
-    }
-
-    function refreshLayerUI(pid) {
-      let state = panelState[pid];
-      if (!state) return;
-      
-      let panel = document.getElementById(pid);
-      if (!panel) return;
-      
-      panel.querySelectorAll('.color-swatch').forEach(s => {
-        s.style.outline = (s.dataset.color === state.currentColor) ? '3px solid #FFD700' : '';
-        s.style.outlineOffset = '2px';
-      });
-      panel.querySelectorAll('.tool-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.tool === state.activeTool);
-      });
-      panel.querySelectorAll('.tpl-btn').forEach(b => {
-        b.style.outline = (b.dataset.template === state.currentTemplate) ? '3px solid #FFD700' : '';
-        b.style.outlineOffset = '2px';
-      });
-    }
-
-    function buildJungle() {
-      let bg = document.getElementById('jungleBg');
-      for (let i=0; i<24; i++) {
-        let leaf = document.createElement('div');
-        leaf.className = 'floating-leaf';
-        leaf.textContent = ['🌿','🍃','🌴','🍀','🌱'][Math.floor(Math.random()*5)];
-        leaf.style.left = Math.random()*100 + '%';
-        leaf.style.top = Math.random()*100 + '%';
-        leaf.style.animationDelay = Math.random()*10 + 's';
-        leaf.style.animationDuration = (15 + Math.random()*20) + 's';
-        bg.appendChild(leaf);
-      }
-    }
-
-    function setupModal() {
-      const modal = document.getElementById('playerModal');
-      const grid = document.getElementById('canvas-grid');
-      const choose1 = document.getElementById('choose1');
-      const choose3 = document.getElementById('choose3');
-
-      function startGame(playerCount) {
-        modal.classList.add('hidden-modal');
-        grid.style.display = 'grid';
-        
-        if (playerCount === 1) {
-          grid.className = 'grid-1';
-          document.getElementById('panel2').style.display = 'none';
-          document.getElementById('panel3').style.display = 'none';
-        } else {
-          grid.className = 'grid-3';
-          document.getElementById('panel2').style.display = 'flex';
-          document.getElementById('panel3').style.display = 'flex';
-        }
-
-        PANEL_IDS.forEach(pid => {
-          panelState[pid] = createInitialLayerState();
-        });
-
-        initPanels();
-        buildPanelToolbars();
-
-        window.addEventListener('resize', function() {
-          PANEL_IDS.forEach(pid => {
-            let p = panels[pid];
-            if (p) {
-              let idx = PANEL_IDS.indexOf(pid);
-              let holder = document.getElementById(HOLDER_IDS[idx]);
-              if (holder && holder.clientWidth > 0) {
-                let newW = holder.clientWidth;
-                let newH = holder.clientHeight;
-                p.canvas.width = newW;
-                p.canvas.height = newH;
-                p.lineCanvas.width = newW;
-                p.lineCanvas.height = newH;
-                p.width = newW;
-                p.height = newH;
-                let state = panelState[pid];
-                if (state) {
-                  buildMasksForPanel(pid, state.currentTemplate);
-                }
-              }
-            }
-          });
-        });
-      }
-
-      choose1.addEventListener('click', () => startGame(1));
-      choose3.addEventListener('click', () => startGame(3));
-    }
-
-    // ----- DRAWING FUNCTIONS -----
-    function drawElephant(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+50,180,150,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy-120,130,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-150,cy-120,70,100,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+150,cy-120,70,100,0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx,cy-60); ctx.quadraticCurveTo(cx-50,cy+50,cx-40,cy+150); ctx.quadraticCurveTo(cx-30,cy+180,cx-10,cy+190); ctx.quadraticCurveTo(cx+10,cy+180,cx+20,cy+150); ctx.quadraticCurveTo(cx+30,cy+50,cx,cy-60); ctx.fill(); ctx.stroke(); for(var i=0;i<4;i++){var lx=cx-100+i*70; ctx.fillRect(lx-25,cy+150,50,120); ctx.strokeRect(lx-25,cy+150,50,120);} ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-50,cy-140,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+50,cy-140,15,0,Math.PI*2); ctx.fill(); }
-    function drawLion(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; for(var i=0;i<16;i++){var a=(i/16)*Math.PI*2; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*140,cy-80+Math.sin(a)*140,50,0,Math.PI*2); ctx.fill(); ctx.stroke();} ctx.beginPath(); ctx.ellipse(cx,cy-80,110,100,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy+80,140,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); for(var i=0;i<4;i++){var lx=cx-90+i*60; ctx.fillRect(lx-20,cy+150,40,110); ctx.strokeRect(lx-20,cy+150,40,110);} ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-40,cy-90,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+40,cy-90,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx,cy-50); ctx.lineTo(cx-15,cy-30); ctx.lineTo(cx+15,cy-30); ctx.closePath(); ctx.fill(); }
-    function drawMonkey(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+20,120,140,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(cx,cy-120,100,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(cx-90,cy-120,40,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(cx+90,cy-120,40,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy-100,60,70,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-130,cy+50,30,100,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+130,cy+50,30,100,0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-30,cy-110,12,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+30,cy-110,12,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx,cy-90,30,0.2,Math.PI-0.2); ctx.stroke(); }
-    function drawParrot(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+30,100,130,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(cx,cy-80,80,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+40,cy-70); ctx.quadraticCurveTo(cx+100,cy-60,cx+90,cy-40); ctx.lineTo(cx+50,cy-50); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-80,cy+20,50,100,-0.5,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+80,cy+20,50,100,0.5,0,Math.PI*2); ctx.fill(); ctx.stroke(); for(var i=0;i<5;i++){ctx.beginPath(); ctx.ellipse(cx-40+i*20,cy+160,20,80,0,0,Math.PI*2); ctx.fill(); ctx.stroke();} ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx+20,cy-90,12,0,Math.PI*2); ctx.fill(); }
-    function drawSnake(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; var bodyW=38, pts=[], segs=80; for(var i=0;i<=segs;i++){var t=i/segs; pts.push({x:cx+Math.sin(t*Math.PI*3)*140, y:cy-180+t*480});} ctx.beginPath(); ctx.moveTo(pts[0].x-bodyW,pts[0].y); for(var i=1;i<=segs;i++){var dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y,len=Math.sqrt(dx*dx+dy*dy); ctx.lineTo(pts[i].x+(-dy/len)*bodyW, pts[i].y+(dx/len)*bodyW);} ctx.lineTo(pts[segs].x,pts[segs].y+15); for(var i=segs;i>=0;i--){var dx=i>0?pts[i].x-pts[i-1].x:pts[1].x-pts[0].x, dy=i>0?pts[i].y-pts[i-1].y:pts[1].y-pts[0].y, len=Math.sqrt(dx*dx+dy*dy); ctx.lineTo(pts[i].x-(-dy/len)*bodyW, pts[i].y-(dx/len)*bodyW);} ctx.closePath(); ctx.fill(); ctx.stroke(); for(var i=8;i<segs-5;i+=6){ctx.beginPath(); ctx.save(); ctx.translate(pts[i].x,pts[i].y); ctx.moveTo(0,-12); ctx.lineTo(10,0); ctx.lineTo(0,12); ctx.lineTo(-10,0); ctx.closePath(); ctx.restore(); ctx.lineWidth=3; ctx.stroke();} ctx.lineWidth=5; var hx=pts[0].x, hy=pts[0].y-35; ctx.beginPath(); ctx.ellipse(hx,hy,55,45,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(hx-20,hy-8,10,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(hx+20,hy-8,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(hx-18,hy-10,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(hx+22,hy-10,3,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#333'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(hx,hy+10,18,0.2,Math.PI-0.2); ctx.stroke(); ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(hx,hy+28); ctx.lineTo(hx-8,hy+42); ctx.moveTo(hx,hy+28); ctx.lineTo(hx+8,hy+42); ctx.stroke(); }
-    function drawTiger(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+50,160,130,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy-100,120,110,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); for(var i=0;i<4;i++){var lx=cx-100+i*70; ctx.fillRect(lx-20,cy+130,40,120); ctx.strokeRect(lx-20,cy+130,40,120);} ctx.lineWidth=8; for(var i=0;i<6;i++){ctx.beginPath(); ctx.moveTo(cx-120,cy+20+i*25); ctx.lineTo(cx+120,cy+20+i*25); ctx.stroke();} ctx.lineWidth=5; ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-40,cy-110,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+40,cy-110,15,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx,cy-70); ctx.lineTo(cx-15,cy-50); ctx.lineTo(cx+15,cy-50); ctx.closePath(); ctx.fill(); }
-    function drawGiraffe(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+100,140,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillRect(cx-30,cy-300,60,400); ctx.strokeRect(cx-30,cy-300,60,400); ctx.beginPath(); ctx.ellipse(cx,cy-330,60,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); for(var i=0;i<4;i++){var lx=cx-90+i*60; ctx.fillRect(lx-15,cy+180,30,150); ctx.strokeRect(lx-15,cy+180,30,150);} [[cx-80,cy+80],[cx-40,cy+60],[cx,cy+100],[cx+40,cy+70],[cx+80,cy+90],[cx-20,cy-100],[cx+10,cy-150]].forEach(function(s){ctx.beginPath(); ctx.ellipse(s[0],s[1],25,30,0,0,Math.PI*2); ctx.fill(); ctx.stroke();}); ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx+20,cy-340,12,0,Math.PI*2); ctx.fill(); }
-    function drawFrog(ctx,w,h) { let cx=w/2, cy=h/2; ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy+30,130,110,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx,cy-50,120,80,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-60,cy-90,45,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+60,cy-90,45,50,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle='#333'; ctx.beginPath(); ctx.arc(cx-60,cy-85,20,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+60,cy-85,20,0,Math.PI*2); ctx.fill(); ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(cx,cy-20,60,0.1,Math.PI-0.1); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-110,cy+80,30,60,-0.5,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+110,cy+80,30,60,0.5,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx-130,cy+20,50,80,-0.8,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx+130,cy+20,50,80,0.8,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
-
-    // ----- START -----
-    buildJungle();
-    setupModal();
-  })();
+  buildJungle();
+  setupModal();
+})();
 </script>
-    <script src="../js/audio-manager.js"></script>
+<script src="../js/audio-manager.js"></script>
 </body>
 </html>
