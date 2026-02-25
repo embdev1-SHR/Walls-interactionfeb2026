@@ -55,6 +55,10 @@ const CATEGORIES = {
             { name: 'Word Explorer', game: 'word-explorer' },
             { name: 'Word Creator', game: 'word-creator' }
         ]
+    },
+    'money-counter': {
+        title: 'Money Shop',
+        game: 'money-counter'
     }
 };
 
@@ -285,6 +289,9 @@ function loadGame(gameName) {
                 break;
             case 'word-matcher':
                 window.location.href = 'games/word-matcher.html';
+                break;
+            case 'money-counter':
+                window.location.href = 'games/money-counter.html';
                 break;
             case 'arithmetica':
                 window.location.href = 'games/arithmetica-multi.html';
