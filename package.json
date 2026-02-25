@@ -9,7 +9,7 @@
   },
   "build": {
     "appId": "com.yourname.interactive-wall-games",
-    "productName": "Interactive Wall Games",
+    "productName": "Auticare Blueroom Interactive",
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
