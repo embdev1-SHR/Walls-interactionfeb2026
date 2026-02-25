@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fruit Counter!</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@800;900&display=swap');
+
+*{
+  margin:0;padding:0;box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  /* CRITICAL for multi-touch: allow touch on each element independently */
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+html,body{width:100%;height:100%;overflow:hidden;}
+body{font-family:'Nunito',sans-serif;background:#FFF8EE;}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(circle,#FFE5B4 2px,transparent 2px);
+  background-size:34px 34px;pointer-events:none;z-index:0;
+}
+
+/* ══════════ SHELL ══════════ */
+.shell{
+  position:relative;z-index:1;
+  width:100%;height:100%;
+  display:flex;flex-direction:row;
+  /* right margin for toolbar */
+  padding-right:170px;
+}
+
+/* ══════════ PLAYER PANELS ══════════ */
+.player-panel{
+  flex:1;height:100%;
+  display:flex;flex-direction:column;
+  align-items:center;
+  position:relative;
+  overflow:hidden;
+  min-width:0;
+  /* each panel gets its own touch context */
+  touch-action:none;
+}
+
+.panel-div{
+  width:4px;flex-shrink:0;height:100%;
+  background:linear-gradient(to bottom,transparent,rgba(0,0,0,.08),transparent);
+}
+
+/* Per-player colour vars */
+.player-panel[data-p="0"]{--pc:#FF5722;--pcs:#FF8A65;--pcb:rgba(255,87,34,.07);--pcglow:rgba(255,87,34,.3);}
+.player-panel[data-p="1"]{--pc:#2E7D32;--pcs:#66BB6A;--pcb:rgba(46,125,50,.07);--pcglow:rgba(46,125,50,.3);}
+.player-panel[data-p="2"]{--pc:#1565C0;--pcs:#64B5F6;--pcb:rgba(21,101,192,.07);--pcglow:rgba(21,101,192,.3);}
+
+/* ── PANEL HEADER ── */
+.p-header{
+  width:100%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:10px 8px 6px;
+  background:var(--pcb);
+  border-bottom:3px solid var(--pcs);
+}
+.p-avatar{
+  width:clamp(28px,4vw,38px);height:clamp(28px,4vw,38px);
+  border-radius:50%;
+  background:var(--pc);
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(14px,2vw,20px);
+  box-shadow:0 3px 0 rgba(0,0,0,.15);
+  flex-shrink:0;
+}
+.p-name{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(14px,2.2vw,22px);
+  color:var(--pc);
+  text-shadow:1px 1px 0 var(--pcs);
+  white-space:nowrap;
+}
+.p-new-btn{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(10px,1.2vw,14px);
+  padding:5px 10px;
+  background:var(--pc);color:white;
+  border:none;border-radius:50px;cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.2);
+  flex-shrink:0;
+  /* allow click events still */
+  touch-action:auto;
+}
+
+/* ── BIG NUMBER ── */
+.p-number-zone{
+  flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;
+  padding:8px 4px 4px;
+}
+.p-count{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(60px,13vw,110px);
+  color:var(--pc);line-height:1;
+  text-shadow:3px 3px 0 var(--pcs),5px 5px 0 rgba(0,0,0,.06);
+  text-align:center;
+  transition:transform .1s;
+}
+.p-count.pop{animation:countPop .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes countPop{
+  0%{transform:scale(1)}
+  45%{transform:scale(1.35) rotate(-4deg)}
+  70%{transform:scale(.93)}
+  100%{transform:scale(1)}
+}
+
+/* Progress stars — warm, rewarding feedback for autistic kids */
+.p-dots{
+  display:flex;gap:clamp(3px,1vw,8px);
+  align-items:center;justify-content:center;
+  flex-wrap:wrap;padding:3px 8px 4px;min-height:26px;
+}
+.p-dot{
+  font-size:clamp(14px,2.2vw,22px);
+  opacity:.18;
+  transform:scale(.7);
+  transition:opacity .25s, transform .3s cubic-bezier(.34,1.56,.64,1), filter .25s;
+  flex-shrink:0;
+  display:inline-block;
+}
+.p-dot.lit{
+  opacity:1;
+  transform:scale(1.2);
+  filter:drop-shadow(0 2px 6px rgba(255,200,0,.8));
+  animation:starPop .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes starPop{
+  0%{transform:scale(.7)}
+  55%{transform:scale(1.5)}
+  80%{transform:scale(1.05)}
+  100%{transform:scale(1.2)}
+}
+
+/* ── LEARN STRIP ── */
+.p-learn{
+  display:none;flex-wrap:wrap;
+  justify-content:center;align-items:center;
+  gap:3px;padding:2px 8px;width:100%;flex-shrink:0;
+}
+.p-learn.visible{display:flex;}
+.p-lf{
+  font-size:clamp(18px,3vw,30px);
+  opacity:.2;transition:opacity .2s,transform .18s;
+}
+.p-lf.lit{opacity:1;transform:scale(1.12);filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));}
+
+/* ── FRUIT WRAP — movable via slider ── */
+.p-fruit-wrap{
+  position:absolute;
+  left:0;right:0;
+  top:62%;
+  display:flex;justify-content:center;
+  transition:top .08s ease;
+}
+.p-fruits{
+  display:flex;flex-wrap:wrap;
+  justify-content:center;align-items:center;
+  gap:clamp(8px,2vw,18px);
+  padding:8px 10px 14px;
+  width:100%;
+}
+
+/* ── FRUIT ITEM — big, clear, touchable ── */
+.p-fruit{
+  /* BIG so autistic kids can easily tap */
+  font-size:clamp(38px,7vw,62px);
+  display:inline-block;
+  opacity:.28;
+  filter:grayscale(80%) brightness(.9);
+  transition:opacity .18s,filter .18s,transform .12s;
+  /* Each fruit is its own touch target */
+  touch-action:none;
+  cursor:pointer;
+  /* Nice rounded bg so target is obvious */
+  padding:6px;
+  border-radius:20px;
+  border:3px solid transparent;
+  background:transparent;
+}
+.p-fruit.counted{
+  opacity:1;
+  filter:grayscale(0%) brightness(1);
+  border-color:var(--pc);
+  background:var(--pcb);
+  box-shadow:0 4px 12px var(--pcglow);
+}
+/* Glow pulse on newly counted */
+.p-fruit.just-counted{
+  animation:fruitGlow .4s ease;
+}
+@keyframes fruitGlow{
+  0%{transform:scale(1)}
+  35%{transform:scale(1.5)}
+  65%{transform:scale(.95)}
+  100%{transform:scale(1)}
+}
+
+/* ── TIMER BAR ── */
+.p-timer-bar{
+  width:100%;flex-shrink:0;
+  padding:3px 12px 2px;display:none;
+}
+.p-timer-bar.visible{display:block;}
+.p-timer-track{
+  width:100%;height:8px;
+  background:rgba(0,0,0,.06);border-radius:50px;overflow:hidden;
+}
+.p-timer-fill{
+  height:100%;border-radius:50px;
+  background:linear-gradient(90deg,var(--pc),var(--pcs));
+  width:100%;transition:width .1s linear;
+}
+.p-timer-label{
+  font-family:'Fredoka One',cursive;
+  font-size:11px;color:var(--pc);opacity:.65;
+  text-align:center;margin-top:1px;
+}
+
+/* ── CELEBRATION — gentle, not overwhelming ── */
+.p-celebrate{
+  position:absolute;inset:0;z-index:30;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(255,248,238,.94);
+  backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;
+  transition:opacity .4s;
+  padding:16px;
+  gap:6px;
+}
+.p-celebrate.show{opacity:1;pointer-events:all;}
+.p-cel-emoji{
+  font-size:clamp(40px,8vw,70px);
+  animation:celebBounce .5s cubic-bezier(.34,1.56,.64,1) .1s both;
+}
+.p-cel-text{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(20px,3.5vw,34px);
+  color:var(--pc);text-align:center;
+  text-shadow:2px 2px 0 var(--pcs);
+  animation:celebBounce .5s cubic-bezier(.34,1.56,.64,1) .2s both;
+}
+.p-cel-sub{
+  font-size:clamp(13px,2vw,18px);font-weight:800;
+  color:var(--pc);opacity:.7;text-align:center;
+  animation:celebBounce .5s cubic-bezier(.34,1.56,.64,1) .32s both;
+}
+@keyframes celebBounce{
+  0%{transform:scale(0) rotate(-8deg);opacity:0}
+  100%{transform:scale(1) rotate(0deg);opacity:1}
+}
+.p-cel-btn{
+  margin-top:10px;
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(14px,2.2vw,20px);
+  padding:10px 26px;
+  background:var(--pc);color:white;
+  border:none;border-radius:50px;cursor:pointer;
+  box-shadow:0 4px 0 rgba(0,0,0,.2);
+  transition:transform .1s,box-shadow .1s;
+  animation:celebBounce .5s cubic-bezier(.34,1.56,.64,1) .44s both;
+  touch-action:auto;
+}
+.p-cel-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.2);}
+
+/* ══════════ FLOATING TOOLBAR ══════════ */
+.floating-toolbar{
+  position:fixed;
+  right:8px;top:50%;
+  transform:translateY(-50%);
+  z-index:200;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border:2px solid rgba(255,87,34,.18);
+  border-radius:30px;
+  padding:12px 8px;
+  box-shadow:0 8px 28px rgba(255,87,34,.18),0 2px 8px rgba(0,0,0,.08);
+  width:60px;
+  /* toolbar itself handles its own touch */
+  touch-action:auto;
+}
+.tb-btn{
+  width:42px;height:42px;
+  background:rgba(255,87,34,.07);
+  border:2px solid rgba(255,87,34,.16);
+  border-radius:13px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px;
+  transition:background .18s,border-color .18s,transform .1s;
+  flex-shrink:0;
+  touch-action:auto;
+}
+.tb-btn:active{transform:scale(.88);}
+.tb-btn.active{background:#FF5722;border-color:#FF5722;box-shadow:0 3px 10px rgba(255,87,34,.4);}
+.tb-btn.menu-btn{
+  background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22);
+  color:#dc2626;font-family:'Fredoka One',cursive;
+  font-size:9px;line-height:1.3;text-align:center;
+}
+
+.tb-sep{width:26px;height:2px;background:rgba(255,87,34,.12);border-radius:2px;}
+.tb-micro{
+  font-family:'Fredoka One',cursive;font-size:7.5px;
+  color:#FF5722;opacity:.5;text-align:center;letter-spacing:.3px;
+}
+
+/* Vertical slider */
+.tb-slider-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.tb-arr{font-size:9px;color:#FF5722;opacity:.5;line-height:1;font-family:'Fredoka One',cursive;}
+.v-track{
+  width:22px;height:110px;
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.v-input{
+  -webkit-appearance:none;appearance:none;
+  width:110px;height:22px;
+  border-radius:50px;outline:none;cursor:pointer;
+  transform:rotate(-90deg);
+  background:transparent;position:absolute;
+  touch-action:none;
+}
+.v-input::-webkit-slider-runnable-track{
+  width:100%;height:6px;border-radius:50px;background:rgba(255,87,34,.14);
+}
+.v-input::-moz-range-track{
+  width:100%;height:6px;border-radius:50px;background:rgba(255,87,34,.14);
+}
+.v-input::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:20px;height:20px;border-radius:50%;
+  background:#FF5722;box-shadow:0 2px 8px rgba(255,87,34,.5);
+  cursor:pointer;margin-top:-7px;border:2px solid white;
+}
+.v-input::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  background:#FF5722;border:2px solid white;
+}
+
+/* ══════════ CONFETTI / FX ══════════ */
+.confetti-piece{
+  position:fixed;border-radius:2px;top:-20px;
+  animation:confettiFall linear forwards;
+  pointer-events:none;z-index:300;
+}
+@keyframes confettiFall{
+  0%{transform:translateY(0) rotate(0deg);opacity:1;}
+  100%{transform:translateY(110vh) rotate(600deg);opacity:0;}
+}
+.touch-ring{
+  position:fixed;width:64px;height:64px;
+  border:4px solid rgba(255,87,34,.65);border-radius:50%;
+  pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%) scale(0);
+  animation:ringPop .55s ease forwards;
+}
+@keyframes ringPop{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(2.1);opacity:0}
+}
+.float-num{
+  position:fixed;font-family:'Fredoka One',cursive;
+  font-size:clamp(26px,4vw,42px);
+  pointer-events:none;z-index:500;
+  animation:floatUp .85s ease forwards;
+  text-shadow:2px 2px 0 rgba(0,0,0,.12);
+}
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(1);opacity:1;}
+  100%{transform:translateY(-75px) scale(1.25);opacity:0;}
+}
+.time-up-flash{
+  position:fixed;inset:0;z-index:50;
+  background:rgba(255,87,34,.22);pointer-events:none;
+  animation:flashOut .7s ease forwards;
+}
+@keyframes flashOut{0%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ══ PLAYER 1 ══ -->
+  <div class="player-panel" data-p="0" id="panel-0">
+    <div class="p-header">
+      <div class="p-avatar">😊</div>
+      <div class="p-name">Player 1</div>
+      <button class="p-new-btn" id="new0">🔀 New</button>
+    </div>
+    <div class="p-timer-bar" id="timerBar-0">
+      <div class="p-timer-track"><div class="p-timer-fill" id="timerFill-0"></div></div>
+      <div class="p-timer-label" id="timerLabel-0">30s</div>
+    </div>
+    <div class="p-number-zone">
+      <div class="p-count" id="count-0">0</div>
+      <div class="p-dots" id="dots-0"></div>
+    </div>
+    <div class="p-learn" id="learn-0"></div>
+    <div class="p-fruit-wrap" id="fruitWrap-0">
+      <div class="p-fruits" id="fruits-0"></div>
+    </div>
+    <div class="p-celebrate" id="cel-0">
+      <div class="p-cel-emoji">🌟</div>
+      <div class="p-cel-text" id="celText-0">Well Done!</div>
+      <div class="p-cel-sub" id="celSub-0">You counted all the fruits!</div>
+      <button class="p-cel-btn" id="celBtn-0">Play Again! 🍓</button>
+    </div>
+  </div>
+
+  <div class="panel-div"></div>
+
+  <!-- ══ PLAYER 2 ══ -->
+  <div class="player-panel" data-p="1" id="panel-1">
+    <div class="p-header">
+      <div class="p-avatar">🌟</div>
+      <div class="p-name">Player 2</div>
+      <button class="p-new-btn" id="new1">🔀 New</button>
+    </div>
+    <div class="p-timer-bar" id="timerBar-1">
+      <div class="p-timer-track"><div class="p-timer-fill" id="timerFill-1"></div></div>
+      <div class="p-timer-label" id="timerLabel-1">30s</div>
+    </div>
+    <div class="p-number-zone">
+      <div class="p-count" id="count-1">0</div>
+      <div class="p-dots" id="dots-1"></div>
+    </div>
+    <div class="p-learn" id="learn-1"></div>
+    <div class="p-fruit-wrap" id="fruitWrap-1">
+      <div class="p-fruits" id="fruits-1"></div>
+    </div>
+    <div class="p-celebrate" id="cel-1">
+      <div class="p-cel-emoji">🌟</div>
+      <div class="p-cel-text" id="celText-1">Well Done!</div>
+      <div class="p-cel-sub" id="celSub-1">You counted all the fruits!</div>
+      <button class="p-cel-btn" id="celBtn-1">Play Again! 🍊</button>
+    </div>
+  </div>
+
+  <div class="panel-div"></div>
+
+  <!-- ══ PLAYER 3 ══ -->
+  <div class="player-panel" data-p="2" id="panel-2">
+    <div class="p-header">
+      <div class="p-avatar">🎈</div>
+      <div class="p-name">Player 3</div>
+      <button class="p-new-btn" id="new2">🔀 New</button>
+    </div>
+    <div class="p-timer-bar" id="timerBar-2">
+      <div class="p-timer-track"><div class="p-timer-fill" id="timerFill-2"></div></div>
+      <div class="p-timer-label" id="timerLabel-2">30s</div>
+    </div>
+    <div class="p-number-zone">
+      <div class="p-count" id="count-2">0</div>
+      <div class="p-dots" id="dots-2"></div>
+    </div>
+    <div class="p-learn" id="learn-2"></div>
+    <div class="p-fruit-wrap" id="fruitWrap-2">
+      <div class="p-fruits" id="fruits-2"></div>
+    </div>
+    <div class="p-celebrate" id="cel-2">
+      <div class="p-cel-emoji">🌟</div>
+      <div class="p-cel-text" id="celText-2">Well Done!</div>
+      <div class="p-cel-sub" id="celSub-2">You counted all the fruits!</div>
+      <button class="p-cel-btn" id="celBtn-2">Play Again! 🍋</button>
+    </div>
+  </div>
+
+</div><!-- end .shell -->
+
+<!-- ══ SHARED FLOATING TOOLBAR ══ -->
+<div class="floating-toolbar" id="floatingToolbar">
+
+  <div class="tb-btn active" id="newAllBtn" title="New game for all">
+    🔀<br><span style="font-size:8px;font-family:'Fredoka One',cursive;opacity:.8">ALL</span>
+  </div>
+
+  <div class="tb-sep"></div>
+  <div class="tb-micro">Move<br>Fruits</div>
+
+  <div class="tb-slider-wrap">
+    <div class="tb-arr">▲</div>
+    <div class="v-track">
+      <input type="range" class="v-input" id="posSlider" min="0" max="100" value="25">
+    </div>
+    <div class="tb-arr">▼</div>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-btn" id="learnBtn" title="Learning Mode">📚</div>
+  <div class="tb-btn" id="timerBtn" title="Countdown Timer">⏱️</div>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-btn menu-btn" id="backBtn">←<br>Menu</div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  AUTISM-FRIENDLY DESIGN PRINCIPLES APPLIED:
+//  - Only 3–5 fruits per round (not overwhelming)
+//  - ALL fruits are the SAME type (no visual confusion)
+//  - Big clear emoji with obvious border when tapped
+//  - Simple dots progress (not stars — cleaner)
+//  - Gentle, clear TTS with slow pace
+//  - Celebration is calm (not flashing/overwhelming)
+//  - No "wrong" feedback — just wait
+//  - Multi-touch: each panel handles independent touches
+// ══════════════════════════════════════════════
+
+const FRUITS=['🍎','🍊','🍋','🍇','🍓','🍑','🍒','🍍','🥭','🍌'];
+const CONGRATS=['Well done!','You got it!','Great job!','Brilliant!','You did it!'];
+const PNAMES=['Player 1','Player 2','Player 3'];
+
+// Per-panel state
+const S=[0,1,2].map(p=>({
+  p, total:0, counted:0,
+  emoji:'🍎', startTime:0,
+  timerInterval:null, timerRemaining:30,
+  // track which touch identifiers are currently inside each fruit
+  activeTouches:new Set()
+}));
+
+let learnMode=false, timerEnabled=false;
+const TIMER_DURATION=30;
+
+// ── TTS ──
+const synth=window.speechSynthesis;
+let voices=[];
+function loadVoices(){voices=synth.getVoices();}
+loadVoices();
+if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;
+function getVoice(){
+  // Pick a clear, gentle voice
+  const prefs=['Samantha','Karen','Moira','Google UK English Female','Tessa'];
+  for(let p of prefs){let v=voices.find(v=>v.name.includes(p));if(v)return v;}
+  return voices[0]||null;
+}
+function speak(text,onDone){
+  if(!text)return;
+  synth.cancel();
+  const utt=new SpeechSynthesisUtterance(text);
+  const v=getVoice();if(v)utt.voice=v;
+  // Slower, clearer for accessibility
+  utt.rate=0.85;
+  utt.pitch=1.5;
+  utt.volume=1.0;
+  utt.onend=onDone||null;
+  synth.speak(utt);
+}
+
+// ── POSITION SLIDER ──
+document.getElementById('posSlider').addEventListener('input',function(){
+  applyPos(parseInt(this.value));
+});
+function applyPos(val){
+  // val 0(bottom)..100(top) → top css 78%..15%
+  const top=78-(val/100)*63;
+  [0,1,2].forEach(p=>{
+    document.getElementById('fruitWrap-'+p).style.top=top+'%';
+  });
+}
+applyPos(25);
+
+// ── LEARN MODE ──
+document.getElementById('learnBtn').addEventListener('click',function(){
+  learnMode=!learnMode;
+  this.classList.toggle('active',learnMode);
+  [0,1,2].forEach(p=>refreshLearnStrip(p));
+});
+
+// ── TIMER ──
+document.getElementById('timerBtn').addEventListener('click',function(){
+  timerEnabled=!timerEnabled;
+  this.classList.toggle('active',timerEnabled);
+  if(!timerEnabled){
+    [0,1,2].forEach(p=>{
+      stopTimer(p);
+      document.getElementById('timerBar-'+p).classList.remove('visible');
+    });
+  }
+  newAllGames();
+});
+
+function startTimer(p){
+  stopTimer(p);
+  const s=S[p];s.timerRemaining=TIMER_DURATION;
+  document.getElementById('timerBar-'+p).classList.add('visible');
+  tickTimer(p);
+  s.timerInterval=setInterval(()=>tickTimer(p),100);
+}
+function tickTimer(p){
+  const s=S[p];
+  s.timerRemaining=Math.max(0,s.timerRemaining-0.1);
+  const pct=(s.timerRemaining/TIMER_DURATION*100)+'%';
+  const fill=document.getElementById('timerFill-'+p);
+  fill.style.width=pct;
+  document.getElementById('timerLabel-'+p).textContent=Math.ceil(s.timerRemaining)+'s';
+  if(s.timerRemaining<=5) fill.style.background='linear-gradient(90deg,#ef4444,#f97316)';
+  else if(s.timerRemaining<=10) fill.style.background='linear-gradient(90deg,#f97316,#fbbf24)';
+  else fill.style.background=''; // reset to css var
+  if(s.timerRemaining<=0){stopTimer(p);timeUp(p);}
+}
+function stopTimer(p){
+  const s=S[p];
+  if(s.timerInterval){clearInterval(s.timerInterval);s.timerInterval=null;}
+}
+function timeUp(p){
+  const s=S[p];
+  const fl=document.createElement('div');fl.className='time-up-flash';
+  document.body.appendChild(fl);fl.addEventListener('animationend',()=>fl.remove());
+  setTimeout(()=>{
+    document.getElementById('celText-'+p).textContent="Time's up! ⏱";
+    document.getElementById('celSub-'+p).textContent='You counted '+s.counted+' fruits!';
+    document.getElementById('cel-'+p).classList.add('show');
+  },500);
+  speak(PNAMES[p]+', time is up! You counted '+s.counted+'!');
+}
+
+// ── BUILD STARS ──
+function buildDots(p){
+  const s=S[p];
+  const row=document.getElementById('dots-'+p);row.innerHTML='';
+  for(let i=0;i<s.total;i++){
+    const d=document.createElement('span');
+    d.className='p-dot';d.id='dot-'+p+'-'+i;
+    d.textContent='⭐';
+    row.appendChild(d);
+  }
+}
+function lightDot(p,idx){
+  const d=document.getElementById('dot-'+p+'-'+idx);
+  if(d)d.classList.add('lit');
+}
+
+// ── LEARN STRIP ──
+function refreshLearnStrip(p){
+  const s=S[p];
+  const strip=document.getElementById('learn-'+p);
+  if(!learnMode){strip.classList.remove('visible');strip.innerHTML='';return;}
+  strip.classList.add('visible');strip.innerHTML='';
+  for(let i=0;i<s.total;i++){
+    const sp=document.createElement('span');
+    sp.className='p-lf'+(i<s.counted?' lit':'');
+    sp.id='lf-'+p+'-'+i;sp.textContent=s.emoji;strip.appendChild(sp);
+  }
+}
+function lightLearn(p,idx){
+  const el=document.getElementById('lf-'+p+'-'+idx);if(el)el.classList.add('lit');
+}
+
+// ── NEW GAME ──
+// Autism-friendly: 3–5 fruits, ALL same type, simple
+function newGame(p){
+  const s=S[p];
+  stopTimer(p);
+  s.activeTouches.clear();
+  // 3–5 fruits only — simple, achievable
+  s.total=Math.floor(Math.random()*3)+3; // 3,4, or 5
+  s.counted=0;
+  s.startTime=Date.now();
+  s.emoji=FRUITS[Math.floor(Math.random()*FRUITS.length)];
+
+  document.getElementById('count-'+p).textContent='0';
+  document.getElementById('cel-'+p).classList.remove('show');
+  document.getElementById('timerBar-'+p).classList.remove('visible');
+
+  buildDots(p);
+
+  const container=document.getElementById('fruits-'+p);
+  container.innerHTML='';
+
+  for(let i=0;i<s.total;i++){
+    const span=document.createElement('span');
+    span.className='p-fruit';
+    span.textContent=s.emoji;
+    // Gentle slight rotation
+    const rot=(Math.random()-.5)*12;
+    span.style.transform=`rotate(${rot}deg)`;
+    span.dataset.idx=i;
+
+    // ── MULTI-TOUCH via pointer events ──
+    // pointerdown fires for each finger separately, no interference
+    span.addEventListener('pointerdown',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(!span.classList.contains('counted')){
+        tapFruit(p,span,e.clientX,e.clientY);
+      }
+    });
+
+    container.appendChild(span);
+  }
+
+  refreshLearnStrip(p);
+  if(timerEnabled)startTimer(p);
+}
+
+function newAllGames(){
+  [0,1,2].forEach(p=>newGame(p));
+  speak("Let's count the fruits!");
+}
+
+// ── TAP FRUIT ──
+function tapFruit(p,span,cx,cy){
+  if(span.classList.contains('counted'))return;
+  const s=S[p];
+
+  s.counted++;
+  span.classList.add('counted','just-counted');
+  span.addEventListener('animationend',()=>span.classList.remove('just-counted'),{once:true});
+
+  lightDot(p,s.counted-1);
+  if(learnMode)lightLearn(p,s.counted-1);
+
+  // Update big number
+  const bubble=document.getElementById('count-'+p);
+  bubble.textContent=s.counted;
+  bubble.classList.add('pop');
+  bubble.addEventListener('animationend',()=>bubble.classList.remove('pop'),{once:true});
+
+  // Visual feedback at touch point
+  spawnRing(cx,cy,p);
+  spawnFloat(s.counted,cx,cy,p);
+
+  if(s.counted===s.total){
+    // Done!
+    stopTimer(p);
+    const elapsed=((Date.now()-s.startTime)/1000).toFixed(1);
+    speak(s.counted+'!',()=>{
+      setTimeout(()=>{
+        const c=CONGRATS[Math.floor(Math.random()*CONGRATS.length)];
+        document.getElementById('celText-'+p).textContent=c;
+        document.getElementById('celSub-'+p).textContent='You counted all '+s.total+' fruits!';
+        document.getElementById('cel-'+p).classList.add('show');
+        launchConfetti(p);
+        speak(PNAMES[p]+', '+c+' You counted all '+s.total+'!');
+      },350);
+    });
+  } else {
+    speak(String(s.counted));
+  }
+}
+
+// ── FX HELPERS ──
+const PCOLS=['#FF5722','#2E7D32','#1565C0'];
+function spawnRing(x,y,p){
+  const r=document.createElement('div');r.className='touch-ring';
+  r.style.left=x+'px';r.style.top=y+'px';
+  r.style.borderColor=PCOLS[p]+'aa';
+  document.body.appendChild(r);
+  r.addEventListener('animationend',()=>r.remove());
+}
+function spawnFloat(n,x,y,p){
+  const el=document.createElement('div');el.className='float-num';
+  el.textContent=n;
+  el.style.left=x+'px';el.style.top=y+'px';
+  el.style.color=PCOLS[p];
+  document.body.appendChild(el);
+  el.addEventListener('animationend',()=>el.remove());
+}
+function launchConfetti(p){
+  const colors=[PCOLS[p],'#FFB347','#FFD700','#86efac','#93c5fd','#FF6B8A'];
+  // Fewer, gentler confetti — not overwhelming
+  for(let i=0;i<30;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');el.className='confetti-piece';
+      el.style.left=Math.random()*100+'vw';
+      el.style.background=colors[Math.floor(Math.random()*colors.length)];
+      el.style.width=(8+Math.random()*7)+'px';el.style.height=(10+Math.random()*8)+'px';
+      el.style.borderRadius=Math.random()>.5?'50%':'3px';
+      el.style.animationDuration=(1.6+Math.random()*2)+'s';
+      el.style.animationDelay=(Math.random()*.4)+'s';
+      document.body.appendChild(el);el.addEventListener('animationend',()=>el.remove());
+    },i*40);
+  }
+}
+
+function goBack(){
+  synth.cancel();
+  [0,1,2].forEach(p=>stopTimer(p));
+  if(window.history.length>1)window.history.back();
+  else window.location.href='../index.html';
+}
+
+// ── BUTTON BINDINGS ──
+document.getElementById('newAllBtn').addEventListener('click',newAllGames);
+document.getElementById('backBtn').addEventListener('click',goBack);
+[0,1,2].forEach(p=>{
+  document.getElementById('new'+p).addEventListener('click',()=>newGame(p));
+  document.getElementById('celBtn-'+p).addEventListener('click',()=>{
+    document.getElementById('cel-'+p).classList.remove('show');
+    newGame(p);
+  });
+});
+
+// ── START ──
+newAllGames();
+</script>
+</body>
+</html>

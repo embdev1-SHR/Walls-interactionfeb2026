@@ -5,9 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "vite",
-    "build": "electron-builder",
-    "preview": "vite preview"
+    "build": "electron-builder"
   },
   "build": {
     "appId": "com.yourname.interactive-wall-games",
@@ -26,7 +24,11 @@
     },
     "files": [
       "main.js",
-      "dist/**/*",
+      "index.html",
+      "FreeCanvas.html",
+      "solar-system.html",
+      "games/**/*",
+      "js/**/*",
       "assets/**/*",
       "package.json"
     ],
@@ -36,8 +38,7 @@
   },
   "devDependencies": {
     "electron": "^28.0.0",
-    "electron-builder": "^24.9.1",
-    "vite": "^5.4.0"
+    "electron-builder": "^24.9.1"
   },
   "dependencies": {
     "three": "^0.182.0"

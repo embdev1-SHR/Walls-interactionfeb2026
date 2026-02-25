@@ -25,7 +25,8 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile('index.html');
+  // Load index.html from app directory
+  mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
   mainWindow.on('closed', function () {
     mainWindow = null;

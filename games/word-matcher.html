@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word Matcher - Learning Alphabets</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: 'Space Grotesk', Arial, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      color: white;
+      max-width: 900px;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .description {
+      font-size: 1.5rem;
+      margin-bottom: 40px;
+      opacity: 0.95;
+    }
+
+    .game-area {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 50px 40px;
+      margin-bottom: 30px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .word-display {
+      font-size: 3rem;
+      margin: 20px 0;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 20px 40px;
+      border-radius: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      letter-spacing: 3px;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .option-btn {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 20px;
+      font-size: 1.3rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      font-family: 'Space Grotesk', Arial, sans-serif;
+    }
+
+    .option-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .option-btn.correct {
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      border-color: #38ef7d;
+    }
+
+    .option-btn.wrong {
+      background: linear-gradient(135deg, #eb3349, #f45c43);
+      border-color: #f45c43;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-family: 'Space Grotesk', Arial, sans-serif;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    button:active {
+      transform: translateY(-1px);
+    }
+
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 0, 0, 0.7);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 1rem;
+      z-index: 1000;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 0, 0, 0.9);
+    }
+
+    .score {
+      font-size: 1.3rem;
+      margin-top: 20px;
+      font-weight: 700;
+    }
+
+    .instructions {
+      font-size: 1.1rem;
+      margin-top: 30px;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <button class="back-button" onclick="window.location.href='../index.html'">← Back to Menu</button>
+
+  <div class="container">
+    <h1>📝 Word Matcher 🔤</h1>
+    <p class="description">Match words with their pictures or meanings!</p>
+
+    <div class="game-area">
+      <div>
+        <p style="font-size: 1.2rem; opacity: 0.95;">Find the matching word:</p>
+        <div class="word-display" id="wordDisplay">APPLE</div>
+
+        <div class="options" id="optionsContainer">
+          <button class="option-btn" onclick="checkAnswer('A')">A</button>
+          <button class="option-btn" onclick="checkAnswer('B')">B</button>
+          <button class="option-btn" onclick="checkAnswer('C')">C</button>
+          <button class="option-btn" onclick="checkAnswer('D')">D</button>
+        </div>
+
+        <div class="score" id="scoreDisplay">Score: 0/0</div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button onclick="nextWord()">Next Word</button>
+      <button onclick="resetGame()">Reset Game</button>
+    </div>
+
+    <div class="instructions">
+      <p>Click on the correct option that matches the word displayed.</p>
+      <p>Test your alphabet and word recognition skills!</p>
+    </div>
+  </div>
+
+  <script>
+    const words = [
+      { word: 'APPLE', options: ['Apple 🍎', 'Banana 🍌', 'Orange 🍊', 'Grape 🍇'], correct: 0 },
+      { word: 'BALL', options: ['House 🏠', 'Ball ⚽', 'Car 🚗', 'Tree 🌳'], correct: 1 },
+      { word: 'CAT', options: ['Dog 🐕', 'Cat 🐱', 'Bird 🐦', 'Fish 🐠'], correct: 1 },
+      { word: 'DOOR', options: ['Window 🪟', 'Door 🚪', 'Wall 🧱', 'Floor 🏠'], correct: 1 },
+      { word: 'EGG', options: ['Egg 🥚', 'Bread 🍞', 'Cheese 🧀', 'Milk 🥛'], correct: 0 }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let total = 0;
+
+    function displayWord() {
+      const current = words[currentIndex];
+      document.getElementById('wordDisplay').textContent = current.word;
+      
+      const container = document.getElementById('optionsContainer');
+      container.innerHTML = '';
+      
+      current.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = option;
+        btn.onclick = () => checkAnswer(index);
+        container.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(index) {
+      total++;
+      const current = words[currentIndex];
+      
+      if (index === current.correct) {
+        score++;
+        alert('✅ Correct!');
+      } else {
+        alert('❌ Try again!');
+      }
+      
+      updateScore();
+      nextWord();
+    }
+
+    function nextWord() {
+      currentIndex = (currentIndex + 1) % words.length;
+      displayWord();
+    }
+
+    function resetGame() {
+      currentIndex = 0;
+      score = 0;
+      total = 0;
+      updateScore();
+      displayWord();
+    }
+
+    function updateScore() {
+      document.getElementById('scoreDisplay').textContent = `Score: ${score}/${total}`;
+    }
+
+    displayWord();
+  </script>
+</body>
+</html>

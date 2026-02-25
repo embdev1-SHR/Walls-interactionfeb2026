@@ -39,6 +39,7 @@ const CATEGORIES = {
         title: 'Maths',
         parent: 'learning',
         options: [
+            { name: 'Fruit Counter', game: 'fruit-counter' },
             { name: 'Number Explorer', game: 'number-explorer' },
             { name: 'Arithmetica', game: 'arithmetica' },
             { name: 'Number Crunch', game: 'number-crunch' },
@@ -49,6 +50,7 @@ const CATEGORIES = {
         title: 'Alphabets',
         parent: 'learning',
         options: [
+            { name: 'Word Matcher', game: 'word-matcher' },
             { name: 'Alphabet Explorer', game: 'alphabet-explorer' },
             { name: 'Word Explorer', game: 'word-explorer' },
             { name: 'Word Creator', game: 'word-creator' }
@@ -277,6 +279,12 @@ function loadGame(gameName) {
                 break;
             case 'sort-table':
                 window.location.href = 'games/room-sorter.html?room=table';
+                break;
+            case 'fruit-counter':
+                window.location.href = 'games/fruit-counter.html';
+                break;
+            case 'word-matcher':
+                window.location.href = 'games/word-matcher.html';
                 break;
             case 'arithmetica':
                 window.location.href = 'games/arithmetica-multi.html';
