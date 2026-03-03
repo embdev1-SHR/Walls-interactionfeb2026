@@ -4,698 +4,626 @@
 <meta charset="utf-8">
 <title>World Tour 360°</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Chewy&display=swap" rel="stylesheet">
 <style>
   :root {
-    --white: #ffffff;
-    --offwhite: #f5f8ff;
-    --card: rgba(255,255,255,0.85);
-    --blue: #4f8cff;
-    --sky: #b3d8ff;
-    --green: #3ecf7a;
+    --blue:   #4f8cff;
+    --green:  #3ecf7a;
     --orange: #ff8c42;
-    --pink: #ff5fa0;
-    --yellow: #ffe14d;
+    --pink:   #ff5fa0;
     --purple: #a78bfa;
-    --text: #1a2340;
-    --muted: #8898b0;
-    --border: rgba(80,120,255,0.13);
-    --radius: 18px;
+    --yellow: #ffe14d;
+    --text:   #1a2340;
+    --muted:  #8898b0;
+    --border: rgba(80,120,255,0.14);
+    --panel-w: 150px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: 'Nunito', sans-serif;
-    background: var(--offwhite);
+    background: #0a0d1a;
     color: var(--text);
     overflow: hidden;
     height: 100dvh;
     width: 100dvw;
   }
 
-  /* ─── GLOBE CANVAS ─── */
+  /* ── MAIN AREA (everything except the right panel) ── */
+  .main-area {
+    position: fixed;
+    inset: 0;
+    right: var(--panel-w);   /* 150 px reserved for panel */
+  }
+
+  /* ── 360 PLAYER CANVAS ── */
+  #playerCanvas {
+    position: absolute;
+    inset: 0;
+    display: none;
+    cursor: grab;
+    touch-action: none;
+    background: #0a0a18;
+  }
+  #playerCanvas:active { cursor: grabbing; }
+
+  /* ── BACKGROUND GLOBE CANVAS ── */
   #globeCanvas {
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: 0;
     pointer-events: none;
   }
 
-  /* ─── CONFETTI ─── */
-  .confetti-piece {
-    position: fixed;
-    pointer-events: none;
-    z-index: 5;
-    animation: confettiFall linear forwards;
-  }
-  @keyframes confettiFall {
-    0%   { transform: translateY(-20px) rotate(0deg) scale(1); opacity: 1; }
-    100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
-  }
-
-  /* ─── FLOATING DECO ─── */
-  .deco {
-    position: fixed;
-    pointer-events: none;
-    z-index: 1;
-    border-radius: 50%;
-    animation: decoFloat linear infinite;
-  }
-  @keyframes decoFloat {
-    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
-    10%  { opacity: 1; }
-    90%  { opacity: 1; }
-    100% { transform: translateY(-105vh) rotate(360deg); opacity: 0; }
-  }
-
-  /* ─── WELCOME ─── */
-  #welcomeMenu {
-    position: fixed;
+  /* ── WELCOME OVERLAY (inside main-area) ── */
+  #welcomeCenter {
+    position: absolute;
     inset: 0;
-    z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.55s ease, visibility 0.55s;
+    gap: 18px;
+    transition: opacity 0.5s, visibility 0.5s;
   }
-  #welcomeMenu.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  #welcomeCenter.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-  .welcome-bubble {
-    position: relative;
-    background: rgba(255,255,255,0.82);
-    backdrop-filter: blur(28px);
-    border: 2.5px solid rgba(255,255,255,0.98);
-    border-radius: 34px;
-    padding: 48px 52px 44px;
-    max-width: 760px;
-    width: 92vw;
-    box-shadow: 0 10px 70px rgba(80,120,255,0.13), 0 2px 12px rgba(80,120,255,0.07);
-    text-align: center;
-    animation: floatIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
-  }
-  @keyframes floatIn {
-    from { transform: scale(0.85) translateY(30px); opacity: 0; }
-    to   { transform: scale(1) translateY(0); opacity: 1; }
-  }
-
-  .globe-emoji {
-    font-size: 68px;
-    display: block;
+  .wc-globe {
+    font-size: 72px;
     animation: spinBob 3s ease-in-out infinite;
-    margin-bottom: 10px;
-    filter: drop-shadow(0 8px 20px rgba(80,180,255,0.28));
+    filter: drop-shadow(0 10px 30px rgba(80,180,255,0.35));
   }
   @keyframes spinBob {
-    0%,100% { transform: translateY(0) rotate(-6deg); }
-    50%      { transform: translateY(-12px) rotate(6deg); }
+    0%,100% { transform: translateY(0) rotate(-5deg); }
+    50%      { transform: translateY(-14px) rotate(5deg); }
   }
-
-  .welcome-tag {
+  .wc-tag {
     font-family: 'Chewy', cursive;
-    font-size: 14px;
-    letter-spacing: 0.2em;
-    color: var(--blue);
-    margin-bottom: 8px;
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    color: rgba(180,210,255,0.75);
   }
-
-  .welcome-title {
+  .wc-title {
     font-family: 'Chewy', cursive;
-    font-size: clamp(2.2rem, 5vw, 3.5rem);
-    color: var(--text);
-    line-height: 1.1;
-    margin-bottom: 34px;
-  }
-  .welcome-title .hi { background: linear-gradient(110deg, var(--blue), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-
-  .portal-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
-  @media (min-width: 560px) { .portal-grid { grid-template-columns: repeat(4, 1fr); } }
-
-  .portal-btn {
-    padding: 22px 12px 18px;
-    background: white;
-    border: 2.5px solid transparent;
-    border-radius: 22px;
-    cursor: pointer;
-    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s, border-color 0.2s;
+    font-size: clamp(2rem, 4.5vw, 3.2rem);
+    color: #fff;
     text-align: center;
-    box-shadow: 0 4px 18px rgba(80,120,255,0.08);
-    user-select: none;
+    line-height: 1.15;
   }
-  .portal-btn:hover { transform: translateY(-7px) scale(1.05); box-shadow: 0 16px 40px rgba(80,120,255,0.18); }
-  .portal-btn:active { transform: scale(0.97); }
-  .portal-btn:nth-child(1) { border-color: #c5f5dc; } .portal-btn:nth-child(1):hover { border-color: var(--green); }
-  .portal-btn:nth-child(2) { border-color: #c0daff; } .portal-btn:nth-child(2):hover { border-color: var(--blue); }
-  .portal-btn:nth-child(3) { border-color: #ffd6f5; } .portal-btn:nth-child(3):hover { border-color: var(--pink); }
-  .portal-btn:nth-child(4) { border-color: #ffe2cc; } .portal-btn:nth-child(4):hover { border-color: var(--orange); }
+  .wc-title .hi {
+    background: linear-gradient(110deg, var(--blue), var(--pink));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .wc-hint {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(180,210,255,0.55);
+    margin-top: 6px;
+  }
+  .wc-hint span {
+    display: inline-block;
+    animation: arrowBounce 1.4s ease-in-out infinite;
+  }
+  @keyframes arrowBounce {
+    0%,100% { transform: translateX(0); }
+    50%      { transform: translateX(8px); }
+  }
 
-  .portal-icon { font-size: 38px; display: block; margin-bottom: 10px; }
-  .portal-num  { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; }
-  .portal-name { font-size: 14px; font-weight: 900; color: var(--text); margin-bottom: 3px; }
-  .portal-sub  { font-size: 11px; color: var(--muted); font-weight: 600; }
-
-  /* ─── HUD ─── */
+  /* ── HUD (top of main area) ── */
   #hud {
-    position: fixed;
+    position: absolute;
     top: 0; left: 0; right: 0;
-    z-index: 50;
+    z-index: 20;
     display: none;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 22px;
-    background: linear-gradient(180deg, rgba(245,248,255,0.97) 0%, transparent 100%);
+    padding: 14px 20px;
+    background: linear-gradient(180deg, rgba(10,13,26,0.82) 0%, transparent 100%);
     pointer-events: none;
   }
   #hud.active { display: flex; }
-
-  .hud-brand { display: flex; align-items: center; gap: 10px; }
-  .hud-globe { font-size: 28px; animation: spinBob 3s ease-in-out infinite; display: inline-block; }
-  .hud-title { font-family: 'Chewy', cursive; font-size: 22px; color: var(--blue); }
+  .hud-brand { display: flex; align-items: center; gap: 9px; }
+  .hud-globe { font-size: 26px; animation: spinBob 3s ease-in-out infinite; }
+  .hud-title { font-family: 'Chewy', cursive; font-size: 20px; color: var(--blue); }
   .hud-badge {
-    padding: 7px 18px;
-    background: white;
+    padding: 6px 16px;
+    background: rgba(255,255,255,0.12);
     border-radius: 50px;
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--text);
-    box-shadow: 0 2px 14px rgba(80,120,255,0.13);
-    border: 2px solid var(--border);
+    font-size: 13px; font-weight: 800;
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
   }
 
-  /* ─── TOOLBAR ─── */
-  #toolbar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 50;
+  /* ── DRAG HINT ── */
+  #dragHint {
+    position: absolute;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 50px;
+    padding: 10px 24px;
+    font-size: 13px; font-weight: 800;
+    color: #fff;
     display: none;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px 20px;
-    background: linear-gradient(0deg, rgba(245,248,255,0.98) 50%, transparent 100%);
-    gap: 10px;
-    flex-wrap: wrap;
+    pointer-events: none;
+    transition: opacity 0.4s;
   }
-  #toolbar.active { display: flex; }
-  .tb-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-  .tool-btn {
-    padding: 9px 20px;
-    background: white;
-    color: var(--text);
-    border: 2px solid var(--border);
-    border-radius: 50px;
-    font-family: 'Nunito', sans-serif;
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    box-shadow: 0 2px 10px rgba(80,120,255,0.08);
-    white-space: nowrap;
-  }
-  .tool-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 22px rgba(80,120,255,0.18); border-color: var(--blue); color: var(--blue); }
-  .tool-btn.exit:hover { border-color: var(--pink); color: var(--pink); }
-  .tool-btn:active { transform: scale(0.97); }
-
-  .world-pill {
-    padding: 8px 16px;
-    background: white;
-    border: 2px solid var(--border);
-    border-radius: 50px;
-    font-family: 'Nunito', sans-serif;
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    color: var(--muted);
-    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    box-shadow: 0 2px 8px rgba(80,120,255,0.06);
-  }
-  .world-pill:hover { transform: translateY(-2px) scale(1.07); }
-  #pill-0.active { background: #e6fff3; border-color: var(--green); color: var(--green); }
-  #pill-1.active { background: #e8f2ff; border-color: var(--blue); color: var(--blue); }
-  #pill-2.active { background: #fff0fa; border-color: var(--pink); color: var(--pink); }
-  #pill-3.active { background: #fff5ec; border-color: var(--orange); color: var(--orange); }
-
-  /* ─── LOADER ─── */
+  /* ── LOADER ── */
   #loader {
-    position: fixed; inset: 0; z-index: 80;
+    position: absolute; inset: 0; z-index: 30;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 16px;
-    background: rgba(245,248,255,0.85);
-    backdrop-filter: blur(10px);
+    background: rgba(10,13,26,0.80);
+    backdrop-filter: blur(8px);
     opacity: 0; pointer-events: none;
     transition: opacity 0.3s;
   }
   #loader.visible { opacity: 1; pointer-events: all; }
-  .loader-globe { font-size: 58px; animation: spinGlobe 1s linear infinite; display: inline-block; }
+  .loader-globe { font-size: 54px; animation: spinGlobe 1s linear infinite; }
   @keyframes spinGlobe { to { transform: rotate(360deg); } }
-  .loader-text { font-family: 'Chewy', cursive; font-size: 22px; color: var(--blue); }
+  .loader-text { font-family: 'Chewy', cursive; font-size: 20px; color: var(--blue); }
 
-  /* ─── HOTSPOT PANEL ─── */
+  /* ── HOTSPOT PANEL (left side) ── */
   #hotspotPanel {
-    position: fixed; top: 50%; left: 20px;
+    position: absolute; top: 50%; left: 18px;
     transform: translateY(-50%);
-    z-index: 50; display: none;
-    flex-direction: column; gap: 10px;
-    pointer-events: none;
+    z-index: 20; display: none;
+    flex-direction: column; gap: 9px;
   }
-  #hotspotPanel.active { display: flex; pointer-events: all; }
-
+  #hotspotPanel.active { display: flex; }
   .hs-btn {
-    display: flex; align-items: center; gap: 10px;
-    padding: 11px 16px;
-    background: rgba(255,255,255,0.92);
-    border: 2px solid var(--border);
+    display: flex; align-items: center; gap: 9px;
+    padding: 10px 15px;
+    background: rgba(255,255,255,0.10);
+    border: 1.5px solid rgba(255,255,255,0.14);
     border-radius: 50px;
     cursor: pointer;
     font-family: 'Nunito', sans-serif;
-    font-size: 13px; font-weight: 800;
-    color: var(--muted);
+    font-size: 12px; font-weight: 800;
+    color: rgba(255,255,255,0.75);
     transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    min-width: 175px;
-    backdrop-filter: blur(14px);
-    box-shadow: 0 3px 14px rgba(80,120,255,0.08);
+    min-width: 165px;
+    backdrop-filter: blur(12px);
   }
-  .hs-dot {
-    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-    animation: dotBop 2s ease-in-out infinite;
-  }
-  @keyframes dotBop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.5); box-shadow: 0 0 0 4px rgba(80,120,255,0.15); } }
-  .hs-btn:hover { transform: translateX(6px) scale(1.04); box-shadow: 0 8px 26px rgba(80,120,255,0.16); border-color: var(--blue); color: var(--text); }
-  .hs-btn.active-hs { border-color: var(--blue); background: #eef4ff; color: var(--text); }
+  .hs-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; animation: dotBop 2s ease-in-out infinite; }
+  @keyframes dotBop { 0%,100%{transform:scale(1)}50%{transform:scale(1.5)} }
+  .hs-btn:hover { transform: translateX(5px); background: rgba(255,255,255,0.18); color: #fff; }
+  .hs-btn.active-hs { border-color: var(--blue); background: rgba(79,140,255,0.18); color: #fff; }
 
-  /* ─── INFO CARD ─── */
+  /* ── INFO CARD ── */
   #infoCard {
-    position: fixed; top: 50%; right: 20px;
-    transform: translateY(-50%) translateX(20px);
-    width: 268px; z-index: 60;
-    background: rgba(255,255,255,0.96);
-    border: 2.5px solid var(--border);
-    border-radius: 26px; padding: 28px 24px;
+    position: absolute; top: 50%; left: 200px;
+    transform: translateY(-50%) translateX(-10px);
+    width: 250px; z-index: 25;
+    background: rgba(255,255,255,0.95);
+    border: 2px solid var(--border);
+    border-radius: 24px; padding: 26px 22px;
     backdrop-filter: blur(20px);
-    box-shadow: 0 14px 52px rgba(80,120,255,0.14);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.22);
     opacity: 0; pointer-events: none;
     transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
   }
   #infoCard.visible { opacity: 1; pointer-events: all; transform: translateY(-50%) translateX(0); }
-  .card-emoji { font-size: 38px; display: block; margin-bottom: 10px; }
-  .card-tag {
-    display: inline-block; padding: 3px 13px;
-    border-radius: 50px; font-size: 10px; font-weight: 800;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    margin-bottom: 10px; background: #eef4ff; color: var(--blue);
-  }
-  .card-title { font-family: 'Chewy', cursive; font-size: 23px; margin-bottom: 10px; color: var(--text); }
-  .card-desc { font-size: 13px; color: var(--muted); line-height: 1.78; font-weight: 600; }
-  .card-close {
-    position: absolute; top: 14px; right: 14px;
-    background: #f0f4ff; border: none;
-    width: 30px; height: 30px; border-radius: 50%;
-    font-size: 15px; cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--muted); font-weight: 900; line-height: 1;
-  }
-  .card-close:hover { background: #ffe0ea; color: var(--pink); transform: scale(1.15) rotate(12deg); }
+  .card-emoji { font-size: 36px; display: block; margin-bottom: 8px; }
+  .card-tag { display:inline-block;padding:3px 12px;border-radius:50px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;background:#eef4ff;color:var(--blue); }
+  .card-title { font-family:'Chewy',cursive;font-size:21px;margin-bottom:8px;color:var(--text); }
+  .card-desc { font-size:12px;color:var(--muted);line-height:1.75;font-weight:600; }
+  .card-close { position:absolute;top:12px;right:12px;background:#f0f4ff;border:none;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:900;transition:background .2s,transform .2s; }
+  .card-close:hover { background:#ffe0ea;color:var(--pink);transform:scale(1.15) rotate(12deg); }
 
-  /* ─── FULLSCREEN ─── */
-  #fsBtn {
-    position: fixed; bottom: 80px; right: 20px; z-index: 50;
-    display: none; width: 46px; height: 46px;
-    background: white; border: 2px solid var(--border);
-    border-radius: 14px; cursor: pointer;
-    align-items: center; justify-content: center;
-    font-size: 20px;
-    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    box-shadow: 0 3px 14px rgba(80,120,255,0.1);
-  }
-  #fsBtn.active { display: flex; }
-  #fsBtn:hover { border-color: var(--blue); transform: scale(1.12); box-shadow: 0 8px 26px rgba(80,120,255,0.2); }
-
-  /* ─── TOAST ─── */
+  /* ── TOAST ── */
   #toast {
-    position: fixed; bottom: 90px; left: 50%;
-    transform: translateX(-50%) translateY(12px);
-    background: white; border: 2px solid var(--border);
-    color: var(--text); padding: 10px 24px;
+    position: absolute; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(255,255,255,0.96); border: 2px solid var(--border);
+    color: var(--text); padding: 9px 22px;
     border-radius: 50px; font-size: 13px; font-weight: 800;
-    z-index: 200; opacity: 0; pointer-events: none;
-    transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    box-shadow: 0 4px 22px rgba(80,120,255,0.13);
+    z-index: 40; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     white-space: nowrap;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── CONFETTI ── */
+  .confetti-piece { position:fixed;pointer-events:none;z-index:5;animation:confettiFall linear forwards; }
+  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0) scale(1);opacity:1} 100%{transform:translateY(110vh) rotate(720deg) scale(.5);opacity:0} }
+
+  /* ══════════════════════════════════════════════════
+     RIGHT FLOATING TOOLBAR  —  150 px zone
+  ══════════════════════════════════════════════════ */
+  #rightPanel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--panel-w);   /* exactly 150 px */
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 10px 18px;
+    gap: 8px;
+    background: rgba(255,255,255,0.93);
+    backdrop-filter: blur(22px);
+    border-left: 1.5px solid rgba(80,120,255,0.13);
+    box-shadow: -4px 0 32px rgba(80,120,255,0.10);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Panel header */
+  .rp-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 6px;
+    padding-bottom: 12px;
+    border-bottom: 1.5px solid rgba(80,120,255,0.12);
+    width: 100%;
+  }
+  .rp-globe { font-size: 30px; animation: spinBob 3s ease-in-out infinite; }
+  .rp-brand { font-family:'Chewy',cursive; font-size: 14px; color: var(--blue); text-align: center; line-height: 1.2; }
+  .rp-sub   { font-size: 9px; font-weight: 800; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+
+  /* World buttons */
+  .rp-world-btn {
+    width: 100%;
+    padding: 10px 8px;
+    background: #fff;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s, border-color 0.2s, background 0.2s;
+    box-shadow: 0 2px 10px rgba(80,120,255,0.07);
+    user-select: none;
+  }
+  .rp-world-btn:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 8px 24px rgba(80,120,255,0.16); }
+  .rp-world-btn:active { transform: scale(0.96); }
+
+  .rp-world-btn:nth-child(1 of .rp-world-btn) { border-color: #d4f5e4; }
+  .rp-world-btn:nth-child(1 of .rp-world-btn):hover { border-color: var(--green); }
+
+  .rp-world-btn[data-idx="0"] { border-color: #d4f5e4; }  .rp-world-btn[data-idx="0"]:hover { border-color: var(--green); }
+  .rp-world-btn[data-idx="1"] { border-color: #cce0ff; }  .rp-world-btn[data-idx="1"]:hover { border-color: var(--blue); }
+  .rp-world-btn[data-idx="2"] { border-color: #ffd6f5; }  .rp-world-btn[data-idx="2"]:hover { border-color: var(--pink); }
+  .rp-world-btn[data-idx="3"] { border-color: #ffe2cc; }  .rp-world-btn[data-idx="3"]:hover { border-color: var(--orange); }
+  .rp-world-btn[data-idx="4"] { border-color: #e6deff; }  .rp-world-btn[data-idx="4"]:hover { border-color: var(--purple); }
+
+  .rp-world-btn.active[data-idx="0"] { background:#edfff5; border-color:var(--green); }
+  .rp-world-btn.active[data-idx="1"] { background:#e8f2ff; border-color:var(--blue); }
+  .rp-world-btn.active[data-idx="2"] { background:#fff0fa; border-color:var(--pink); }
+  .rp-world-btn.active[data-idx="3"] { background:#fff5ec; border-color:var(--orange); }
+  .rp-world-btn.active[data-idx="4"] { background:#f3eeff; border-color:var(--purple); }
+
+  .rp-icon  { font-size: 26px; display: block; margin-bottom: 4px; }
+  .rp-num   { font-size: 9px; font-weight: 800; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+  .rp-name  { font-size: 12px; font-weight: 900; color: var(--text); }
+
+  /* Divider */
+  .rp-divider { width: 100%; height: 1.5px; background: rgba(80,120,255,0.10); margin: 4px 0; flex-shrink: 0; }
+
+  /* Back button */
+  #rpBack {
+    width: 100%;
+    padding: 10px 8px;
+    background: #fff0f4;
+    border: 2px solid #ffc0d0;
+    border-radius: 16px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px; font-weight: 900;
+    color: var(--pink);
+    text-align: center;
+    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 2px 10px rgba(255,95,160,0.08);
+    display: none;
+  }
+  #rpBack.visible { display: block; }
+  #rpBack:hover { transform: translateY(-3px) scale(1.04); background: var(--pink); color: #fff; border-color: var(--pink); box-shadow: 0 8px 24px rgba(255,95,160,0.28); }
+  #rpBack:active { transform: scale(0.96); }
+
+  /* Fullscreen button */
+  #rpFs {
+    width: 100%;
+    padding: 8px;
+    background: #fff;
+    border: 2px solid rgba(80,120,255,0.14);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 18px;
+    text-align: center;
+    transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 2px 8px rgba(80,120,255,0.06);
+    margin-top: auto;
+  }
+  #rpFs:hover { border-color: var(--blue); transform: scale(1.08); }
 </style>
 </head>
 <body>
 
-<!-- Three.js Globe Canvas -->
-<canvas id="globeCanvas"></canvas>
+<!-- ── MAIN AREA (left of the 150px panel) ── -->
+<div class="main-area">
+  <canvas id="globeCanvas"></canvas>
+  <canvas id="playerCanvas"></canvas>
 
-<!-- A-Frame (behind UI, above globe) -->
-<a-scene vr-mode-ui="enabled: false" embedded style="position:fixed;inset:0;z-index:2;">
-  <a-assets>
-    <video id="video360" preload="auto" loop muted crossorigin="anonymous" playsinline webkit-playsinline></video>
-  </a-assets>
-  <a-videosphere id="sphere" src="#video360" rotation="0 -90 0"></a-videosphere>
-  <a-entity id="cameraRig" position="0 1.6 0">
-    <a-camera id="mainCamera" fov="75"
-      look-controls="touchEnabled: true; mouseEnabled: true; magicWindowTrackingEnabled: true"
-      wasd-controls="enabled: false">
-    </a-camera>
-  </a-entity>
-</a-scene>
+  <!-- Welcome screen -->
+  <div id="welcomeCenter">
+    <span class="wc-globe">🌍</span>
+    <p class="wc-tag">✨ VIRTUAL WORLD TOUR ✨</p>
+    <h1 class="wc-title">Explore the <span class="hi">World</span><br>in 360°</h1>
+    <p class="wc-hint">Select a world from the panel <span>→</span></p>
+  </div>
 
-<!-- Welcome -->
-<div id="welcomeMenu">
-  <div class="welcome-bubble">
-    <span class="globe-emoji">🌍</span>
-    <p class="welcome-tag">✨ Virtual World Tour ✨</p>
-    <h1 class="welcome-title">Explore the <span class="hi">World</span><br>in 360°!</h1>
-    <div class="portal-grid">
-      <div class="portal-btn" onclick="loadWorld(0)">
-        <span class="portal-icon">🌲</span>
-        <div class="portal-num">World 01</div>
-        <div class="portal-name">Forest Walk</div>
-        <div class="portal-sub">Nature & Trails</div>
-      </div>
-      <div class="portal-btn" onclick="loadWorld(1)">
-        <span class="portal-icon">🏛️</span>
-        <div class="portal-num">World 02</div>
-        <div class="portal-name">Modern Lobby</div>
-        <div class="portal-sub">Architecture</div>
-      </div>
-      <div class="portal-btn" onclick="loadWorld(2)">
-        <span class="portal-icon">💎</span>
-        <div class="portal-num">World 03</div>
-        <div class="portal-name">LED Cave</div>
-        <div class="portal-sub">Underground</div>
-      </div>
-      <div class="portal-btn" onclick="loadWorld(3)">
-        <span class="portal-icon">🌇</span>
-        <div class="portal-num">World 04</div>
-        <div class="portal-name">Rooftop View</div>
-        <div class="portal-sub">City Skyline</div>
-      </div>
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-brand">
+      <span class="hud-globe">🌍</span>
+      <span class="hud-title">World Tour</span>
     </div>
+    <div class="hud-badge" id="worldName">—</div>
   </div>
-</div>
 
-<!-- Loader -->
-<div id="loader">
-  <span class="loader-globe">🌍</span>
-  <div class="loader-text">Teleporting you there…</div>
-</div>
+  <!-- Drag hint -->
+  <div id="dragHint">👆 Drag to look around</div>
 
-<!-- HUD -->
-<div id="hud">
-  <div class="hud-brand">
-    <span class="hud-globe">🌍</span>
-    <span class="hud-title">World Tour</span>
+  <!-- Loader -->
+  <div id="loader">
+    <span class="loader-globe">🌍</span>
+    <div class="loader-text">Teleporting you there…</div>
   </div>
-  <div class="hud-badge" id="worldName">—</div>
-</div>
 
-<!-- Fullscreen -->
-<button id="fsBtn" onclick="toggleFullscreen()">⛶</button>
+  <!-- Hotspots (left side) -->
+  <div id="hotspotPanel"></div>
 
-<!-- Toolbar -->
-<div id="toolbar">
-  <div class="tb-group">
-    <button class="tool-btn exit" onclick="goBack()">🏠 Home</button>
-    <button class="tool-btn" onclick="resetView()">🔄 Reset View</button>
+  <!-- Info Card -->
+  <div id="infoCard">
+    <button class="card-close" onclick="closeCard()">✕</button>
+    <span class="card-emoji" id="cardEmoji"></span>
+    <div class="card-tag" id="cardTag"></div>
+    <div class="card-title" id="cardTitle"></div>
+    <div class="card-desc" id="cardDesc"></div>
   </div>
-  <div class="tb-group" id="worldSwitchers"></div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
 </div>
 
-<!-- Hotspots -->
-<div id="hotspotPanel"></div>
+<!-- ══ RIGHT FLOATING TOOLBAR (150 px) ══ -->
+<div id="rightPanel">
+  <div class="rp-header">
+    <span class="rp-globe">🌍</span>
+    <span class="rp-brand">World<br>Tour</span>
+    <span class="rp-sub">360°</span>
+  </div>
 
-<!-- Info Card -->
-<div id="infoCard">
-  <button class="card-close" onclick="closeCard()">✕</button>
-  <span class="card-emoji" id="cardEmoji"></span>
-  <div class="card-tag" id="cardTag"></div>
-  <div class="card-title" id="cardTitle"></div>
-  <div class="card-desc" id="cardDesc"></div>
+  <!-- World buttons — built by JS -->
+  <div id="rpWorlds" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
+
+  <div class="rp-divider"></div>
+
+  <!-- Back button -->
+  <button id="rpBack" onclick="goBack()">🏠 Back</button>
+
+  <!-- Fullscreen -->
+  <button id="rpFs" onclick="toggleFullscreen()">⛶</button>
 </div>
-
-<!-- Toast -->
-<div id="toast"></div>
 
 <script>
-// ─── ANIMATED THREE.JS GLOBE ─────────────────────────────────
+// ─── BACKGROUND GLOBE ─────────────────────────────────────────
 (function () {
   const canvas = document.getElementById("globeCanvas");
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
-
   const scene = new THREE.Scene();
-  const W = window.innerWidth, H = window.innerHeight;
-  const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
   camera.position.z = 4.2;
-
+  const R = 1.6, grp = new THREE.Group();
+  scene.add(grp);
   function resize() {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const W = window.innerWidth - 150, H = window.innerHeight;
+    renderer.setSize(W, H);
+    camera.aspect = W / H;
     camera.updateProjectionMatrix();
   }
-  window.addEventListener("resize", resize);
-  resize();
-
-  const R = 1.6;
-  const globeGroup = new THREE.Group();
-  scene.add(globeGroup);
-
-  // Lat lines
+  window.addEventListener("resize", resize); resize();
   for (let i = 0; i <= 14; i++) {
-    const lat = (i / 14) * Math.PI - Math.PI / 2;
-    const r = Math.cos(lat) * R;
-    const y = Math.sin(lat) * R;
-    const pts = [];
-    for (let j = 0; j <= 72; j++) {
-      const a = (j / 72) * Math.PI * 2;
-      pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
-    }
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const mat = new THREE.LineBasicMaterial({ color: 0x4f8cff, transparent: true, opacity: 0.13 });
-    globeGroup.add(new THREE.Line(geo, mat));
+    const lat = (i / 14) * Math.PI - Math.PI / 2, r = Math.cos(lat) * R, y = Math.sin(lat) * R, pts = [];
+    for (let j = 0; j <= 72; j++) { const a=(j/72)*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r)); }
+    grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:0x4f8cff,transparent:true,opacity:0.13})));
   }
-
-  // Lon lines
   for (let i = 0; i < 18; i++) {
-    const a = (i / 18) * Math.PI * 2;
-    const pts = [];
-    for (let j = 0; j <= 72; j++) {
-      const lat = (j / 72) * Math.PI - Math.PI / 2;
-      const r = Math.cos(lat) * R;
-      const y = Math.sin(lat) * R;
-      pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
-    }
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const mat = new THREE.LineBasicMaterial({ color: 0x4f8cff, transparent: true, opacity: 0.1 });
-    globeGroup.add(new THREE.Line(geo, mat));
+    const a=(i/18)*Math.PI*2, pts=[];
+    for (let j=0;j<=72;j++){const lat=(j/72)*Math.PI-Math.PI/2,r=Math.cos(lat)*R,y=Math.sin(lat)*R;pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));}
+    grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x4f8cff,transparent:true,opacity:0.10})));
   }
-
-  // Surface dots
-  const dotPositions = [];
-  for (let i = 0; i < 80; i++) {
-    const phi = Math.random() * Math.PI * 2;
-    const theta = Math.random() * Math.PI;
-    const r = R + 0.02;
-    dotPositions.push(r * Math.sin(theta) * Math.cos(phi), r * Math.cos(theta), r * Math.sin(theta) * Math.sin(phi));
-  }
-  const dotGeo = new THREE.BufferGeometry();
-  dotGeo.setAttribute("position", new THREE.Float32BufferAttribute(dotPositions, 3));
-  const dotMat = new THREE.PointsMaterial({ color: 0x4f8cff, size: 0.045, transparent: true, opacity: 0.65 });
-  globeGroup.add(new THREE.Points(dotGeo, dotMat));
-
-  // Soft glow sphere
-  const glowGeo = new THREE.SphereGeometry(R + 0.05, 32, 32);
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0x4f8cff, transparent: true, opacity: 0.035, side: THREE.BackSide });
-  globeGroup.add(new THREE.Mesh(glowGeo, glowMat));
-
-  let t = 0;
-  (function animate() {
-    requestAnimationFrame(animate);
-    t += 0.004;
-    globeGroup.rotation.y = t;
-    globeGroup.rotation.x = Math.sin(t * 0.35) * 0.12;
-    renderer.render(scene, camera);
-  })();
+  const dp=[]; for(let i=0;i<80;i++){const phi=Math.random()*Math.PI*2,th=Math.random()*Math.PI,r=R+.02;dp.push(r*Math.sin(th)*Math.cos(phi),r*Math.cos(th),r*Math.sin(th)*Math.sin(phi));}
+  const dg=new THREE.BufferGeometry(); dg.setAttribute("position",new THREE.Float32BufferAttribute(dp,3));
+  grp.add(new THREE.Points(dg,new THREE.PointsMaterial({color:0x4f8cff,size:0.045,transparent:true,opacity:0.65})));
+  grp.add(new THREE.Mesh(new THREE.SphereGeometry(R+.05,32,32),new THREE.MeshBasicMaterial({color:0x4f8cff,transparent:true,opacity:.035,side:THREE.BackSide})));
+  let t=0; (function animate(){requestAnimationFrame(animate);t+=.004;grp.rotation.y=t;grp.rotation.x=Math.sin(t*.35)*.12;renderer.render(scene,camera);})();
 })();
 
-// ─── FLOATING DECO SHAPES ────────────────────────────────────
-const DECO_COLORS = ["#b3d8ff","#ffe14d","#ffd6f5","#b3efcc","#ffcba8","#e4d4ff"];
-for (let i = 0; i < 16; i++) {
-  const el = document.createElement("div");
-  el.className = "deco";
-  const size = 5 + Math.random() * 12;
-  const dur = 10 + Math.random() * 18;
-  const delay = -Math.random() * 25;
-  el.style.cssText = `width:${size}px;height:${size}px;background:${DECO_COLORS[i % DECO_COLORS.length]};left:${Math.random() * 100}vw;bottom:-${size}px;animation-duration:${dur}s;animation-delay:${delay}s;opacity:${0.3 + Math.random() * 0.4};`;
-  document.body.appendChild(el);
-}
-
-// ─── CONFETTI ────────────────────────────────────────────────
-const CONF_COLORS = ["#4f8cff","#ff5fa0","#3ecf7a","#ffe14d","#ff8c42","#a78bfa","#ff4d6d"];
-function spawnConfetti() {
-  for (let i = 0; i < 50; i++) {
-    const el = document.createElement("div");
-    el.className = "confetti-piece";
-    const size = 6 + Math.random() * 9;
-    const dur = 1.6 + Math.random() * 2.2;
-    const delay = Math.random() * 0.9;
-    el.style.cssText = `width:${size}px;height:${size}px;border-radius:${Math.random()>0.5?'50%':'3px'};background:${CONF_COLORS[Math.floor(Math.random()*CONF_COLORS.length)]};left:${5+Math.random()*90}vw;top:-12px;animation-duration:${dur}s;animation-delay:${delay}s;`;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), (dur + delay + 0.6) * 1000);
+// ─── CONFETTI ─────────────────────────────────────────────────
+const CONF_COLORS=["#4f8cff","#ff5fa0","#3ecf7a","#ffe14d","#ff8c42","#a78bfa"];
+function spawnConfetti(){
+  for(let i=0;i<50;i++){
+    const el=document.createElement("div"); el.className="confetti-piece";
+    const size=6+Math.random()*9,dur=1.6+Math.random()*2.2,delay=Math.random()*.9;
+    el.style.cssText=`width:${size}px;height:${size}px;border-radius:${Math.random()>.5?'50%':'3px'};background:${CONF_COLORS[Math.floor(Math.random()*CONF_COLORS.length)]};left:${5+Math.random()*75}vw;top:-12px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+    document.body.appendChild(el); setTimeout(()=>el.remove(),(dur+delay+.6)*1000);
   }
 }
 
-// ─── WORLD DATA ──────────────────────────────────────────────
-// ─── ELECTRON / BROWSER PATH RESOLVER ───────────────────────
-// Works in Electron (file://) and regular browsers alike.
-function assetPath(rel) {
-  if (typeof window !== "undefined" && window.location.protocol === "file:") {
-    // Electron: build absolute file:// path relative to this HTML file's directory
-    const base = window.location.pathname.replace(/\/[^/]*$/, "");
-    return "file://" + base + "/" + rel;
-  }
-  return rel; // normal browser — relative path works fine
-}
-
+// ─── WORLD DATA ───────────────────────────────────────────────
 const WORLDS = [
-  {
-    id: 0, name: "🌲 Forest Walk", src: assetPath("assets/1.mp4"), pill: "🌲 W1",
-    hotspots: [
-      { label: "Ancient Oak",     tag: "Flora",    emoji: "🌳", desc: "Estimated at over 300 years old. Its canopy spans 18 metres, sheltering rich understorey ferns and mosses." },
-      { label: "Creek Crossing",  tag: "Landmark", emoji: "🌊", desc: "Seasonal stream flowing east. Water quality monitored monthly — home to three native fish species." },
-      { label: "Viewpoint Trail", tag: "Route",    emoji: "🥾", desc: "Marked trail 1.2km to the hilltop clearing. Moderate difficulty, about 25 minutes of hiking." }
-    ]
-  },
-  {
-    id: 1, name: "🏛️ Modern Lobby", src: assetPath("assets/2.mp4"), pill: "🏛️ W2",
-    hotspots: [
-      { label: "Reception",        tag: "Service",  emoji: "🪪", desc: "Staffed Mon–Fri, 08:00–18:00. Visitor badges and access cards issued here." },
-      { label: "Atrium Garden",    tag: "Feature",  emoji: "🌿", desc: "2,400 plants across 47 species. Maintained by automated drip irrigation and natural skylight." },
-      { label: "Conference Suite", tag: "Facility", emoji: "📽️", desc: "Three bookable rooms seating 8–40 guests. Full AV and catering available." }
-    ]
-  },
-  {
-    id: 2, name: "💎 LED Cave", src: assetPath("assets/3.mp4"), pill: "💎 W3",
-    hotspots: [
-      { label: "Crystal Formation", tag: "Geology",  emoji: "🔮", desc: "Calcite stalactites formed over 12,000 years. Colours shift with LED arrays on a 90-min cycle." },
-      { label: "Echo Chamber",      tag: "Acoustic", emoji: "🎵", desc: "Natural reverb of 4.2 seconds — one of the longest in the region. Sound installations nightly." },
-      { label: "Underground Lake",  tag: "Wonder",   emoji: "🪸", desc: "34m deep subterranean lake. Rare translucent shrimp species discovered here in 2018." }
-    ]
-  },
-  {
-    id: 3, name: "🌇 Rooftop View", src: assetPath("assets/4.mp4"), pill: "🌇 W4",
-    hotspots: [
-      { label: "City Skyline", tag: "Panorama", emoji: "🏙️", desc: "On clear days visibility extends 60km. Twelve landmark towers identifiable from here." },
-      { label: "Helipad",      tag: "Infra",    emoji: "🚁", desc: "ICAO-certified H-pad rated for aircraft up to 8,600 kg MTOW. Emergency services only." },
-      { label: "Rooftop Bar",  tag: "Amenity",  emoji: "🍹", desc: "Open dusk–midnight. Seasonal cocktail menu by resident mixologist. Reservations recommended." }
-    ]
-  }
+  { id:0, name:"🌍 World 1", src:"https://wb3pjp18ht.ufs.sh/f/QuW97IHpGAx13dY9mT47OD2QA4fvazpGbmVYEZL5cHrjSBIT", icon:"🌍",
+    hotspots:[{label:"Look Around",tag:"Explore",emoji:"🔭",desc:"Drag or swipe to explore World 1 in full 360°."},{label:"Atmosphere",tag:"Ambience",emoji:"✨",desc:"Take in the sights of this immersive virtual environment."},{label:"Discover",tag:"Wonder",emoji:"🌟",desc:"Look up, down and all around — World 1 is full of detail."}] },
+  { id:1, name:"🌐 World 2", src:"https://wb3pjp18ht.ufs.sh/f/QuW97IHpGAx1obIkTPyAdhDLU456M7VgNQHSFwt9eCXfrP3m", icon:"🌐",
+    hotspots:[{label:"Look Around",tag:"Explore",emoji:"🔭",desc:"Drag or swipe to explore World 2 in full 360°."},{label:"Atmosphere",tag:"Ambience",emoji:"✨",desc:"Take in the sights of this immersive virtual environment."},{label:"Discover",tag:"Wonder",emoji:"🌟",desc:"Look up, down and all around — World 2 is full of detail."}] },
+  { id:2, name:"🗺️ World 3", src:"https://wb3pjp18ht.ufs.sh/f/QuW97IHpGAx1WUM9kfCmo1lSEFLryieXcfhDNjGxaqdn26w8", icon:"🗺️",
+    hotspots:[{label:"Look Around",tag:"Explore",emoji:"🔭",desc:"Drag or swipe to explore World 3 in full 360°."},{label:"Atmosphere",tag:"Ambience",emoji:"✨",desc:"Take in the sights of this immersive virtual environment."},{label:"Discover",tag:"Wonder",emoji:"🌟",desc:"Look up, down and all around — World 3 is full of detail."}] },
+  { id:3, name:"🌏 World 4", src:"https://wb3pjp18ht.ufs.sh/f/QuW97IHpGAx18xqI6TdNjxeBM0hCtlY1ifRuD6grpF59dazq", icon:"🌏",
+    hotspots:[{label:"Look Around",tag:"Explore",emoji:"🔭",desc:"Drag or swipe to explore World 4 in full 360°."},{label:"Atmosphere",tag:"Ambience",emoji:"✨",desc:"Take in the sights of this immersive virtual environment."},{label:"Discover",tag:"Wonder",emoji:"🌟",desc:"Look up, down and all around — World 4 is full of detail."}] },
+  { id:4, name:"🌎 World 5", src:"https://wb3pjp18ht.ufs.sh/f/QuW97IHpGAx1UbKV9lLv6dUXGjYzsfq2JeIhMLC14yEKV9i3", icon:"🌎",
+    hotspots:[{label:"Look Around",tag:"Explore",emoji:"🔭",desc:"Drag or swipe to explore World 5 in full 360°."},{label:"Atmosphere",tag:"Ambience",emoji:"✨",desc:"Take in the sights of this immersive virtual environment."},{label:"Discover",tag:"Wonder",emoji:"🌟",desc:"Look up, down and all around — World 5 is full of detail."}] },
 ];
 
-let currentWorldIndex = -1;
-const DOT_COLORS = ["#3ecf7a","#4f8cff","#a78bfa"];
-
-const video          = document.getElementById("video360");
-const sphere         = document.getElementById("sphere");
-const welcome        = document.getElementById("welcomeMenu");
-const hud            = document.getElementById("hud");
-const toolbar        = document.getElementById("toolbar");
-const hotspotPanel   = document.getElementById("hotspotPanel");
-const infoCard       = document.getElementById("infoCard");
-const loader         = document.getElementById("loader");
-const fsBtn          = document.getElementById("fsBtn");
-const worldName      = document.getElementById("worldName");
-const worldSwitchers = document.getElementById("worldSwitchers");
-const toast          = document.getElementById("toast");
-
-// Build pills
+// ─── BUILD RIGHT PANEL WORLD BUTTONS ─────────────────────────
+const rpWorlds = document.getElementById("rpWorlds");
 WORLDS.forEach((w, i) => {
-  const pill = document.createElement("button");
-  pill.className = "world-pill";
-  pill.id = `pill-${i}`;
-  pill.textContent = w.pill;
-  pill.onclick = () => loadWorld(i);
-  worldSwitchers.appendChild(pill);
+  const btn = document.createElement("button");
+  btn.className = "rp-world-btn";
+  btn.dataset.idx = i;
+  btn.innerHTML = `<span class="rp-icon">${w.icon}</span><div class="rp-num">World 0${i+1}</div><div class="rp-name">World ${i+1}</div>`;
+  btn.onclick = () => loadWorld(i);
+  rpWorlds.appendChild(btn);
 });
 
+// ─── THREE.JS 360 PLAYER ──────────────────────────────────────
+const playerCanvas = document.getElementById("playerCanvas");
+const pRenderer = new THREE.WebGLRenderer({ canvas: playerCanvas, antialias: true });
+pRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const pScene = new THREE.Scene();
+const pCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1100);
+
+const sGeo = new THREE.SphereGeometry(500, 64, 40);
+sGeo.scale(-1, 1, 1);
+const sMat = new THREE.MeshBasicMaterial({ color: 0x0a0a18 });
+const sMesh = new THREE.Mesh(sGeo, sMat);
+pScene.add(sMesh);
+
+const pVideo = document.createElement("video");
+pVideo.crossOrigin = "anonymous";
+pVideo.loop = true;
+pVideo.playsInline = true;
+pVideo.setAttribute("webkit-playsinline", "");
+
+let pTexture = null;
+let pLon = 0, pLat = 0, pLonV = 0, pLatV = 0;
+let pDown = false, pLastX = 0, pLastY = 0;
+
+function pResize() {
+  const W = window.innerWidth - 150, H = window.innerHeight;
+  pRenderer.setSize(W, H);
+  pCamera.aspect = W / H;
+  pCamera.updateProjectionMatrix();
+}
+window.addEventListener("resize", pResize); pResize();
+
+playerCanvas.addEventListener("pointerdown", e => {
+  pDown = true; pLastX = e.clientX; pLastY = e.clientY;
+  pLonV = 0; pLatV = 0;
+  playerCanvas.setPointerCapture(e.pointerId);
+});
+playerCanvas.addEventListener("pointermove", e => {
+  if (!pDown) return;
+  const dx = e.clientX - pLastX, dy = e.clientY - pLastY;
+  pLon -= dx * 0.20; pLat += dy * 0.20;
+  pLonV = -dx * 0.20; pLatV = dy * 0.20;
+  pLastX = e.clientX; pLastY = e.clientY;
+});
+playerCanvas.addEventListener("pointerup",     () => { pDown = false; });
+playerCanvas.addEventListener("pointercancel", () => { pDown = false; });
+playerCanvas.addEventListener("click", () => { if (pVideo.paused && pVideo.src) pVideo.play().catch(()=>{}); }, { passive:true });
+
+(function pAnimate() {
+  requestAnimationFrame(pAnimate);
+  if (!pDown) { pLon += pLonV; pLat += pLatV; pLonV *= 0.90; pLatV *= 0.90; }
+  pLat = Math.max(-85, Math.min(85, pLat));
+  const phi = THREE.MathUtils.degToRad(90 - pLat);
+  const theta = THREE.MathUtils.degToRad(pLon);
+  pCamera.lookAt(Math.sin(phi)*Math.cos(theta), Math.cos(phi), Math.sin(phi)*Math.sin(theta));
+  if (pTexture) pTexture.needsUpdate = true;
+  pRenderer.render(pScene, pCamera);
+})();
+
+// ─── UI REFS ──────────────────────────────────────────────────
+let currentWorldIndex = -1;
+const DOT_COLORS = ["#3ecf7a","#4f8cff","#a78bfa"];
+const welcome      = document.getElementById("welcomeCenter");
+const hud          = document.getElementById("hud");
+const hotspotPanel = document.getElementById("hotspotPanel");
+const infoCard     = document.getElementById("infoCard");
+const loader       = document.getElementById("loader");
+const worldName    = document.getElementById("worldName");
+const dragHint     = document.getElementById("dragHint");
+const rpBack       = document.getElementById("rpBack");
+const toast        = document.getElementById("toast");
+
+// ─── LOAD WORLD ───────────────────────────────────────────────
 function loadWorld(index) {
   const world = WORLDS[index];
   currentWorldIndex = index;
   loader.classList.add("visible");
   closeCard();
 
-  // Step 1: fully detach current video
-  video.pause();
-  sphere.setAttribute("src", "");
-  video.removeAttribute("src");
-  video.load();
+  pVideo.pause();
+  pVideo.src = "";
+  pVideo.load();
+  if (pTexture) { pTexture.dispose(); pTexture = null; }
+  sMat.map = null; sMat.color.set(0x0a0a18); sMat.needsUpdate = true;
 
-  // Step 2: assign new source
-  video.src = world.src;
+  pVideo.src = world.src;
+  pVideo.load();
 
+  let loaded = false;
   function onCanPlay() {
-    // Re-bind A-Frame texture — set directly to avoid Electron asset system issues
-    sphere.setAttribute("src", "#video360");
-    // Force A-Frame texture refresh
-    const mesh = sphere.getObject3D("mesh");
-    if (mesh && mesh.material && mesh.material.map) {
-      mesh.material.map.needsUpdate = true;
-    }
-    video.play().catch(() => {});
+    if (loaded) return; loaded = true;
+    pTexture = new THREE.VideoTexture(pVideo);
+    pTexture.minFilter = THREE.LinearFilter;
+    pTexture.magFilter = THREE.LinearFilter;
+    sMat.map = pTexture; sMat.color.set(0xffffff); sMat.needsUpdate = true;
+    pVideo.play().catch(() => showToast("▶ Tap screen to play"));
     loader.classList.remove("visible");
-    afterLoad(world);
-    spawnConfetti();
+    afterLoad(world); spawnConfetti(); showDragHint();
   }
-  function onError(e) {
+  function onError() {
+    if (loaded) return; loaded = true;
     loader.classList.remove("visible");
-    showToast("⚠️ Cannot load: " + world.src.split("/").pop());
-    afterLoad(world);
+    showToast("⚠️ Could not load video"); afterLoad(world);
   }
+  pVideo.addEventListener("canplay", onCanPlay, { once:true });
+  pVideo.addEventListener("error",   onError,   { once:true });
+  setTimeout(() => { if (!loaded) onError(); }, 10000);
 
-  video.addEventListener("canplay", onCanPlay, { once: true });
-  video.addEventListener("error",   onError,   { once: true });
-  video.load();
-  setTimeout(() => loader.classList.remove("visible"), 6000);
-
+  playerCanvas.style.display = "block";
   welcome.classList.add("hidden");
   hud.classList.add("active");
-  toolbar.classList.add("active");
   hotspotPanel.classList.add("active");
-  fsBtn.classList.add("active");
+  rpBack.classList.add("visible");
+
+  pLon = 0; pLat = 0; pLonV = 0; pLatV = 0;
 }
 
 function afterLoad(world) {
   worldName.textContent = world.name;
-  WORLDS.forEach((_, i) => document.getElementById(`pill-${i}`).classList.toggle("active", i === currentWorldIndex));
+  document.querySelectorAll(".rp-world-btn").forEach((b, i) =>
+    b.classList.toggle("active", i === currentWorldIndex));
   buildHotspots(world);
 }
 
+// ─── HOTSPOTS ─────────────────────────────────────────────────
 function buildHotspots(world) {
   hotspotPanel.innerHTML = "";
   world.hotspots.forEach((hs, i) => {
     const btn = document.createElement("button");
     btn.className = "hs-btn";
-    btn.innerHTML = `<span class="hs-dot" style="background:${DOT_COLORS[i % DOT_COLORS.length]}"></span>${hs.emoji} ${hs.label}`;
+    btn.innerHTML = `<span class="hs-dot" style="background:${DOT_COLORS[i%DOT_COLORS.length]}"></span>${hs.emoji} ${hs.label}`;
     btn.onclick = () => openCard(hs, btn);
     hotspotPanel.appendChild(btn);
   });
 }
-
 function openCard(hs, btn) {
   const isSame = infoCard.classList.contains("visible") && document.getElementById("cardTitle").textContent === hs.label;
   if (isSame) { closeCard(); return; }
@@ -707,54 +635,58 @@ function openCard(hs, btn) {
   document.querySelectorAll(".hs-btn").forEach(b => b.classList.remove("active-hs"));
   btn.classList.add("active-hs");
 }
-
 function closeCard() {
   infoCard.classList.remove("visible");
   document.querySelectorAll(".hs-btn").forEach(b => b.classList.remove("active-hs"));
 }
 
+// ─── BACK / RESET ─────────────────────────────────────────────
 function goBack() {
-  video.pause();
-  sphere.setAttribute("src", "");
-  video.removeAttribute("src");
-  video.load();
-  hud.classList.remove("active"); toolbar.classList.remove("active");
-  hotspotPanel.classList.remove("active"); fsBtn.classList.remove("active");
-  welcome.classList.remove("hidden"); closeCard();
-  currentWorldIndex = -1;
+  pVideo.pause(); pVideo.src = ""; pVideo.load();
+  if (pTexture) { pTexture.dispose(); pTexture = null; }
+  sMat.map = null; sMat.color.set(0x0a0a18); sMat.needsUpdate = true;
+  playerCanvas.style.display = "none";
+  hud.classList.remove("active");
+  hotspotPanel.classList.remove("active");
+  rpBack.classList.remove("visible");
+  dragHint.style.display = "none";
+  welcome.classList.remove("hidden");
+  document.querySelectorAll(".rp-world-btn").forEach(b => b.classList.remove("active"));
+  closeCard(); currentWorldIndex = -1;
 }
 
-function resetView() {
-  const cam = document.getElementById("mainCamera");
-  cam.setAttribute("rotation", "0 0 0");
-  const lc = cam.components["look-controls"];
-  if (lc) { lc.pitchObject.rotation.x = 0; lc.yawObject.rotation.y = 0; }
-  showToast("🔄 View reset!");
+// ─── DRAG HINT ────────────────────────────────────────────────
+function showDragHint() {
+  dragHint.style.display = "block"; dragHint.style.opacity = "1";
+  setTimeout(() => { dragHint.style.opacity = "0"; }, 2200);
+  setTimeout(() => { dragHint.style.display = "none"; }, 2700);
 }
 
+// ─── FULLSCREEN ───────────────────────────────────────────────
+const rpFs = document.getElementById("rpFs");
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(() => showToast("Fullscreen unavailable"));
-    fsBtn.textContent = "✕";
-  } else { document.exitFullscreen(); fsBtn.textContent = "⛶"; }
+    rpFs.textContent = "✕";
+  } else { document.exitFullscreen(); rpFs.textContent = "⛶"; }
 }
-document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) fsBtn.textContent = "⛶"; });
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) rpFs.textContent = "⛶"; });
 
+// ─── TOAST ────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg) {
-  toast.textContent = msg;
-  toast.classList.add("show");
+  toast.textContent = msg; toast.classList.add("show");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
 }
 
+// ─── KEYBOARD ─────────────────────────────────────────────────
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") { if (infoCard.classList.contains("visible")) closeCard(); else if (currentWorldIndex >= 0) goBack(); }
   if (e.key === "f" || e.key === "F") toggleFullscreen();
-  if (e.key === "r" || e.key === "R") resetView();
-  if (["1","2","3","4"].includes(e.key) && currentWorldIndex >= 0) loadWorld(+e.key - 1);
+  if (e.key === "r" || e.key === "R") { pLon=0;pLat=0;pLonV=0;pLatV=0; showToast("🔄 View reset!"); }
+  if (["1","2","3","4","5"].includes(e.key)) loadWorld(+e.key - 1);
 });
-document.addEventListener("click", () => { if (video.paused && video.src) video.play().catch(() => {}); }, { once: true });
 </script>
 </body>
 </html>

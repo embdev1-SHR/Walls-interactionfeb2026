@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Welcome — Auticare</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
         :root{
             --gold:#FFD700;--deep-gold:#B8860B;--saffron:#FF6B00;
-            --crimson:#DC143C;--ivory:#FFFFF0;--night:#04060D;
-            --cyan:#00E5FF;
+            --crimson:#DC143C;--ivory:#FFFFF0;--night:#04060D;--cyan:#00E5FF;
         }
         body{margin:0;overflow:hidden;background:var(--night);
              font-family:"Cormorant Garamond",serif;cursor:none;}
@@ -18,6 +19,42 @@
         #canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
         #physicsCanvas{position:absolute;top:0;left:0;width:100%;height:100%;
                        z-index:50;pointer-events:none;}
+
+        /* ===== 3D Gallery tunnel ===== */
+        #galleryContainer{
+            position:fixed;top:0;left:0;width:100%;height:100%;
+            z-index:53;display:none;opacity:0;
+            transition:opacity 0.8s ease;pointer-events:none;background:#000;
+        }
+        #galleryContainer canvas{display:block;}
+        .gallery-label{
+            position:absolute;bottom:10%;left:50%;
+            transform:translateX(-50%);
+            font-family:"Rajdhani",sans-serif;font-size:13px;
+            letter-spacing:9px;text-transform:uppercase;
+            color:rgba(0,200,255,0.7);
+            text-shadow:0 0 20px rgba(0,180,255,0.8);
+            opacity:0;transition:opacity 1.2s ease;pointer-events:none;
+            white-space:nowrap;
+        }
+
+        /* ===== 3D Globe overlay ===== */
+        #globeContainer{
+            position:fixed;top:0;left:0;width:100%;height:100%;
+            z-index:55;display:none;pointer-events:none;
+            opacity:0;transition:opacity 1.2s ease;
+        }
+        #globeContainer canvas{display:block;}
+        .globe-label{
+            position:absolute;bottom:9%;left:50%;
+            transform:translateX(-50%);
+            font-family:"Rajdhani",sans-serif;font-size:14px;
+            letter-spacing:9px;text-transform:uppercase;
+            color:rgba(0,229,255,.75);
+            text-shadow:0 0 14px rgba(0,200,255,1);
+            opacity:0;transition:opacity 0.8s ease;pointer-events:none;
+            white-space:nowrap;
+        }
 
         /* ===== Scissors cursor ===== */
         .scissors-cursor{
@@ -37,7 +74,7 @@
         /* ===== Kerala Map ===== */
         .kerala-container{
             position:absolute;top:50%;left:50%;
-            transform:translate(-50%,-50%);width:44%;max-width:500px;
+            transform:translate(-50%,-50%);width:40%;max-width:460px;
             z-index:60;opacity:0;display:none;
         }
         .kerala-container.show{
@@ -71,22 +108,20 @@
         .cinematic-text{
             position:absolute;top:50%;left:50%;
             transform:translate(-50%,-50%) scale(.85);
-            text-align:center;z-index:100;opacity:0;pointer-events:none;
-            white-space:nowrap;
+            text-align:center;z-index:100;opacity:0;pointer-events:none;white-space:nowrap;
         }
         .cinematic-text .ti{position:relative;display:inline-block;}
-
-        .t-hero  {font-family:"Cinzel Decorative",serif;font-size:72px;font-weight:900;
-                  letter-spacing:6px;color:var(--gold);}
-        .t-large {font-family:"Cinzel Decorative",serif;font-size:54px;font-weight:700;
-                  letter-spacing:4px;color:var(--ivory);}
-        .t-italic{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:62px;
-                  font-weight:300;letter-spacing:8px;color:rgba(255,250,220,.95);}
-        .t-caps  {font-family:"Rajdhani",sans-serif;font-size:40px;font-weight:400;
-                  letter-spacing:16px;text-transform:uppercase;color:rgba(255,255,255,.88);}
-        .t-giant {font-family:"Cinzel Decorative",serif;font-size:118px;font-weight:900;
-                  color:var(--gold);letter-spacing:2px;}
-
+        .t-hero  {font-family:"Cinzel Decorative",serif;font-size:72px;font-weight:900;letter-spacing:6px;color:var(--gold);}
+        .t-large {font-family:"Cinzel Decorative",serif;font-size:54px;font-weight:700;letter-spacing:4px;color:var(--ivory);}
+        .t-italic{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:62px;font-weight:300;letter-spacing:8px;color:rgba(255,250,220,.95);}
+        .t-caps  {font-family:"Rajdhani",sans-serif;font-size:40px;font-weight:400;letter-spacing:16px;text-transform:uppercase;color:rgba(255,255,255,.88);}
+        .t-giant {font-family:"Cinzel Decorative",serif;font-size:118px;font-weight:900;color:var(--gold);letter-spacing:2px;}
+        /* connector words — "by", "which is" */
+        .t-connector{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:34px;font-weight:300;letter-spacing:14px;color:rgba(255,245,200,.55);}
+        /* brand reveal — "Auticare Blueroom" */
+        .brand-text{white-space:normal!important;line-height:1.25;}
+        .t-brand-name{font-family:"Cinzel Decorative",serif;font-size:66px;font-weight:900;letter-spacing:5px;color:var(--gold);display:block;}
+        .t-brand-sub {font-family:"Rajdhani",sans-serif;font-size:38px;letter-spacing:18px;text-transform:uppercase;color:rgba(180,220,255,.88);display:block;margin-top:6px;}
         .anim-enter{animation:cinematicIn 1.7s cubic-bezier(.16,1,.3,1) forwards;}
         .anim-exit {animation:cinematicOut  1s cubic-bezier(.55,0,1,.45) forwards;}
         @keyframes cinematicIn{
@@ -115,65 +150,57 @@
         }
         .logo-container.reveal{opacity:1;transform:translate(-50%,-50%) scale(1);}
         .logo-box{
-            display:flex;flex-direction:column;align-items:center;
-            gap:14px;
+            display:flex;flex-direction:column;align-items:center;gap:8px;
             background:#ffffff;
-            border:1.5px solid rgba(0,229,255,.35);
-            border-radius:20px;
-            padding:36px 56px 30px;
+            border:1.5px solid rgba(0,180,200,.35);border-radius:20px;
+            padding:28px 48px 22px;
             box-shadow:0 0 40px rgba(0,200,255,.25),0 0 80px rgba(0,100,200,.15),
                         inset 0 0 30px rgba(0,180,255,.06);
         }
-        .logo-title{
-            font-family:"Cinzel Decorative",serif;font-size:42px;font-weight:700;
-            color:#0055CC;letter-spacing:3px;
-            text-shadow:0 0 20px rgba(0,130,255,.35);
-        }
+        .logo-img{width:180px;height:auto;display:block;}
         .logo-tagline{
             font-family:"Rajdhani",sans-serif;font-size:13px;
-            letter-spacing:5px;color:rgba(0,100,200,.75);text-transform:uppercase;
-            font-weight:600;
+            letter-spacing:5px;color:rgba(0,80,160,.8);text-transform:uppercase;
+            font-weight:600;margin-top:2px;
         }
 
         /* ===== Instruction text ===== */
         .instruction-text{
             position:absolute;top:61%;left:50%;
             transform:translateX(-50%) translateY(-40px);
-            font-family:"Rajdhani",sans-serif;font-size:26px;
-            font-weight:500;letter-spacing:6px;text-transform:uppercase;
+            font-family:"Rajdhani",sans-serif;font-size:26px;font-weight:500;
+            letter-spacing:6px;text-transform:uppercase;
             color:rgba(255,255,255,.9);z-index:45;opacity:0;pointer-events:none;
             text-shadow:0 0 18px rgba(255,215,0,.8),0 0 36px rgba(255,130,0,.5);
-            transition:none;
         }
         .instruction-text.show{
-            animation:instructDrop 0.7s cubic-bezier(.16,1,.3,1) forwards,
-                      instructPulse 2.5s ease-in-out 0.7s infinite;
+            animation:instructDrop .7s cubic-bezier(.16,1,.3,1) forwards,
+                      instructPulse 2.5s ease-in-out .7s infinite;
         }
         @keyframes instructDrop{
             0%  {opacity:0;transform:translateX(-50%) translateY(-60px);}
-            100%{opacity:.8;transform:translateX(-50%) translateY(0px);}
+            100%{opacity:.8;transform:translateX(-50%) translateY(0);}
         }
         @keyframes instructPulse{
             0%,100%{opacity:.6;transform:translateX(-50%) scale(1);}
             50%    {opacity:1; transform:translateX(-50%) scale(1.04);}
         }
 
-        /* ===== Start Button ===== */
+        /* ===== Start Button — positioned toward center ===== */
         #startButton{
-            position:absolute;bottom:72px;left:50%;
+            position:absolute;top:69%;left:50%;
             transform:translateX(-50%);
             padding:18px 64px;
             font-family:"Rajdhani",sans-serif;font-size:22px;
             font-weight:700;letter-spacing:6px;text-transform:uppercase;
             color:#ffffff;
             background:linear-gradient(135deg,#0066FF 0%,#00B4FF 50%,#0066FF 100%);
-            border:1.5px solid rgba(0,200,255,.4);
-            border-radius:12px;
+            border:1.5px solid rgba(0,200,255,.4);border-radius:12px;
             cursor:pointer;opacity:0;z-index:200;pointer-events:none;
             box-shadow:0 6px 32px rgba(0,130,255,.55);
             transition:all .3s ease;
             display:flex;align-items:center;justify-content:center;
-            text-align:center;
+            text-align:center;white-space:nowrap;
         }
         #startButton.show{opacity:1;pointer-events:all;animation:btnGlow 2s ease-in-out infinite;}
         #startButton:hover{transform:translateX(-50%) scale(1.06);box-shadow:0 10px 50px rgba(0,160,255,.85);}
@@ -182,7 +209,7 @@
             50%    {box-shadow:0 8px 60px rgba(0,180,255,.9),0 0 90px rgba(0,80,255,.35);}
         }
 
-        /* ===== Vignette + light streak ===== */
+        /* ===== Vignette + streak ===== */
         #vignette{
             position:fixed;top:0;left:0;width:100%;height:100%;
             background:radial-gradient(ellipse at center,transparent 38%,rgba(0,0,0,.88) 100%);
@@ -203,12 +230,18 @@
 <div id="vignette"></div>
 <div class="streak" id="streak"></div>
 
-<!-- ===== AUDIO — same pattern as index.html ===== -->
+<!-- 3D Gallery tunnel -->
+<div id="galleryContainer"></div>
+
+<!-- 3D Globe overlay -->
+<div id="globeContainer">
+    <div class="globe-label" id="globeLabel">Zooming to Kerala, India</div>
+</div>
+
 <audio id="intro-audio" preload="auto">
     <source src="./assets/Audio/intro.mp3" type="audio/mpeg">
 </audio>
 
-<!-- Scissors cursor -->
 <svg class="scissors-cursor" id="scissorsCursor" viewBox="0 0 56 56">
     <defs>
         <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -231,22 +264,27 @@
 <div class="kerala-container" id="keralaContainer">
     <div class="halo-ring"></div><div class="halo-ring"></div>
     <div class="halo-ring"></div><div class="halo-ring"></div>
-    <img src="Kerala-map-en.svg" class="kerala-svg" alt="Kerala Map">
+    <img src="assets/Kerala_updated.png" class="kerala-svg" alt="Kerala Map">
 </div>
 
-<!-- Cinematic texts -->
-<div id="welcomeText" class="cinematic-text"><span class="ti t-hero">Welcome to Kerala</span></div>
-<div id="realityText" class="cinematic-text"><span class="ti t-italic">Stepping into a New Reality</span></div>
-<div id="text1"       class="cinematic-text"><span class="ti t-large">Experience the New Vision</span></div>
-<div id="text2"       class="cinematic-text"><span class="ti t-caps">THAT IS</span></div>
-<div id="text3"       class="cinematic-text"><span class="ti t-giant">BIGGER</span></div>
-<div id="text4"       class="cinematic-text"><span class="ti t-giant">BRIGHTER</span></div>
+<div id="welcomeText"  class="cinematic-text"><span class="ti t-hero">Welcome Kerala</span></div>
+<div id="witnessText"  class="cinematic-text"><span class="ti t-large">Witness the Evolution</span></div>
+<div id="byText"       class="cinematic-text"><span class="ti t-connector">by</span></div>
+<div id="realityText"  class="cinematic-text"><span class="ti t-italic">stepping into a new reality</span></div>
+<div id="whichText"    class="cinematic-text"><span class="ti t-connector">which is</span></div>
+<div id="biggerText"   class="cinematic-text"><span class="ti t-giant">BIGGER</span></div>
+<div id="brighterText" class="cinematic-text"><span class="ti t-giant">BRIGHTER</span></div>
+<div id="brandText"    class="cinematic-text brand-text">
+    <span class="ti" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <span class="t-brand-name">Auticare</span>
+        <span class="t-brand-sub">Blueroom</span>
+    </span>
+</div>
 
-<!-- Logo: text only -->
 <div id="logo" class="logo-container">
     <div class="logo-box">
-        <div class="logo-title">Auticare</div>
-        <div class="logo-tagline">Interactive Wall Games</div>
+        <img src="assets/images/Auticare_logo_Embright (1).png" class="logo-img" alt="Auticare">
+        <div class="logo-tagline">Blueroom</div>
     </div>
 </div>
 
@@ -254,12 +292,12 @@
 
 <script>
 // ================================================================
-//  CANVAS
+//  CANVAS SETUP
 // ================================================================
 const canvas        = document.getElementById("canvas");
-const ctx           = canvas.getContext("2d", {alpha:false});
+const ctx           = canvas.getContext("2d",{alpha:false});
 const physicsCanvas = document.getElementById("physicsCanvas");
-const physicsCtx    = physicsCanvas.getContext("2d", {alpha:true});
+const physicsCtx    = physicsCanvas.getContext("2d",{alpha:true});
 
 function resizeCanvases(){
     canvas.width = physicsCanvas.width  = window.innerWidth;
@@ -267,13 +305,11 @@ function resizeCanvases(){
 }
 resizeCanvases();
 
-const scissorsCursor = document.getElementById("scissorsCursor");
-const instructionText= document.getElementById("instructionText");
-const keralaContainer= document.getElementById("keralaContainer");
-const startButton    = document.getElementById("startButton");
-
-// ===== AUDIO element (preloaded in HTML) =====
-const introAudio = document.getElementById("intro-audio");
+const scissorsCursor  = document.getElementById("scissorsCursor");
+const instructionText = document.getElementById("instructionText");
+const keralaContainer = document.getElementById("keralaContainer");
+const startButton     = document.getElementById("startButton");
+const introAudio      = document.getElementById("intro-audio");
 introAudio.volume = 0.6;
 
 // ================================================================
@@ -315,8 +351,8 @@ class LampSpark{
         ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); ctx.restore();
     }
 }
-const stars = Array.from({length:600}, ()=>new Star());
-const sparks = Array.from({length:80},  ()=>new LampSpark());
+const stars = Array.from({length:600},()=>new Star());
+const sparks = Array.from({length:80}, ()=>new LampSpark());
 function animateBg(){
     requestAnimationFrame(animateBg);
     ctx.fillStyle="rgba(4,6,13,.15)"; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -326,7 +362,7 @@ function animateBg(){
 animateBg();
 
 // ================================================================
-//  PHYSICS OBJECTS  — `let` so continueSequence can reassign
+//  PHYSICS OBJECTS
 // ================================================================
 let physicsObjects = [];
 let animatingPhysics = false;
@@ -360,46 +396,67 @@ class RopeConstraint{
     }
 }
 
-class Confetti{
-    constructor(x,y,burst){
+// Fast light-streak particles — burst outward from cut point, fade in ~0.6-1s
+class LightBurst{
+    constructor(x,y){
         this.x=x; this.y=y;
-        if(burst){
-            const side=Math.floor(Math.random()*4);
-            if(side===0){ this.x=Math.random()*physicsCanvas.width; this.y=-10; }
-            else if(side===1){ this.x=physicsCanvas.width+10; this.y=Math.random()*physicsCanvas.height; }
-            else if(side===2){ this.x=Math.random()*physicsCanvas.width; this.y=physicsCanvas.height+10; }
-            else{ this.x=-10; this.y=Math.random()*physicsCanvas.height; }
-            const cx=physicsCanvas.width/2, cy=physicsCanvas.height/2;
-            const angle=Math.atan2(cy-this.y,cx-this.x)+(Math.random()-.5)*.9;
-            const sp=9+Math.random()*14;
-            this.vx=Math.cos(angle)*sp; this.vy=Math.sin(angle)*sp;
-        } else {
-            const angle=Math.random()*Math.PI*2, sp=4+Math.random()*18;
-            this.vx=Math.cos(angle)*sp; this.vy=Math.sin(angle)*sp-6;
-        }
-        this.rotation=Math.random()*Math.PI*2;
-        this.angularVelocity=(Math.random()-.5)*.3;
-        this.w=6+Math.random()*10; this.h=4+Math.random()*6;
-        this.color=["#FF6B00","#FFD700","#FF1744","#00E676","#2979FF",
-                    "#FF4081","#EEFF41","#18FFFF","#FF9100","#F50057"][Math.floor(Math.random()*10)];
-        this.gravity=0.32;
+        const angle=Math.random()*Math.PI*2;
+        const sp=10+Math.random()*30;
+        this.vx=Math.cos(angle)*sp;
+        this.vy=Math.sin(angle)*sp-6; // upward bias
         this.life=1;
-        this.decay=0.004+Math.random()*0.004;
-        this.opacity=1;
+        this.decay=0.020+Math.random()*0.020; // ~25-50 frames = 0.4-0.8s
+        this.width=1+Math.random()*2.5;
+        this.color=["#FFD700","#FF8C00","#FFFFFF","#FF6B00",
+                    "#FFE566","#00E5FF","#FF4444"][Math.floor(Math.random()*7)];
     }
     update(){
-        this.vx*=.984; this.vy+=this.gravity;
+        this.vx*=0.93; this.vy*=0.93; this.vy+=0.15;
         this.x+=this.vx; this.y+=this.vy;
-        this.rotation+=this.angularVelocity;
         this.life-=this.decay;
-        this.opacity=Math.max(0, this.life);
     }
     draw(){
-        if(this.opacity<=0) return;
-        physicsCtx.save(); physicsCtx.globalAlpha=this.opacity;
-        physicsCtx.translate(this.x,this.y); physicsCtx.rotate(this.rotation);
-        physicsCtx.fillStyle=this.color;
-        physicsCtx.fillRect(-this.w/2,-this.h/2,this.w,this.h);
+        if(this.life<=0) return;
+        physicsCtx.save();
+        physicsCtx.globalAlpha=this.life;
+        physicsCtx.strokeStyle=this.color;
+        physicsCtx.lineWidth=this.width;
+        physicsCtx.shadowBlur=10;
+        physicsCtx.shadowColor=this.color;
+        physicsCtx.beginPath();
+        physicsCtx.moveTo(this.x, this.y);
+        physicsCtx.lineTo(this.x-this.vx*0.8, this.y-this.vy*0.8);
+        physicsCtx.stroke();
+        physicsCtx.restore();
+    }
+}
+
+// Expanding shockwave rings — up to 4 rings, each fades in ~0.4-0.7s
+class ShockRing{
+    constructor(x,y,idx){
+        this.x=x; this.y=y;
+        this.r=8;
+        this.speed=7+idx*4;
+        this.life=1;
+        this.decay=0.028+idx*0.007; // ring 0: ~36 frames, ring 3: ~24 frames
+        this.color=["#FFD700","#FF8C00","rgba(255,255,255,0.9)","#00E5FF"][idx%4];
+    }
+    update(){
+        this.r+=this.speed;
+        this.speed*=1.06;
+        this.life-=this.decay;
+    }
+    draw(){
+        if(this.life<=0) return;
+        physicsCtx.save();
+        physicsCtx.globalAlpha=this.life*0.7;
+        physicsCtx.strokeStyle=this.color;
+        physicsCtx.lineWidth=3;
+        physicsCtx.shadowBlur=18;
+        physicsCtx.shadowColor=this.color;
+        physicsCtx.beginPath();
+        physicsCtx.arc(this.x,this.y,this.r,0,Math.PI*2);
+        physicsCtx.stroke();
         physicsCtx.restore();
     }
 }
@@ -451,7 +508,7 @@ class RibbonPiece{
 }
 
 // ================================================================
-//  ROPE CREATION + DRAWING
+//  ROPE
 // ================================================================
 function createRibbon(){
     ropeSegments.length=0; ropeConstraints.length=0;
@@ -544,8 +601,8 @@ function animatePhysics(){
         for(let i=physicsObjects.length-1;i>=0;i--){
             physicsObjects[i].update();
             physicsObjects[i].draw();
-            if((physicsObjects[i].opacity!==undefined && physicsObjects[i].opacity<=0)||
-               (physicsObjects[i].life   !==undefined && physicsObjects[i].life   <=0)){
+            if((physicsObjects[i].opacity!==undefined&&physicsObjects[i].opacity<=0)||
+               (physicsObjects[i].life   !==undefined&&physicsObjects[i].life   <=0)){
                 physicsObjects.splice(i,1);
             }
         }
@@ -587,8 +644,8 @@ function cutRibbon(hx,hy){
             (Math.random()-.5)*14, -3-Math.random()*8));
     }
     for(let i=0;i<70;i++)  physicsObjects.push(new KnotSpark(cs.x,cs.y));
-    for(let i=0;i<320;i++) physicsObjects.push(new Confetti(cs.x,cs.y,true));
-    for(let i=0;i<120;i++) physicsObjects.push(new Confetti(cs.x,cs.y,false));
+    for(let i=0;i<180;i++) physicsObjects.push(new LightBurst(cs.x,cs.y));
+    for(let i=0;i<4;i++)   physicsObjects.push(new ShockRing(cs.x,cs.y,i));
     animatingPhysics=true;
     const streak=document.getElementById("streak");
     streak.style.top=cs.y+"px";
@@ -624,19 +681,13 @@ function handleClick(e){
     if(hit){
         ribbonCut=true; isHoveringRibbon=false;
         scissorsCursor.classList.remove("hovering");
-
-        // ── Play audio on the ribbon click (user gesture) with fade-in ──
-        introAudio.loop   = true;
-        introAudio.volume = 0;
-        introAudio.play().catch(function(err){
-            console.log('Audio play failed:', err);
-        });
+        introAudio.loop=true; introAudio.volume=0;
+        introAudio.play().catch(err=>console.log("Audio:",err));
         audioFadeIn();
-
-        if(cutRibbon(hit.x,hit.y)) setTimeout(continueSequence, 2000);
+        if(cutRibbon(hit.x,hit.y)) setTimeout(continueSequence, 2200);
     }
 }
-document.addEventListener("click", handleClick);
+document.addEventListener("click",handleClick);
 document.addEventListener("touchstart",e=>{
     scissorsCursor.style.left=(e.touches[0]?.clientX??0)+"px";
     scissorsCursor.style.top =(e.touches[0]?.clientY??0)+"px";
@@ -653,81 +704,73 @@ function showText(el,delay,exitDelay,animClass="anim-enter"){
             el.classList.remove(animClass);
             el.classList.add("anim-exit");
             setTimeout(()=>{ el.classList.remove("anim-exit"); el.style.opacity="0"; },1000);
-        }, exitDelay||2200);
-    }, delay);
+        },exitDelay||2200);
+    },delay);
 }
 
+// ================================================================
+//  CONTINUE SEQUENCE
+// ================================================================
 function continueSequence(){
     document.body.classList.remove("interactive-mode");
     instructionText.classList.remove("show");
 
-    // ── Fade confetti opacity to 0 over 2 seconds, then remove them ──
-    const confettiStart = performance.now();
-    const CONFETTI_FADE = 2000; // ms
-    function fadeConfetti(){
-        const elapsed = performance.now() - confettiStart;
-        const progress = Math.min(elapsed / CONFETTI_FADE, 1);
-        physicsObjects.forEach(obj => {
-            if(obj instanceof Confetti) obj.opacity = Math.max(0, (1 - progress) * obj.life);
-        });
-        if(progress < 1){
-            requestAnimationFrame(fadeConfetti);
-        } else {
-            // All confetti fully invisible — remove them
-            physicsObjects = physicsObjects.filter(obj => !(obj instanceof Confetti));
-            // ── Now start Kerala map ──
-            keralaContainer.classList.add("show");
-            document.querySelectorAll(".halo-ring").forEach(r=>r.classList.add("animate"));
-        }
-    }
-    requestAnimationFrame(fadeConfetti);
+    physicsObjects = [];
+    animatingPhysics = false;
+    ropeCreated = false;
+    physicsCtx.clearRect(0,0,physicsCanvas.width,physicsCanvas.height);
 
-    // Kerala hides after 4.8s from when it appears (2s after continueSequence)
-    setTimeout(()=>keralaContainer.classList.add("hide"), 2000 + 4800);
+    // Gallery first, then globe
+    startGallerySequence(function(){
+        startGlobeSequence(showAfterGlobe);
+    });
+}
 
-    // Cinematic texts start after Kerala is hidden
-    let t = 2000 + 5600;
-    showText(document.getElementById("welcomeText"),t,2400,"anim-wipe"); t+=3400;
-    showText(document.getElementById("realityText"),t,2600);             t+=3400;
-    showText(document.getElementById("text1"),      t,2600);             t+=3400;
-    showText(document.getElementById("text2"),      t,2000);             t+=2800;
-    showText(document.getElementById("text3"),      t,2200);             t+=3000;
-    showText(document.getElementById("text4"),      t,2200);             t+=3000;
+function showAfterGlobe(){
+    keralaContainer.classList.add("show");
+    document.querySelectorAll(".halo-ring").forEach(r=>r.classList.add("animate"));
+    setTimeout(()=>keralaContainer.classList.add("hide"),4800);
 
-    setTimeout(()=>{ document.getElementById("logo").classList.add("reveal"); }, t);
+    let t = 5600;
+    // "Welcome Kerala"  — wipe reveal
+    showText(document.getElementById("welcomeText"),  t, 2400, "anim-wipe"); t += 3000;
+    // "Witness the Evolution"
+    showText(document.getElementById("witnessText"),  t, 2400);              t += 3000;
+    // "by"  — short connector
+    showText(document.getElementById("byText"),       t, 1400);              t += 1800;
+    // "stepping into a new reality"
+    showText(document.getElementById("realityText"),  t, 2400);              t += 2800;
+    // "which is"  — short connector
+    showText(document.getElementById("whichText"),    t, 1400);              t += 1800;
+    // "BIGGER"
+    showText(document.getElementById("biggerText"),   t, 2000);              t += 2600;
+    // "BRIGHTER"
+    showText(document.getElementById("brighterText"), t, 2000);              t += 2800;
+    // "Auticare Blueroom"  — brand reveal (longer hold)
+    showText(document.getElementById("brandText"),    t, 2800);              t += 3400;
+    // Logo box
+    setTimeout(()=>document.getElementById("logo").classList.add("reveal"), t);
     t += 2200;
     setTimeout(()=>startButton.classList.add("show"), t);
 }
 
 // ================================================================
-//  AUDIO FADE HELPERS
+//  AUDIO
 // ================================================================
-let fadeInTimer  = null;
-let fadeOutTimer = null;
-
+let fadeInTimer=null,fadeOutTimer=null;
 function audioFadeIn(){
     clearInterval(fadeOutTimer);
-    fadeInTimer = setInterval(()=>{
-        if(introAudio.volume < 0.6){
-            introAudio.volume = Math.min(introAudio.volume + 0.02, 0.6);
-        } else {
-            clearInterval(fadeInTimer);
-        }
-    }, 40); // steps every 40ms → reaches 0.6 in ~1.2s
+    fadeInTimer=setInterval(()=>{
+        if(introAudio.volume<0.6) introAudio.volume=Math.min(introAudio.volume+0.02,0.6);
+        else clearInterval(fadeInTimer);
+    },40);
 }
-
 function audioFadeOut(cb){
     clearInterval(fadeInTimer);
-    fadeOutTimer = setInterval(()=>{
-        if(introAudio.volume > 0.02){
-            introAudio.volume = Math.max(introAudio.volume - 0.02, 0);
-        } else {
-            introAudio.volume = 0;
-            introAudio.pause();
-            clearInterval(fadeOutTimer);
-            if(cb) cb();
-        }
-    }, 40); // same rate → ~1.2s fade-out
+    fadeOutTimer=setInterval(()=>{
+        if(introAudio.volume>0.02) introAudio.volume=Math.max(introAudio.volume-0.02,0);
+        else{ introAudio.volume=0; introAudio.pause(); clearInterval(fadeOutTimer); if(cb) cb(); }
+    },40);
 }
 
 // ================================================================
@@ -739,18 +782,524 @@ function startSequence(){
         scissorsCursor.style.opacity="1";
         instructionText.classList.add("show");
         document.body.classList.add("interactive-mode");
-    }, 600);
+    },600);
 }
-setTimeout(startSequence, 400);
+setTimeout(startSequence,400);
 
-startButton.addEventListener("click",()=>{
-    audioFadeOut(()=>{ window.location.href="index.html"; });
-});
-
+startButton.addEventListener("click",()=>{ audioFadeOut(()=>{ window.location.href="index.html"; }); });
 window.addEventListener("resize",()=>{
     resizeCanvases();
     if(!ribbonCut) createRibbon();
 });
+
+// ================================================================
+//  THREE.JS 3D GALLERY HELIX NETWORK — IIFE
+//  Images arranged on a helix spiral with network connection lines.
+//  Flow: fade-in → camera flies through helix centre → fade-out → onComplete()
+// ================================================================
+(function GalleryModule(){
+
+    const IMGS = [
+        "assets/IMG/intro1.jpeg",
+        "assets/IMG/intro2.jpeg",
+        "assets/IMG/intro3.jpeg",
+        "assets/IMG/intro4.jpeg",
+        "assets/IMG/intro5.jpeg",
+        "assets/IMG/intro6.jpeg",
+        "assets/IMG/intro7.jpeg",
+        "assets/IMG/intro8.jpeg",
+    ];
+
+    const T_GALLERY  = 20000;  // total gallery play time (ms)
+    const T_FADE_IN  =   700;
+    const T_FADE_OUT =   900;
+    const PLANE_W    =   1.5;
+    const PLANE_H    =   0.94;
+    const Z_SPACE    =   6.5;   // gap between successive images
+    const X_OFFSET   =   0.85;  // how far left / right each lane sits
+
+    // Unique glow colour per image plane (one per image)
+    const GLOW_COLORS = [0x00e5ff,0x00ff88,0xff8800,0xffdd00,
+                         0xff44aa,0x88aaff,0x44ffcc,0xffd700];
+
+    // Images alternate left / right lanes — camera flies straight down the middle
+    function getHelixPos(i){
+        const side = (i % 2 === 0) ? -X_OFFSET : X_OFFSET;
+        return { x: side, y: 0, ry: 0 };
+    }
+
+    function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+    function lerp(a,b,t){ return a+(b-a)*t; }
+
+    window.startGallerySequence = function(onComplete){
+        const container = document.getElementById("galleryContainer");
+        container.style.display = "block";
+        container.style.opacity  = "0";
+
+        const W = window.innerWidth, H = window.innerHeight;
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000510);
+        scene.fog        = new THREE.FogExp2(0x000510, 0.028);
+
+        const camera = new THREE.PerspectiveCamera(62, W/H, 0.1, 200);
+        camera.position.set(0, 0, 4);  // start in the middle of the two lanes
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(W, H);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // === Image planes on helix ===
+        const loader = new THREE.TextureLoader();
+        const planes  = [];
+
+        IMGS.forEach((url, i) => {
+            const hp  = getHelixPos(i);
+            const geo = new THREE.PlaneGeometry(PLANE_W, PLANE_H);
+
+            const mat = new THREE.MeshBasicMaterial({
+                color: new THREE.Color(0x0a1a2e),
+                transparent: true,
+                opacity: 0,
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(hp.x, hp.y, -i * Z_SPACE);
+            mesh.rotation.y = hp.ry;
+            scene.add(mesh);
+
+            // Glowing border frame
+            const edgeGeo = new THREE.EdgesGeometry(geo);
+            const edgeMat = new THREE.LineBasicMaterial({
+                color: GLOW_COLORS[i % GLOW_COLORS.length], transparent: true, opacity: 0,
+            });
+            mesh.add(new THREE.LineSegments(edgeGeo, edgeMat));
+
+            planes.push({ mesh, mat, edgeMat, loaded: false });
+
+            loader.load(url,
+                tex => { mat.map=tex; mat.color.set(0xffffff); mat.needsUpdate=true; planes[i].loaded=true; },
+                undefined,
+                () => { mat.color.set(0x112233); }
+            );
+        });
+
+        // === Network connection lines between helix nodes ===
+        const netMat = new THREE.LineBasicMaterial({
+            color: 0x0077ee, transparent: true, opacity: 0.18,
+        });
+        for(let i = 0; i < IMGS.length; i++){
+            for(let j = i+1; j <= Math.min(i+2, IMGS.length-1); j++){
+                const pa = planes[i].mesh.position;
+                const pb = planes[j].mesh.position;
+                const lg = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(pa.x, pa.y, pa.z),
+                    new THREE.Vector3(pb.x, pb.y, pb.z),
+                ]);
+                scene.add(new THREE.Line(lg, netMat));
+            }
+        }
+
+        // === Star field particles ===
+        const pCount = 1500;
+        const pPos   = new Float32Array(pCount * 3);
+        for(let i = 0; i < pCount; i++){
+            pPos[i*3]   = (Math.random()-0.5)*34;
+            pPos[i*3+1] = (Math.random()-0.5)*18;
+            pPos[i*3+2] = -Math.random() * IMGS.length * Z_SPACE - 1;
+        }
+        const pGeo = new THREE.BufferGeometry();
+        pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+        scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+            color: 0x55aaff, size: 0.05, transparent: true, opacity: 0.7,
+        })));
+
+        // === Subtitle label ===
+        const lbl = document.createElement("div");
+        lbl.className = "gallery-label";
+        lbl.textContent = "Empowering Lives · Celebrating Kerala";
+        container.appendChild(lbl);
+
+        setTimeout(() => { container.style.opacity = "1"; }, 30);
+        setTimeout(() => { lbl.style.opacity = "1"; }, T_FADE_IN + 600);
+
+        // === Animation loop ===
+        let startTS = null, raf = null, ended = false;
+        const totalTravel = (IMGS.length - 1) * Z_SPACE;
+
+        function animate(ts){
+            if(ended) return;
+            raf = requestAnimationFrame(animate);
+            if(!startTS) startTS = ts;
+            const el = ts - startTS;
+            const t  = Math.min(el / T_GALLERY, 1);
+            const te = easeInOutCubic(t);
+
+            // Camera glides down the centre between the two image lanes
+            camera.position.z = lerp(4, 4 - totalTravel * 1.0, te);
+            camera.position.x = 0;
+            camera.position.y = Math.sin(el * 0.00028) * 0.08; // very gentle vertical drift
+            camera.lookAt(0, 0, camera.position.z - 5);
+
+            // Per-plane opacity + breathing scale based on z-distance to camera
+            planes.forEach((p, i) => {
+                const dz = p.mesh.position.z - camera.position.z;
+                let op;
+                // Fade-in 4 units ahead; full opacity window ±2.5 units; slow fade-out over 8 units
+                if(dz > 2.5)        op = Math.max(0, 1 - (dz - 2.5) / 8.0);
+                else if(dz > -2.5)  op = p.loaded ? 0.97 : 0.35;
+                else                op = Math.max(0, (dz + 4.0) / 4.0);
+                p.mat.opacity     = op;
+                // Edge glow pulses independently per plane for a lively neon look
+                const glowPulse = 0.55 + 0.45 * Math.sin(el * 0.0038 + i * 0.85);
+                p.edgeMat.opacity = op * glowPulse;
+                // Subtle breathing scale
+                const breathe = 1 + 0.022 * Math.sin(el * 0.0028 + i * 0.7);
+                p.mesh.scale.setScalar(breathe);
+            });
+            // Network lines pulse with the music of the animation
+            netMat.opacity = 0.10 + 0.20 * Math.abs(Math.sin(el * 0.0018));
+
+            renderer.render(scene, camera);
+
+            if(t >= 1 && !ended){
+                ended = true;
+                lbl.style.opacity = "0";
+                container.style.transition = `opacity ${T_FADE_OUT}ms ease`;
+                container.style.opacity    = "0";
+                setTimeout(() => {
+                    cancelAnimationFrame(raf);
+                    renderer.dispose();
+                    container.style.display = "none";
+                    container.innerHTML     = "";
+                    onComplete();
+                }, T_FADE_OUT);
+            }
+        }
+
+        requestAnimationFrame(animate);
+    };
+
+})(); // end gallery IIFE
+
+// ================================================================
+//  D3 WIREFRAME DOTTED GLOBE — IIFE
+//  Style: black sphere, white grid, white land outlines, grey dots
+//  Rotation correction: D3 geoOrthographic.rotate([-lon, -lat])
+//  Kerala (76.5°E, 10.5°N) → rotate([-76.5, -10.5])
+//  3 eastward spins first: start lambda = -76.5 + 3×360 = 1003.5 → end = -76.5
+// ================================================================
+(function(){
+
+    const KERALA_LON = 76.5;
+    const KERALA_LAT = 10.5;
+
+    // D3 geoOrthographic.rotate([λ, φ]):
+    //   λ = rotation around vertical axis (negative lon centers that longitude)
+    //   φ = tilt around horizontal axis  (negative lat centers that latitude)
+    //
+    // To center Kerala (76.5°E, 10.5°N): rotate([-76.5, -10.5])
+    //
+    // For 3 full westward spins THEN land on Kerala:
+    //   Start λ = -76.5 + 3×360 = 1003.5 (3 turns east of Kerala)
+    //   End   λ = -76.5
+    //   Interpolating from 1003.5 → -76.5 swings the globe WEST 3 full turns ending at Kerala.
+    const LAMBDA_END = -KERALA_LON;        //  -76.5
+    const LAMBDA_START = LAMBDA_END + 3*360; // 1003.5
+    const PHI_START = 0;
+    const PHI_END   = -KERALA_LAT;         //  -10.5
+
+    // ── Timings ──
+    const T_SPIN     = 7500;   // spinning  (ms)
+    const T_HOLD     =  600;   // hold after spin lands
+    const T_ZOOM     = 5200;   // camera swoop-in (longer for dramatic effect)
+    const T_DISSOLVE =  700;   // fast dissolve after swoop
+
+    // ── City coordinates [lon, lat] ──
+    const CITIES = [
+        [-74.0,  40.7],  // 0 New York
+        [ -0.1,  51.5],  // 1 London
+        [  2.3,  48.8],  // 2 Paris
+        [ 37.6,  55.7],  // 3 Moscow
+        [116.4,  39.9],  // 4 Beijing
+        [139.7,  35.7],  // 5 Tokyo
+        [ 77.2,  28.6],  // 6 Delhi
+        [103.8,   1.3],  // 7 Singapore
+        [ 76.3,   9.9],  // 8 Kochi, Kerala ★
+        [ 18.4, -33.9],  // 9 Cape Town
+        [-122.4, 37.6],  // 10 San Francisco
+        [-46.6, -23.5],  // 11 São Paulo
+    ];
+    const CONNECTIONS = [[0,1],[1,2],[1,3],[3,4],[4,5],[4,6],[6,8],[7,8],[1,9],[10,0],[0,11],[2,3]];
+    const ARC_COLORS  = ["#00e5ff","#00ff88","#ff8800","#ffdd00","#ff44aa","#88aaff"];
+
+    // ── Satellites: 2D elliptical orbits ──
+    const SATS = [
+        {col:"#00ffff", rx:1.30, ry:0.25, spd:0.9,  ph:0.0},
+        {col:"#ff8800", rx:1.45, ry:0.18, spd:0.65, ph:2.1},
+        {col:"#88ff44", rx:1.20, ry:0.32, spd:1.15, ph:1.0},
+        {col:"#ffaaff", rx:1.58, ry:0.15, spd:0.75, ph:3.5},
+        {col:"#ffd700", rx:1.38, ry:0.28, spd:1.05, ph:4.8},
+    ];
+
+    let land = null, dots = [];
+    let cvs, g2, proj, gPath;
+    let W, H, baseR;
+    let globeDone = false, startTS = null, rafId = null;
+
+    // ── Easing ──
+    const easeOutCubic = t => 1-(1-t)**3;
+    const easeOutQuad  = t => 1-(1-t)**2;
+    const easeInCubic  = t => t*t*t;  // slow start → rushes to end (swoop feel)
+    const lerp = (a,b,t) => a+(b-a)*t;
+
+    // ── Generate land dots once (2.5° grid inside land polygons) ──
+    function buildDots(features){
+        const STEP = 2.5;
+        features.forEach(feat=>{
+            try{
+                const b=d3.geoBounds(feat);
+                const [[lon0,lat0],[lon1,lat1]]=b;
+                for(let lon=lon0; lon<=lon1; lon+=STEP)
+                    for(let lat=lat0; lat<=lat1; lat+=STEP)
+                        if(d3.geoContains(feat,[lon,lat]))
+                            dots.push([lon,lat]);
+            }catch(e){}
+        });
+    }
+
+    // ── Draw one frame ──
+    function drawFrame(elMs){
+        g2.clearRect(0,0,W,H);
+
+        // Current rotation interpolated
+        const tSpin = Math.min(elMs/T_SPIN, 1);
+        const eSpin = easeOutCubic(tSpin);
+        const curLambda = lerp(LAMBDA_START, LAMBDA_END, eSpin);
+        const curPhi    = lerp(PHI_START,    PHI_END,    eSpin);
+
+        // Zoom + pan
+        let curScale = baseR;
+        let tx = W/2, ty = H/2;
+        if(elMs > T_SPIN + T_HOLD){
+            const tZ  = Math.min((elMs-T_SPIN-T_HOLD)/T_ZOOM, 1);
+            const eZ  = easeInCubic(tZ);   // slow hold → sudden rush INTO the globe
+            curScale  = baseR * (1 + eZ * 5.0);  // zoom to 6× — camera flies through surface
+            ty        = H/2 + eZ * H * 0.04;
+        }
+
+        proj.rotate([curLambda, curPhi, 0]).scale(curScale).translate([tx, ty]);
+        const sf = curScale / baseR;  // scale factor for stroke/dot sizes
+
+        // ── Atmospheric glow ──
+        const ag = g2.createRadialGradient(tx,ty,curScale*0.7,tx,ty,curScale*1.35);
+        ag.addColorStop(0,"rgba(0,60,180,0.22)");
+        ag.addColorStop(0.6,"rgba(0,40,120,0.12)");
+        ag.addColorStop(1,"rgba(0,20,80,0)");
+        g2.beginPath();
+        g2.arc(tx,ty,curScale*1.35,0,2*Math.PI);
+        g2.fillStyle=ag; g2.fill();
+
+        // ── Black globe sphere ──
+        g2.beginPath(); g2.arc(tx,ty,curScale,0,2*Math.PI);
+        g2.fillStyle="#000000"; g2.fill();
+
+        // Subtle dark-blue tint on the globe
+        const tint = g2.createRadialGradient(tx-curScale*0.3,ty-curScale*0.35,0,tx,ty,curScale);
+        tint.addColorStop(0,"rgba(10,40,100,0.35)");
+        tint.addColorStop(1,"rgba(0,10,50,0.55)");
+        g2.beginPath(); g2.arc(tx,ty,curScale,0,2*Math.PI);
+        g2.fillStyle=tint; g2.fill();
+
+        // Rim glow ring
+        g2.beginPath(); g2.arc(tx,ty,curScale,0,2*Math.PI);
+        g2.strokeStyle="rgba(80,160,255,0.55)"; g2.lineWidth=1.8*sf; g2.stroke();
+
+        // ── Clip to sphere ──
+        g2.save();
+        g2.beginPath(); g2.arc(tx,ty,curScale-0.5,0,2*Math.PI); g2.clip();
+
+        // Graticule
+        const grat = d3.geoGraticule()();
+        g2.beginPath(); gPath(grat);
+        g2.strokeStyle="rgba(255,255,255,0.10)"; g2.lineWidth=0.5; g2.stroke();
+
+        // Land outlines
+        if(land){
+            g2.beginPath();
+            land.features.forEach(f=>gPath(f));
+            g2.strokeStyle="rgba(255,255,255,0.55)"; g2.lineWidth=0.7*sf; g2.stroke();
+        }
+
+        // Network arcs (great-circle paths via geoPath LineString)
+        const pulse = 0.45 + 0.3*Math.sin(elMs*0.003);
+        CONNECTIONS.forEach(([i,j],ci)=>{
+            const arc={type:"Feature",geometry:{type:"LineString",
+                coordinates:[[CITIES[i][0],CITIES[i][1]],[CITIES[j][0],CITIES[j][1]]]}};
+            g2.beginPath(); gPath(arc);
+            g2.globalAlpha = pulse;
+            g2.strokeStyle = ARC_COLORS[ci%ARC_COLORS.length];
+            g2.lineWidth = 0.75*sf; g2.stroke();
+            g2.globalAlpha = 1;
+        });
+
+        // City dots
+        CITIES.forEach(([lon,lat],i)=>{
+            const p=proj([lon,lat]);
+            if(!p) return;
+            const isK=(i===8);
+            const r=isK ? 5*sf : 2.2*sf;
+            g2.beginPath(); g2.arc(p[0],p[1],r,0,2*Math.PI);
+            if(isK){
+                g2.fillStyle="#00ffcc";
+                g2.shadowBlur=14*sf; g2.shadowColor="#00ffcc";
+            } else {
+                g2.fillStyle="rgba(80,200,255,0.85)"; g2.shadowBlur=0;
+            }
+            g2.fill(); g2.shadowBlur=0;
+        });
+
+        // Land dots (halftone effect)
+        const dr = 0.95*sf;
+        dots.forEach(([lon,lat])=>{
+            const p=proj([lon,lat]);
+            if(!p) return;
+            g2.beginPath(); g2.arc(p[0],p[1],dr,0,2*Math.PI);
+            g2.fillStyle="rgba(180,180,185,0.72)"; g2.fill();
+        });
+
+        // Kerala zoom: pulsing ring when zooming
+        if(elMs > T_SPIN+T_HOLD+400){
+            const kp=proj([KERALA_LON,KERALA_LAT]);
+            if(kp){
+                const pr=(6+3.5*Math.sin(elMs*0.009))*sf;
+                g2.beginPath(); g2.arc(kp[0],kp[1],pr,0,2*Math.PI);
+                g2.strokeStyle="#00ffcc"; g2.lineWidth=1.8*sf;
+                g2.shadowBlur=18*sf; g2.shadowColor="#00ffcc"; g2.stroke();
+                g2.shadowBlur=0;
+                // inner dot
+                g2.beginPath(); g2.arc(kp[0],kp[1],3*sf,0,2*Math.PI);
+                g2.fillStyle="#ffffff"; g2.fill();
+            }
+        }
+
+        g2.restore(); // end clip
+
+        // ── Satellites (drawn outside clip so they orbit around the sphere) ──
+        SATS.forEach(s=>{
+            const ang = s.ph + elMs*0.001*s.spd;
+            const rx  = curScale*s.rx;
+            const ry  = curScale*s.ry;
+
+            // Orbit ellipse (dashed)
+            g2.beginPath();
+            g2.ellipse(tx,ty,rx,ry,0,0,2*Math.PI);
+            g2.setLineDash([4,6]);
+            g2.strokeStyle=s.col+"44"; g2.lineWidth=0.8; g2.stroke();
+            g2.setLineDash([]);
+
+            // Satellite body
+            const sx=tx+Math.cos(ang)*rx;
+            const sy=ty+Math.sin(ang)*ry;
+            g2.beginPath(); g2.arc(sx,sy,4*sf,0,2*Math.PI);
+            g2.fillStyle=s.col;
+            g2.shadowBlur=12*sf; g2.shadowColor=s.col; g2.fill(); g2.shadowBlur=0;
+
+            // Trail
+            g2.beginPath(); g2.moveTo(sx,sy);
+            let first=true;
+            for(let ta=0.06; ta<0.55; ta+=0.06){
+                const px=tx+Math.cos(ang-ta)*rx;
+                const py=ty+Math.sin(ang-ta)*ry;
+                if(first){ g2.moveTo(px,py); first=false; }
+                else g2.lineTo(px,py);
+            }
+            g2.globalAlpha=0.55; g2.strokeStyle=s.col; g2.lineWidth=1.5*sf; g2.stroke();
+            g2.globalAlpha=1;
+        });
+    }
+
+    // ── Animation tick ──
+    function tick(ts){
+        if(!startTS) startTS=ts;
+        const el=ts-startTS;
+        rafId=requestAnimationFrame(tick);
+
+        const container=document.getElementById("globeContainer");
+        drawFrame(el);
+
+        // Label: appears when zoom starts, fades out as swoop accelerates
+        const lbl=document.getElementById("globeLabel");
+        if(el > T_SPIN+T_HOLD){
+            const tZ=Math.min((el-T_SPIN-T_HOLD)/T_ZOOM,1);
+            // Fade out in final 60% of zoom so it vanishes before the rush hits
+            lbl.style.opacity=Math.max(0, 1 - tZ * 2.5).toString();
+        } else {
+            lbl.style.opacity="0";
+        }
+
+        // Dissolve
+        if(el>T_SPIN+T_HOLD+T_ZOOM){
+            const t=Math.min((el-T_SPIN-T_HOLD-T_ZOOM)/T_DISSOLVE,1);
+            container.style.opacity=(1-t).toString();
+            if(t>=1 && !globeDone){
+                globeDone=true;
+                cancelAnimationFrame(rafId);
+                container.style.display="none";
+                container.innerHTML="";
+                if(window._globeOnComplete) window._globeOnComplete();
+            }
+        }
+    }
+
+    // ── Setup ──
+    async function createGlobe(){
+        W=window.innerWidth; H=window.innerHeight;
+        baseR=Math.min(W,H)*0.41;
+
+        const dpr=window.devicePixelRatio||1;
+        cvs=document.createElement("canvas");
+        cvs.width=W*dpr; cvs.height=H*dpr;
+        cvs.style.width=W+"px"; cvs.style.height=H+"px";
+        document.getElementById("globeContainer").appendChild(cvs);
+
+        g2=cvs.getContext("2d");
+        g2.scale(dpr,dpr);
+
+        proj=d3.geoOrthographic()
+            .scale(baseR)
+            .translate([W/2,H/2])
+            .clipAngle(90)
+            .rotate([LAMBDA_START,PHI_START,0]);
+
+        gPath=d3.geoPath().projection(proj).context(g2);
+
+        // Begin animation immediately (globe spins even before land loads)
+        requestAnimationFrame(ts=>{ startTS=ts; tick(ts); });
+
+        // Load land data asynchronously
+        try{
+            const res=await fetch(
+                "https://raw.githubusercontent.com/martynafford/natural-earth-geojson/refs/heads/master/110m/physical/ne_110m_land.json"
+            );
+            land=await res.json();
+            buildDots(land.features);
+        }catch(e){ console.warn("Globe: land data unavailable, showing wireframe only"); }
+    }
+
+    // ── Public entry point ──
+    window.startGlobeSequence=function(onComplete){
+        window._globeOnComplete=onComplete;
+        const container=document.getElementById("globeContainer");
+        container.style.display="block";
+        container.style.opacity="0";
+        createGlobe();
+        setTimeout(()=>{
+            container.style.transition="opacity 1.2s ease";
+            container.style.opacity="1";
+        },60);
+    };
+
+})(); // end globe IIFE
 </script>
 </body>
 </html>

@@ -323,10 +323,10 @@ body::before{
    MEMORY MATCH
 ════════════════════════════════ */
 .mem-board{
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:clamp(4px,1vw,8px);
-  width:min(96%,calc(100% - 6px));
-  padding:2px;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:clamp(8px,1.8vw,14px);
+  width:min(94%,calc(100% - 8px));
+  padding:4px;
 }
 .mc{
   aspect-ratio:1;border-radius:11px;
@@ -343,13 +343,13 @@ body::before{
   position:absolute;inset:0;border-radius:11px;
   display:flex;align-items:center;justify-content:center;
   backface-visibility:hidden;
-  font-size:clamp(14px,3.5vw,26px);
+  font-size:clamp(42px,8vw,80px);
 }
 .mc-f{
   background:white;border:2.5px solid #e8ecf8;
   box-shadow:0 3px 9px rgba(60,60,120,0.1);
 }
-.mc-f::after{content:'❓';font-size:clamp(13px,3vw,22px);color:#c8ccde;}
+.mc-f::after{content:'❓';font-size:clamp(38px,7.5vw,72px);color:#c8ccde;}
 .mc-b{
   transform:rotateY(180deg);
   background:var(--cc,white);
@@ -682,6 +682,7 @@ function initWater(p){
 
   PS[p].wsTubes=tubes;
   PS[p].wsSel=null;
+  PS[p].wsPouring=false;
 
   renderWater(p);
 
@@ -721,6 +722,7 @@ function renderWater(p){
 
 function wsTap(p,idx){
   const s=PS[p];
+  if(s.wsPouring) return;  // ignore taps while a pour animation is running
   if(s.wsSel===null){
     if(s.wsTubes[idx].length===0) return;
     s.wsSel=idx; renderWater(p); return;
@@ -732,13 +734,15 @@ function wsTap(p,idx){
 function wsPour(p,from,to){
   const s=PS[p];
   const src=s.wsTubes[from],dst=s.wsTubes[to];
-  function invalid(ti){ wsShake(p,ti); s.wsSel=null; renderWater(p); }
+  function invalid(ti){ wsShake(p,ti); s.wsSel=null; s.wsPouring=false; renderWater(p); }
   if(!src.length||dst.length>=WS_CAP) return invalid(to);
   const tc=src[src.length-1];
   if(dst.length&&dst[dst.length-1]!==tc) return invalid(to);
   let cnt=0;
   for(let i=src.length-1;i>=0;i--){ if(src[i]===tc)cnt++;else break; }
   const pour=Math.min(cnt,WS_CAP-dst.length);
+
+  s.wsPouring=true;  // lock input during pour animation
 
   // tilt anim
   const area=document.getElementById('wa'+p);
@@ -748,6 +752,7 @@ function wsPour(p,from,to){
   }
   setTimeout(()=>{
     for(let i=0;i<pour;i++) dst.push(src.pop());
+    s.wsPouring=false;  // unlock
     incMoves(p);
     // splash
     const a2=document.getElementById('wa'+p);
@@ -835,7 +840,7 @@ function initMemory(p){
   const board=document.createElement('div');board.className='mem-board';board.id='mb'+p;
   body.insertBefore(board,body.querySelector('.win-banner'));
 
-  const pairs=shuffle([...MM_EMOJI]).slice(0,8);
+  const pairs=shuffle([...MM_EMOJI]).slice(0,3);
   const cards=shuffle([...pairs,...pairs]);
   const s=PS[p];
   s.mmCards=cards;s.mmFlipped=[];s.mmMatched=new Set();
