@@ -25,6 +25,7 @@
     "files": [
       "main.js",
       "index.html",
+      "intro.html",
       "FreeCanvas.html",
       "solar-system.html",
       "games/**/*",
