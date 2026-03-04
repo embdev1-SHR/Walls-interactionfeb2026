@@ -652,16 +652,7 @@ function closeCard() {
 // ─── BACK / RESET ─────────────────────────────────────────────
 function goBack() {
   pVideo.pause(); pVideo.src = ""; pVideo.load();
-  if (pTexture) { pTexture.dispose(); pTexture = null; }
-  sMat.map = null; sMat.color.set(0x0a0a18); sMat.needsUpdate = true;
-  playerCanvas.style.display = "none";
-  hud.classList.remove("active");
-  hotspotPanel.classList.remove("active");
-  rpBack.classList.remove("visible");
-  dragHint.style.display = "none";
-  welcome.classList.remove("hidden");
-  document.querySelectorAll(".rp-world-btn").forEach(b => b.classList.remove("active"));
-  closeCard(); currentWorldIndex = -1;
+  window.location.href = '../index.html';
 }
 
 // ─── DRAG HINT ────────────────────────────────────────────────
