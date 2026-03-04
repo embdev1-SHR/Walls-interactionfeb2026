@@ -161,12 +161,13 @@
                    drop-shadow(0 8px 30px rgba(0,0,0,.9));
         }
 
-        /* — by / which is — whisper thin connectors */
+        /* — By / Which Is — bold cinematic connectors */
         .t-connector{
-            font-family:"Cormorant Garamond",serif;font-style:italic;
-            font-size:36px;font-weight:400;letter-spacing:24px;
-            color:rgba(255,245,200,.92);
+            font-family:"Cinzel",serif;font-style:normal;
+            font-size:38px;font-weight:700;letter-spacing:18px;
+            color:rgba(255,245,200,.95);
             text-shadow:0 0 18px rgba(255,235,160,.6),0 0 40px rgba(255,210,100,.3);
+            text-transform:uppercase;
         }
 
         .t-caps{font-family:"Rajdhani",sans-serif;font-size:40px;font-weight:400;letter-spacing:18px;text-transform:uppercase;color:rgba(255,255,255,.88);}
@@ -365,9 +366,9 @@
 
 <div id="welcomeText"  class="cinematic-text"><span class="ti t-hero">Welcome Kerala</span></div>
 <div id="witnessText"  class="cinematic-text"><span class="ti t-large">Witness the Evolution</span></div>
-<div id="byText"       class="cinematic-text"><span class="ti t-connector">by</span></div>
-<div id="realityText"  class="cinematic-text"><span class="ti t-italic">stepping into a new reality</span></div>
-<div id="whichText"    class="cinematic-text"><span class="ti t-connector">which is</span></div>
+<div id="byText"       class="cinematic-text"><span class="ti t-connector">By</span></div>
+<div id="realityText"  class="cinematic-text"><span class="ti t-italic">Stepping Into a New Reality</span></div>
+<div id="whichText"    class="cinematic-text"><span class="ti t-connector">Which Is</span></div>
 <div id="biggerText"   class="cinematic-text"><span class="ti t-giant">BIGGER</span></div>
 <div id="brighterText" class="cinematic-text"><span class="ti t-giant">BRIGHTER</span></div>
 <div id="brandText"    class="cinematic-text brand-text">
@@ -1049,10 +1050,10 @@ window.addEventListener("resize",()=>{
             planes.forEach((p, i) => {
                 const dz = p.mesh.position.z - camera.position.z;
                 let op;
-                // Fade-in 4 units ahead; full opacity window ±2.5 units; slow fade-out over 8 units
-                if(dz > 2.5)        op = Math.max(0, 1 - (dz - 2.5) / 8.0);
+                // Fade-in 14 units ahead; full opacity window ±2.5 units; slow fade-out over 10 units
+                if(dz > 2.5)        op = Math.max(0, 1 - (dz - 2.5) / 14.0);
                 else if(dz > -2.5)  op = p.loaded ? 0.97 : 0.35;
-                else                op = Math.max(0, (dz + 4.0) / 4.0);
+                else                op = Math.max(0, (dz + 2.5 + 10.0) / 10.0);
                 p.mat.opacity     = op;
                 // Edge glow pulses independently per plane for a lively neon look
                 const glowPulse = 0.55 + 0.45 * Math.sin(el * 0.0038 + i * 0.85);
