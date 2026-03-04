@@ -55,11 +55,30 @@
     .touch-ring { position: fixed; width: 60px; height: 60px; border: 3px solid rgba(74, 222, 128, 0.6); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%) scale(0); animation: ringPop 0.6s ease forwards; }
     @keyframes ringPop { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
     @media (max-width: 480px) { .letter-btn { width: 40px; height: 40px; font-size: 15px; } .letter-btn.ml { font-size: 13px; } .big-letter.ml { font-size: 120px; } }
+    /* ── Sound button ── */
+    .sound-btn {
+      background: rgba(74,222,128,0.10);
+      border: 2px solid rgba(74,222,128,0.28);
+      color: rgba(255,255,255,0.82);
+      border-radius: 50px;
+      padding: 8px 26px;
+      font-size: 19px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex; align-items: center; gap: 9px;
+      font-family: inherit;
+      user-select: none;
+    }
+    .sound-btn span.lbl { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; color: rgba(255,255,255,0.55); }
+    .sound-btn:hover { background: rgba(74,222,128,0.22); border-color: rgba(74,222,128,0.60); color: #4ade80; box-shadow: 0 0 18px rgba(74,222,128,0.22); transform: scale(1.07); }
+    .sound-btn:hover .lbl { color: #4ade80; }
+    .sound-btn.playing { background: rgba(74,222,128,0.28); border-color: #4ade80; color: #4ade80; box-shadow: 0 0 24px rgba(74,222,128,0.35); animation: sndPulse 0.5s ease; }
+    @keyframes sndPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.13)} }
   </style>
 </head>
 <body>
   <audio id="alphabet-explorer-music" preload="auto" loop>
-    <source src="../assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+    <source src="../assets/Audio/jyproject-endless-shore-part2-399386.mp3" type="audio/mpeg">
   </audio>
 
   <div class="bg-particles" id="bgP"></div>
@@ -79,6 +98,9 @@
         <div class="arrow-btn" id="nextBtn">→</div>
       </div>
       <div class="letter-pair" id="letterPair">A a</div>
+      <button class="sound-btn" id="soundBtn" aria-label="Pronounce">
+        🔊 <span class="lbl">Pronounce</span>
+      </button>
       <div class="example-word" id="exampleWord"></div>
       <div class="phonetic" id="phonetic"></div>
     </div>
@@ -272,6 +294,20 @@
 
       document.querySelectorAll('.lang-btn').forEach(btn => { bindTouch(btn, () => switchLang(btn.dataset.lang)); });
 
+      // ── Sound button ──────────────────────────────────────────────
+      const soundBtn = document.getElementById('soundBtn');
+      function pronounceCurrent() {
+        const item = getData()[currentIdx];
+        if (lang === 'en') {
+          TTSEngine.speak(item.upper, 'en', item.word);
+        } else {
+          TTSEngine.speak(item.letter, 'ml', item.word);
+        }
+        soundBtn.classList.add('playing');
+        setTimeout(() => soundBtn.classList.remove('playing'), 600);
+      }
+      bindTouch(soundBtn, pronounceCurrent);
+
       document.getElementById('letterList').addEventListener('click', (e) => {
         if (e.sourceCapabilities?.firesTouchEvents) return;
         const btn = e.target.closest('.letter-btn');
@@ -331,6 +367,7 @@
       }
     }, { passive: true });
   </script>
+  <script src="../js/tts-engine.js"></script>
   <script src="../js/audio-manager.js"></script>
 </body>
 </html>

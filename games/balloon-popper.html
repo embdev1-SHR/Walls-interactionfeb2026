@@ -684,6 +684,9 @@ function popAt(x, y) {
                 AC.resume().then(() => playPop(pitchBase, true));
                 spawnFloatingText(b.x, b.y, b.obj.ch, b.color);
                 spawnSpeechBubble(b.x, b.y - 20, b.obj, b.color, currentMode);
+                // Kids yell the letter — fires immediately after the pop sound
+                const isML = currentMode === 'malayalam' || currentMode === 'vowels' || currentMode === 'consonants';
+                TTSEngine.kidsYell(b.obj.ch, isML ? 'ml' : 'en');
             }
 
             spawnRipple(b.x, b.y, b.color);
@@ -793,5 +796,6 @@ canvas.addEventListener('touchcancel', e => {
     }
 });
 </script>
+<script src="../js/tts-engine.js"></script>
 </body>
 </html>
