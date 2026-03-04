@@ -243,17 +243,17 @@
     right: 140px;
     top: 50%;
     transform: translateY(-50%);
-    width: 130px;
-    max-height: 85vh;
+    width: 120px;
+    max-height: 80vh;
     z-index: 100;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 16px 10px;
-    gap: 8px;
+    padding: 10px 8px;
+    gap: 5px;
     background: rgba(255,255,255,0.93);
     backdrop-filter: blur(22px);
-    border-radius: 24px;
+    border-radius: 20px;
     border: 1.5px solid rgba(80,120,255,0.13);
     box-shadow: 0 8px 40px rgba(80,120,255,0.18), 0 2px 12px rgba(0,0,0,0.12);
     overflow-y: auto;
@@ -265,23 +265,23 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
-    margin-bottom: 6px;
-    padding-bottom: 12px;
+    gap: 1px;
+    margin-bottom: 2px;
+    padding-bottom: 8px;
     border-bottom: 1.5px solid rgba(80,120,255,0.12);
     width: 100%;
   }
-  .rp-globe { font-size: 30px; animation: spinBob 3s ease-in-out infinite; }
-  .rp-brand { font-family:'Chewy',cursive; font-size: 14px; color: var(--blue); text-align: center; line-height: 1.2; }
-  .rp-sub   { font-size: 9px; font-weight: 800; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  .rp-globe { font-size: 22px; animation: spinBob 3s ease-in-out infinite; }
+  .rp-brand { font-family:'Chewy',cursive; font-size: 12px; color: var(--blue); text-align: center; line-height: 1.2; }
+  .rp-sub   { font-size: 8px; font-weight: 800; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
 
   /* World buttons */
   .rp-world-btn {
     width: 100%;
-    padding: 10px 8px;
+    padding: 6px 6px;
     background: #fff;
     border: 2px solid transparent;
-    border-radius: 16px;
+    border-radius: 12px;
     cursor: pointer;
     text-align: center;
     transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s, border-color 0.2s, background 0.2s;
@@ -306,46 +306,44 @@
   .rp-world-btn.active[data-idx="3"] { background:#fff5ec; border-color:var(--orange); }
   .rp-world-btn.active[data-idx="4"] { background:#f3eeff; border-color:var(--purple); }
 
-  .rp-icon  { font-size: 26px; display: block; margin-bottom: 4px; }
-  .rp-num   { font-size: 9px; font-weight: 800; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
-  .rp-name  { font-size: 12px; font-weight: 900; color: var(--text); }
+  .rp-icon  { font-size: 20px; display: block; margin-bottom: 2px; }
+  .rp-num   { font-size: 8px; font-weight: 800; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 1px; }
+  .rp-name  { font-size: 11px; font-weight: 900; color: var(--text); }
 
   /* Divider */
-  .rp-divider { width: 100%; height: 1.5px; background: rgba(80,120,255,0.10); margin: 4px 0; flex-shrink: 0; }
+  .rp-divider { width: 100%; height: 1.5px; background: rgba(80,120,255,0.10); margin: 2px 0; flex-shrink: 0; }
 
-  /* Back button */
+  /* Back button — inside panel */
   #rpBack {
     width: 100%;
-    padding: 10px 8px;
+    padding: 7px 6px;
     background: #fff0f4;
-    border: 2px solid #ffc0d0;
-    border-radius: 16px;
+    border: 1.5px solid #ffc0d0;
+    border-radius: 12px;
     cursor: pointer;
     font-family: 'Nunito', sans-serif;
-    font-size: 12px; font-weight: 900;
+    font-size: 11px; font-weight: 900;
     color: var(--pink);
     text-align: center;
     transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    box-shadow: 0 2px 10px rgba(255,95,160,0.08);
     display: none;
   }
   #rpBack.visible { display: block; }
-  #rpBack:hover { transform: translateY(-3px) scale(1.04); background: var(--pink); color: #fff; border-color: var(--pink); box-shadow: 0 8px 24px rgba(255,95,160,0.28); }
+  #rpBack:hover { background: var(--pink); color: #fff; border-color: var(--pink); transform: translateY(-2px); }
   #rpBack:active { transform: scale(0.96); }
 
   /* Fullscreen button */
   #rpFs {
     width: 100%;
-    padding: 8px;
+    padding: 6px;
     background: #fff;
-    border: 2px solid rgba(80,120,255,0.14);
-    border-radius: 12px;
+    border: 1.5px solid rgba(80,120,255,0.14);
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 16px;
     text-align: center;
     transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
     box-shadow: 0 2px 8px rgba(80,120,255,0.06);
-    margin-top: auto;
   }
   #rpFs:hover { border-color: var(--blue); transform: scale(1.08); }
 </style>
@@ -399,7 +397,7 @@
   <div id="toast"></div>
 </div>
 
-<!-- ══ RIGHT FLOATING TOOLBAR (150 px) ══ -->
+<!-- ══ RIGHT FLOATING TOOLBAR ══ -->
 <div id="rightPanel">
   <div class="rp-header">
     <span class="rp-globe">🌍</span>
@@ -408,7 +406,7 @@
   </div>
 
   <!-- World buttons — built by JS -->
-  <div id="rpWorlds" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
+  <div id="rpWorlds" style="width:100%;display:flex;flex-direction:column;gap:5px;"></div>
 
   <div class="rp-divider"></div>
 
