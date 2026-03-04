@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Welcome — Auticare</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Playfair+Display+SC:ital,wght@0,400;0,700;0,900;1,400&family=IM+Fell+English:ital@0;1&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
@@ -111,30 +111,106 @@
             text-align:center;z-index:100;opacity:0;pointer-events:none;white-space:nowrap;
         }
         .cinematic-text .ti{position:relative;display:inline-block;}
-        .t-hero  {font-family:"Cinzel Decorative",serif;font-size:72px;font-weight:900;letter-spacing:6px;color:var(--gold);}
-        .t-large {font-family:"Cinzel Decorative",serif;font-size:54px;font-weight:700;letter-spacing:4px;color:var(--ivory);}
-        .t-italic{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:62px;font-weight:300;letter-spacing:8px;color:rgba(255,250,220,.95);}
-        .t-caps  {font-family:"Rajdhani",sans-serif;font-size:40px;font-weight:400;letter-spacing:16px;text-transform:uppercase;color:rgba(255,255,255,.88);}
-        .t-giant {font-family:"Cinzel Decorative",serif;font-size:118px;font-weight:900;color:var(--gold);letter-spacing:2px;}
-        /* connector words — "by", "which is" */
-        .t-connector{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:34px;font-weight:300;letter-spacing:14px;color:rgba(255,245,200,.55);}
-        /* brand reveal — "Auticare Blueroom" */
-        .brand-text{white-space:normal!important;line-height:1.25;}
-        .t-brand-name{font-family:"Cinzel Decorative",serif;font-size:66px;font-weight:900;letter-spacing:5px;color:var(--gold);display:block;}
-        .t-brand-sub {font-family:"Rajdhani",sans-serif;font-size:38px;letter-spacing:18px;text-transform:uppercase;color:rgba(180,220,255,.88);display:block;margin-top:6px;}
-        .anim-enter{animation:cinematicIn 1.7s cubic-bezier(.16,1,.3,1) forwards;}
-        .anim-exit {animation:cinematicOut  1s cubic-bezier(.55,0,1,.45) forwards;}
+
+        /* — WELCOME KERALA — deep gold, cathedral glow */
+        .t-hero{
+            font-family:"Cinzel Decorative",serif;font-size:90px;font-weight:900;
+            letter-spacing:14px;color:var(--gold);
+            text-shadow:
+                0 0 25px rgba(255,215,0,1),
+                0 0 60px rgba(255,190,0,.75),
+                0 0 120px rgba(255,140,0,.45),
+                0 6px 28px rgba(0,0,0,.95);
+        }
+
+        /* — WITNESS THE EVOLUTION — editorial serif, silver-ivory */
+        .t-large{
+            font-family:"Playfair Display SC",serif;font-size:60px;font-weight:700;
+            letter-spacing:8px;color:var(--ivory);
+            text-shadow:
+                0 0 18px rgba(255,255,230,.55),
+                0 0 55px rgba(210,195,150,.3),
+                0 5px 22px rgba(0,0,0,.9);
+        }
+
+        /* — stepping into a new reality — IM Fell hand-press italic */
+        .t-italic{
+            font-family:"IM Fell English",serif;font-style:italic;
+            font-size:72px;font-weight:400;letter-spacing:5px;
+            color:rgba(255,248,215,.93);
+            text-shadow:
+                0 0 22px rgba(255,235,170,.4),
+                0 0 55px rgba(200,160,80,.2),
+                0 5px 20px rgba(0,0,0,.85);
+        }
+
+        /* — BIGGER / BRIGHTER — gold metallic shimmer, massive scale */
+        .t-giant{
+            font-family:"Cinzel Decorative",serif;font-size:152px;font-weight:900;
+            letter-spacing:12px;
+            background:linear-gradient(150deg,
+                #7A5800 0%,#FFD700 28%,#FFFACD 48%,#FFD700 68%,#7A5800 100%);
+            background-size:220% auto;
+            -webkit-background-clip:text;background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation:metalShimmer 3.5s linear infinite;
+            filter:drop-shadow(0 0 38px rgba(255,215,0,.85))
+                   drop-shadow(0 0 80px rgba(255,170,0,.5))
+                   drop-shadow(0 8px 30px rgba(0,0,0,.9));
+        }
+
+        /* — by / which is — whisper thin connectors */
+        .t-connector{
+            font-family:"Cormorant Garamond",serif;font-style:italic;
+            font-size:30px;font-weight:300;letter-spacing:24px;
+            color:rgba(255,245,200,.42);
+            text-shadow:0 0 12px rgba(255,235,160,.15);
+        }
+
+        .t-caps{font-family:"Rajdhani",sans-serif;font-size:40px;font-weight:400;letter-spacing:18px;text-transform:uppercase;color:rgba(255,255,255,.88);}
+
+        /* — Auticare / BLUEROOM brand reveal — */
+        .brand-text{white-space:normal!important;line-height:1.3;}
+        .t-brand-name{
+            font-family:"Cinzel Decorative",serif;font-size:76px;font-weight:900;
+            letter-spacing:9px;display:block;
+            background:linear-gradient(150deg,
+                #7A5800 0%,#FFD700 28%,#FFFACD 48%,#FFD700 68%,#7A5800 100%);
+            background-size:220% auto;
+            -webkit-background-clip:text;background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation:metalShimmer 2.8s linear infinite;
+            filter:drop-shadow(0 0 28px rgba(255,215,0,.75))
+                   drop-shadow(0 0 60px rgba(255,180,0,.4));
+        }
+        .t-brand-sub{
+            font-family:"Rajdhani",sans-serif;font-size:44px;
+            letter-spacing:24px;text-transform:uppercase;display:block;margin-top:10px;
+            color:rgba(190,228,255,.92);
+            text-shadow:
+                0 0 18px rgba(120,190,255,.7),
+                0 0 45px rgba(60,140,255,.35),
+                0 3px 16px rgba(0,0,0,.8);
+        }
+
+        @keyframes metalShimmer{
+            0%  {background-position:220% center;}
+            100%{background-position:-220% center;}
+        }
+
+        .anim-enter{animation:cinematicIn 1.9s cubic-bezier(.16,1,.3,1) forwards;}
+        .anim-exit {animation:cinematicOut  1.1s cubic-bezier(.55,0,1,.45) forwards;}
         @keyframes cinematicIn{
-            0%  {opacity:0;transform:translate(-50%,-50%) scale(.55) translateY(35px);filter:blur(22px);}
-            40% {opacity:1;filter:blur(2px);}
-            70% {transform:translate(-50%,-50%) scale(1.04) translateY(-5px);filter:blur(0);}
+            0%  {opacity:0;transform:translate(-50%,-50%) scale(.42) translateY(55px);filter:blur(36px);}
+            35% {opacity:1;filter:blur(5px);}
+            65% {transform:translate(-50%,-50%) scale(1.06) translateY(-8px);filter:blur(0);}
             100%{opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0);filter:blur(0);}
         }
         @keyframes cinematicOut{
             0%  {opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0);}
-            100%{opacity:0;transform:translate(-50%,-50%) scale(1.22) translateY(-22px);filter:blur(14px);}
+            100%{opacity:0;transform:translate(-50%,-50%) scale(1.28) translateY(-28px);filter:blur(18px);}
         }
-        .anim-wipe{animation:lineWipe 1.7s cubic-bezier(.16,1,.3,1) forwards !important;}
+        .anim-wipe{animation:lineWipe 1.9s cubic-bezier(.16,1,.3,1) forwards !important;}
         @keyframes lineWipe{
             0%  {opacity:0;clip-path:inset(0 50% 0 50%);transform:translate(-50%,-50%) scaleX(.5);}
             50% {opacity:1;clip-path:inset(0 8% 0 8%);}

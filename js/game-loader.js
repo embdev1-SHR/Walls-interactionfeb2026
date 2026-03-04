@@ -3,7 +3,8 @@ const CATEGORIES = {
         title: 'Jungle Games',
         options: [
             { name: 'Forest Animals', game: 'forest-animals' },
-            { name: 'Hidden Animals', game: 'hidden-animals' }
+            { name: 'Hidden Animals', game: 'hidden-animals' },
+            { name: 'Forest Walk', game: 'forest-walkthrough' }
         ]
     },
     'daily-skills': {
@@ -346,6 +347,9 @@ function loadGame(gameName) {
                 break;
             case 'video-360-player':
                 window.location.href = 'games/video-360-player.html';
+                break;
+            case 'forest-walkthrough':
+                window.location.href = 'games/forest-walkthrough.html';
                 break;
             default:
                 console.log('Game not found:', gameName);
