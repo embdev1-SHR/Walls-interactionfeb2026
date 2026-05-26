@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Fill the Outline</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif}
+
+/* TOP zone: title + progress */
+.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;pointer-events:none;z-index:2}
+.scene-title{font-size:clamp(20px,3.2vw,36px);font-weight:900;color:#4A235A;
+  text-shadow:0 2px 8px rgba(255,255,255,.5);text-align:center}
+.prog-wrap{width:clamp(160px,38vw,320px)}
+.prog-track{background:rgba(255,255,255,.4);border-radius:20px;height:14px;
+  overflow:hidden;border:2px solid rgba(255,255,255,.6)}
+.prog-fill{height:100%;border-radius:20px;width:0%;transition:width .4s ease}
+.prog-label{text-align:center;font-size:clamp(12px,1.6vw,16px);font-weight:700;
+  margin-top:5px;color:#5D4037}
+
+/* BOTTOM zone: canvas painting area */
+.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;z-index:5}
+canvas{display:block;touch-action:none;width:100%;height:100%;
+  cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Ccircle cx='14' cy='14' r='12' fill='rgba(180,120,50,0.45)' stroke='%23663300' stroke-width='2'/%3E%3C/svg%3E") 14 14, crosshair}
+
+/* Action buttons overlaid at bottom */
+.btn-bar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
+  display:flex;gap:10px;z-index:50;flex-wrap:wrap;justify-content:center}
+.act-btn{padding:10px 24px;border-radius:20px;border:2px solid rgba(255,255,255,.7);
+  font-weight:900;font-size:clamp(13px,1.8vw,16px);
+  cursor:pointer;font-family:inherit;transition:all .25s;
+  background:rgba(255,255,255,.5);backdrop-filter:blur(6px);color:#5D4037}
+.act-btn:hover{transform:scale(1.07)}
+.act-btn:active{transform:scale(.94)}
+</style>
+</head>
+<body>
+
+<!-- TOP: display only -->
+<div class="top-zone" id="topZone">
+  <div class="scene-title" id="sceneTitle">🎨 Fill the Outline</div>
+  <div class="prog-wrap">
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <div class="prog-label" id="progLabel">Paint inside the lines! 🖌️</div>
+  </div>
+</div>
+
+<!-- BOTTOM: interactive canvas -->
+<div class="bottom-zone">
+  <canvas id="paintCanvas"></canvas>
+  <canvas id="outlineCanvas" style="position:absolute;top:0;left:0;pointer-events:none"></canvas>
+</div>
+
+<div class="btn-bar">
+  <button class="act-btn" id="btnClear">🧽 Clear</button>
+  <button class="act-btn" id="btnFill">🪣 Fill All</button>
+</div>
+
+<script src="../js/audio-manager.js"></script>
+<script src="../js/pre-primary-common.js"></script>
+<script>
+const SUBJECT = PP.param('subject') || 'rabbit';
+
+const SUBJECTS = {
+  rabbit: {
+    fillColor:'#F5F5DC', progColor:'linear-gradient(90deg,#A5D6A7,#66BB6A)',
+    titleEn:'🐰 Rabbit Cotton Fill', bg:'linear-gradient(160deg,#E8F5E9,#C8E6C9)',
+  },
+  crow: {
+    fillColor:'#1C1C1C', progColor:'linear-gradient(90deg,#607D8B,#37474F)',
+    titleEn:'🐦 Crow Black Coat',   bg:'linear-gradient(160deg,#ECEFF1,#CFD8DC)',
+  }
+};
+const cfg = SUBJECTS[SUBJECT] || SUBJECTS.rabbit;
+
+document.body.style.background = cfg.bg;
+document.getElementById('topZone').style.background = cfg.bg;
+document.getElementById('sceneTitle').textContent = cfg.titleEn;
+document.getElementById('progFill').style.background = cfg.progColor;
+
+PP.init();
+document.body.insertAdjacentHTML('beforeend', PP.toolbarHTML());
+
+const paintC   = document.getElementById('paintCanvas');
+const outlineC = document.getElementById('outlineCanvas');
+const pCtx = paintC.getContext('2d');
+const oCtx = outlineC.getContext('2d');
+let CW, CH, SCALE;
+const LW = 520, LH = 480; // logical dimensions
+
+function resizeCanvases() {
+  const bz = document.querySelector('.bottom-zone').getBoundingClientRect();
+  SCALE = Math.min(bz.width / LW, bz.height / LH);
+  CW = Math.round(LW * SCALE); CH = Math.round(LH * SCALE);
+  [paintC, outlineC].forEach(c => {
+    c.width = CW; c.height = CH;
+    c.style.width = CW+'px'; c.style.height = CH+'px';
+    c.style.position = 'absolute';
+    c.style.left = ((bz.width-CW)/2)+'px';
+    c.style.top  = ((bz.height-CH)/2)+'px';
+  });
+  initPaint(); drawOutline();
+}
+
+function buildSubjectPath(ctx, fill) {
+  const cx = LW/2*SCALE, cy = LH/2*SCALE;
+  ctx.save();
+  if (fill) ctx.fillStyle = fill;
+  if (SUBJECT === 'rabbit') {
+    ctx.beginPath(); ctx.ellipse(cx-10*SCALE,cy+40*SCALE,70*SCALE,90*SCALE,0,0,Math.PI*2); ctx.fill?.();ctx.stroke?.();
+    ctx.beginPath(); ctx.ellipse(cx+30*SCALE,cy-70*SCALE,60*SCALE,55*SCALE,0,0,Math.PI*2); ctx.fill?.();ctx.stroke?.();
+    ctx.beginPath(); ctx.ellipse(cx+2*SCALE,cy-165*SCALE,20*SCALE,62*SCALE,-0.12,0,Math.PI*2); ctx.fill?.();ctx.stroke?.();
+    ctx.beginPath(); ctx.ellipse(cx+52*SCALE,cy-165*SCALE,20*SCALE,62*SCALE,0.12,0,Math.PI*2); ctx.fill?.();ctx.stroke?.();
+    ctx.beginPath(); ctx.ellipse(cx-78*SCALE,cy+55*SCALE,22*SCALE,20*SCALE,0,0,Math.PI*2); ctx.fill?.();ctx.stroke?.();
+  } else {
+    ctx.beginPath(); ctx.ellipse(cx,cy+10*SCALE,84*SCALE,58*SCALE,-0.25,0,Math.PI*2); ctx.fill?.();ctx.stroke?.();
+    ctx.beginPath(); ctx.ellipse(cx+65*SCALE,cy-38*SCALE,40*SCALE,36*SCALE,0,0,Math.PI*2); ctx.fill?.();ctx.stroke?.();
+    ctx.beginPath(); ctx.moveTo((cx+105)*SCALE,cy-38*SCALE); ctx.lineTo((cx+145)*SCALE,cy-28*SCALE); ctx.lineTo((cx+105)*SCALE,cy-18*SCALE); ctx.closePath(); ctx.fill?.();ctx.stroke?.();
+    ctx.beginPath(); ctx.moveTo(cx-15*SCALE,cy-18*SCALE); ctx.quadraticCurveTo(cx-78*SCALE,cy+8*SCALE,cx-73*SCALE,cy+52*SCALE); ctx.quadraticCurveTo(cx-18*SCALE,cy+36*SCALE,cx+28*SCALE,cy+12*SCALE); ctx.closePath(); ctx.fill?.();ctx.stroke?.();
+    ctx.beginPath(); ctx.moveTo(cx-68*SCALE,cy-2*SCALE); ctx.lineTo(cx-128*SCALE,cy+26*SCALE); ctx.lineTo(cx-118*SCALE,cy+60*SCALE); ctx.lineTo(cx-58*SCALE,cy+50*SCALE); ctx.closePath(); ctx.fill?.();ctx.stroke?.();
+  }
+  ctx.restore();
+}
+
+function initPaint() {
+  pCtx.clearRect(0,0,CW,CH);
+  pCtx.fillStyle = SUBJECT==='crow' ? 'rgba(40,40,40,0.1)' : 'rgba(245,240,210,0.3)';
+  pCtx.strokeStyle = 'transparent'; pCtx.lineWidth = 0;
+  buildSubjectPath(pCtx, null);
+  progressTs = 0;
+}
+
+function drawOutline() {
+  oCtx.clearRect(0,0,CW,CH);
+  oCtx.strokeStyle = SUBJECT==='crow' ? '#1A1A2E' : '#3E2723';
+  oCtx.lineWidth = Math.max(3, 3.5*SCALE);
+  oCtx.lineJoin = 'round'; oCtx.lineCap = 'round';
+  oCtx.fillStyle = 'transparent';
+  buildSubjectPath(oCtx, null);
+
+  const cx = LW/2*SCALE, cy = LH/2*SCALE;
+  if (SUBJECT === 'rabbit') {
+    oCtx.fillStyle = '#E91E63';
+    oCtx.beginPath(); oCtx.arc(cx+62*SCALE,cy-80*SCALE,7*SCALE,0,Math.PI*2); oCtx.fill();
+    oCtx.fillStyle = '#FF8A80';
+    oCtx.beginPath(); oCtx.ellipse(cx+92*SCALE,cy-60*SCALE,8*SCALE,6*SCALE,0,0,Math.PI*2); oCtx.fill();
+    oCtx.strokeStyle='#5D4037'; oCtx.lineWidth=Math.max(1.5,1.5*SCALE);
+    [[cx+92*SCALE,cy-60*SCALE,cx+120*SCALE,cy-64*SCALE],[cx+92*SCALE,cy-60*SCALE,cx+120*SCALE,cy-56*SCALE],[cx+92*SCALE,cy-60*SCALE,cx+62*SCALE,cy-64*SCALE],[cx+92*SCALE,cy-60*SCALE,cx+62*SCALE,cy-56*SCALE]].forEach(([x1,y1,x2,y2])=>{oCtx.beginPath();oCtx.moveTo(x1,y1);oCtx.lineTo(x2,y2);oCtx.stroke();});
+  } else {
+    oCtx.fillStyle='#FFD700';
+    oCtx.beginPath();oCtx.arc(cx+76*SCALE,cy-42*SCALE,6*SCALE,0,Math.PI*2);oCtx.fill();
+    oCtx.fillStyle='#1A1A1A';
+    oCtx.beginPath();oCtx.arc(cx+77*SCALE,cy-42*SCALE,3*SCALE,0,Math.PI*2);oCtx.fill();
+  }
+}
+
+let progressTs = 0, celebrated = false;
+function paintAt(lx,ly) {
+  const bsz = 26*SCALE;
+  pCtx.save(); pCtx.globalCompositeOperation='source-atop';
+  pCtx.fillStyle = cfg.fillColor;
+  pCtx.beginPath(); pCtx.arc(lx,ly,bsz,0,Math.PI*2); pCtx.fill();
+  if (SUBJECT==='rabbit') {
+    pCtx.globalAlpha=0.15; pCtx.fillStyle='#FFFFFF';
+    pCtx.beginPath(); pCtx.arc(lx+bsz*.3,ly-bsz*.3,bsz*.5,0,Math.PI*2); pCtx.fill();
+  }
+  pCtx.restore();
+}
+function paintLine(x1,y1,x2,y2) {
+  const dx=x2-x1,dy=y2-y1,dist=Math.hypot(dx,dy);
+  const step=Math.max(4,26*SCALE*.5);
+  for(let i=0;i<=Math.ceil(dist/step);i++){const t=i/Math.ceil(dist/step);paintAt(x1+dx*t,y1+dy*t);}
+  checkProgress();
+}
+function floodFill() {
+  pCtx.save();pCtx.globalCompositeOperation='source-atop';
+  pCtx.fillStyle=cfg.fillColor;pCtx.fillRect(0,0,CW,CH);
+  pCtx.restore();checkProgress();
+}
+function checkProgress() {
+  if (progressTs > Date.now()-80) return; progressTs=Date.now();
+  const data=pCtx.getImageData(0,0,CW,CH).data;
+  let total=0,filled=0;
+  for(let i=0;i<data.length;i+=4*8){
+    if(data[i+3]>10){total++;
+      if(SUBJECT==='crow'?data[i]<60:(data[i]>185&&data[i+2]<210)) filled++;}
+  }
+  const pct=total>0?Math.min(100,Math.round(filled/total*160)):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  const lbl=document.getElementById('progLabel');
+  lbl.textContent=pct<30?'Paint inside the lines! 🖌️':pct<70?'Looking great! 😊':pct<100?'Almost there! ✨':'Beautiful! 🌟';
+}
+
+const activePtrs=new Map();
+function getCanvas(e) {
+  const r=paintC.getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top};
+}
+paintC.addEventListener('pointerdown',e=>{e.preventDefault();paintC.setPointerCapture(e.pointerId);const p=getCanvas(e);activePtrs.set(e.pointerId,p);paintAt(p.x,p.y);});
+paintC.addEventListener('pointermove',e=>{e.preventDefault();const prev=activePtrs.get(e.pointerId);if(!prev)return;const p=getCanvas(e);paintLine(prev.x,prev.y,p.x,p.y);activePtrs.set(e.pointerId,p);});
+paintC.addEventListener('pointerup',e=>{e.preventDefault();activePtrs.delete(e.pointerId);});
+paintC.addEventListener('pointercancel',e=>{activePtrs.delete(e.pointerId);});
+
+function resetPaint() {
+  celebrated=false;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('progLabel').textContent='Paint inside the lines! 🖌️';
+  initPaint();
+}
+
+PP.bindTouch(document.getElementById('btnClear'),resetPaint);
+PP.bindTouch(document.getElementById('btnFill'), floodFill);
+
+window.addEventListener('resize',resizeCanvases);
+resizeCanvases();
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Mosquito Clap</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;
+  background:linear-gradient(180deg,#B3E5FC 0%,#E8F5E9 45%,#A5D6A7 100%)}
+
+/* TOP zone: score HUD — no interaction */
+.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;pointer-events:none;z-index:2}
+.scene-title{font-size:clamp(22px,3.8vw,42px);font-weight:900;color:#1B5E20;
+  text-shadow:0 2px 8px rgba(0,0,0,.12)}
+.score-row{display:flex;gap:16px;align-items:center}
+.score-badge{background:rgba(255,255,255,.6);backdrop-filter:blur(6px);
+  border:2px solid rgba(255,255,255,.7);border-radius:16px;
+  padding:8px 22px;font-weight:900;font-size:clamp(18px,3vw,32px);color:#1B5E20}
+.progress-track{width:clamp(160px,35vw,300px);background:rgba(255,255,255,.3);
+  border-radius:20px;height:14px;overflow:hidden;border:2px solid rgba(255,255,255,.5)}
+.progress-fill{height:100%;background:linear-gradient(90deg,#FF7043,#FF5722);
+  border-radius:20px;width:0%;transition:width .4s ease}
+
+/* BOTTOM zone: mosquito fly area — interactive */
+.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,#C8E6C9 0%,#A5D6A7 100%);
+  z-index:5;touch-action:none;overflow:hidden}
+
+/* status label inside bottom zone */
+.status-label{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  font-size:clamp(13px,1.8vw,18px);font-weight:700;color:#2E7D32;
+  background:rgba(255,255,255,.5);border-radius:12px;padding:5px 16px;
+  pointer-events:none;white-space:nowrap}
+
+.mosquito{position:absolute;font-size:clamp(44px,7.5vw,80px);
+  cursor:pointer;line-height:1;z-index:20;pointer-events:auto;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));
+  -webkit-user-select:none;user-select:none}
+.mosquito.caught{animation:mCatch .35s ease forwards;pointer-events:none}
+@keyframes mCatch{
+  0%  {transform:scale(1)   rotate(0deg);  opacity:1}
+  40% {transform:scale(1.6) rotate(30deg); opacity:.8}
+  100%{transform:scale(.1)  rotate(90deg); opacity:0}}
+
+.clap-ring{position:absolute;pointer-events:none;z-index:100;
+  font-size:clamp(28px,5vw,52px);animation:clapPop .5s ease forwards}
+@keyframes clapPop{
+  0%  {transform:translate(-50%,-50%) scale(.3);opacity:1}
+  50% {transform:translate(-50%,-50%) scale(1.4);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(1.8);opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- TOP: display only -->
+<div class="top-zone">
+  <div class="scene-title">🦟 Mosquito Clap</div>
+  <div class="score-row">
+    <div class="score-badge">🦟 <span id="scoreNum">0</span> / 8</div>
+    <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+  </div>
+</div>
+
+<!-- BOTTOM: interactive fly zone -->
+<div class="bottom-zone" id="flyZone">
+  <div class="status-label" id="statusLabel">Clap the mosquitoes! 👏</div>
+</div>
+
+<script src="../js/audio-manager.js"></script>
+<script src="../js/pre-primary-common.js"></script>
+<script>
+PP.init();
+document.body.insertAdjacentHTML('beforeend', PP.toolbarHTML());
+
+const GOAL = 8, MAX_LIVE = 5, BASE_SPEED = 1.8;
+let score = 0, gameOver = false, nextId = 0, frame = 0;
+const bugs = new Map();
+const flyZone = document.getElementById('flyZone');
+
+let ZW, ZH; // fly zone dimensions (bottom half)
+function getZoneDims() {
+  const r = flyZone.getBoundingClientRect();
+  ZW = r.width; ZH = r.height;
+}
+
+// Web Audio
+let audioCtx;
+function _ac() { if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+function buzzSound() {
+  try { _ac();
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(260,audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.18);
+    g.gain.setValueAtTime(.3,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.22);
+    o.start();o.stop(audioCtx.currentTime+.22);
+  } catch(e) {}
+}
+function catchSound() {
+  try { _ac();
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);
+    o.type='sine';
+    o.frequency.setValueAtTime(600,audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+.12);
+    g.gain.setValueAtTime(.35,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.2);
+    o.start();o.stop(audioCtx.currentTime+.2);
+  } catch(e) {}
+}
+
+function spawnMosquito() {
+  if (bugs.size >= MAX_LIVE || gameOver) return;
+  const id = nextId++;
+  const speed = BASE_SPEED + score * 0.18;
+  getZoneDims();
+  let x = Math.random() * (ZW - 80) + 20;
+  let y = Math.random() * (ZH - 80) + 20;
+  const angle = Math.random() * Math.PI * 2;
+  const vx = Math.cos(angle) * speed, vy = Math.sin(angle) * speed;
+
+  const el = document.createElement('div');
+  el.className = 'mosquito';
+  el.textContent = '🦟';
+  el.style.left = x+'px'; el.style.top = y+'px';
+  flyZone.appendChild(el);
+  bugs.set(id, { el, x, y, vx, vy, wobbleT:0, turnT:80+Math.random()*80 });
+  buzzSound();
+}
+
+function tick() {
+  if (gameOver) return;
+  frame++;
+  if (frame % 55 === 0) spawnMosquito();
+
+  bugs.forEach((bug, id) => {
+    bug.turnT--;
+    if (bug.turnT <= 0) {
+      const sp = Math.hypot(bug.vx,bug.vy);
+      const na = Math.atan2(bug.vy,bug.vx)+(Math.random()-.5)*2.8;
+      bug.vx = Math.cos(na)*sp; bug.vy = Math.sin(na)*sp;
+      bug.turnT = 70+Math.random()*80;
+    }
+    bug.wobbleT += .08;
+    bug.x += bug.vx + Math.sin(bug.wobbleT)*1.8;
+    bug.y += bug.vy;
+    getZoneDims();
+    if (bug.x < 20)     { bug.x = 20;     bug.vx =  Math.abs(bug.vx); }
+    if (bug.x > ZW-60)  { bug.x = ZW-60;  bug.vx = -Math.abs(bug.vx); }
+    if (bug.y < 10)     { bug.y = 10;     bug.vy =  Math.abs(bug.vy); }
+    if (bug.y > ZH-60)  { bug.y = ZH-60;  bug.vy = -Math.abs(bug.vy); }
+    bug.el.style.transform = bug.vx < 0 ? 'scaleX(-1)' : '';
+    bug.el.style.left = bug.x+'px'; bug.el.style.top = bug.y+'px';
+  });
+  requestAnimationFrame(tick);
+}
+
+function tryClap(ex, ey) {
+  if (gameOver) return;
+  _ac();
+  const zr = flyZone.getBoundingClientRect();
+  const lx = ex - zr.left, ly = ey - zr.top;
+
+  // Clap ring
+  const ring = document.createElement('div');
+  ring.className = 'clap-ring'; ring.textContent = '👏';
+  ring.style.left = lx+'px'; ring.style.top = ly+'px';
+  flyZone.appendChild(ring);
+  ring.addEventListener('animationend', () => ring.remove());
+
+  let closest = null, minDist = 72;
+  bugs.forEach((bug, id) => {
+    const mx = bug.x + 30, my = bug.y + 30;
+    const d = Math.hypot(lx-mx, ly-my);
+    if (d < minDist) { minDist = d; closest = id; }
+  });
+
+  if (closest !== null) {
+    const bug = bugs.get(closest);
+    bug.el.classList.add('caught');
+    bug.el.addEventListener('animationend', () => { bug.el.remove(); bugs.delete(closest); }, {once:true});
+    catchSound();
+    score++;
+    document.getElementById('scoreNum').textContent = score;
+    document.getElementById('progFill').style.width = (score/GOAL*100)+'%';
+    document.getElementById('statusLabel').textContent =
+      score < GOAL ? `${score} / ${GOAL} caught!` : 'All done! 🎉';
+    if (score >= GOAL) {
+      gameOver = true;
+      document.getElementById('statusLabel').textContent = 'Great job! 🎉 Tap ← Menu to go back.';
+    }
+  }
+}
+
+flyZone.addEventListener('touchstart', e => {
+  for (const t of e.changedTouches) tryClap(t.clientX, t.clientY);
+}, {passive:true});
+flyZone.addEventListener('click', e => {
+  if (e.sourceCapabilities?.firesTouchEvents) return;
+  tryClap(e.clientX, e.clientY);
+});
+
+getZoneDims();
+setTimeout(() => { spawnMosquito(); spawnMosquito(); }, 400);
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

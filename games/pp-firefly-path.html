@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Firefly Path</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;background:#0D1B2A}
+
+/* TOP zone: night sky decoration — no interaction */
+.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
+  background:linear-gradient(180deg,#0D1B2A 0%,#1A2C3D 70%,#1B4D2E 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;pointer-events:none;z-index:2}
+.moon-row{font-size:clamp(28px,5vw,52px)}
+.scene-title{font-size:clamp(20px,3.4vw,38px);font-weight:900;color:#ECEFF1;
+  text-shadow:0 0 20px rgba(255,240,160,.5);text-align:center}
+.prog-row{display:flex;gap:12px;align-items:center}
+.prog-wrap{width:clamp(140px,28vw,260px)}
+.prog-track{background:rgba(255,255,255,.12);border-radius:20px;height:12px;
+  overflow:hidden;border:1px solid rgba(255,255,255,.25)}
+.prog-fill{height:100%;background:linear-gradient(90deg,#FFE082,#FFD700);
+  border-radius:20px;width:0%;transition:width .4s ease}
+.prog-pct{font-size:clamp(14px,2vw,22px);font-weight:900;color:#ECEFF1;
+  background:rgba(255,255,255,.12);border-radius:12px;padding:5px 13px}
+.status-label{font-size:clamp(13px,1.8vw,18px);font-weight:700;color:#A5D6A7;
+  background:rgba(255,255,255,.08);border-radius:12px;padding:5px 14px;text-align:center}
+
+/* BOTTOM zone: interactive canvas */
+.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;z-index:5}
+canvas{display:block;touch-action:none;width:100%;height:100%;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- TOP: night sky display only -->
+<div class="top-zone">
+  <div class="moon-row">🌙 ✨ 🌟</div>
+  <div class="scene-title">✨ Firefly Path</div>
+  <div class="prog-row">
+    <div class="prog-wrap">
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+    <div class="prog-pct" id="progPct">0%</div>
+  </div>
+  <div class="status-label" id="statusLabel">Touch and drag to guide the firefly! 🤌</div>
+</div>
+
+<!-- BOTTOM: interactive canvas -->
+<div class="bottom-zone">
+  <canvas id="c"></canvas>
+</div>
+
+<script src="../js/pre-primary-common.js"></script>
+<script src="../js/audio-manager.js"></script>
+<script>
+const SEED_VAL = parseInt(PP.param('seed')) || (Math.floor(Math.random() * 900000) + 100000);
+
+let W, H;
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+/* ── Seeded PRNG ─────────────────────────────────────────────── */
+function makePRNG(seed) {
+  let s = (seed >>> 0) || 1;
+  return function() {
+    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+    return s / 0x100000000;
+  };
+}
+
+/* ── Procedural firefly path ─────────────────────────────────── */
+function generateFireflyPath(seed) {
+  const rng = makePRNG(seed);
+  const pts = [];
+
+  // Start: lower area, end: upper area — always bottom→top traverse
+  const sx = 0.08 + rng() * 0.18;   const sy = 0.60 + rng() * 0.20;
+  const ex = 0.72 + rng() * 0.20;   const ey = 0.12 + rng() * 0.14;
+
+  const nPts     = 9 + Math.floor(rng() * 4);  // 9-12 control points
+  const freq     = 1.5 + rng() * 3.0;
+  const amp      = 0.08 + rng() * 0.12;
+  const flipWave = rng() > 0.5 ? 1 : -1;
+  const vJitter  = 0.04 + rng() * 0.05;
+
+  for (let i = 0; i < nPts; i++) {
+    const t  = i / (nPts - 1);
+    const bx = sx + (ex - sx) * t;
+    const by = sy + (ey - sy) * t;
+    const wave = Math.sin(t * Math.PI * freq) * amp * flipWave;
+    pts.push({
+      x: Math.max(0.05, Math.min(0.95, bx + wave)),
+      y: Math.max(0.08, Math.min(0.90, by + (rng()-0.5)*vJitter))
+    });
+  }
+  return pts;
+}
+
+/* ── Catmull-Rom spline ──────────────────────────────────────── */
+function catmullSample(pts, n) {
+  const res=[], l=pts.length;
+  for (let i=0; i<l-1; i++) {
+    const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(l-1,i+2)];
+    const seg=Math.ceil(n/(l-1));
+    for (let k=0; k<=seg; k++) {
+      const t=k/seg, t2=t*t, t3=t2*t;
+      res.push({
+        x:0.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
+        y:0.5*((2*p1.y)+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+      });
+    }
+  }
+  return res;
+}
+
+let guidePath = [];
+
+function buildGuide(seed) {
+  const waypoints = generateFireflyPath(seed);
+  guidePath = catmullSample(waypoints.map(p => ({x:p.x*W, y:p.y*H})), 260);
+}
+
+/* ── Firefly + spark state ───────────────────────────────────── */
+let ffX, ffY;
+let touching=false, touchX=0, touchY=0;
+const SPARKS=[], MAX_SPARKS=80;
+let frontier=0, celebrated=false, lastWaySound=-1;
+const STARS=[];
+let frameN=0, audioCtx;
+let currentSeed = SEED_VAL;
+
+function chime() {
+  try {
+    if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type='sine';
+    osc.frequency.setValueAtTime(880+Math.random()*220, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.4);
+    osc.start(); osc.stop(audioCtx.currentTime+0.4);
+  } catch(e){}
+}
+
+function initStars() {
+  STARS.length=0;
+  for (let i=0; i<120; i++) {
+    STARS.push({
+      x:Math.random()*W, y:Math.random()*H*0.40,
+      r:.5+Math.random()*1.8,
+      phase:Math.random()*Math.PI*2,
+      speed:.01+Math.random()*.025
+    });
+  }
+}
+
+/* ── Canvas drawing ──────────────────────────────────────────── */
+function drawNightScene() {
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#0D1B2A'); sky.addColorStop(.55,'#1A2C3D'); sky.addColorStop(1,'#1B4D2E');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+
+  ctx.save();
+  STARS.forEach(s=>{
+    s.phase+=s.speed;
+    const a=0.4+Math.sin(s.phase)*0.35;
+    ctx.fillStyle=`rgba(255,255,200,${a})`;
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+  });
+  ctx.restore();
+
+  // Ground
+  ctx.fillStyle='#1B4D2E';
+  ctx.beginPath(); ctx.moveTo(0,H); ctx.lineTo(0,H*0.78);
+  ctx.quadraticCurveTo(W*.25,H*0.72,W*.5,H*0.75);
+  ctx.quadraticCurveTo(W*.75,H*0.78,W,H*0.73);
+  ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+
+  // Flower goal
+  const ep=guidePath[guidePath.length-1];
+  if (ep) {
+    const pulseR=20+Math.sin(frameN*.06)*8;
+    const pg=ctx.createRadialGradient(ep.x,ep.y,2,ep.x,ep.y,pulseR+20);
+    pg.addColorStop(0,'rgba(255,200,0,.35)'); pg.addColorStop(1,'rgba(255,200,0,0)');
+    ctx.fillStyle=pg; ctx.beginPath(); ctx.arc(ep.x,ep.y,pulseR+20,0,Math.PI*2); ctx.fill();
+    ctx.font=`${Math.min(44,W*0.06)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🌸',ep.x,ep.y);
+  }
+  const sp=guidePath[0];
+  if (sp) {
+    ctx.font=`${Math.min(40,W*0.055)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🌿',sp.x,sp.y);
+  }
+}
+
+function drawGuidePath() {
+  if (guidePath.length<2) return;
+  ctx.save();
+  ctx.setLineDash([8,16]); ctx.strokeStyle='rgba(180,255,150,.35)'; ctx.lineWidth=4;
+  ctx.shadowColor='rgba(180,255,150,.6)'; ctx.shadowBlur=10;
+  ctx.beginPath(); ctx.moveTo(guidePath[0].x,guidePath[0].y);
+  guidePath.forEach(p=>ctx.lineTo(p.x,p.y)); ctx.stroke();
+  ctx.restore();
+}
+
+function drawFirefly() {
+  if (!ffX) return;
+  const pulse=0.7+Math.sin(frameN*.12)*0.3;
+  ctx.save();
+  const grd=ctx.createRadialGradient(ffX,ffY,2,ffX,ffY,36*pulse);
+  grd.addColorStop(0,'rgba(220,255,120,.9)');
+  grd.addColorStop(.4,'rgba(180,255,80,.5)');
+  grd.addColorStop(1,'rgba(100,200,50,0)');
+  ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(ffX,ffY,38*pulse,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#EEFF82'; ctx.shadowColor='#CCFF00'; ctx.shadowBlur=16;
+  ctx.beginPath(); ctx.arc(ffX,ffY,6*pulse,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawSparks() {
+  for (let i=SPARKS.length-1; i>=0; i--) {
+    const s=SPARKS[i];
+    s.life-=0.025; s.x+=s.vx; s.y+=s.vy;
+    if (s.life<=0) { SPARKS.splice(i,1); continue; }
+    ctx.save(); ctx.globalAlpha=s.life;
+    ctx.fillStyle=s.color; ctx.shadowColor=s.color; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r*s.life,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function emitSparks(x,y) {
+  const colors=['#EEFF82','#CCFF00','#FFFFFF','#FFE082','#80FF00'];
+  for (let i=0;i<3;i++) {
+    const a=Math.random()*Math.PI*2, v=0.5+Math.random()*1.5;
+    SPARKS.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,
+      r:2+Math.random()*3, color:colors[~~(Math.random()*colors.length)], life:.8+Math.random()*.5});
+  }
+  if (SPARKS.length>MAX_SPARKS) SPARKS.splice(0,SPARKS.length-MAX_SPARKS);
+}
+
+function updateProgress() {
+  if (!ffX || guidePath.length===0) return;
+  let minDist=Infinity, minIdx=frontier;
+  const lo=Math.max(0,frontier-5), hi=Math.min(guidePath.length-1,frontier+30);
+  for (let i=lo; i<=hi; i++) {
+    const dx=ffX-guidePath[i].x, dy=ffY-guidePath[i].y;
+    const d=dx*dx+dy*dy;
+    if (d<minDist) { minDist=d; minIdx=i; }
+  }
+  if (Math.sqrt(minDist)<70 && minIdx>frontier) {
+    frontier=minIdx;
+    const pct=Math.round(frontier/(guidePath.length-1)*10);
+    if (pct!==lastWaySound) { lastWaySound=pct; chime(); }
+  }
+  const progress=Math.round(frontier/(guidePath.length-1)*100);
+  document.getElementById('progFill').style.width=progress+'%';
+  document.getElementById('progPct').textContent=progress+'%';
+  const ep=guidePath[guidePath.length-1];
+  if (ep) {
+    const dx=ffX-ep.x, dy=ffY-ep.y;
+    if (Math.sqrt(dx*dx+dy*dy)<55 && !celebrated) { celebrated=true; setTimeout(showDone,400); }
+  }
+}
+
+function loop() {
+  frameN++;
+  if (touching && ffX) {
+    const newX=ffX+(touchX-ffX)*0.14, newY=ffY+(touchY-ffY)*0.14;
+    if (Math.hypot(newX-ffX,newY-ffY)>0.5) { emitSparks(ffX,ffY); ffX=newX; ffY=newY; }
+    updateProgress();
+  } else if (!touching && ffX && frontier<guidePath.length-1) {
+    const target=guidePath[Math.min(frontier+5,guidePath.length-1)];
+    ffX+=(target.x-ffX)*0.02; ffY+=(target.y-ffY)*0.02;
+  }
+  ctx.clearRect(0,0,W,H);
+  drawNightScene(); drawGuidePath(); drawSparks(); drawFirefly();
+  requestAnimationFrame(loop);
+}
+
+function getCanvasCoords(e) {
+  const r=canvas.getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top};
+}
+
+canvas.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  if (!audioCtx) { try { audioCtx=new(window.AudioContext||window.webkitAudioContext)(); } catch(ee){} }
+  touching=true;
+  const p=getCanvasCoords(e); touchX=p.x; touchY=p.y;
+  if (!ffX) { ffX=guidePath[0]?.x||W*.15; ffY=guidePath[0]?.y||H*.7; }
+},{passive:false});
+
+canvas.addEventListener('pointermove',e=>{
+  if (!touching) return;
+  e.preventDefault();
+  const p=getCanvasCoords(e); touchX=p.x; touchY=p.y;
+},{passive:false});
+
+canvas.addEventListener('pointerup',    ()=>{touching=false;});
+canvas.addEventListener('pointercancel',()=>{touching=false;});
+
+function showDone() {
+  document.getElementById('statusLabel').textContent='🌟 Magical! The firefly found its way home!';
+  chime(); setTimeout(chime,200); setTimeout(chime,400);
+  setTimeout(startNewPath, 3000);
+}
+
+function startNewPath() {
+  frontier=0; celebrated=false; lastWaySound=-1;
+  SPARKS.length=0;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('progPct').textContent='0%';
+  document.getElementById('statusLabel').textContent='Touch and drag to guide the firefly! 🤌';
+  // Generate a brand-new random path
+  currentSeed = Math.floor(Math.random() * 900000) + 100000;
+  buildGuide(currentSeed);
+  ffX=guidePath[0]?.x; ffY=guidePath[0]?.y;
+}
+
+PP.init();
+document.body.insertAdjacentHTML('beforeend', PP.toolbarHTML());
+
+function resize() {
+  const bz=document.querySelector('.bottom-zone').getBoundingClientRect();
+  W=canvas.width=Math.round(bz.width);
+  H=canvas.height=Math.round(bz.height);
+  initStars(); buildGuide(currentSeed);
+  if (!ffX||ffX>W) { ffX=guidePath[0]?.x; ffY=guidePath[0]?.y; }
+}
+
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

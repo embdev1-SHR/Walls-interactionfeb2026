@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Pre-Primary — Player Select</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif}
+
+/* ── Player-select screen ── */
+#select-screen{
+  position:fixed;inset:0;
+  background:linear-gradient(160deg,#E8D5FF 0%,#C8A8FF 55%,#A8D8FF 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(24px,5vh,48px);z-index:10;
+}
+.sel-title{font-size:clamp(28px,5vw,56px);font-weight:900;color:#4A235A;
+  text-shadow:0 3px 12px rgba(74,35,90,.15);text-align:center}
+.sel-sub{font-size:clamp(16px,2.5vw,28px);font-weight:700;color:#6B46C1;text-align:center}
+.player-btns{display:flex;gap:clamp(20px,4vw,60px);flex-wrap:wrap;justify-content:center}
+.player-btn{
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  padding:clamp(24px,4vh,44px) clamp(32px,5vw,60px);
+  border-radius:28px;border:3px solid rgba(255,255,255,.7);
+  background:rgba(255,255,255,.45);backdrop-filter:blur(8px);
+  cursor:pointer;transition:all .25s;
+  -webkit-user-select:none;user-select:none;
+  box-shadow:0 8px 24px rgba(106,61,169,.18);
+}
+.player-btn:hover{transform:translateY(-6px) scale(1.05);box-shadow:0 16px 36px rgba(106,61,169,.28)}
+.player-btn:active{transform:scale(.94)}
+.player-btn .p-icon{font-size:clamp(48px,9vw,88px);line-height:1}
+.player-btn .p-num{font-size:clamp(22px,4vw,44px);font-weight:900;color:#4A235A}
+.player-btn .p-label{font-size:clamp(13px,1.8vw,20px);font-weight:700;color:#6B46C1}
+
+/* Back button */
+#sel-back{
+  position:fixed;top:16px;right:16px;z-index:20;
+  padding:10px 22px;border-radius:20px;border:2px solid #9B7FDB;
+  background:linear-gradient(135deg,#E8D5FF,#C8A8FF);
+  color:#4A235A;font-weight:900;font-size:clamp(13px,1.8vw,16px);
+  cursor:pointer;font-family:inherit;transition:all .2s;
+}
+#sel-back:hover{transform:scale(1.06)}
+
+/* ── 3-player frame layout ── */
+#frame-screen{position:fixed;inset:0;display:none;flex-direction:row}
+.p-frame{flex:1;height:100%;border:none;border-right:3px solid rgba(155,127,219,.4);display:block}
+.p-frame:last-child{border-right:none}
+
+/* Frame back button */
+#frame-back{
+  position:fixed;top:12px;left:50%;transform:translateX(-50%);
+  z-index:9999;
+  padding:8px 22px;border-radius:18px;border:2px solid #9B7FDB;
+  background:linear-gradient(135deg,#E8D5FF,#C8A8FF);
+  color:#4A235A;font-weight:900;font-size:clamp(12px,1.5vw,15px);
+  cursor:pointer;font-family:inherit;
+  box-shadow:0 3px 12px rgba(155,127,219,.35);
+  transition:all .2s;display:none;
+}
+#frame-back:hover{transform:translateX(-50%) scale(1.06)}
+</style>
+</head>
+<body>
+
+<!-- Player selection screen -->
+<div id="select-screen">
+  <div class="sel-title">🎮 How many players?</div>
+  <div class="sel-sub" id="gameName">Loading…</div>
+  <div class="player-btns">
+    <div class="player-btn" id="btn1">
+      <span class="p-icon">👤</span>
+      <span class="p-num">1</span>
+      <span class="p-label">Player</span>
+    </div>
+    <div class="player-btn" id="btn3">
+      <span class="p-icon">👥</span>
+      <span class="p-num">3</span>
+      <span class="p-label">Players</span>
+    </div>
+  </div>
+</div>
+
+<button id="sel-back">← Menu</button>
+
+<!-- 3-player split screen -->
+<div id="frame-screen">
+  <iframe class="p-frame" id="frame1" src="" allowfullscreen></iframe>
+  <iframe class="p-frame" id="frame2" src="" allowfullscreen></iframe>
+  <iframe class="p-frame" id="frame3" src="" allowfullscreen></iframe>
+</div>
+<button id="frame-back">← Menu</button>
+
+<script>
+  const params  = new URLSearchParams(window.location.search);
+  const gameSrc = params.get('src') || '';
+  const autoVal = params.get('auto') || '';
+
+  // Friendly game name
+  const nameMap = {
+    'pp-egg-count.html':      '1-2-3 Egg Tap',
+    'pp-mosquito-clap.html':  'Mosquito Clap',
+    'pp-fill-outline.html':   'Fill the Outline',
+    'pp-size-color.html':     'Big / Small / Green',
+    'pp-body-parts.html':     'Body Parts',
+    'pp-path-tracer.html':    'Path Tracer',
+    'pp-firefly-path.html':   'Firefly Path',
+    'pp-block-stack.html':    'Block Stack',
+  };
+  const baseName = gameSrc.split('?')[0];
+  document.getElementById('gameName').textContent =
+    (nameMap[baseName] || baseName) + ' — pick player count';
+
+  function goBack() {
+    window.location.href = '../index.html';
+  }
+
+  function launch1() {
+    window.location.href = gameSrc;
+  }
+
+  // Generate a unique random seed URL for each iframe so paths differ
+  function seedURL(base) {
+    const seed = Math.floor(Math.random() * 900000) + 100000;
+    const sep  = base.includes('?') ? '&' : '?';
+    return base + sep + 'framed=1&seed=' + seed;
+  }
+
+  function launch3() {
+    document.getElementById('select-screen').style.display = 'none';
+    const fs = document.getElementById('frame-screen');
+    fs.style.display = 'flex';
+    // Each iframe gets a different seed → different procedural content
+    document.getElementById('frame1').src = seedURL(gameSrc);
+    document.getElementById('frame2').src = seedURL(gameSrc);
+    document.getElementById('frame3').src = seedURL(gameSrc);
+    document.getElementById('frame-back').style.display = 'block';
+    document.getElementById('sel-back').style.display   = 'none';
+  }
+
+  // Wire buttons
+  function bind(el, fn) {
+    el.addEventListener('click', e => {
+      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+      fn();
+    });
+    el.addEventListener('touchend', e => { e.preventDefault(); fn(); });
+  }
+
+  bind(document.getElementById('btn1'),       launch1);
+  bind(document.getElementById('btn3'),       launch3);
+  bind(document.getElementById('sel-back'),   goBack);
+  bind(document.getElementById('frame-back'), goBack);
+
+  // Auto-launch 3-player if ?auto=3
+  if (autoVal === '3') {
+    launch3();
+  }
+</script>
+</body>
+</html>

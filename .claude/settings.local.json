@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(read f *)",
+      "Bash([ -f \"d:/Git/Sibbcs/Walls-interactionfeb2026/games/$f\" ])"
+    ]
+  }
+}

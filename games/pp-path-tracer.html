@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Path Tracer</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif}
+
+/* TOP zone: title + progress — no interaction */
+.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;pointer-events:none;z-index:2}
+.scene-title{font-size:clamp(20px,3.4vw,38px);font-weight:900;text-align:center;
+  text-shadow:0 2px 8px rgba(255,255,255,.5)}
+.prog-row{display:flex;gap:12px;align-items:center}
+.prog-wrap{width:clamp(150px,32vw,280px)}
+.prog-track{background:rgba(255,255,255,.35);border-radius:20px;height:14px;
+  overflow:hidden;border:2px solid rgba(255,255,255,.55)}
+.prog-fill{height:100%;border-radius:20px;width:0%;transition:width .4s ease}
+.prog-pct{font-size:clamp(14px,2vw,22px);font-weight:900;
+  background:rgba(255,255,255,.55);border-radius:12px;padding:6px 14px}
+.status-label{font-size:clamp(13px,1.8vw,19px);font-weight:700;
+  background:rgba(255,255,255,.4);border-radius:12px;padding:5px 16px;text-align:center}
+
+/* BOTTOM zone: interactive canvas */
+.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;z-index:5}
+canvas{display:block;touch-action:none;width:100%;height:100%;cursor:crosshair}
+
+.instruction{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
+  z-index:20;background:rgba(255,255,255,.55);backdrop-filter:blur(6px);
+  border:2px solid rgba(255,255,255,.7);border-radius:20px;
+  padding:7px 20px;font-weight:700;font-size:clamp(13px,1.8vw,18px);
+  text-align:center;pointer-events:none;max-width:75vw}
+</style>
+</head>
+<body>
+
+<!-- TOP: display only -->
+<div class="top-zone" id="topZone">
+  <div class="scene-title" id="sceneTitle">🦜 Parrot to Nest</div>
+  <div class="prog-row">
+    <div class="prog-wrap">
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+    <div class="prog-pct" id="progPct">0%</div>
+  </div>
+  <div class="status-label" id="statusLabel">Trace the path!</div>
+</div>
+
+<!-- BOTTOM: interactive canvas -->
+<div class="bottom-zone">
+  <canvas id="c"></canvas>
+</div>
+<div class="instruction">Trace the dotted path with your finger ✋</div>
+
+<script src="../js/audio-manager.js"></script>
+<script src="../js/pre-primary-common.js"></script>
+<script>
+const PATH_KEY  = PP.param('path') || 'parrot';
+const SEED_VAL  = parseInt(PP.param('seed')) || (Math.floor(Math.random() * 900000) + 100000);
+
+/* ── Per-type visual config (colours, labels, scene) ─────────── */
+const CONFIGS = {
+  parrot:{
+    titleEn:'🦜 Parrot to Nest', instrEn:'Guide the parrot to its nest!',
+    startEmoji:'🦜', endEmoji:'🪹',
+    glowColor:'#66BB6A', traceColor:'#00C853',
+    skyTop:'#87CEEB',   skyBot:'#C8E6C9', groundColor:'#4CAF50',
+    bgGrad:'linear-gradient(160deg,#E8F5E9,#C8E6C9)',
+    titleColor:'#1B5E20', progColor:'linear-gradient(90deg,#A5D6A7,#66BB6A)',
+    sceneType:'forest'
+  },
+  turtle:{
+    titleEn:'🐢 Turtle to Pond', instrEn:'Help the turtle reach the pond!',
+    startEmoji:'🐢', endEmoji:'💧',
+    glowColor:'#29B6F6', traceColor:'#0288D1',
+    skyTop:'#FFF9C4',   skyBot:'#DCEDC8', groundColor:'#8BC34A',
+    bgGrad:'linear-gradient(160deg,#E3F2FD,#BBDEFB)',
+    titleColor:'#01579B', progColor:'linear-gradient(90deg,#90CAF9,#42A5F5)',
+    sceneType:'pond'
+  },
+  crow:{
+    titleEn:'🐦 Crow to Nest',  instrEn:'Fly the crow to its nest!',
+    startEmoji:'🐦', endEmoji:'🪹',
+    glowColor:'#90A4AE', traceColor:'#455A64',
+    skyTop:'#FF8A65',   skyBot:'#FFCC02', groundColor:'#795548',
+    bgGrad:'linear-gradient(160deg,#ECEFF1,#CFD8DC)',
+    titleColor:'#263238', progColor:'linear-gradient(90deg,#90A4AE,#607D8B)',
+    sceneType:'sunset'
+  }
+};
+const cfg = CONFIGS[PATH_KEY] || CONFIGS.parrot;
+
+/* ── Seeded PRNG (LCG) ───────────────────────────────────────── */
+function makePRNG(seed) {
+  let s = (seed >>> 0) || 1;
+  return function() {
+    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+    return s / 0x100000000;
+  };
+}
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+/* ── Procedural waypoint generation ─────────────────────────── */
+function generateWaypoints(type, seed) {
+  const rng = makePRNG(seed);
+  const pts = [];
+
+  // Start/end anchors vary per type
+  let sx, sy, ex, ey;
+  if (type === 'turtle') {
+    // Top-right → bottom-left
+    sx = 0.78 + rng() * 0.14;  sy = 0.10 + rng() * 0.12;
+    ex = 0.06 + rng() * 0.10;  ey = 0.74 + rng() * 0.14;
+  } else {
+    // parrot & crow: bottom-left → top-right
+    sx = 0.05 + rng() * 0.10;  sy = 0.68 + rng() * 0.16;
+    ex = 0.82 + rng() * 0.12;  ey = 0.14 + rng() * 0.12;
+  }
+
+  const nPts     = 8 + Math.floor(rng() * 3);   // 8-10 control points
+  const freq     = 1.4 + rng() * 2.2;           // wave frequency
+  const amp      = 0.06 + rng() * 0.10;         // wave amplitude
+  const flipWave = rng() > 0.5 ? 1 : -1;
+  const vJitter  = 0.04 + rng() * 0.04;         // vertical jitter
+
+  for (let i = 0; i < nPts; i++) {
+    const t = i / (nPts - 1);
+    const bx = sx + (ex - sx) * t;
+    const by = sy + (ey - sy) * t;
+    const wave = Math.sin(t * Math.PI * freq) * amp * flipWave;
+    pts.push({
+      x: clamp(bx + wave,              0.04, 0.96),
+      y: clamp(by + (rng() - 0.5) * vJitter, 0.08, 0.92)
+    });
+  }
+  return pts;
+}
+
+/* ── Catmull-Rom spline sampler ──────────────────────────────── */
+function catmullSample(pts, total) {
+  const result = [], n = pts.length, segs = n - 1,
+        perSeg = Math.ceil(total / segs);
+  for (let i = 0; i < segs; i++) {
+    const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(n-1,i+2)];
+    for (let k = 0; k <= perSeg; k++) {
+      const t=k/perSeg, t2=t*t, t3=t2*t;
+      result.push({
+        x:0.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
+        y:0.5*((2*p1.y)+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+      });
+    }
+  }
+  return result;
+}
+
+let W, H;
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+let pathPoints = [];
+let waypoints  = [];
+
+function buildPath() {
+  waypoints  = generateWaypoints(PATH_KEY, SEED_VAL);
+  pathPoints = catmullSample(waypoints.map(p => ({x:p.x*W, y:p.y*H})), 300);
+}
+
+/* ── Scene drawing ───────────────────────────────────────────── */
+function drawScene() {
+  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.65);
+  sky.addColorStop(0, cfg.skyTop); sky.addColorStop(1, cfg.skyBot);
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = cfg.groundColor; ctx.fillRect(0, H * 0.65, W, H * 0.35);
+
+  if (cfg.sceneType === 'forest') {
+    drawTree(W*0.05, H*0.62, 0.5); drawTree(W*0.88, H*0.54, 0.65); drawTree(W*0.94, H*0.58, 0.5);
+  } else if (cfg.sceneType === 'pond') {
+    ctx.fillStyle='rgba(33,150,243,.4)';
+    ctx.beginPath(); ctx.ellipse(W*0.15, H*0.82, W*0.11, H*0.07, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(33,150,243,.2)';
+    ctx.beginPath(); ctx.ellipse(W*0.15, H*0.82, W*0.14, H*0.10, 0, 0, Math.PI*2); ctx.fill();
+    drawTree(W*0.80, H*0.26, 0.55);
+  } else {
+    ctx.fillStyle='rgba(80,40,10,.7)'; drawTreeSilhouette(W*0.85, H*0.40);
+  }
+}
+
+function drawTree(x, baseY, sc) {
+  ctx.fillStyle='#5D4037'; ctx.fillRect(x-8*sc, baseY-40*sc, 16*sc, 40*sc);
+  ctx.fillStyle='#388E3C';
+  [[0,0],[0,-30],[-20,-15],[20,-15]].forEach(([dx,dy]) => {
+    ctx.beginPath(); ctx.arc(x+dx*sc, baseY-40*sc+dy*sc, 28*sc, 0, Math.PI*2); ctx.fill();
+  });
+}
+function drawTreeSilhouette(x, baseY) {
+  ctx.fillStyle='rgba(50,20,5,.8)'; ctx.fillRect(x-10, baseY, 20, 80);
+  ctx.beginPath(); ctx.arc(x, baseY, 50, 0, Math.PI*2); ctx.fill();
+}
+
+function drawGuide() {
+  if (pathPoints.length < 2) return;
+  ctx.save();
+  ctx.strokeStyle=cfg.glowColor; ctx.globalAlpha=0.55; ctx.lineWidth=6;
+  ctx.setLineDash([12,14]); ctx.shadowColor=cfg.glowColor; ctx.shadowBlur=12;
+  ctx.beginPath(); ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+  pathPoints.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+  ctx.restore();
+}
+
+function drawArrows() {
+  ctx.save(); ctx.fillStyle=cfg.glowColor; ctx.globalAlpha=0.6;
+  for (let i=20; i<pathPoints.length-10; i+=40) {
+    const p1=pathPoints[i], p2=pathPoints[Math.min(i+8,pathPoints.length-1)];
+    const angle=Math.atan2(p2.y-p1.y, p2.x-p1.x);
+    ctx.save(); ctx.translate(p1.x,p1.y); ctx.rotate(angle);
+    ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(-6,7); ctx.lineTo(-6,-7);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawTrace() {
+  if (tracedPts.length < 2) return;
+  ctx.save();
+  ctx.strokeStyle=cfg.traceColor; ctx.lineWidth=9;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.shadowColor=cfg.traceColor; ctx.shadowBlur=18; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(tracedPts[0].x, tracedPts[0].y);
+  tracedPts.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+  ctx.restore();
+}
+
+function drawFingerHint() {
+  if (!tracing || tracedPts.length === 0) return;
+  const p = tracedPts[tracedPts.length-1];
+  ctx.save();
+  ctx.strokeStyle=cfg.traceColor; ctx.lineWidth=3;
+  ctx.globalAlpha=0.7; ctx.shadowColor=cfg.traceColor; ctx.shadowBlur=12;
+  ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+
+function drawEmoji(emoji, x, y, size) {
+  ctx.font=`${size}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(emoji, x, y);
+}
+
+function render() {
+  ctx.clearRect(0,0,W,H);
+  drawScene(); drawGuide(); drawArrows(); drawTrace(); drawFingerHint();
+  const es=pathPoints[0], ee=pathPoints[pathPoints.length-1];
+  const sz=Math.min(54, W*0.072);
+  drawEmoji(cfg.startEmoji, es.x, es.y, sz);
+  drawEmoji(cfg.endEmoji,   ee.x, ee.y, sz);
+}
+
+/* ── Tracing state ───────────────────────────────────────────── */
+const HIT_RADIUS = 60;
+let tracedPts = [], frontier = 0, tracing = false, celebrated = false;
+const activePtr = new Map();
+
+function nearPath(cx, cy) {
+  const lo=Math.max(0,frontier-5), hi=Math.min(pathPoints.length-1, frontier+25);
+  for (let i=lo; i<=hi; i++) {
+    const dx=cx-pathPoints[i].x, dy=cy-pathPoints[i].y;
+    if (dx*dx+dy*dy < HIT_RADIUS*HIT_RADIUS) return i;
+  }
+  return -1;
+}
+
+function getLocal(e) {
+  const r = canvas.getBoundingClientRect();
+  return {x: e.clientX-r.left, y: e.clientY-r.top};
+}
+
+function onPointerDown(e) {
+  e.preventDefault();
+  const {x,y} = getLocal(e);
+  const near = nearPath(x,y);
+  if (near >= 0 || frontier > 5) {
+    tracing = true; activePtr.set(e.pointerId, {x,y});
+    if (frontier===0 && near>=0) frontier = near;
+    tracedPts.push({x,y}); render();
+  }
+}
+
+function onPointerMove(e) {
+  if (!tracing || !activePtr.has(e.pointerId)) return;
+  e.preventDefault();
+  const {x,y} = getLocal(e);
+  activePtr.set(e.pointerId, {x,y});
+  const near = nearPath(x,y);
+  if (near >= 0) {
+    if (near > frontier) frontier = near;
+    tracedPts.push({x,y});
+    const pct = Math.round(frontier / (pathPoints.length-1) * 100);
+    document.getElementById('progFill').style.width = pct + '%';
+    document.getElementById('progPct').textContent  = pct + '%';
+    if (pct >= 90 && !celebrated) { celebrated=true; setTimeout(showDone,400); }
+    render();
+  }
+}
+
+function onPointerUp(e) {
+  activePtr.delete(e.pointerId);
+  if (activePtr.size===0) tracing=false;
+}
+
+canvas.addEventListener('pointerdown',   onPointerDown, {passive:false});
+canvas.addEventListener('pointermove',   onPointerMove, {passive:false});
+canvas.addEventListener('pointerup',     onPointerUp);
+canvas.addEventListener('pointercancel', onPointerUp);
+
+function showDone() {
+  document.getElementById('statusLabel').textContent = '🎉 Brilliant! Path complete!';
+  setTimeout(startNewPath, 2800);
+}
+
+function startNewPath() {
+  // Generate a new random path using a new seed
+  tracedPts=[]; frontier=0; celebrated=false;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('progPct').textContent  = '0%';
+  document.getElementById('statusLabel').textContent = cfg.instrEn;
+  // Rebuild with a new random seed for variety
+  const newSeed = Math.floor(Math.random() * 900000) + 100000;
+  waypoints  = generateWaypoints(PATH_KEY, newSeed);
+  pathPoints = catmullSample(waypoints.map(p => ({x:p.x*W, y:p.y*H})), 300);
+  render();
+}
+
+/* ── Init ────────────────────────────────────────────────────── */
+PP.init();
+document.body.insertAdjacentHTML('beforeend', PP.toolbarHTML());
+
+// Apply config colours
+document.getElementById('topZone').style.background   = cfg.bgGrad;
+document.getElementById('sceneTitle').textContent     = cfg.titleEn;
+document.getElementById('sceneTitle').style.color     = cfg.titleColor;
+document.getElementById('progFill').style.background  = cfg.progColor;
+document.getElementById('progPct').style.color        = cfg.titleColor;
+document.getElementById('statusLabel').textContent    = cfg.instrEn;
+document.getElementById('statusLabel').style.color    = cfg.titleColor;
+
+function resize() {
+  const bz = document.querySelector('.bottom-zone').getBoundingClientRect();
+  W = canvas.width  = Math.round(bz.width);
+  H = canvas.height = Math.round(bz.height);
+  buildPath(); render();
+}
+
+window.addEventListener('resize', resize);
+resize();
+</script>
+</body>
+</html>

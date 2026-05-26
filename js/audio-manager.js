@@ -47,7 +47,17 @@ class AudioManager {
             '3d-viewer': 'idoberg-space-chords-loop',
             'video-360-player': 'jyproject-endless-shore-part2',
             'fruit-ninja': 'jyproject-endless-shore-part2-399386',
-            'rhythm-dance': 'jyproject-endless-shore-part2-399386'
+            'rhythm-dance': 'jyproject-endless-shore-part2-399386',
+
+            /* ── Pre-Primary games ───────────────────────────────── */
+            'pp-size-color':    'forest',
+            'pp-firefly-path':  'jyproject-endless-shore-part2-399386',
+            'pp-mosquito-clap': 'forest',
+            'pp-body-parts':    'forest',
+            'pp-fill-outline':  'colouring',
+            'pp-path-tracer':   'trace-it',
+            'pp-egg-count':     'jyproject-endless-shore-part2-399386',
+            'pp-block-stack':   'jyproject-endless-shore-part2-399386'
         };
     }
 

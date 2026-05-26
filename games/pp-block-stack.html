@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Block Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;
+  background:linear-gradient(160deg,#87CEEB 0%,#B0E0FF 35%,#D4EDA5 65%,#7EC850 100%)}
+
+/* TOP zone: sky decoration — no interaction */
+.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;pointer-events:none;z-index:2}
+.cloud-row{font-size:clamp(28px,5.5vw,56px);opacity:.5;letter-spacing:40px}
+.scene-title{font-size:clamp(20px,3.4vw,38px);font-weight:900;color:#4A235A;
+  text-shadow:0 2px 8px rgba(255,255,255,.6)}
+.count-badge{background:rgba(255,255,255,.55);backdrop-filter:blur(6px);
+  border:2px solid rgba(255,255,255,.7);border-radius:14px;
+  padding:7px 18px;font-weight:900;font-size:clamp(16px,2.5vw,28px);color:#4A235A}
+.status-label{font-size:clamp(13px,1.8vw,18px);font-weight:700;color:#5D4037;
+  background:rgba(255,255,255,.4);border-radius:12px;padding:4px 14px;text-align:center}
+
+/* BOTTOM zone: interactive build area */
+.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,#aaddff 0%,#D4EDA5 50%,#7EC850 100%);
+  z-index:5}
+
+/* Ground strip */
+.ground{position:fixed;left:0;right:0;bottom:16vh;height:14px;
+  background:linear-gradient(180deg,#8FCC5F,#5A9E2F);z-index:8}
+
+/* Build zone: column-reverse stacks blocks bottom-up */
+.build-zone{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:17vh;width:clamp(160px,26vw,300px);
+  z-index:10;display:flex;flex-direction:column-reverse;
+  align-items:center;gap:3px}
+
+.build-slot{
+  width:100%;height:clamp(36px,5.5vh,64px);
+  border:3px dashed rgba(100,80,40,.3);border-radius:8px;
+  background:rgba(255,255,255,.12);
+  transition:border-color .25s,background .25s;
+  display:flex;align-items:center;justify-content:center}
+.build-slot.active{border-color:rgba(100,80,40,.55);background:rgba(255,255,255,.22)}
+.build-slot.filled{border:none;background:transparent}
+
+/* Stacked block inside a slot */
+.stacked-block{
+  width:100%;height:clamp(36px,5.5vh,64px);border-radius:8px;
+  border:3px solid rgba(0,0,0,.18);
+  box-shadow:0 4px 12px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(18px,3.2vw,34px);
+  animation:blockDrop .35s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes blockDrop{0%{transform:scale(1.2) translateY(-20px);opacity:.5}100%{transform:scale(1);opacity:1}}
+
+/* Supply tray at bottom */
+.tray{
+  position:fixed;left:0;right:0;bottom:0;height:16vh;z-index:20;
+  background:rgba(255,255,255,.4);backdrop-filter:blur(8px);
+  border-top:2px solid rgba(255,255,255,.55);
+  display:flex;align-items:center;justify-content:center;
+  gap:clamp(6px,1.8vw,18px);padding:8px 16px}
+
+.block{
+  width:clamp(48px,8.5vw,90px);height:clamp(36px,6vh,68px);
+  border-radius:8px;border:3px solid rgba(0,0,0,.2);
+  box-shadow:0 4px 12px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.4);
+  cursor:grab;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(18px,3.2vw,34px);
+  -webkit-user-select:none;user-select:none;
+  transition:transform .15s,box-shadow .15s;
+  position:relative;z-index:25}
+.block.dragging{cursor:grabbing;transform:scale(1.14) rotate(3deg);
+  box-shadow:0 14px 32px rgba(0,0,0,.3);z-index:999;position:fixed}
+.block.used{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- TOP: sky decoration, no interaction -->
+<div class="top-zone">
+  <div class="cloud-row">☁️ ☁️ ☁️</div>
+  <div class="scene-title">🧱 Block Stack</div>
+  <div class="count-badge" id="countBadge">0 / 6 blocks</div>
+  <div class="status-label" id="statusLabel">Drag blocks up to stack them! 🏗️</div>
+</div>
+
+<!-- BOTTOM: interactive build area -->
+<div class="bottom-zone">
+  <div class="build-zone" id="buildZone"></div>
+  <div class="ground"></div>
+  <div class="tray" id="tray"></div>
+</div>
+
+<script src="../js/pre-primary-common.js"></script>
+<script src="../js/audio-manager.js"></script>
+<script>
+const GOAL = 6;
+const BLOCKS_CONFIG = [
+  {color:'#F44336',shadow:'#C62828',emoji:'🧱'},
+  {color:'#FF9800',shadow:'#E65100',emoji:'🟠'},
+  {color:'#FFEB3B',shadow:'#F57F17',emoji:'🟡'},
+  {color:'#4CAF50',shadow:'#1B5E20',emoji:'🟢'},
+  {color:'#2196F3',shadow:'#0D47A1',emoji:'🔵'},
+  {color:'#9C27B0',shadow:'#4A148C',emoji:'🟣'},
+];
+
+let stackCount = 0, celebrated = false;
+const slots = [];
+let audioCtx;
+
+function snapSound() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440 + stackCount * 55, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+  } catch(e) {}
+}
+
+function setup() {
+  stackCount = 0; celebrated = false;
+  const zone = document.getElementById('buildZone');
+  zone.innerHTML = ''; slots.length = 0;
+  for (let i = 0; i < GOAL; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'build-slot'; slot.dataset.idx = i;
+    zone.appendChild(slot);
+    slots.push({el: slot, filled: false});
+  }
+  const tray = document.getElementById('tray');
+  tray.innerHTML = '';
+  BLOCKS_CONFIG.forEach((bcfg, i) => {
+    const block = document.createElement('div');
+    block.className = 'block'; block.dataset.idx = i;
+    block.style.background = `linear-gradient(160deg,${bcfg.color},${bcfg.shadow})`;
+    block.textContent = bcfg.emoji;
+    attachDrag(block, bcfg);
+    tray.appendChild(block);
+  });
+  updateCount();
+}
+
+function attachDrag(block, bcfg) {
+  let isDragging = false, origParent, origNext, origStyle, ptrId = null;
+
+  function onDown(e) {
+    if (block.classList.contains('used')) return;
+    e.preventDefault();
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(ee){} }
+    isDragging = true; ptrId = e.pointerId;
+    block.setPointerCapture(ptrId);
+    block.classList.add('dragging');
+    origParent = block.parentNode; origNext = block.nextSibling; origStyle = block.style.cssText;
+    const r = block.getBoundingClientRect();
+    block.style.left = r.left + 'px'; block.style.top = r.top + 'px';
+    block.style.width = r.width + 'px'; block.style.height = r.height + 'px';
+    document.body.appendChild(block);
+  }
+
+  function onMove(e) {
+    if (!isDragging || e.pointerId !== ptrId) return;
+    e.preventDefault();
+    block.style.left = (e.clientX - block.offsetWidth / 2) + 'px';
+    block.style.top  = (e.clientY - block.offsetHeight / 2) + 'px';
+    const target = findDropSlot(e.clientX, e.clientY);
+    slots.forEach(s => s.el.classList.toggle('active', s === target && !s.filled));
+  }
+
+  function onUp(e) {
+    if (!isDragging || e.pointerId !== ptrId) return;
+    isDragging = false;
+    block.classList.remove('dragging');
+    slots.forEach(s => s.el.classList.remove('active'));
+    const drop = findDropSlot(e.clientX, e.clientY);
+    if (drop && !drop.filled) {
+      placeBlock(drop, bcfg, block);
+    } else {
+      block.style.cssText = origStyle;
+      origParent.insertBefore(block, origNext);
+    }
+  }
+
+  block.addEventListener('pointerdown',  onDown,  {passive:false});
+  block.addEventListener('pointermove',  onMove,  {passive:false});
+  block.addEventListener('pointerup',    onUp);
+  block.addEventListener('pointercancel',onUp);
+}
+
+function findDropSlot(cx, cy) {
+  const trayEl  = document.getElementById('tray');
+  const trayTop = trayEl.getBoundingClientRect().top;
+  const zoneTop = window.innerHeight * 0.46; // bottom zone starts here
+
+  for (let i = 0; i < slots.length; i++) {
+    const s = slots[i];
+    if (s.filled) continue;
+    // Require all lower slots filled first
+    if (slots.slice(0, i).some(b => !b.filled)) continue;
+    const inX = cx > window.innerWidth * 0.12 && cx < window.innerWidth * 0.88;
+    const inY = cy > zoneTop && cy < trayTop;
+    if (inX && inY) return s;
+  }
+  return null;
+}
+
+function placeBlock(slot, bcfg, blockEl) {
+  blockEl.style.cssText = ''; blockEl.classList.add('used');
+  const sb = document.createElement('div');
+  sb.className = 'stacked-block';
+  sb.style.background = `linear-gradient(160deg,${bcfg.color},${bcfg.shadow})`;
+  sb.textContent = bcfg.emoji;
+  slot.el.classList.add('filled'); slot.el.innerHTML = '';
+  slot.el.appendChild(sb); slot.filled = true;
+  snapSound(); stackCount++; updateCount();
+  if (stackCount >= GOAL && !celebrated) { celebrated = true; setTimeout(showDone, 500); }
+}
+
+function updateCount() {
+  document.getElementById('countBadge').textContent = `${stackCount} / ${GOAL} blocks`;
+}
+
+function showDone() {
+  document.getElementById('statusLabel').textContent = '🏠 You built it! Amazing stacking!';
+  document.getElementById('countBadge').textContent  = `${GOAL} / ${GOAL} ✨ Complete!`;
+  setTimeout(resetGame, 3500);
+}
+
+function resetGame() {
+  document.getElementById('statusLabel').textContent = 'Drag blocks up to stack them! 🏗️';
+  setup();
+}
+
+PP.init();
+document.body.insertAdjacentHTML('beforeend', PP.toolbarHTML());
+setup();
+</script>
+</body>
+</html>

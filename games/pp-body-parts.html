@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Body Parts Explorer</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif}
+
+/* TOP zone: 3D model display — no interaction */
+.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
+  display:flex;flex-direction:column;align-items:center;
+  pointer-events:none;z-index:2;overflow:hidden}
+.title-label{padding:10px 20px;font-size:clamp(15px,2.4vw,26px);
+  font-weight:900;text-align:center;text-shadow:0 2px 8px rgba(255,255,255,.5)}
+.viewer-inner{flex:1;width:100%;display:flex;align-items:center;justify-content:center}
+model-viewer.pp-viewer{width:100%;height:100%;--poster-color:transparent;background:transparent}
+
+/* Emoji placeholder (when no 3D model) */
+.model-placeholder{width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.ph-emoji{font-size:clamp(72px,16vw,160px);animation:phSpin 6s ease-in-out infinite}
+@keyframes phSpin{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.08)}}
+.ph-sub{font-size:clamp(13px,1.8vw,20px);font-weight:700;text-align:center;opacity:.7}
+
+/* BOTTOM zone: interactive part buttons */
+.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;z-index:5;
+  background:rgba(255,255,255,.3);backdrop-filter:blur(8px);
+  border-top:2px solid rgba(255,255,255,.5);
+  display:flex;flex-wrap:wrap;align-content:center;
+  gap:8px;justify-content:center;padding:10px 14px 14px;overflow-y:auto}
+
+.part-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 14px;border-radius:16px;cursor:pointer;
+  border:2px solid rgba(21,101,192,.3);
+  background:rgba(255,255,255,.55);
+  min-width:clamp(68px,11vw,106px);
+  transition:all .25s;-webkit-user-select:none;user-select:none}
+.part-btn:active{transform:scale(.92)}
+.part-btn.active{
+  background:linear-gradient(135deg,#1565C0,#1976D2);
+  border-color:#1565C0;
+  transform:scale(1.1) translateY(-4px);
+  box-shadow:0 8px 22px rgba(21,101,192,.4)}
+.part-btn.active .part-btn-en{color:#fff}
+.part-btn-icon{font-size:clamp(22px,4vw,38px);line-height:1}
+.part-btn-en{font-size:clamp(10px,1.5vw,14px);font-weight:900;color:#1565C0;text-align:center}
+
+/* Floating popup */
+.part-popup{position:fixed;pointer-events:none;z-index:300;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  animation:partPop .8s ease-out forwards}
+@keyframes partPop{
+  0%  {transform:translate(-50%,-20px) scale(.4);opacity:1}
+  45% {transform:translate(-50%,-70px) scale(1.15);opacity:1}
+  100%{transform:translate(-50%,-130px) scale(.9);opacity:0}}
+.part-popup .pp-icon{font-size:clamp(36px,7vw,68px)}
+.part-popup .pp-name{font-size:clamp(16px,2.8vw,30px);font-weight:900;
+  white-space:nowrap;text-shadow:0 2px 8px rgba(255,255,255,.8)}
+</style>
+</head>
+<body>
+
+<!-- TOP: model display, no interaction -->
+<div class="top-zone" id="topZone">
+  <div class="title-label" id="titleLabel">🐘 Body Parts</div>
+  <div class="viewer-inner" id="viewerInner"></div>
+</div>
+
+<!-- BOTTOM: interactive part buttons -->
+<div class="bottom-zone" id="partsGrid"></div>
+
+<script src="../js/audio-manager.js"></script>
+<script src="../js/pre-primary-common.js"></script>
+<script>
+const ANIMALS = {
+  elephant:{
+    titleEn:'🐘 Elephant Body Parts',
+    model:'../3dmodels/elephant__gajah.glb',
+    orbit:'20deg 80deg 2.8m',
+    bg:'linear-gradient(160deg,#E8F5E9,#C8E6C9,#A5D6A7)',
+    titleColor:'#1B5E20',
+    parts:[
+      {en:'Trunk',icon:'🥜'},{en:'Ears',  icon:'👂'},{en:'Tusks',icon:'🦷'},
+      {en:'Legs', icon:'🦵'},{en:'Tail',  icon:'〰️'},{en:'Eyes', icon:'👁️'},{en:'Back', icon:'⬛'},
+    ]
+  },
+  rabbit:{
+    titleEn:'🐰 Rabbit Body Parts',
+    model:'../3dmodels/rabbit.glb',
+    orbit:'0deg 72deg 2m',
+    bg:'linear-gradient(160deg,#FFF3E0,#FFE0B2,#FFCC80)',
+    titleColor:'#E65100',
+    parts:[
+      {en:'Ears',icon:'👂'},{en:'Eyes',icon:'👁️'},
+      {en:'Nose',icon:'👃'},{en:'Tail',icon:'〰️'},
+      {en:'Paws',icon:'🐾'},{en:'Fur', icon:'✨'},
+    ]
+  },
+  turtle:{
+    titleEn:'🐢 Turtle Body Parts',
+    model:null,
+    orbit:'0deg 78deg 2.5m',
+    bg:'linear-gradient(160deg,#E0F2F1,#B2DFDB,#80CBC4)',
+    titleColor:'#00695C',
+    parts:[
+      {en:'Shell',icon:'🟢'},{en:'Head',icon:'🔵'},
+      {en:'Legs', icon:'🦵'},{en:'Tail',icon:'〰️'},{en:'Eyes',icon:'👁️'},
+    ]
+  }
+};
+
+const ANIMAL = PP.param('animal') || 'elephant';
+const cfg    = ANIMALS[ANIMAL] || ANIMALS.elephant;
+
+document.body.style.background = cfg.bg;
+document.getElementById('topZone').style.background = cfg.bg;
+document.getElementById('titleLabel').textContent = cfg.titleEn;
+document.getElementById('titleLabel').style.color  = cfg.titleColor;
+
+function resolveModelPath(rel) {
+  if (typeof process !== 'undefined' && process.versions && process.versions.electron) {
+    try {
+      const path = require('path');
+      const fs   = require('fs');
+      const appPath = path.dirname(__dirname);
+      const normal  = path.join(appPath, rel.replace(/^\.\.\//, ''));
+      const unp     = normal.replace('app.asar', 'app.asar.unpacked');
+      if (fs.existsSync(unp))    return 'file://' + unp.replace(/\\/g, '/');
+      if (fs.existsSync(normal)) return 'file://' + normal.replace(/\\/g, '/');
+    } catch(e) {}
+  }
+  return rel;
+}
+
+const viewerInner = document.getElementById('viewerInner');
+if (cfg.model) {
+  const src = resolveModelPath(cfg.model);
+  const mv  = document.createElement('model-viewer');
+  mv.className = 'pp-viewer';
+  mv.setAttribute('src',               src);
+  mv.setAttribute('auto-rotate',       '');
+  mv.setAttribute('shadow-intensity',  '0.8');
+  mv.setAttribute('exposure',          '1.4');
+  mv.setAttribute('environment-image', 'neutral');
+  mv.setAttribute('camera-orbit',      cfg.orbit);
+  mv.setAttribute('tone-mapping',      'commerce');
+  viewerInner.appendChild(mv);
+} else {
+  const icon = ANIMAL === 'turtle' ? '🐢' : ANIMAL === 'rabbit' ? '🐰' : '🐘';
+  const wrap = document.createElement('div');
+  wrap.className = 'model-placeholder';
+  wrap.innerHTML = `<div class="ph-emoji">${icon}</div>
+    <div class="ph-sub" style="color:${cfg.titleColor}">Tap the buttons to explore!</div>`;
+  viewerInner.appendChild(wrap);
+}
+
+PP.init();
+document.body.insertAdjacentHTML('beforeend', PP.toolbarHTML());
+
+const grid = document.getElementById('partsGrid');
+let activeBtn = null;
+
+cfg.parts.forEach((part, i) => {
+  const btn = document.createElement('div');
+  btn.className   = 'part-btn';
+  btn.dataset.idx = i;
+  btn.innerHTML   = `<span class="part-btn-icon">${part.icon}</span>
+    <span class="part-btn-en">${part.en}</span>`;
+  PP.bindTouch(btn, () => tapPart(btn, part));
+  grid.appendChild(btn);
+});
+
+function tapPart(btn, part) {
+  if (activeBtn === btn) {
+    btn.classList.remove('active');
+    activeBtn = null;
+    return;
+  }
+  if (activeBtn) activeBtn.classList.remove('active');
+  btn.classList.add('active');
+  activeBtn = btn;
+
+  // Floating word popup
+  const rect = btn.getBoundingClientRect();
+  const popup = document.createElement('div');
+  popup.className = 'part-popup';
+  popup.style.left = (rect.left + rect.width / 2) + 'px';
+  popup.style.top  = rect.top + 'px';
+  popup.innerHTML  = `<span class="pp-icon">${part.icon}</span>
+    <span class="pp-name" style="color:${cfg.titleColor}">${part.en}</span>`;
+  document.body.appendChild(popup);
+  popup.addEventListener('animationend', () => popup.remove());
+}
+</script>
+</body>
+</html>

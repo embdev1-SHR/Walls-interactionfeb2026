@@ -59,6 +59,42 @@ const CATEGORIES = {
     'money-counter': {
         title: 'Money Shop',
         game: 'money-counter'
+    },
+
+    /* ══════════════════════════════════════════════════
+       PRE-PRIMARY  (Modules 2 & 3)
+       ══════════════════════════════════════════════════ */
+    'pre-primary': {
+        title: 'Pre-Primary',
+        subcategories: [
+            { name: 'Module 2', key: 'pp-module-2' },
+            { name: 'Module 3', key: 'pp-module-3' }
+        ]
+    },
+    'pp-module-2': {
+        title: 'Module 2',
+        parent: 'pre-primary',
+        options: [
+            { name: 'Big / Small / Green',   game: 'pp-size-color' },
+            { name: 'Firefly Path',          game: 'pp-firefly-path' },
+            { name: 'Mosquito Clap',         game: 'pp-mosquito-clap' },
+            { name: 'Elephant Parts',        game: 'pp-parts-elephant' },
+            { name: 'Rabbit Parts',          game: 'pp-parts-rabbit' },
+            { name: 'Turtle Parts',          game: 'pp-parts-turtle' },
+            { name: 'Rabbit Fill',           game: 'pp-fill-rabbit' },
+            { name: 'Parrot Path',           game: 'pp-path-parrot' },
+            { name: 'Turtle Path',           game: 'pp-path-turtle' }
+        ]
+    },
+    'pp-module-3': {
+        title: 'Module 3',
+        parent: 'pre-primary',
+        options: [
+            { name: '1-2-3 Egg Tap',   game: 'pp-egg-count' },
+            { name: 'Block Stack',     game: 'pp-block-stack' },
+            { name: 'Crow Fill',       game: 'pp-fill-crow' },
+            { name: 'Crow Path',       game: 'pp-path-crow' }
+        ]
     }
 };
 
@@ -109,7 +145,15 @@ gameCards.forEach(card => {
     });
 });
 
+function _isPpCategory(key) {
+    return key === 'pre-primary' || key === 'pp-module-2' || key === 'pp-module-3';
+}
+
 function handleOptionTap(option) {
+    // Placeholder games: stay in submenu, do nothing at all
+    const PLACEHOLDER_GAMES = ['pp-parts-elephant','pp-parts-rabbit','pp-parts-turtle','pp-fill-rabbit','pp-fill-crow'];
+    if (PLACEHOLDER_GAMES.includes(option.game)) return;
+
     playSound('click');
     closeSubmenu();
     setTimeout(() => loadGame(option.game), 300);
@@ -119,65 +163,73 @@ function showSubmenu(categoryName) {
     const category = CATEGORIES[categoryName];
     if (!category) return;
 
-    const overlay = document.getElementById('submenu-overlay');
-    const title = document.getElementById('submenu-title');
-    const optionsContainer = document.getElementById('submenu-options');
+    const overlay   = document.getElementById('submenu-overlay');
+    const box       = document.getElementById('submenu-box');
+    const titleEl   = document.getElementById('submenu-title');
+    const optsCont  = document.getElementById('submenu-options');
+    const ispp      = _isPpCategory(categoryName);
 
-    title.textContent = category.title;
-    optionsContainer.innerHTML = '';
+    titleEl.textContent = category.title;
+    optsCont.innerHTML  = '';
 
+    // Wide 3-col grid for PP option pages; narrow list for everything else
+    if (ispp && category.options) {
+        box.classList.add('pp-grid');
+    } else {
+        box.classList.remove('pp-grid');
+    }
+
+    // \u2500\u2500 Back button \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.parent) {
         const backEl = document.createElement('div');
         backEl.className = 'submenu-option';
-        backEl.style.background = 'linear-gradient(135deg, #fef3c7, #fde68a)';
-        backEl.style.borderColor = '#f59e0b';
-        backEl.textContent = '\u2190 Back';
-        backEl.addEventListener('click', (e) => {
-            if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+        backEl.style.background   = 'linear-gradient(135deg, #fef3c7, #fde68a)';
+        backEl.style.borderColor  = '#f59e0b';
+        backEl.textContent        = '\u2190 Back';
+        const goBack = (e) => {
+            if (e.type === 'click' && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+            if (e.type === 'touchend') e.preventDefault();
             playSound('click');
             showSubmenu(category.parent);
-        });
-        backEl.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            playSound('click');
-            showSubmenu(category.parent);
-        });
-        optionsContainer.appendChild(backEl);
+        };
+        backEl.addEventListener('click',    goBack);
+        backEl.addEventListener('touchend', goBack);
+        optsCont.appendChild(backEl);
     }
 
+    // \u2500\u2500 Subcategory buttons \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.subcategories) {
         category.subcategories.forEach(sub => {
             const subEl = document.createElement('div');
-            subEl.className = 'submenu-option';
+            subEl.className   = 'submenu-option';
             subEl.textContent = sub.name;
-            subEl.addEventListener('click', (e) => {
-                if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+            const goSub = (e) => {
+                if (e.type === 'click' && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                if (e.type === 'touchend') e.preventDefault();
                 playSound('click');
                 showSubmenu(sub.key);
-            });
-            subEl.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                playSound('click');
-                showSubmenu(sub.key);
-            });
-            optionsContainer.appendChild(subEl);
+            };
+            subEl.addEventListener('click',    goSub);
+            subEl.addEventListener('touchend', goSub);
+            optsCont.appendChild(subEl);
         });
     }
 
+    // \u2500\u2500 Option buttons \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.options) {
         category.options.forEach(option => {
-            const optionEl = document.createElement('div');
-            optionEl.className = 'submenu-option';
-            optionEl.textContent = option.name;
-            optionEl.addEventListener('click', (e) => {
-                if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+            option._parentKey = categoryName; // tag for routing
+            const optEl = document.createElement('div');
+            optEl.className   = 'submenu-option';
+            optEl.textContent = option.name;
+            const goOpt = (e) => {
+                if (e.type === 'click' && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                if (e.type === 'touchend') e.preventDefault();
                 handleOptionTap(option);
-            });
-            optionEl.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                handleOptionTap(option);
-            });
-            optionsContainer.appendChild(optionEl);
+            };
+            optEl.addEventListener('click',    goOpt);
+            optEl.addEventListener('touchend', goOpt);
+            optsCont.appendChild(optEl);
         });
     }
 
@@ -216,6 +268,13 @@ document.getElementById('submenu-overlay').addEventListener('touchend', (e) => {
 });
 
 function loadGame(gameName) {
+    // Placeholder games — keep as visible buttons but do nothing when tapped
+    const PLACEHOLDER_GAMES = [
+        'pp-parts-elephant', 'pp-parts-rabbit', 'pp-parts-turtle',
+        'pp-fill-rabbit', 'pp-fill-crow'
+    ];
+    if (PLACEHOLDER_GAMES.includes(gameName)) return;
+
     const mainMenu = document.getElementById('main-menu');
     const menuAudio = document.getElementById('menu-audio');
 
@@ -347,6 +406,24 @@ function loadGame(gameName) {
             case 'video-360-player':
                 window.location.href = 'games/video-360-player.html';
                 break;
+            /* ── Pre-Primary — routed through player-selector ─── */
+            case 'pp-size-color':
+                window.location.href = 'games/pp-multiplayer.html?src=' + encodeURIComponent('pp-size-color.html'); break;
+            /* bird path games — auto 3-player split with different procedural seeds */
+            case 'pp-firefly-path':
+                window.location.href = 'games/pp-multiplayer.html?auto=3&src=' + encodeURIComponent('pp-firefly-path.html'); break;
+            case 'pp-path-parrot':
+                window.location.href = 'games/pp-multiplayer.html?auto=3&src=' + encodeURIComponent('pp-path-tracer.html?path=parrot'); break;
+            case 'pp-path-turtle':
+                window.location.href = 'games/pp-multiplayer.html?auto=3&src=' + encodeURIComponent('pp-path-tracer.html?path=turtle'); break;
+            case 'pp-path-crow':
+                window.location.href = 'games/pp-multiplayer.html?auto=3&src=' + encodeURIComponent('pp-path-tracer.html?path=crow'); break;
+            case 'pp-mosquito-clap':
+                window.location.href = 'games/pp-multiplayer.html?src=' + encodeURIComponent('pp-mosquito-clap.html'); break;
+            case 'pp-egg-count':
+                window.location.href = 'games/pp-multiplayer.html?src=' + encodeURIComponent('pp-egg-count.html'); break;
+            case 'pp-block-stack':
+                window.location.href = 'games/pp-multiplayer.html?src=' + encodeURIComponent('pp-block-stack.html'); break;
             default:
                 console.log('Game not found:', gameName);
                 mainMenu.style.display = 'block';

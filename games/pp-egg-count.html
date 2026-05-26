@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>1-2-3 Egg Tap</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;
+  background:linear-gradient(180deg,#87CEEB 0%,#B0E8B0 45%,#4CAF50 100%)}
+
+/* TOP: decorative sky scene — no interaction */
+.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:12px;pointer-events:none;z-index:2}
+.scene-title{font-size:clamp(22px,3.8vw,42px);font-weight:900;color:#fff;
+  text-shadow:0 3px 10px rgba(0,0,0,.3);text-align:center}
+.scene-birds{font-size:clamp(28px,5vw,52px);opacity:.7;letter-spacing:20px;margin-bottom:6px}
+.progress-bar-wrap{width:clamp(180px,40vw,340px);
+  background:rgba(255,255,255,.3);border-radius:20px;height:14px;
+  overflow:hidden;border:2px solid rgba(255,255,255,.5);margin-top:10px}
+.progress-bar{height:100%;background:linear-gradient(90deg,#FFD700,#FF8C00);
+  border-radius:20px;width:0%;transition:width .5s ease}
+.progress-text{font-size:clamp(13px,1.9vw,20px);font-weight:700;
+  color:rgba(255,255,255,.95);margin-top:6px}
+
+/* BOTTOM: all interactive — eggs + nest + buttons */
+.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,#5DBB5D 0%,#3A8C3A 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(14px,2.5vh,28px);z-index:5;
+  padding:16px 20px 20px}
+
+/* Nest + eggs */
+.nest-area{position:relative;display:flex;align-items:flex-end;justify-content:center;
+  gap:clamp(14px,3.5vw,50px);padding:0 20px 30px}
+.nest-bg{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:calc(100% + 70px);height:50px;
+  background:radial-gradient(ellipse at 50% 75%,#8B6914 0%,#5C4008 55%,transparent 85%);
+  border-radius:50%;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+
+.egg-wrap{position:relative;z-index:2;display:flex;flex-direction:column;
+  align-items:center;gap:4px;cursor:pointer;
+  -webkit-user-select:none;user-select:none;transition:transform .15s}
+.egg-wrap:active{transform:scale(.88)}
+.egg{font-size:clamp(64px,11vw,110px);line-height:1;
+  transition:filter .3s,transform .25s;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+.egg-wrap.tapped .egg{
+  animation:eggGlow 1.8s ease-in-out infinite;transform:translateY(-10px) scale(1.08)}
+@keyframes eggGlow{
+  0%,100%{filter:drop-shadow(0 0 14px #FFD700) drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+  50%    {filter:drop-shadow(0 0 36px #FFE066) drop-shadow(0 0 22px #FFD700)}}
+.egg-label{font-size:clamp(18px,3vw,32px);font-weight:900;color:#fff;
+  text-shadow:0 2px 7px rgba(0,0,0,.5);text-align:center;
+  opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s}
+.egg-wrap.tapped .egg-label{opacity:1;transform:translateY(0)}
+
+/* Buttons row */
+.btn-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.game-btn{padding:12px 28px;border-radius:22px;border:2px solid rgba(255,255,255,.6);
+  background:rgba(255,255,255,.25);backdrop-filter:blur(6px);
+  color:#fff;font-weight:900;font-size:clamp(14px,2vw,18px);
+  cursor:pointer;font-family:inherit;transition:all .25s}
+.game-btn:hover{background:rgba(255,255,255,.38);transform:scale(1.06)}
+.game-btn:active{transform:scale(.94)}
+</style>
+</head>
+<body>
+
+<!-- TOP: display only -->
+<div class="top-zone">
+  <div class="scene-birds">🌤️ &nbsp; 🐦 &nbsp; 🌤️</div>
+  <div class="scene-title">🥚 1 · 2 · 3 Egg Tap</div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="progress-text" id="progressText">Tap each egg!</div>
+</div>
+
+<!-- BOTTOM: all interactive -->
+<div class="bottom-zone">
+  <div class="nest-area" id="nestArea">
+    <div class="nest-bg"></div>
+    <div class="egg-wrap" id="egg1">
+      <div class="egg">🥚</div>
+      <div class="egg-label">1 · ONE</div>
+    </div>
+    <div class="egg-wrap" id="egg2">
+      <div class="egg">🥚</div>
+      <div class="egg-label">2 · TWO</div>
+    </div>
+    <div class="egg-wrap" id="egg3">
+      <div class="egg">🥚</div>
+      <div class="egg-label">3 · THREE</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="game-btn" id="btnHearAll">🔊 Hear All</button>
+    <button class="game-btn" id="btnReset">↺ Try Again</button>
+  </div>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/audio-manager.js"></script>
+<script src="../js/pre-primary-common.js"></script>
+<script>
+const ML_WAV = {
+  1:   new Audio('../assets/Audio/ഒന്ന്.wav'),
+  2:   new Audio('../assets/Audio/രണ്ട്.wav'),
+  3:   new Audio('../assets/Audio/മൂന്ന്.wav'),
+  all: new Audio('../assets/Audio/ഒന്ന് രണ്ട് മൂന്ന് ന.wav')
+};
+Object.values(ML_WAV).forEach(a => a.load());
+
+const EN_WORDS = ['','ONE','TWO','THREE'];
+let tapped = new Set();
+
+PP.init();
+document.body.insertAdjacentHTML('beforeend', PP.toolbarHTML());
+
+function playNum(n) {
+  const a = ML_WAV[n];
+  if (a) { a.currentTime = 0; a.play().catch(() => {}); }
+  TTSEngine.speak(String(n), 'en', EN_WORDS[n]);
+}
+
+function playAll() {
+  const a = ML_WAV.all;
+  if (a) { a.currentTime = 0; a.play().catch(() => {}); }
+}
+
+function updateProgress() {
+  const n = tapped.size;
+  document.getElementById('progressBar').style.width = (n/3*100)+'%';
+  document.getElementById('progressText').textContent =
+    n === 0 ? 'Tap each egg! 🐣' :
+    n < 3   ? `${n} / 3 eggs tapped ✓` :
+              'All three eggs! 🌟';
+}
+
+function tapEgg(num) {
+  const wrap = document.getElementById('egg'+num);
+  wrap.style.transform = 'scale(1.22) translateY(-14px)';
+  setTimeout(() => { wrap.style.transform = ''; }, 230);
+  playNum(num);
+  tapped.add(num);
+  wrap.classList.add('tapped');
+  updateProgress();
+}
+
+function resetGame() {
+  tapped.clear();
+  [1,2,3].forEach(n => document.getElementById('egg'+n).classList.remove('tapped'));
+  updateProgress();
+}
+
+PP.bindTouch(document.getElementById('btnHearAll'), playAll);
+PP.bindTouch(document.getElementById('btnReset'),   resetGame);
+[1,2,3].forEach(n => PP.bindTouch(document.getElementById('egg'+n), () => tapEgg(n)));
+updateProgress();
+</script>
+</body>
+</html>
