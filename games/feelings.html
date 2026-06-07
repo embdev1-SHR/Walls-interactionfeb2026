@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Feelings Finder</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    background: radial-gradient(ellipse at 25% 20%, #5b21b6 0%, #3730a3 30%, #1e1b4b 60%, #0c0a1e 100%) fixed;
+    overflow:hidden; touch-action:none; user-select:none;
+    font-family:'Comic Sans MS','Chalkboard SE',cursive;
+  }
+  body::before{
+    content:''; position:fixed; inset:0;
+    background: radial-gradient(circle at 75% 30%, rgba(244,114,182,.12) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(167,139,250,.14) 0%, transparent 45%),
+                radial-gradient(circle at 55% 55%, rgba(251,191,36,.05) 0%, transparent 40%);
+    pointer-events:none; z-index:0;
+  }
+
+  /* ── MODAL ── */
+  #modal{
+    position:fixed; inset:0; z-index:500;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(5,25,5,.88);
+  }
+  #modal.off{ display:none; }
+  .modal-card{
+    background:rgba(8,40,8,.96); border:2px solid rgba(52,211,153,.45);
+    border-radius:28px; padding:48px 64px;
+    backdrop-filter:blur(20px); text-align:center; color:#a7f3d0;
+  }
+  .modal-card h1{ font-size:50px; margin-bottom:10px; }
+  .modal-card p { font-size:18px; opacity:.85; margin-bottom:32px; line-height:1.6; }
+  .modal-btns{ display:flex; gap:28px; justify-content:center; }
+  .m-btn{
+    background:rgba(52,211,153,.15); border:2px solid #34d399;
+    border-radius:18px; color:#a7f3d0;
+    font-size:19px; font-weight:bold; font-family:inherit;
+    padding:16px 36px; cursor:pointer; touch-action:auto;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    transition:transform .12s, background .12s;
+  }
+  .m-btn span{ font-size:44px; }
+  .m-btn:active{ transform:scale(.94); background:rgba(52,211,153,.32); }
+
+  /* ── HUD ── */
+  #hud{
+    position:fixed; top:0; left:0; right:0; height:50px; z-index:40;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 24px;
+    background:rgba(0,18,4,.7); backdrop-filter:blur(10px);
+    border-bottom:1.5px solid rgba(52,211,153,.25);
+  }
+  #hud.off{ display:none; }
+  #round-pill{
+    background:rgba(0,36,8,.8); border:1.5px solid rgba(52,211,153,.5);
+    border-radius:20px; padding:5px 20px;
+    color:#a7f3d0; font-size:17px; font-weight:bold; white-space:nowrap;
+  }
+  #side-ctrl{
+    position:fixed; right:0; top:50%; transform:translateY(-50%);
+    z-index:100; display:flex; flex-direction:column; gap:10px;
+    background:rgba(0,36,8,.9); border:1.5px solid rgba(52,211,153,.4);
+    border-radius:14px 0 0 14px; padding:14px 10px;
+    backdrop-filter:blur(10px);
+  }
+  .sc-btn{
+    background:rgba(52,211,153,.15); border:1.5px solid rgba(52,211,153,.45);
+    border-radius:10px; color:#a7f3d0;
+    font-size:13px; font-weight:bold; font-family:inherit;
+    padding:10px 10px; cursor:pointer; touch-action:auto;
+    text-align:center; line-height:1.4; min-width:54px;
+    transition:background .15s, transform .1s;
+  }
+  .sc-btn:active{ background:rgba(52,211,153,.35); transform:scale(.93); }
+
+  /* ── GRID ── */
+  #grid{
+    position:fixed; top:50px; left:0; right:0; bottom:0;
+    display:none; z-index:5;
+  }
+  #grid.p1{ display:grid; grid-template-columns:1fr; }
+  #grid.p3{ display:grid; grid-template-columns:1fr 1fr 1fr; }
+
+  /* ── PANEL ── */
+  .panel{
+    position:relative; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:56px 22px 24px;
+    border-right:2px solid rgba(52,211,153,.18);
+    overflow:hidden; gap:4px;
+  }
+  .panel:last-child{ border-right:none; }
+  .panel.off{ display:none !important; }
+
+  /* colour pulse overlay */
+  .panel-pulse{
+    position:absolute; inset:0; pointer-events:none; opacity:0;
+    transition:opacity .15s; z-index:1;
+  }
+  .panel.good .panel-pulse{ background:rgba(52,211,153,.32); opacity:1; }
+  .panel.bad  .panel-pulse{ background:rgba(248,113,113,.3);  opacity:1; }
+
+  /* ── SCORE BADGE ── */
+  .score-badge{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    background:rgba(0,36,8,.78); border:1.5px solid rgba(52,211,153,.4);
+    border-radius:18px; padding:4px 18px;
+    color:#a7f3d0; font-size:15px; font-weight:bold; z-index:3;
+    white-space:nowrap;
+  }
+
+  /* ── EMOTION WORD ── */
+  .emo-word{
+    font-size:clamp(38px,4.8vw,70px); font-weight:bold;
+    text-align:center; letter-spacing:5px;
+    text-shadow:0 3px 14px rgba(0,0,0,.6);
+    transition:color .3s; z-index:2;
+    margin-top:4px;
+  }
+  .emo-ml{
+    font-size:clamp(18px,2.2vw,28px); text-align:center;
+    color:rgba(255,255,255,.55); letter-spacing:2px;
+    margin-bottom:20px; z-index:2;
+  }
+  .emo-hint{
+    font-size:13px; color:rgba(255,255,255,.38);
+    letter-spacing:.5px; margin-bottom:12px; z-index:2;
+  }
+
+  /* ── EMOJI GRID ── */
+  .emo-grid{
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:clamp(10px,1.4vw,18px);
+    width:100%; max-width:360px; z-index:2;
+  }
+  .emo-btn{
+    aspect-ratio:1; border-radius:20px;
+    background:rgba(255,255,255,.1);
+    border:2.5px solid rgba(255,255,255,.22);
+    font-size:clamp(48px,6.5vw,82px);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; touch-action:auto; pointer-events:all;
+    transition:transform .1s, background .15s, border-color .15s;
+    line-height:1;
+  }
+  .emo-btn:active{ transform:scale(.86); }
+  .emo-btn.pop{
+    background:rgba(52,211,153,.38); border-color:#34d399;
+    animation:btnPop .42s cubic-bezier(.3,0,.1,1);
+  }
+  .emo-btn.shake{
+    background:rgba(248,113,113,.22); border-color:#f87171;
+    animation:btnShake .34s ease;
+  }
+  @keyframes btnPop{
+    0%{ transform:scale(1); }
+    40%{ transform:scale(1.28); }
+    70%{ transform:scale(.9); }
+    100%{ transform:scale(1); }
+  }
+  @keyframes btnShake{
+    0%,100%{ transform:translateX(0); }
+    22%{ transform:translateX(-13px); }
+    44%{ transform:translateX(13px); }
+    66%{ transform:translateX(-7px); }
+    88%{ transform:translateX(7px); }
+  }
+
+  /* ── CORRECT OVERLAY ── */
+  .done-overlay{
+    position:absolute; inset:0; z-index:10;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px;
+    background:rgba(4,28,8,.84); backdrop-filter:blur(6px);
+    opacity:0; pointer-events:none; transition:opacity .3s;
+  }
+  .done-overlay.show{ opacity:1; pointer-events:all; }
+  .done-star{ font-size:96px; animation:starPop .6s cubic-bezier(.3,0,.1,1); }
+  .done-label{
+    font-size:30px; font-weight:bold; color:#FFD700;
+    text-shadow:2px 2px 0 #333;
+    animation:starPop .6s .05s cubic-bezier(.3,0,.1,1) both;
+  }
+  @keyframes starPop{
+    0%  { transform:scale(0) rotate(-180deg); opacity:0; }
+    60% { transform:scale(1.3) rotate(12deg); opacity:1; }
+    100%{ transform:scale(1)   rotate(0deg);  opacity:1; }
+  }
+
+  /* ── SPARKLES ── */
+  .spark{
+    position:fixed; width:11px; height:11px; border-radius:50%;
+    pointer-events:none; z-index:200;
+    animation:sf .55s ease-out forwards;
+  }
+  @keyframes sf{
+    0%  { transform:translate(0,0) scale(1.3); opacity:1; }
+    100%{ transform:translate(var(--tx),var(--ty)) scale(0); opacity:0; }
+  }
+
+  /* ── GAME OVER ── */
+  #gameover{
+    position:fixed; inset:0; z-index:600;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px; background:rgba(4,20,4,.92); backdrop-filter:blur(18px);
+  }
+  #gameover.show{ display:flex; }
+  .go-title{ font-size:48px; color:#a7f3d0; font-weight:bold; text-shadow:2px 2px 0 #000; }
+  .scores-row{ display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
+  .go-card{
+    background:rgba(8,40,8,.95); border:2px solid rgba(52,211,153,.45);
+    border-radius:24px; padding:30px 40px; text-align:center; color:#a7f3d0;
+    min-width:200px;
+  }
+  .go-card .go-player{ font-size:16px; opacity:.65; margin-bottom:6px; }
+  .go-card .go-score{ font-size:74px; font-weight:bold; color:#FFD700; line-height:1; }
+  .go-card .go-grade{ font-size:20px; margin-top:8px; }
+  .go-btns{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+  .go-btn{
+    background:rgba(52,211,153,.18); border:2px solid #34d399;
+    border-radius:16px; color:#a7f3d0;
+    font-size:19px; font-weight:bold; font-family:inherit;
+    padding:12px 34px; cursor:pointer; touch-action:auto;
+    transition:transform .12s, background .12s;
+  }
+  .go-btn:active{ transform:scale(.95); background:rgba(52,211,153,.35); }
+  .go-btn.sec{ background:transparent; border-color:rgba(52,211,153,.3); font-size:15px; padding:10px 22px; }
+</style>
+</head>
+<body>
+
+<!-- ── MODAL ── -->
+<div id="modal">
+  <div class="modal-card">
+    <h1>😊 Feelings Finder</h1>
+    <p>See the <strong>emotion word</strong> — tap the <strong>matching emoji!</strong><br>
+       വികാരം കണ്ടുപിടിക്കൂ!</p>
+    <div class="modal-btns">
+      <button class="m-btn" id="btn1p"><span>👤</span>1 Player</button>
+      <button class="m-btn" id="btn3p"><span>👥</span>3 Players</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HUD ── -->
+<div id="hud" class="off">
+  <div id="round-pill">Round 1 of 10</div>
+</div>
+
+<div id="side-ctrl">
+  <button class="sc-btn" onclick="location.href='../index.html'">🔙<br>Menu</button>
+</div>
+
+<!-- ── GAME GRID ── -->
+<div id="grid">
+  <div id="p0" class="panel">
+    <div class="panel-pulse"></div>
+    <div class="score-badge" id="sb0">⭐ 0 / 10</div>
+    <div class="emo-word" id="word0"></div>
+    <div class="emo-ml"   id="ml0"></div>
+    <div class="emo-hint">Tap the matching emoji!</div>
+    <div class="emo-grid" id="choices0"></div>
+    <div class="done-overlay" id="done0">
+      <div class="done-star">⭐</div>
+      <div class="done-label">Correct!</div>
+    </div>
+  </div>
+  <div id="p1" class="panel">
+    <div class="panel-pulse"></div>
+    <div class="score-badge" id="sb1">⭐ 0 / 10</div>
+    <div class="emo-word" id="word1"></div>
+    <div class="emo-ml"   id="ml1"></div>
+    <div class="emo-hint">Tap the matching emoji!</div>
+    <div class="emo-grid" id="choices1"></div>
+    <div class="done-overlay" id="done1">
+      <div class="done-star">⭐</div>
+      <div class="done-label">Correct!</div>
+    </div>
+  </div>
+  <div id="p2" class="panel">
+    <div class="panel-pulse"></div>
+    <div class="score-badge" id="sb2">⭐ 0 / 10</div>
+    <div class="emo-word" id="word2"></div>
+    <div class="emo-ml"   id="ml2"></div>
+    <div class="emo-hint">Tap the matching emoji!</div>
+    <div class="emo-grid" id="choices2"></div>
+    <div class="done-overlay" id="done2">
+      <div class="done-star">⭐</div>
+      <div class="done-label">Correct!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── GAME OVER ── -->
+<div id="gameover">
+  <div class="go-title">🎉 Well Done!</div>
+  <div class="scores-row" id="scores-row"></div>
+  <div class="go-btns">
+    <button class="go-btn" id="replay-btn">🔄 Play Again</button>
+    <button class="go-btn sec" onclick="location.href='../index.html'">🔙 Menu</button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+const EMOTIONS = [
+  { word:'HAPPY',      ml:'സന്തോഷം',          emoji:'😊', color:'#fbbf24' },
+  { word:'SAD',        ml:'സങ്കടം',            emoji:'😢', color:'#60a5fa' },
+  { word:'ANGRY',      ml:'ദേഷ്യം',            emoji:'😠', color:'#f87171' },
+  { word:'SURPRISED',  ml:'അദ്ഭുതം',           emoji:'😲', color:'#c084fc' },
+  { word:'SCARED',     ml:'പേടി',              emoji:'😨', color:'#6ee7b7' },
+  { word:'EXCITED',    ml:'ആവേശം',            emoji:'🤩', color:'#fb923c' },
+  { word:'TIRED',      ml:'ക്ഷീണം',            emoji:'😴', color:'#94a3b8' },
+  { word:'LOVE',       ml:'സ്നേഹം',            emoji:'😍', color:'#f472b6' },
+  { word:'SILLY',      ml:'തമാശ',              emoji:'😜', color:'#34d399' },
+  { word:'CONFUSED',   ml:'ആശയക്കുഴപ്പം',     emoji:'😕', color:'#fcd34d' },
+  { word:'BORED',      ml:'മടുപ്പ്',            emoji:'😑', color:'#9ca3af' },
+  { word:'PROUD',      ml:'അഭിമാനം',           emoji:'😤', color:'#a3e635' },
+];
+
+const ROUNDS = 10;
+const SPARKS = ['#FFD700','#FF6B6B','#4ECDC4','#a7f3d0','#FF1493','#FFA07A','#fff','#c084fc'];
+
+let playerCount = 3;
+let scores     = [0,0,0];
+let panelRound = [0,0,0];
+let panelOrder = [[],[],[]];
+let panelAdv   = [false,false,false];
+let panelDone  = [false,false,false];
+let audioCtx   = null;
+
+// ── audio ────────────────────────────────────────────────
+function initAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+function playTone(freqs, type='sine', vol=0.22, gap=0.12, dur=0.3){
+  if(!audioCtx) return;
+  freqs.forEach((f,i)=>{
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type=type; o.frequency.value=f;
+    const t=audioCtx.currentTime+i*gap;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(vol,t+0.03);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.start(t); o.stop(t+dur);
+  });
+}
+const playCorrect   = ()=> playTone([523,659,784],           'sine',     0.22, 0.10, 0.26);
+const playWrong     = ()=> playTone([200,180],                'sawtooth', 0.16, 0.06, 0.20);
+const playPanelDone = ()=> playTone([523,659,784,1047],       'triangle', 0.20, 0.09, 0.32);
+const playAllDone   = ()=> playTone([523,659,784,1047,1319],  'sine',     0.18, 0.08, 0.36);
+
+// ── utils ────────────────────────────────────────────────
+function shuffle(a){
+  a=[...a];
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function doSparkles(el){
+  const r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+  for(let i=0;i<14;i++){
+    const sp=document.createElement('div'); sp.className='spark';
+    const a=(i/14)*Math.PI*2+Math.random()*.5, d=45+Math.random()*65;
+    sp.style.cssText=`left:${cx}px;top:${cy}px;background:${SPARKS[i%SPARKS.length]};--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px;animation-duration:${.38+Math.random()*.22}s;`;
+    document.body.appendChild(sp); setTimeout(()=>sp.remove(),650);
+  }
+}
+
+// ── render one panel ──────────────────────────────────────
+function renderPanel(i){
+  const emo = EMOTIONS[panelOrder[i][panelRound[i]]];
+  const maxR = Math.max(...Array.from({length:playerCount},(_,j)=>panelRound[j]));
+  document.getElementById('round-pill').textContent = `Round ${maxR+1} of ${ROUNDS}`;
+
+  const w = document.getElementById('word'+i);
+  w.textContent = emo.word; w.style.color = emo.color;
+  w.style.textShadow = `0 3px 16px ${emo.color}99`;
+  document.getElementById('ml'+i).textContent = emo.ml;
+
+  document.getElementById('done'+i).classList.remove('show');
+  document.getElementById('p'+i).classList.remove('good','bad');
+
+  const others  = EMOTIONS.filter(e => e !== emo);
+  const choices = shuffle([emo, ...shuffle(others).slice(0,3)]);
+  const grid    = document.getElementById('choices'+i);
+  grid.innerHTML = '';
+  choices.forEach(ch=>{
+    const btn = document.createElement('button');
+    btn.className = 'emo-btn'; btn.textContent = ch.emoji;
+    btn.addEventListener('pointerdown', e=>{ e.stopPropagation(); onAnswer(i, ch.emoji===emo.emoji, btn); });
+    grid.appendChild(btn);
+  });
+}
+
+// ── answer handler ────────────────────────────────────────
+function onAnswer(i, correct, btn){
+  if(panelAdv[i] || panelDone[i]) return;
+  initAudio();
+  const panel = document.getElementById('p'+i);
+
+  if(correct){
+    panelAdv[i] = true;
+    scores[i]++;
+    document.getElementById('sb'+i).textContent = `⭐ ${scores[i]} / ${ROUNDS}`;
+    btn.classList.add('pop'); doSparkles(btn); playCorrect();
+    panel.classList.add('good'); setTimeout(()=>panel.classList.remove('good'),380);
+    setTimeout(()=>document.getElementById('done'+i).classList.add('show'),480);
+
+    setTimeout(()=>{
+      panelRound[i]++;
+      if(panelRound[i] >= ROUNDS){
+        panelDone[i] = true;
+        playPanelDone();
+        const ov = document.getElementById('done'+i);
+        ov.innerHTML = `<div class="done-star">🏆</div><div class="done-label">Done! ${scores[i]}/${ROUNDS}</div>`;
+        ov.classList.add('show');
+        checkAllFinished();
+      } else {
+        document.getElementById('done'+i).classList.remove('show');
+        panelAdv[i] = false;
+        renderPanel(i);
+      }
+    }, 1600);
+
+  } else {
+    btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),380);
+    playWrong();
+    panel.classList.add('bad'); setTimeout(()=>panel.classList.remove('bad'),320);
+  }
+}
+
+function checkAllFinished(){
+  if(Array.from({length:playerCount},(_,i)=>panelDone[i]).every(Boolean)){
+    playAllDone();
+    setTimeout(showGameOver, 2000);
+  }
+}
+
+// ── game over ─────────────────────────────────────────────
+function showGameOver(){
+  document.getElementById('hud').classList.add('off');
+  document.getElementById('grid').style.display = 'none';
+  const row = document.getElementById('scores-row'); row.innerHTML = '';
+  const labels = ['Player 1','Player 2','Player 3'];
+  for(let i=0;i<playerCount;i++){
+    const grade = scores[i]>=9?'🏆 Amazing!':scores[i]>=7?'⭐ Great!':scores[i]>=5?'👍 Good!':'🌱 Keep going!';
+    const c = document.createElement('div'); c.className = 'go-card';
+    c.innerHTML = `<div class="go-player">${labels[i]}</div><div class="go-score">${scores[i]}</div><div class="go-grade">${grade}</div>`;
+    row.appendChild(c);
+  }
+  document.getElementById('gameover').classList.add('show');
+}
+
+// ── start ─────────────────────────────────────────────────
+function startGame(count){
+  playerCount = count;
+  scores = [0,0,0]; panelRound = [0,0,0];
+  panelAdv = [false,false,false]; panelDone = [false,false,false];
+  const allIdx = EMOTIONS.map((_,i)=>i);
+  panelOrder = [ shuffle(allIdx).slice(0,ROUNDS), shuffle(allIdx).slice(0,ROUNDS), shuffle(allIdx).slice(0,ROUNDS) ];
+
+  // reset done-overlay content
+  for(let i=0;i<3;i++){
+    const ov = document.getElementById('done'+i);
+    ov.innerHTML = '<div class="done-star">⭐</div><div class="done-label">Correct!</div>';
+    ov.classList.remove('show');
+  }
+
+  document.getElementById('modal').classList.add('off');
+  document.getElementById('gameover').classList.remove('show');
+  const grid = document.getElementById('grid');
+  grid.className = count===1?'p1':'p3';
+  document.getElementById('p1').classList.toggle('off', count===1);
+  document.getElementById('p2').classList.toggle('off', count===1);
+  document.getElementById('hud').classList.remove('off');
+  document.getElementById('round-pill').textContent = `Round 1 of ${ROUNDS}`;
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    for(let i=0;i<count;i++) renderPanel(i);
+  }));
+}
+
+document.getElementById('btn1p').addEventListener('click', ()=>startGame(1));
+document.getElementById('btn3p').addEventListener('click', ()=>startGame(3));
+document.getElementById('replay-btn').addEventListener('click', ()=>{
+  document.getElementById('gameover').classList.remove('show');
+  document.getElementById('modal').classList.remove('off');
+});
+
+})();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

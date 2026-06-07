@@ -9,8 +9,20 @@
 *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;-webkit-user-select:none;user-select:none}
 
-#loading-screen{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:#000}
-#loading-screen canvas{width:100%;height:100%}
+#loading-screen{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:#fff}
+#loading-screen canvas{position:absolute;inset:0;width:100%;height:100%}
+#loading-ui{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:22px;pointer-events:none;}
+#loading-logo{width:230px;max-width:52vw;animation:ldLogoPulse 2.4s ease-in-out infinite;}
+@keyframes ldLogoPulse{
+  0%,100%{transform:scale(1) translateY(0);filter:drop-shadow(0 6px 28px rgba(99,102,241,.22));}
+  50%{transform:scale(1.04) translateY(-5px);filter:drop-shadow(0 14px 52px rgba(99,102,241,.46));}
+}
+#loading-tagline{font-size:13px;color:#6366f1;font-weight:800;letter-spacing:5px;text-transform:uppercase;opacity:.85;}
+#loading-bar-wrap{width:210px;height:3px;background:rgba(99,102,241,.12);border-radius:3px;overflow:hidden;}
+#loading-bar{height:100%;width:0%;background:linear-gradient(90deg,#6366f1 0%,#ec4899 50%,#06b6d4 100%);border-radius:3px;animation:ldProg 3s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes ldProg{0%{width:0%}40%{width:55%}70%{width:78%}90%{width:92%}100%{width:100%}}
+#loading-dots{font-size:11px;color:#a5a5c0;font-weight:700;letter-spacing:4px;text-transform:uppercase;animation:ldBlink 1.3s ease-in-out infinite;}
+@keyframes ldBlink{0%,100%{opacity:.3}50%{opacity:1}}
 
 #main-menu{position:fixed;inset:0;display:none;flex-direction:column;z-index:40}
 #menu-canvas{position:fixed;inset:0;z-index:0;width:100%;height:100%}
@@ -144,8 +156,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 .card-tug{background:linear-gradient(135deg,#87CEEB,#4A6FA5)}
 .card-memory{background:linear-gradient(135deg,#DDA0DD,#BA55D3)}
 .card-shape{background:linear-gradient(135deg,#FFD700,#FFA500)}
-.card-preprimary{background:linear-gradient(135deg,#E8D5FF,#C8A8FF)}
-
+.card-preprimary{background:linear-gradient(135deg,#d1fae5,#6ee7b7)}
 /* BOTTOM */
 
 
@@ -208,6 +219,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 }
 .submenu-option:hover{transform:scale(1.04);box-shadow:0 6px 20px rgba(144,205,244,.3);border-color:#63B3ED}
 .submenu-option:active{transform:scale(.97)}
+.pp-grid{ max-width:700px !important; }
+.pp-grid .submenu-options{ display:grid !important; grid-template-columns:1fr 1fr 1fr; }
+.pp-grid .submenu-option{ text-align:center; padding:18px 10px; font-size:14px; }
 .submenu-close{
   margin-top:16px;padding:12px 24px;
   background:linear-gradient(135deg,#FEB2B2,#FC8181);
@@ -219,14 +233,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 }
 .submenu-close:hover{background:linear-gradient(135deg,#FC8181,#F56565);transform:scale(1.02)}
 
-/* PP wide grid submenu */
-.submenu-box.pp-grid{max-width:min(92vw,900px);width:92vw}
-.submenu-box.pp-grid .submenu-options{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-}
-.submenu-box.pp-grid .submenu-option{font-size:clamp(13px,1.8vw,18px)}
 
 @keyframes touchRingPop{
   0%{transform:translate(-50%,-50%) scale(0);opacity:1}
@@ -264,6 +270,12 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
 
 <div id="loading-screen">
   <canvas id="particle-canvas"></canvas>
+  <div id="loading-ui">
+    <img src="./assets/images/Auticare_logo_Embright (1).png" alt="Auticare" id="loading-logo">
+    <div id="loading-tagline">Interactive Learning Wall</div>
+    <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+    <div id="loading-dots">Loading</div>
+  </div>
   <audio id="loading-audio" preload="auto">
     <source src="./assets/Audio/Loading.mp3" type="audio/mpeg">
   </audio>
@@ -369,7 +381,7 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
           <div class="card-name">Puzzle Balance</div>
         </div>
         <div class="game-card card-preprimary card-stagger" data-category="pre-primary">
-          <div class="card-icon">🐘</div>
+          <div class="card-icon">🦁</div>
           <div class="card-name">Pre-Primary</div>
         </div>
         <div class="game-card card-memory card-stagger" data-game="money-counter">

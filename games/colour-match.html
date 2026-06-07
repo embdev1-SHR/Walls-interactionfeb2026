@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Colour Match</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    background: radial-gradient(ellipse at 50% 0%, #1a1035 0%, #0a0f1e 45%, #0c1a0c 100%) fixed;
+    overflow:hidden; touch-action:none; user-select:none;
+    font-family:'Comic Sans MS','Chalkboard SE',cursive;
+  }
+  body::before{
+    content:''; position:fixed; inset:0;
+    background: radial-gradient(circle at 85% 15%, rgba(234,179,8,.15) 0%, transparent 35%),
+                radial-gradient(circle at 12% 75%, rgba(59,130,246,.13) 0%, transparent 38%),
+                radial-gradient(circle at 55% 88%, rgba(239,68,68,.1) 0%, transparent 28%),
+                radial-gradient(circle at 28% 28%, rgba(34,197,94,.08) 0%, transparent 30%);
+    pointer-events:none; z-index:0;
+  }
+
+  /* ── MODAL ── */
+  #modal{ position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; background:rgba(5,25,5,.88); }
+  #modal.off{ display:none; }
+  .modal-card{ background:rgba(8,40,8,.96); border:2px solid rgba(52,211,153,.45); border-radius:28px; padding:48px 64px; backdrop-filter:blur(20px); text-align:center; color:#a7f3d0; }
+  .modal-card h1{ font-size:48px; margin-bottom:10px; }
+  .modal-card p { font-size:18px; opacity:.85; margin-bottom:32px; line-height:1.6; }
+  .modal-btns{ display:flex; gap:28px; justify-content:center; }
+  .m-btn{ background:rgba(52,211,153,.15); border:2px solid #34d399; border-radius:18px; color:#a7f3d0; font-size:19px; font-weight:bold; font-family:inherit; padding:16px 36px; cursor:pointer; touch-action:auto; display:flex; flex-direction:column; align-items:center; gap:8px; transition:transform .12s,background .12s; }
+  .m-btn span{ font-size:44px; }
+  .m-btn:active{ transform:scale(.94); background:rgba(52,211,153,.32); }
+
+  /* ── HUD ── */
+  #hud{ position:fixed; top:0; left:0; right:0; height:50px; z-index:40; display:flex; align-items:center; justify-content:center; padding:0 20px; background:rgba(0,18,4,.7); backdrop-filter:blur(10px); border-bottom:1.5px solid rgba(52,211,153,.25); }
+  #hud.off{ display:none; }
+  #round-pill{ background:rgba(0,36,8,.8); border:1.5px solid rgba(52,211,153,.5); border-radius:20px; padding:5px 20px; color:#a7f3d0; font-size:17px; font-weight:bold; white-space:nowrap; }
+  #side-ctrl{
+    position:fixed; right:0; top:50%; transform:translateY(-50%);
+    z-index:100; display:flex; flex-direction:column; gap:10px;
+    background:rgba(0,36,8,.9); border:1.5px solid rgba(52,211,153,.4);
+    border-radius:14px 0 0 14px; padding:14px 10px;
+    backdrop-filter:blur(10px);
+  }
+  .sc-btn{
+    background:rgba(52,211,153,.15); border:1.5px solid rgba(52,211,153,.45);
+    border-radius:10px; color:#a7f3d0;
+    font-size:13px; font-weight:bold; font-family:inherit;
+    padding:10px 10px; cursor:pointer; touch-action:auto;
+    text-align:center; line-height:1.4; min-width:54px;
+    transition:background .15s, transform .1s;
+  }
+  .sc-btn:active{ background:rgba(52,211,153,.35); transform:scale(.93); }
+
+  /* ── GRID ── */
+  #grid{ position:fixed; top:50px; left:0; right:0; bottom:0; display:none; z-index:5; }
+  #grid.p1{ display:grid; grid-template-columns:1fr; }
+  #grid.p3{ display:grid; grid-template-columns:1fr 1fr 1fr; }
+
+  /* ── PANEL ── */
+  .panel{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:52px 18px 22px; border-right:2px solid rgba(52,211,153,.18); overflow:hidden; gap:8px; }
+  .panel:last-child{ border-right:none; }
+  .panel.off{ display:none !important; }
+  .panel-pulse{ position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .15s; z-index:1; }
+  .panel.good .panel-pulse{ background:rgba(52,211,153,.3); opacity:1; }
+  .panel.bad  .panel-pulse{ background:rgba(248,113,113,.28); opacity:1; }
+
+  /* ── SCORE ── */
+  .score-badge{ position:absolute; top:10px; left:50%; transform:translateX(-50%); background:rgba(0,36,8,.78); border:1.5px solid rgba(52,211,153,.4); border-radius:18px; padding:4px 18px; color:#a7f3d0; font-size:15px; font-weight:bold; z-index:3; white-space:nowrap; }
+
+  /* ── QUESTION TEXT ── */
+  .q-text{ font-size:clamp(15px,1.9vw,21px); color:#a7f3d0; text-align:center; z-index:2; font-weight:bold; }
+  .q-sub { font-size:clamp(12px,1.5vw,16px); color:rgba(167,243,208,.5); text-align:center; z-index:2; margin-top:-4px; }
+
+  /* ── OBJECT DISPLAY ── */
+  .obj-wrap{ display:flex; flex-direction:column; align-items:center; gap:6px; z-index:2; margin:4px 0; }
+  .obj-emoji{ font-size:clamp(72px,9vw,110px); line-height:1; filter:drop-shadow(0 4px 12px rgba(0,0,0,.5)); }
+  .obj-name-en{ font-size:clamp(22px,2.8vw,34px); font-weight:bold; color:#fff; text-shadow:1px 1px 0 #000; }
+  .obj-name-ml{ font-size:clamp(16px,2.1vw,26px); color:rgba(255,255,255,.55); }
+
+  /* ── COLOUR CHOICES ── */
+  .col-grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(10px,1.3vw,16px); max-width:320px; width:100%; z-index:2; }
+  .col-btn{
+    border-radius:18px; padding:10px 8px 8px;
+    border:3px solid rgba(255,255,255,.25);
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+    cursor:pointer; touch-action:auto; pointer-events:all;
+    transition:transform .1s,border-color .15s,box-shadow .15s;
+    background:rgba(255,255,255,.08);
+  }
+  .col-btn:active{ transform:scale(.88); }
+  .col-dot{
+    width:clamp(52px,6.5vw,78px); height:clamp(52px,6.5vw,78px);
+    border-radius:50%; border:3px solid rgba(0,0,0,.2);
+    flex-shrink:0;
+  }
+  .col-dot.white-dot{ border-color:rgba(255,255,255,.5)!important; }
+  .col-name{ font-size:clamp(13px,1.6vw,18px); font-weight:bold; color:#fff; text-align:center; line-height:1.2; text-shadow:1px 1px 0 #000; }
+  .col-btn.pop{ border-color:#34d399!important; box-shadow:0 0 0 3px rgba(52,211,153,.4); animation:btnPop .42s cubic-bezier(.3,0,.1,1); }
+  .col-btn.shake{ border-color:#f87171!important; animation:btnShake .34s ease; }
+  @keyframes btnPop{ 0%{transform:scale(1)} 40%{transform:scale(1.18)} 70%{transform:scale(.93)} 100%{transform:scale(1)} }
+  @keyframes btnShake{ 0%,100%{transform:translateX(0)} 22%{transform:translateX(-12px)} 44%{transform:translateX(12px)} 66%{transform:translateX(-7px)} 88%{transform:translateX(7px)} }
+
+  /* ── DONE OVERLAY ── */
+  .done-overlay{ position:absolute; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:rgba(4,28,8,.84); backdrop-filter:blur(6px); opacity:0; pointer-events:none; transition:opacity .3s; }
+  .done-overlay.show{ opacity:1; pointer-events:all; }
+  .done-star{ font-size:96px; animation:starPop .6s cubic-bezier(.3,0,.1,1); }
+  .done-label{ font-size:30px; font-weight:bold; color:#FFD700; text-shadow:2px 2px 0 #333; }
+  @keyframes starPop{ 0%{transform:scale(0) rotate(-180deg);opacity:0} 60%{transform:scale(1.3) rotate(12deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1} }
+
+  /* ── SPARKLE ── */
+  .spark{ position:fixed; width:11px; height:11px; border-radius:50%; pointer-events:none; z-index:200; animation:sf .55s ease-out forwards; }
+  @keyframes sf{ 0%{transform:translate(0,0) scale(1.3);opacity:1} 100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0} }
+
+  /* ── GAME OVER ── */
+  #gameover{ position:fixed; inset:0; z-index:600; display:none; flex-direction:column; align-items:center; justify-content:center; gap:22px; background:rgba(4,20,4,.92); backdrop-filter:blur(18px); }
+  #gameover.show{ display:flex; }
+  .go-title{ font-size:48px; color:#a7f3d0; font-weight:bold; }
+  .scores-row{ display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
+  .go-card{ background:rgba(8,40,8,.96); border:2px solid rgba(52,211,153,.45); border-radius:24px; padding:28px 40px; text-align:center; color:#a7f3d0; min-width:200px; }
+  .go-card .gp{ font-size:16px; opacity:.6; margin-bottom:6px; }
+  .go-card .gs{ font-size:74px; font-weight:bold; color:#FFD700; line-height:1; }
+  .go-card .gg{ font-size:20px; margin-top:8px; }
+  .go-btns{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+  .go-btn{ background:rgba(52,211,153,.18); border:2px solid #34d399; border-radius:16px; color:#a7f3d0; font-size:19px; font-weight:bold; font-family:inherit; padding:12px 34px; cursor:pointer; touch-action:auto; transition:transform .12s,background .12s; }
+  .go-btn:active{ transform:scale(.95); }
+  .go-btn.sec{ background:transparent; border-color:rgba(52,211,153,.3); font-size:15px; padding:10px 22px; }
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div id="modal">
+  <div class="modal-card">
+    <h1>🎨 Colour Match</h1>
+    <p>Look at the picture — tap its colour!<br>
+       ചിത്രം കണ്ടു — നിറം തിരഞ്ഞെടുക്കൂ!</p>
+    <div class="modal-btns">
+      <button class="m-btn" id="btn1p"><span>👤</span>1 Player</button>
+      <button class="m-btn" id="btn3p"><span>👥</span>3 Players</button>
+    </div>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="off">
+  <div id="round-pill">Round 1 of 10</div>
+</div>
+
+<!-- SIDE CTRL -->
+<div id="side-ctrl">
+  <button id="back-btn" class="sc-btn">🔙<br>Menu</button>
+  <button id="lang-btn" class="sc-btn">EN / മല</button>
+</div>
+
+<!-- GRID -->
+<div id="grid">
+  <div id="p0" class="panel"><div class="panel-pulse"></div><div class="score-badge" id="sb0">⭐ 0/10</div><div class="q-text" id="qt0"></div><div class="q-sub" id="qs0"></div><div class="obj-wrap" id="obj0"></div><div class="col-grid" id="ch0"></div><div class="done-overlay" id="dn0"><div class="done-star">⭐</div><div class="done-label" id="dlbl0">Correct!</div></div></div>
+  <div id="p1" class="panel"><div class="panel-pulse"></div><div class="score-badge" id="sb1">⭐ 0/10</div><div class="q-text" id="qt1"></div><div class="q-sub" id="qs1"></div><div class="obj-wrap" id="obj1"></div><div class="col-grid" id="ch1"></div><div class="done-overlay" id="dn1"><div class="done-star">⭐</div><div class="done-label" id="dlbl1">Correct!</div></div></div>
+  <div id="p2" class="panel"><div class="panel-pulse"></div><div class="score-badge" id="sb2">⭐ 0/10</div><div class="q-text" id="qt2"></div><div class="q-sub" id="qs2"></div><div class="obj-wrap" id="obj2"></div><div class="col-grid" id="ch2"></div><div class="done-overlay" id="dn2"><div class="done-star">⭐</div><div class="done-label" id="dlbl2">Correct!</div></div></div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameover">
+  <div class="go-title">🎉 Well Done!</div>
+  <div class="scores-row" id="scores-row"></div>
+  <div class="go-btns">
+    <button class="go-btn" id="replay-btn">🔄 Play Again</button>
+    <button class="go-btn sec" onclick="location.href='../index.html'">🔙 Menu</button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+const ALL_COLORS = [
+  { id:'red',    en:'Red',    ml:'ചുവപ്പ്',      hex:'#ef4444' },
+  { id:'yellow', en:'Yellow', ml:'മഞ്ഞ',          hex:'#fbbf24' },
+  { id:'blue',   en:'Blue',   ml:'നീല',            hex:'#3b82f6' },
+  { id:'green',  en:'Green',  ml:'പച്ച',           hex:'#22c55e' },
+  { id:'orange', en:'Orange', ml:'ഓറഞ്ച്',         hex:'#f97316' },
+  { id:'purple', en:'Purple', ml:'നീലലോഹിതം',      hex:'#a855f7' },
+  { id:'white',  en:'White',  ml:'വെള്ള',           hex:'#f0f0f0' },
+  { id:'grey',   en:'Grey',   ml:'ചാരനിറം',         hex:'#9ca3af' },
+  { id:'pink',   en:'Pink',   ml:'പിങ്ക്',           hex:'#ec4899' },
+  { id:'brown',  en:'Brown',  ml:'തവിട്ട്',          hex:'#a16207' },
+];
+
+const ITEMS = [
+  { emoji:'🍎', en:'Apple',        ml:'ആപ്പിൾ',        color:'red'    },
+  { emoji:'🍌', en:'Banana',       ml:'വാഴപ്പഴം',       color:'yellow' },
+  { emoji:'🌊', en:'Sea',          ml:'കടൽ',            color:'blue'   },
+  { emoji:'🍀', en:'Leaf',         ml:'ഇല',             color:'green'  },
+  { emoji:'☀️', en:'Sun',          ml:'സൂര്യൻ',         color:'yellow' },
+  { emoji:'🍊', en:'Orange',       ml:'ഓറഞ്ച്',         color:'orange' },
+  { emoji:'🍇', en:'Grapes',       ml:'മുന്തിരി',        color:'purple' },
+  { emoji:'🐸', en:'Frog',         ml:'തവള',            color:'green'  },
+  { emoji:'🍓', en:'Strawberry',   ml:'സ്ട്രോബെറി',     color:'red'    },
+  { emoji:'🐘', en:'Elephant',     ml:'ആന',             color:'grey'   },
+  { emoji:'🦩', en:'Flamingo',     ml:'ഫ്ലെമിംഗോ',      color:'pink'   },
+  { emoji:'🌸', en:'Blossom',      ml:'പൂ',             color:'pink'   },
+  { emoji:'🌻', en:'Sunflower',    ml:'സൂര്യകാന്തി',    color:'yellow' },
+  { emoji:'🐬', en:'Dolphin',      ml:'ഡോൾഫിൻ',        color:'blue'   },
+  { emoji:'🌹', en:'Rose',         ml:'റോസ്',           color:'red'    },
+  { emoji:'🍫', en:'Chocolate',    ml:'ചോക്ലേറ്റ്',     color:'brown'  },
+  { emoji:'🐇', en:'Rabbit',       ml:'മുയൽ',           color:'white'  },
+  { emoji:'⛅', en:'Cloud',        ml:'മേഘം',           color:'white'  },
+  { emoji:'🐱', en:'Cat',          ml:'പൂച്ച',          color:'white'  },
+];
+
+const Q = {
+  en: { main:'What colour is this?',   sub:'ഇതിന്റെ നിറം ഏത്?' },
+  ml: { main:'ഇതിന്റെ നിറം ഏത്?',    sub:'What colour is this?' },
+};
+
+const ROUNDS = 10;
+const SPARKS = ['#FFD700','#FF6B6B','#4ECDC4','#a7f3d0','#FF1493','#FFA07A','#fff','#c084fc'];
+
+let lang = 'en';
+let playerCount = 3;
+let scores     = [0,0,0];
+let panelRound = [0,0,0];
+let panelOrder = [[],[],[]];
+let panelAdv   = [false,false,false];
+let panelDone  = [false,false,false];
+let panelPat   = [null,null,null];
+let audioCtx   = null;
+
+// ── audio ──────────────────────────────────────────────
+function initAudio(){ if(audioCtx) return; audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+function playTone(freqs,type='sine',vol=0.22,gap=0.11,dur=0.28){
+  if(!audioCtx) return;
+  freqs.forEach((f,i)=>{ const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.type=type; o.frequency.value=f; const t=audioCtx.currentTime+i*gap; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.03); g.gain.exponentialRampToValueAtTime(0.001,t+dur); o.start(t); o.stop(t+dur); });
+}
+const playCorrect   = ()=>playTone([523,659,784],          'sine',     0.22, 0.10, 0.26);
+const playWrong     = ()=>playTone([200,180],               'sawtooth', 0.16, 0.06, 0.20);
+const playPanelDone = ()=>playTone([523,659,784,1047],      'triangle', 0.20, 0.09, 0.32);
+const playAllDone   = ()=>playTone([523,659,784,1047,1319], 'sine',     0.18, 0.08, 0.36);
+
+// ── utils ──────────────────────────────────────────────
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function colById(id){ return ALL_COLORS.find(c=>c.id===id); }
+function doSparkles(el){
+  const r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+  for(let i=0;i<14;i++){
+    const sp=document.createElement('div'); sp.className='spark';
+    const a=(i/14)*Math.PI*2+Math.random()*.5, d=45+Math.random()*65;
+    sp.style.cssText=`left:${cx}px;top:${cy}px;background:${SPARKS[i%SPARKS.length]};--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px;animation-duration:${.38+Math.random()*.22}s;`;
+    document.body.appendChild(sp); setTimeout(()=>sp.remove(),650);
+  }
+}
+
+// ── render one panel ───────────────────────────────────
+function renderPanel(i){
+  const it = panelPat[i] = ITEMS[panelOrder[i][panelRound[i]]];
+  const correct = colById(it.color);
+  const maxR = Math.max(...Array.from({length:playerCount},(_,j)=>panelRound[j]));
+  document.getElementById('round-pill').textContent = `Round ${maxR+1} of ${ROUNDS}`;
+
+  const others = ALL_COLORS.filter(c=>c.id!==it.color);
+  const choices = shuffle([correct, ...shuffle(others).slice(0,3)]);
+
+  document.getElementById('qt'+i).textContent = lang==='en'?Q.en.main:Q.ml.main;
+  document.getElementById('qs'+i).textContent = lang==='en'?Q.en.sub:Q.ml.sub;
+  document.getElementById('dlbl'+i).textContent = lang==='en'?'Correct! ✓':'ശരി! ✓';
+
+  const objEl=document.getElementById('obj'+i);
+  objEl.innerHTML=`<div class="obj-emoji">${it.emoji}</div>`+
+    `<div class="obj-name-en">${lang==='en'?it.en:it.ml}</div>`+
+    `<div class="obj-name-ml">${lang==='en'?it.ml:it.en}</div>`;
+
+  document.getElementById('dn'+i).classList.remove('show');
+  document.getElementById('p'+i).classList.remove('good','bad');
+
+  const chEl=document.getElementById('ch'+i); chEl.innerHTML='';
+  choices.forEach(col=>{
+    const btn=document.createElement('button'); btn.className='col-btn';
+    const isCorrect=col.id===it.color;
+    btn.innerHTML=`<div class="col-dot${col.id==='white'?' white-dot':''}" style="background:${col.hex}"></div>`+
+      `<div class="col-name">${lang==='en'?col.en:col.ml}</div>`;
+    btn.addEventListener('pointerdown',e=>{ e.stopPropagation(); onAnswer(i,isCorrect,btn); });
+    chEl.appendChild(btn);
+  });
+}
+
+function refreshLang(){
+  document.getElementById('lang-btn').textContent = lang==='en'?'EN / മല':'മല / EN';
+  for(let i=0;i<playerCount;i++){
+    if(!panelPat[i] || panelDone[i]) continue;
+    const it=panelPat[i];
+    document.getElementById('qt'+i).textContent = lang==='en'?Q.en.main:Q.ml.main;
+    document.getElementById('qs'+i).textContent = lang==='en'?Q.en.sub:Q.ml.sub;
+    document.getElementById('dlbl'+i).textContent = lang==='en'?'Correct! ✓':'ശരി! ✓';
+    const objEl=document.getElementById('obj'+i);
+    const nameEN=objEl.querySelector('.obj-name-en'); if(nameEN) nameEN.textContent=lang==='en'?it.en:it.ml;
+    const nameML=objEl.querySelector('.obj-name-ml'); if(nameML) nameML.textContent=lang==='en'?it.ml:it.en;
+    document.getElementById('ch'+i).querySelectorAll('.col-btn').forEach(btn=>{
+      const dot=btn.querySelector('.col-dot'); const hex=dot.style.background;
+      const col=ALL_COLORS.find(c=>c.hex===hex);
+      if(col){ const nm=btn.querySelector('.col-name'); if(nm) nm.textContent=lang==='en'?col.en:col.ml; }
+    });
+  }
+}
+
+// ── answer ─────────────────────────────────────────────
+function onAnswer(i, correct, btn){
+  if(panelAdv[i] || panelDone[i]) return;
+  initAudio();
+  const panel=document.getElementById('p'+i);
+  if(correct){
+    panelAdv[i]=true; scores[i]++;
+    document.getElementById('sb'+i).textContent=`⭐ ${scores[i]}/${ROUNDS}`;
+    btn.classList.add('pop'); doSparkles(btn); playCorrect();
+    panel.classList.add('good'); setTimeout(()=>panel.classList.remove('good'),380);
+    setTimeout(()=>document.getElementById('dn'+i).classList.add('show'),480);
+    setTimeout(()=>{
+      panelRound[i]++;
+      if(panelRound[i] >= ROUNDS){
+        panelDone[i]=true; playPanelDone();
+        const ov=document.getElementById('dn'+i);
+        ov.innerHTML=`<div class="done-star">🏆</div><div class="done-label">${lang==='en'?'Done!':'തീർന്നു!'} ${scores[i]}/${ROUNDS}</div>`;
+        ov.classList.add('show'); checkAllFinished();
+      } else {
+        document.getElementById('dn'+i).classList.remove('show');
+        panelAdv[i]=false; renderPanel(i);
+      }
+    }, 1600);
+  } else {
+    btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),380);
+    playWrong();
+    panel.classList.add('bad'); setTimeout(()=>panel.classList.remove('bad'),320);
+  }
+}
+
+function checkAllFinished(){
+  if(Array.from({length:playerCount},(_,i)=>panelDone[i]).every(Boolean)){
+    playAllDone(); setTimeout(showGameOver, 2000);
+  }
+}
+
+// ── game over ──────────────────────────────────────────
+function showGameOver(){
+  document.getElementById('hud').classList.add('off');
+  document.getElementById('grid').style.display='none';
+  const row=document.getElementById('scores-row'); row.innerHTML='';
+  const lbl=['Player 1','Player 2','Player 3'];
+  for(let i=0;i<playerCount;i++){
+    const g=scores[i]>=9?'🏆 Amazing!':scores[i]>=7?'⭐ Great!':scores[i]>=5?'👍 Good!':'🌱 Keep going!';
+    const c=document.createElement('div'); c.className='go-card';
+    c.innerHTML=`<div class="gp">${lbl[i]}</div><div class="gs">${scores[i]}</div><div class="gg">${g}</div>`;
+    row.appendChild(c);
+  }
+  document.getElementById('gameover').classList.add('show');
+}
+
+// ── start ──────────────────────────────────────────────
+function startGame(count){
+  playerCount=count; scores=[0,0,0]; panelRound=[0,0,0];
+  panelAdv=[false,false,false]; panelDone=[false,false,false]; panelPat=[null,null,null];
+  const allIdx=ITEMS.map((_,i)=>i);
+  panelOrder=[ shuffle(allIdx).slice(0,ROUNDS), shuffle(allIdx).slice(0,ROUNDS), shuffle(allIdx).slice(0,ROUNDS) ];
+  for(let i=0;i<3;i++){
+    const ov=document.getElementById('dn'+i);
+    ov.innerHTML=`<div class="done-star">⭐</div><div class="done-label" id="dlbl${i}">Correct!</div>`;
+    ov.classList.remove('show');
+  }
+  document.getElementById('modal').classList.add('off');
+  document.getElementById('gameover').classList.remove('show');
+  const grid=document.getElementById('grid');
+  grid.className=count===1?'p1':'p3';
+  document.getElementById('p1').classList.toggle('off',count===1);
+  document.getElementById('p2').classList.toggle('off',count===1);
+  document.getElementById('hud').classList.remove('off');
+  document.getElementById('round-pill').textContent=`Round 1 of ${ROUNDS}`;
+  refreshLang();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ for(let i=0;i<count;i++) renderPanel(i); }));
+}
+
+document.getElementById('btn1p').addEventListener('click',()=>startGame(1));
+document.getElementById('btn3p').addEventListener('click',()=>startGame(3));
+document.getElementById('back-btn').addEventListener('click',()=>location.href='../index.html');
+document.getElementById('lang-btn').addEventListener('click',()=>{ lang=lang==='en'?'ml':'en'; refreshLang(); });
+document.getElementById('replay-btn').addEventListener('click',()=>{ document.getElementById('gameover').classList.remove('show'); document.getElementById('modal').classList.remove('off'); });
+
+})();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

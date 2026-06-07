@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>3D Animal Explorer</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;user-select:none}
+
+/* ══ Forest background ══ */
+body{
+  background: url('../assets/bg forest.jpg') center/cover no-repeat fixed;
+}
+/* dark-green tint over the image so 3D models are readable */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:rgba(0,18,5,.55);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ══ Branch + leaf overlay (SVG, pointer-events:none) ══ */
+#forest-deco{
+  position:fixed;inset:0;
+  z-index:10;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+/* ══ 3-column grid ══ */
+#cards-area{
+  position:fixed;inset:0;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-rows:100vh;
+  z-index:5;
+}
+
+/* ══ Card ══ */
+.model-card{
+  position:relative;
+  display:flex;flex-direction:column;
+  height:100vh;overflow:hidden;
+  border-right:2px solid rgba(52,211,153,.18);
+  background:rgba(2,20,8,.62);
+  backdrop-filter:blur(2px);
+}
+.model-card:last-child{border-right:none}
+
+/* vine line on card separator */
+.model-card:not(:last-child)::after{
+  content:'';
+  position:absolute;right:-1px;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,
+    transparent 0%,
+    rgba(74,222,128,.35) 20%,
+    rgba(34,197,94,.5)  50%,
+    rgba(74,222,128,.35) 80%,
+    transparent 100%);
+  pointer-events:none;
+  z-index:2;
+}
+
+/* ══ Name strip ══ */
+.card-strip{
+  flex-shrink:0;
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;
+  background:linear-gradient(135deg,rgba(5,40,15,.92),rgba(3,28,10,.95));
+  border-bottom:1px solid rgba(52,211,153,.2);
+  z-index:5;
+}
+.cs-emoji{font-size:clamp(18px,2.2vw,28px)}
+.cs-name{font-size:clamp(14px,1.8vw,24px);font-weight:900;color:#d1fae5}
+.cs-count{
+  margin-left:auto;
+  font-size:clamp(9px,.9vw,12px);font-weight:700;
+  color:rgba(167,243,208,.5);background:rgba(52,211,153,.1);
+  padding:3px 10px;border-radius:50px;
+  border:1px solid rgba(52,211,153,.2);
+}
+
+/* ══ model-viewer wrapper ══ */
+.mv-wrap{
+  flex:1;position:relative;min-height:0;
+}
+model-viewer{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:transparent;--poster-color:transparent;
+}
+
+/* coming-soon */
+.card-ph{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+}
+.ph-icon{font-size:clamp(50px,7vw,80px);filter:grayscale(1);opacity:.22}
+.ph-txt{font-size:clamp(13px,1.5vw,20px);font-weight:800;color:rgba(167,243,208,.2);text-align:center}
+
+/* ══ Hotspots ══ */
+.Hotspot{
+  background:rgba(240,253,244,.93);
+  border-radius:50px;border:none;
+  box-shadow:0 3px 14px rgba(0,0,0,.55);
+  cursor:pointer;
+  font-size:clamp(11px,1.1vw,14px);font-weight:900;
+  padding:7px 15px;
+  font-family:'Nunito',sans-serif;color:#14532d;
+  white-space:nowrap;touch-action:none;
+  transition:transform .15s,box-shadow .15s,background .2s;
+}
+.Hotspot:hover{transform:scale(1.1);box-shadow:0 6px 22px rgba(0,0,0,.6)}
+.Hotspot.hs-active{
+  background:linear-gradient(135deg,#4ade80,#16a34a);
+  color:#052e16;
+  box-shadow:0 0 24px rgba(74,222,128,.8),0 4px 14px rgba(0,0,0,.5);
+  animation:hsPulse 1.8s ease-in-out infinite;
+}
+@keyframes hsPulse{
+  0%,100%{box-shadow:0 0 20px rgba(74,222,128,.7)}
+  50%{box-shadow:0 0 44px rgba(74,222,128,1),0 0 16px rgba(74,222,128,.5)}
+}
+.Hotspot:not([data-visible]){
+  background:rgba(255,255,255,.35);border:3px solid rgba(255,255,255,.5);
+  box-shadow:none;width:22px;height:22px;
+  padding:0;pointer-events:none;border-radius:50%;
+}
+.Hotspot:not([data-visible]) .HotspotAnnotation{display:none}
+.HotspotAnnotation{pointer-events:none}
+
+/* loading bar */
+.mvpb{display:block;width:40%;height:3px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:4px;overflow:hidden;background:rgba(255,255,255,.15)}
+.mvpb.hide{visibility:hidden}
+.mvpb-inner{background:#4ade80;width:0%;height:100%;transition:width .3s}
+
+/* ══ Per-card description overlay ══ */
+.card-overlay{
+  position:absolute;left:10px;right:10px;bottom:10px;
+  max-height:calc(100% - 80px);          /* full card minus strip + gap */
+  background:rgba(1,12,4,.96);
+  backdrop-filter:blur(24px);
+  border:1.5px solid rgba(52,211,153,.22);
+  border-radius:18px;                    /* all corners — it's floating */
+  padding:14px 16px 20px;
+  opacity:0;
+  transform:translateY(18px) scale(.98);
+  transition:opacity .3s ease, transform .32s cubic-bezier(.3,0,.1,1);
+  overflow-y:auto;
+  touch-action:pan-y;
+  pointer-events:none;
+  display:flex;flex-direction:column;gap:10px;
+  z-index:20;
+  box-shadow:0 -4px 40px rgba(0,0,0,.65), 0 0 0 1px rgba(52,211,153,.08);
+  scrollbar-width:thin;
+  scrollbar-color:rgba(52,211,153,.25) transparent;
+}
+.card-overlay.show{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+
+.ov-handle{display:none}
+.ov-close{
+  position:absolute;top:12px;right:14px;
+  width:34px;height:34px;border-radius:50%;border:none;
+  background:rgba(52,211,153,.12);color:rgba(167,243,208,.7);
+  font-size:15px;font-weight:900;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-family:inherit;touch-action:none;
+  border:1px solid rgba(52,211,153,.2);
+  transition:background .2s,transform .14s;
+}
+.ov-close:active{transform:scale(.86)}
+.ov-animal{
+  font-size:clamp(10px,1.1vw,14px);font-weight:800;
+  color:rgba(167,243,208,.45);padding-right:42px;
+}
+.ov-part{
+  font-size:clamp(20px,2.5vw,32px);font-weight:900;
+  color:#4ade80;
+  display:flex;align-items:center;gap:9px;
+  text-shadow:0 0 28px rgba(74,222,128,.4);
+}
+.ov-div{height:1px;border:none;background:linear-gradient(90deg,rgba(74,222,128,.35),transparent);flex-shrink:0}
+.ov-block{
+  background:rgba(52,211,153,.06);border-radius:12px;
+  padding:12px 14px;border-left:3px solid #60a5fa;
+}
+.ov-lbl{
+  font-size:clamp(8px,.8vw,10px);font-weight:900;
+  letter-spacing:1.6px;text-transform:uppercase;margin-bottom:6px;
+  color:#60a5fa;
+}
+.ov-txt{
+  font-size:clamp(12px,1.2vw,16px);font-weight:700;
+  color:rgba(209,250,229,.88);line-height:1.65;
+}
+
+/* ══ Page title — top centre ══ */
+#page-title{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);
+  z-index:900;
+  background:rgba(1,15,5,.78);backdrop-filter:blur(16px);
+  border:1px solid rgba(52,211,153,.22);border-radius:50px;
+  padding:9px 24px;
+  font-size:clamp(13px,1.6vw,20px);font-weight:900;
+  color:#d1fae5;letter-spacing:.5px;
+  box-shadow:0 4px 22px rgba(0,0,0,.45),0 0 0 1px rgba(52,211,153,.06);
+  white-space:nowrap;pointer-events:none;
+}
+
+/* ══ Floating controls — right-centre ══ */
+#side-ctrl{
+  position:fixed;right:16px;top:50%;transform:translateY(-50%);
+  z-index:900;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:rgba(1,15,5,.75);backdrop-filter:blur(16px);
+  border:1px solid rgba(52,211,153,.2);
+  border-radius:50px;padding:12px 8px;
+  box-shadow:0 8px 30px rgba(0,0,0,.55),0 0 0 1px rgba(52,211,153,.06);
+}
+#btn-back-f{
+  width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#16a34a,#14532d);color:#d1fae5;
+  font-size:22px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(22,163,74,.45);
+  touch-action:none;transition:transform .14s;
+}
+#btn-back-f:active{transform:scale(.88)}
+.sc-sep{width:24px;height:1px;background:rgba(52,211,153,.2)}
+.lang-f{
+  width:40px;height:28px;border-radius:50px;
+  border:1.5px solid rgba(52,211,153,.2);
+  cursor:pointer;font-size:12px;font-weight:900;font-family:inherit;
+  background:rgba(52,211,153,.07);color:rgba(167,243,208,.45);
+  touch-action:none;transition:all .2s;
+}
+.lang-f.active{
+  background:linear-gradient(135deg,#16a34a,#166534);
+  border-color:transparent;color:#d1fae5;
+  box-shadow:0 2px 10px rgba(22,163,74,.5);
+}
+</style>
+</head>
+<body>
+
+<!-- ══ Branch & Leaf SVG Decoration ══ -->
+<div id="forest-deco" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+
+  <!-- TOP-LEFT branch -->
+  <path d="M0,-10 Q30,60 15,140 Q0,210 35,280" stroke="#1a5c35" stroke-width="7" stroke-linecap="round" fill="none" opacity=".75"/>
+  <ellipse cx="22" cy="55"  rx="42" ry="20" fill="#1e6b3e" transform="rotate(-55,22,55)"  opacity=".72"/>
+  <ellipse cx="10" cy="100" rx="36" ry="18" fill="#2d8a55" transform="rotate(-42,10,100)" opacity=".65"/>
+  <ellipse cx="30" cy="155" rx="32" ry="16" fill="#40916c" transform="rotate(-60,30,155)" opacity=".6"/>
+  <ellipse cx="38" cy="210" rx="28" ry="14" fill="#52b788" transform="rotate(-35,38,210)" opacity=".5"/>
+  <!-- small twigs -->
+  <path d="M15,120 Q-20,100 -30,80"   stroke="#1a5c35" stroke-width="4" stroke-linecap="round" fill="none" opacity=".5"/>
+  <ellipse cx="-20" cy="88" rx="22" ry="11" fill="#2d8a55" transform="rotate(-70,-20,88)" opacity=".5"/>
+  <path d="M32,200 Q65,175 80,155" stroke="#1a5c35" stroke-width="3" stroke-linecap="round" fill="none" opacity=".4"/>
+  <ellipse cx="72" cy="158" rx="20" ry="10" fill="#40916c" transform="rotate(30,72,158)" opacity=".4"/>
+
+  <!-- TOP-RIGHT branch (mirrored) -->
+  <path d="M1920,-10 Q1890,60 1905,140 Q1920,210 1885,280" stroke="#1a5c35" stroke-width="7" stroke-linecap="round" fill="none" opacity=".75"/>
+  <ellipse cx="1898" cy="55"  rx="42" ry="20" fill="#1e6b3e" transform="rotate(55,1898,55)"  opacity=".72"/>
+  <ellipse cx="1910" cy="100" rx="36" ry="18" fill="#2d8a55" transform="rotate(42,1910,100)" opacity=".65"/>
+  <ellipse cx="1890" cy="155" rx="32" ry="16" fill="#40916c" transform="rotate(60,1890,155)" opacity=".6"/>
+  <ellipse cx="1882" cy="210" rx="28" ry="14" fill="#52b788" transform="rotate(35,1882,210)" opacity=".5"/>
+  <path d="M1905,120 Q1940,100 1950,80" stroke="#1a5c35" stroke-width="4" stroke-linecap="round" fill="none" opacity=".5"/>
+  <ellipse cx="1940" cy="88" rx="22" ry="11" fill="#2d8a55" transform="rotate(70,1940,88)" opacity=".5"/>
+  <path d="M1888,200 Q1855,175 1840,155" stroke="#1a5c35" stroke-width="3" stroke-linecap="round" fill="none" opacity=".4"/>
+  <ellipse cx="1848" cy="158" rx="20" ry="10" fill="#40916c" transform="rotate(-30,1848,158)" opacity=".4"/>
+
+  <!-- Card divider leaves (at col 1/3 and 2/3) -->
+  <path d="M640,-5 Q645,45 632,95" stroke="#1a5c35" stroke-width="5" stroke-linecap="round" fill="none" opacity=".6"/>
+  <ellipse cx="625" cy="38" rx="28" ry="14" fill="#2d8a55" transform="rotate(-65,625,38)" opacity=".55"/>
+  <ellipse cx="630" cy="78" rx="24" ry="12" fill="#40916c" transform="rotate(-50,630,78)" opacity=".48"/>
+
+  <path d="M1280,-5 Q1275,45 1288,95" stroke="#1a5c35" stroke-width="5" stroke-linecap="round" fill="none" opacity=".6"/>
+  <ellipse cx="1295" cy="38" rx="28" ry="14" fill="#2d8a55" transform="rotate(65,1295,38)" opacity=".55"/>
+  <ellipse cx="1290" cy="78" rx="24" ry="12" fill="#40916c" transform="rotate(50,1290,78)" opacity=".48"/>
+
+  <!-- scattered top leaves -->
+  <ellipse cx="320"  cy="18" rx="20" ry="10" fill="#40916c" transform="rotate(-50,320,18)"  opacity=".3"/>
+  <ellipse cx="960"  cy="12" rx="22" ry="11" fill="#52b788" transform="rotate(35,960,12)"   opacity=".28"/>
+  <ellipse cx="1600" cy="20" rx="18" ry="9"  fill="#2d8a55" transform="rotate(-60,1600,20)" opacity=".3"/>
+  <ellipse cx="480"  cy="8"  rx="16" ry="8"  fill="#52b788" transform="rotate(45,480,8)"    opacity=".25"/>
+  <ellipse cx="1440" cy="10" rx="17" ry="8"  fill="#40916c" transform="rotate(-40,1440,10)" opacity=".25"/>
+
+  <!-- BOTTOM foliage left -->
+  <path d="M-20,1000 Q80,965 180,985 Q300,1010 420,975 Q520,945 620,968" stroke="#1a5c35" stroke-width="6" stroke-linecap="round" fill="none" opacity=".55"/>
+  <ellipse cx="80"  cy="975" rx="38" ry="18" fill="#1e6b3e" transform="rotate(10,80,975)"   opacity=".5"/>
+  <ellipse cx="200" cy="980" rx="32" ry="16" fill="#2d8a55" transform="rotate(-15,200,980)" opacity=".48"/>
+  <ellipse cx="350" cy="968" rx="28" ry="14" fill="#40916c" transform="rotate(8,350,968)"   opacity=".45"/>
+  <ellipse cx="500" cy="960" rx="26" ry="13" fill="#52b788" transform="rotate(-20,500,960)" opacity=".42"/>
+
+  <!-- BOTTOM foliage right -->
+  <path d="M1300,975 Q1450,945 1600,968 Q1730,995 1840,975 Q1900,965 1940,980" stroke="#1a5c35" stroke-width="6" stroke-linecap="round" fill="none" opacity=".55"/>
+  <ellipse cx="1380" cy="962" rx="32" ry="16" fill="#2d8a55" transform="rotate(12,1380,962)" opacity=".48"/>
+  <ellipse cx="1540" cy="972" rx="28" ry="14" fill="#40916c" transform="rotate(-8,1540,972)" opacity=".45"/>
+  <ellipse cx="1700" cy="968" rx="26" ry="13" fill="#52b788" transform="rotate(18,1700,968)" opacity=".42"/>
+  <ellipse cx="1860" cy="975" rx="30" ry="15" fill="#1e6b3e" transform="rotate(-12,1860,975)" opacity=".5"/>
+
+  <!-- Gentle leaf sway animations via SVG animate -->
+  <!-- (passive, no interactivity) -->
+</svg>
+</div>
+
+<!-- ══ 3 model cards ══ -->
+<div id="page-title">🐾 3D Animal Explorer</div>
+<div id="cards-area"><!-- JS builds here --></div>
+
+<!-- ══ Floating controls ══ -->
+<div id="side-ctrl">
+  <button id="btn-back-f">🏠</button>
+  <div class="sc-sep"></div>
+  <button class="lang-f active" id="btn-en">EN</button>
+  <button class="lang-f"        id="btn-ml">ML</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════════════ */
+const ANIMALS = [
+  {
+    id:'bear', name:{en:'Brown Bear',ml:'തവിട്ടുകരടി'}, emoji:'🐻',
+    glb:'../3dmodels/bear.glb',
+    hotspots:[
+      { slot:'hotspot-3', surface:'0 0 222 223 224 6.053 -11.126 6.073',
+        icon:'👃', label:{en:'Nose',ml:'മൂക്ക്'},
+        desc:{
+          en:'The bear\'s nose detects scents from over 20 miles away — 7× more sensitive than a bloodhound. It is their most powerful sense organ.',
+          ml:'20 മൈൽ ദൂരത്ത് നിന്ന് ഗന്ധം മണക്കും — ബ്ലഡ്ഹൗണ്ടിനേക്കാൾ 7 മടങ്ങ് ശേഷി. ഏറ്റവും ശക്തമായ ഇന്ദ്രിയ അവയവം.'
+        }
+      },
+      { slot:'hotspot-5', surface:'0 0 1143 1107 1105 -0.773 0.815 0.958',
+        icon:'🦵', label:{en:'Legs',ml:'കാലുകൾ'},
+        desc:{
+          en:'Powerful muscular legs let bears run at 35 mph (56 km/h). Longer hind legs allow them to stand fully upright.',
+          ml:'ശക്തമായ കാലുകൾ 56 കി.മീ/മണിക്കൂർ വേഗം. നീണ്ട പിൻ കാലുകൾ ഉപയോഗിച്ച് നേരേ നിൽക്കാൻ ശേഷി.'
+        }
+      },
+      { slot:'hotspot-7', surface:'0 0 3547 3548 3545 -1.001 -0.864 2.865',
+        icon:'👂', label:{en:'Ears',ml:'ചെവികൾ'},
+        desc:{
+          en:'Bear ears hear beyond human frequency range. Each ear rotates independently to pinpoint the exact direction of a sound.',
+          ml:'മനുഷ്യ ഇന്ദ്രിയ പരിധിക്കപ്പുറം ശബ്ദം കേൾക്കും. ദിശ കൃത്യമായി കണ്ടെത്താൻ ഓരോ ചെവിയും സ്വതന്ത്രമായി ചലിക്കും.'
+        }
+      },
+      { slot:'hotspot-9', surface:'0 0 1522 1605 1643 0.771 0.838 -0.609',
+        icon:'🐾', label:{en:'Claws',ml:'നഖങ്ങൾ'},
+        desc:{
+          en:'Non-retractable claws grow up to 4 inches. Used for digging, climbing trees, tearing logs for insects, and catching fish.',
+          ml:'ഉൾ വലിക്കാൻ കഴിയാത്ത 4 ഇഞ്ച് നഖങ്ങൾ. ഖനനം, മരം കയറൽ, ഭക്ഷണ തിരയൽ, മീൻ പിടി ഇവയ്ക്ക്.'
+        }
+      }
+    ]
+  },
+  {
+    id:'cow', name:{en:'Cow',ml:'പശു'}, emoji:'🐄',
+    glb:'../3dmodels/cow.glb',
+    hotspots:[
+      { slot:'hotspot-1',
+        position:'0.2719229116130819m 5.798205363065249m -15.719102258186833m',
+        normal:'0.9995582773407032m 0.016731045429628222m 0.024562620351212695m',
+        icon:'🐮', label:{en:'Tail',ml:'വാൽ'},
+        desc:{
+          en:'A cow\'s tail swats flies all day. The tuft at the tip is a natural fly swatter that keeps the animal comfortable.',
+          ml:'ഈച്ചകളെ അകറ്റാൻ ദിവസം മുഴുവൻ ഉപയോഗം. അറ്റത്തെ രോമക്കെട്ട് ഒരു പ്രകൃതിദത്ത ഈച്ചക്കൊല്ലി.'
+        }
+      },
+      { slot:'hotspot-2',
+        position:'1.2095255071203042m 5.316432386102658m -8.309987666548631m',
+        normal:'0.8334754542420367m -0.5387212244203284m 0.12287436484105428m',
+        icon:'🥛', label:{en:'Udder',ml:'അകിട്'},
+        desc:{
+          en:'4 separate sections (quarters), each with its own teat. A healthy cow produces up to 30 litres of milk per day.',
+          ml:'4 ക്വാർട്ടർ അറകൾ, ഓരോന്നിനും ഒരു കാമ്പ്. ദിനേന 30 ലിറ്റർ വരെ പാൽ ഉൽപ്പാദിപ്പിക്കും.'
+        }
+      },
+      { slot:'hotspot-3',
+        position:'0.7468289681790736m 9.614125790806519m 12.341186099741671m',
+        normal:'0.9300114470980753m 0.033467904247856485m 0.3660035623485113m',
+        icon:'🌿', label:{en:'Mouth',ml:'വായ'},
+        desc:{
+          en:'No upper front teeth — a hard dental pad grips grass. Cows chew cud up to 8 hours a day with 40,000 jaw movements.',
+          ml:'മുകൾ മുൻ പല്ലുകൾ ഇല്ല — ഡന്റൽ പാഡ് പുല്ല് പിടിക്കുന്നു. ദിനേന 8 മണിക്കൂർ, 40,000 ചലനങ്ങൾ.'
+        }
+      },
+      { slot:'hotspot-4',
+        position:'2.7710157740713797m 13.37272630691438m 8.38637254693516m',
+        normal:'0.2552940777677283m -0.40882207341315113m 0.8761788893524525m',
+        icon:'👂', label:{en:'Ear',ml:'ചെവി'},
+        desc:{
+          en:'Ears rotate up to 180°. Upright = alert, drooping = calm. They use ear positions to signal emotions.',
+          ml:'180 ഡിഗ്രി തിരിക്കും. ഉയർത്തിയാൽ ജാഗ്രത, താഴ്ത്തിയാൽ ശാന്തത — ഭാവം വഴി വികാര പ്രകടനം.'
+        }
+      },
+      { slot:'hotspot-5',
+        position:'1.141817562878451m 12.054131938574969m 10.519779387837989m',
+        normal:'0.9127175794329139m 0.26375335993575233m 0.3120589452599048m',
+        icon:'👁️', label:{en:'Eyes',ml:'കണ്ണുകൾ'},
+        desc:{
+          en:'Eyes on the sides of the head give nearly 360° panoramic vision. They see colour but are red-green colour blind.',
+          ml:'വശത്ത് ഉള്ള കണ്ണുകൾ 360 ഡിഗ്രി കാഴ്ച. നിറം കാണും, എന്നാൽ ചുവപ്പ്-പച്ച അന്ധതയുണ്ട്.'
+        }
+      }
+    ]
+  },
+  {
+    id:'deer', name:{en:'Deer',ml:'മാൻ'}, emoji:'🦌',
+    glb:'../3dmodels/Deer.glb',
+    hotspots:[
+      { slot:'hotspot-1',
+        position:'2.094822898944067m 3.548937289500917m 0.7188764094416316m',
+        normal:'-0.07881216631729135m -0.2362355428653201m 0.9684944040765042m',
+        icon:'👁️', label:{en:'Eyes',ml:'കണ്ണുകൾ'},
+        desc:{
+          en:'Large side-set eyes give deer nearly 310° of vision. They see well in low light — perfect for spotting predators at dawn and dusk.',
+          ml:'വശത്ത് ഉള്ള വലിയ കണ്ണുകൾ 310 ഡിഗ്രി കാഴ്ച. പ്രഭാതത്തിലും സന്ധ്യയിലും വേട്ടക്കാരെ കണ്ടുപിടിക്കാൻ.'
+        }
+      },
+      { slot:'hotspot-3',
+        position:'2.269271245684886m 4.518758627394128m 0.23081259611235982m',
+        normal:'0.8759071153204872m -0.3197575161241151m 0.36130576554087696m',
+        icon:'🦌', label:{en:'Horns',ml:'കൊമ്പ്'},
+        desc:{
+          en:'Only male deer (stags) grow antlers, shed and regrown each year. Used for fighting rivals — they grow over 1 cm per day.',
+          ml:'ആൺ മാൻ മാത്രം; ഓരോ വർഷവും കൊഴിഞ്ഞ് പുതിയത്. ഇണ ചേരൽ കാലത്ത് ഉപയോഗം — ദിനേന 1 സെ.മീ. വളരും.'
+        }
+      },
+      { slot:'hotspot-4',
+        position:'0.9490830812981486m 1.4696482526067411m 0.6439119566348125m',
+        normal:'-0.39234916859107694m -0.15265354951775653m 0.90706065052207m',
+        icon:'🦵', label:{en:'Legs',ml:'കാലുകൾ'},
+        desc:{
+          en:'Slender legs built for speed — deer run at 30 mph (48 km/h) and leap obstacles up to 10 feet (3 m) high.',
+          ml:'വേഗതയ്ക്കുള്ള കാലുകൾ. 48 കി.മീ/മണിക്കൂർ ഓടും, 3 മീ. ഉയരത്തിൽ ചാടും.'
+        }
+      },
+      { slot:'hotspot-6',
+        position:'-1.5301964441847282m 2.3864301984913956m -0.05027298950205972m',
+        normal:'-0.7656953351397662m 0.14559301818164994m -0.6265088401626581m',
+        icon:'🏳️', label:{en:'Tail',ml:'വാൽ'},
+        desc:{
+          en:'Called a "flag" — when raised it flashes white as a danger warning visible to other deer from far away.',
+          ml:'"ഫ്ലാഗ്" — ഉയർത്തുമ്പോൾ വെളുത്ത അടിഭാഗം കാണും. ദൂരത്ത് ഉള്ള മറ്റ് മാനുകൾക്ക് അപകട മുന്നറിയിപ്പ്.'
+        }
+      },
+      { slot:'hotspot-7',
+        position:'1.8360538124481072m 3.7603520127105625m -0.056575957569832025m',
+        normal:'0.9118694187579258m -0.3921583477750974m 0.12126827039414918m',
+        icon:'👂', label:{en:'Ear',ml:'ചെവി'},
+        desc:{
+          en:'Large ears rotate independently to detect sounds from multiple directions at once — an early-warning system against predators.',
+          ml:'ഒരേ സമയം ഒന്നിലധികം ദിശ ശ്രദ്ധിക്കാൻ ചെവി സ്വതന്ത്രമായി ചലിക്കും. വേട്ടക്കാരെ നേരത്തെ കണ്ടെത്തും.'
+        }
+      }
+    ]
+  }
+];
+
+/* ══════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════ */
+let lang = 'en';
+const cardState = {};
+
+/* ══════════════════════════════════════════════════════
+   BUILD
+══════════════════════════════════════════════════════ */
+const area = document.getElementById('cards-area');
+
+function buildCards() {
+  area.innerHTML = '';
+  ANIMALS.forEach(a => { cardState[a.id] = null; area.appendChild(makeCard(a)); });
+}
+
+function makeCard(a) {
+  const card = document.createElement('div');
+  card.className = 'model-card';
+  card.dataset.id = a.id;
+
+  /* strip */
+  const strip = document.createElement('div');
+  strip.className = 'card-strip';
+  strip.innerHTML = `
+    <span class="cs-emoji">${a.emoji}</span>
+    <span class="cs-name" data-ctitle="${a.id}">${a.name[lang]}</span>
+    ${a.hotspots.length ? `<span class="cs-count">${a.hotspots.length} hotspots</span>` : ''}
+  `;
+  card.appendChild(strip);
+
+  if (!a.glb) {
+    const ph = document.createElement('div');
+    ph.className = 'card-ph';
+    ph.innerHTML = `<div class="ph-icon">${a.emoji}</div><div class="ph-txt">Coming Soon</div>`;
+    card.appendChild(ph);
+  } else {
+    const wrap = document.createElement('div');
+    wrap.className = 'mv-wrap';
+
+    const mv = document.createElement('model-viewer');
+    mv.setAttribute('src', a.glb);
+    mv.setAttribute('camera-controls', '');
+    mv.setAttribute('tone-mapping', 'neutral');
+    mv.setAttribute('shadow-intensity', '1');
+    mv.setAttribute('auto-rotate', '');
+    mv.setAttribute('auto-rotate-delay', '4000');
+    mv.setAttribute('rotation-per-second', '20deg');
+
+    /* progress bar */
+    const pb = document.createElement('div');
+    pb.className = 'mvpb'; pb.setAttribute('slot','progress-bar');
+    const pbI = document.createElement('div'); pbI.className = 'mvpb-inner';
+    pb.appendChild(pbI);
+    mv.addEventListener('progress', e => {
+      pbI.style.width = (e.detail.totalProgress * 100) + '%';
+      if (e.detail.totalProgress >= 1) pb.classList.add('hide');
+    });
+    mv.appendChild(pb);
+
+    /* hotspots */
+    a.hotspots.forEach(hs => {
+      const btn = document.createElement('button');
+      btn.className = 'Hotspot';
+      btn.setAttribute('slot', hs.slot);
+      if (hs.surface) {
+        btn.setAttribute('data-surface', hs.surface);
+      } else {
+        btn.setAttribute('data-position', hs.position);
+        btn.setAttribute('data-normal',   hs.normal);
+      }
+      btn.setAttribute('data-visibility-attribute', 'visible');
+
+      const ann = document.createElement('div');
+      ann.className = 'HotspotAnnotation';
+      ann.textContent = hs.label[lang];
+      ann.dataset.hlabel = `${a.id}:${hs.slot}`;
+      btn.appendChild(ann);
+
+      btn.addEventListener('pointerdown', e => {
+        e.stopPropagation();
+        openOverlay(a, hs, btn);
+      });
+      mv.appendChild(btn);
+    });
+
+    wrap.appendChild(mv);
+    card.appendChild(wrap);
+  }
+
+  card.appendChild(makeOverlay(a));
+  return card;
+}
+
+/* ══════════════════════════════════════════════════════
+   OVERLAY — single language desc
+══════════════════════════════════════════════════════ */
+function makeOverlay(a) {
+  const ov = document.createElement('div');
+  ov.className = 'card-overlay';
+  ov.id = `ov-${a.id}`;
+  ov.innerHTML = `
+    <div class="ov-handle"></div>
+    <button class="ov-close" id="ovc-${a.id}">✕</button>
+    <div class="ov-animal" id="ova-${a.id}"></div>
+    <div class="ov-part"   id="ovp-${a.id}"></div>
+    <hr  class="ov-div">
+    <div class="ov-block"  id="ovblock-${a.id}">
+      <div class="ov-lbl"  id="ovlbl-${a.id}">English</div>
+      <div class="ov-txt"  id="ovtxt-${a.id}"></div>
+    </div>
+  `;
+  ov.querySelector(`#ovc-${a.id}`).addEventListener('pointerdown', e => {
+    e.stopPropagation(); closeOverlay(a.id);
+  });
+  ov.addEventListener('pointerdown', e => e.stopPropagation());
+  return ov;
+}
+
+function openOverlay(a, hs, btn) {
+  const prev = cardState[a.id];
+  if (prev?.btn) prev.btn.classList.remove('hs-active');
+  cardState[a.id] = { hs, btn };
+  btn.classList.add('hs-active');
+  populateOverlay(a.id, a, hs);
+  document.getElementById(`ov-${a.id}`).classList.add('show');
+}
+
+function populateOverlay(id, a, hs) {
+  const isML = lang === 'ml';
+  document.getElementById(`ova-${id}`).innerHTML  = `${a.emoji} ${a.name[lang]}`;
+  document.getElementById(`ovp-${id}`).innerHTML  = `${hs.icon} ${hs.label[lang]}`;
+  document.getElementById(`ovlbl-${id}`).textContent = isML ? 'Malayalam · മലയാളം' : 'English';
+  document.getElementById(`ovtxt-${id}`).textContent = hs.desc[lang];
+  /* switch border colour */
+  document.getElementById(`ovblock-${id}`).style.borderLeftColor = isML ? '#34d399' : '#60a5fa';
+  document.getElementById(`ovlbl-${id}`).style.color = isML ? '#34d399' : '#60a5fa';
+}
+
+function closeOverlay(id) {
+  document.getElementById(`ov-${id}`).classList.remove('show');
+  const st = cardState[id];
+  if (st?.btn) st.btn.classList.remove('hs-active');
+  cardState[id] = null;
+}
+
+/* ══════════════════════════════════════════════════════
+   LANGUAGE
+══════════════════════════════════════════════════════ */
+function setLang(l) {
+  lang = l;
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+  document.getElementById('btn-ml').classList.toggle('active', l==='ml');
+
+  /* update hotspot annotations */
+  document.querySelectorAll('[data-hlabel]').forEach(el => {
+    const [aid, slot] = el.dataset.hlabel.split(':');
+    const hs = ANIMALS.find(a=>a.id===aid)?.hotspots.find(h=>h.slot===slot);
+    if (hs) el.textContent = hs.label[l];
+  });
+  /* update card titles */
+  document.querySelectorAll('[data-ctitle]').forEach(el => {
+    const a = ANIMALS.find(x=>x.id===el.dataset.ctitle);
+    if (a) el.textContent = a.name[l];
+  });
+  /* update any open overlays */
+  ANIMALS.forEach(a => {
+    const st = cardState[a.id];
+    if (st) populateOverlay(a.id, a, st.hs);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   WIRING
+══════════════════════════════════════════════════════ */
+function pd(id, fn) {
+  document.getElementById(id).addEventListener('pointerdown', e => { e.stopPropagation(); fn(); });
+}
+pd('btn-back-f', () => location.href='../index.html');
+pd('btn-en',     () => setLang('en'));
+pd('btn-ml',     () => setLang('ml'));
+document.addEventListener('keydown', e => { if(e.key==='Escape') location.href='../index.html'; });
+
+buildCards();
+</script>
+</body>
+</html>

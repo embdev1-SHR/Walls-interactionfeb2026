@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Size Quiz – Pre-Primary</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;user-select:none;-webkit-user-select:none}
+
+#bg{position:fixed;inset:0;z-index:0;background:url('../assets/bg%20forest.jpg') center/100% 100% no-repeat}
+#bg-overlay{position:fixed;inset:0;z-index:1;background:rgba(0,0,0,.38)}
+canvas#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:60}
+
+/* ── HUD – round + timer only ── */
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:30;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 84px 0 20px;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(10px);
+  border-bottom:2px solid rgba(255,255,255,.12)
+}
+#hud-round{font-size:clamp(12px,1.4vw,17px);font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap}
+#hud-timer{
+  font-size:clamp(28px,3.8vw,50px);font-weight:900;color:#fff;
+  min-width:64px;text-align:right;
+  text-shadow:0 0 20px rgba(255,255,100,.4);transition:color .3s
+}
+#hud-timer.urgent{color:#ff4444;animation:timerPulse .45s ease-in-out infinite}
+@keyframes timerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+
+/* ── Player area – 3 equal columns ── */
+#players-area{
+  position:fixed;top:56px;left:0;right:0;bottom:0;z-index:10;
+  display:flex;align-items:stretch
+}
+
+.player-panel{
+  flex:1;position:relative;
+  display:flex;flex-direction:column;align-items:stretch;
+  border-right:2px solid rgba(255,255,255,.2);
+  transition:background .2s
+}
+.player-panel:last-child{border-right:none}
+
+/* Per-player colour tints */
+.player-panel[data-player="0"]{background:rgba(59,130,246,.1)}
+.player-panel[data-player="1"]{background:rgba(16,185,129,.1)}
+.player-panel[data-player="2"]{background:rgba(245,158,11,.1)}
+
+/* Header – two rows: name/score strip + big question */
+.player-header{
+  display:flex;flex-direction:column;align-items:center;
+  padding:8px 14px 12px;
+  background:rgba(0,0,0,.55);
+  border-bottom:1px solid rgba(255,255,255,.1)
+}
+.player-panel[data-player="0"] .player-header{border-top:4px solid #3b82f6}
+.player-panel[data-player="1"] .player-header{border-top:4px solid #10b981}
+.player-panel[data-player="2"] .player-header{border-top:4px solid #f59e0b}
+.ph-top{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.player-name{font-size:clamp(13px,1.8vw,22px);font-weight:900;color:#fff}
+.player-score{font-size:clamp(15px,2vw,24px);font-weight:900;color:#fbbf24}
+.player-check{font-size:clamp(16px,2.2vw,26px);opacity:0;transition:opacity .25s}
+.player-panel.answered .player-check{opacity:1}
+/* Question shown inside each player's panel */
+.panel-question{text-align:center;line-height:1.15;pointer-events:none}
+.pq-label{
+  display:block;font-size:clamp(9px,1.1vw,14px);
+  letter-spacing:2px;color:rgba(255,255,255,.65);text-transform:uppercase;margin-bottom:2px
+}
+.pq-word{
+  display:block;
+  font-size:clamp(24px,3.8vw,52px);font-weight:900;color:#fbbf24;
+  text-shadow:0 0 36px rgba(251,191,36,.65),0 2px 10px rgba(0,0,0,.9);
+  animation:pqPulse 2.4s ease-in-out infinite
+}
+@keyframes pqPulse{
+  0%,100%{text-shadow:0 0 36px rgba(251,191,36,.65),0 2px 10px rgba(0,0,0,.9)}
+  50%{text-shadow:0 0 70px rgba(251,191,36,1),0 0 30px rgba(251,191,36,.4),0 2px 10px rgba(0,0,0,.9)}
+}
+
+/* Animals row – animals stand at bottom */
+.animals-area{
+  flex:1;display:flex;align-items:flex-end;justify-content:space-around;
+  padding:8px 6px 18px;gap:4px;position:relative
+}
+
+/* Individual animal button */
+.animal-btn{
+  display:flex;flex-direction:column;align-items:center;
+  cursor:pointer;border:3px solid transparent;
+  background:rgba(255,255,255,.06);border-radius:16px;
+  padding:6px 6px 8px;font-family:inherit;
+  transition:border-color .2s,background .2s,transform .15s;
+  flex:1;max-width:32%
+}
+.animal-btn:active{transform:scale(.93)}
+.animal-btn-img{
+  object-fit:contain;display:block;width:100%;
+  /* height set by JS via sizeRank */
+}
+.animal-btn-name{
+  margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:100%;
+  font-size:clamp(8px,1.1vw,13px);font-weight:900;color:#fff;
+  background:rgba(0,0,0,.65);padding:2px 8px;border-radius:10px;
+  text-shadow:0 1px 3px rgba(0,0,0,.8)
+}
+
+/* States */
+.animal-btn.selected{
+  border-color:#fbbf24;background:rgba(251,191,36,.12)
+}
+.animal-btn.selected .animal-btn-img{
+  filter:drop-shadow(0 0 10px rgba(251,191,36,.9))
+}
+.animal-btn.correct{
+  border-color:#4ade80;background:rgba(74,222,128,.18);
+  animation:correctPop .5s ease
+}
+.animal-btn.correct .animal-btn-img{
+  filter:drop-shadow(0 0 14px rgba(74,222,128,1))
+}
+.animal-btn.wrong{
+  border-color:#f87171;background:rgba(248,113,113,.12)
+}
+.animal-btn.wrong .animal-btn-img{
+  filter:brightness(.45) drop-shadow(0 0 8px rgba(248,113,113,.8))
+}
+@keyframes correctPop{0%{transform:scale(.9)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+/* Waiting dots */
+.waiting-indicator{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  display:flex;gap:10px;pointer-events:none;opacity:0;transition:opacity .3s
+}
+.waiting-indicator.show{opacity:.55}
+.wait-dot{
+  width:13px;height:13px;border-radius:50%;background:#fff;
+  animation:waitBounce 1.2s ease-in-out infinite
+}
+.wait-dot:nth-child(2){animation-delay:.22s}
+.wait-dot:nth-child(3){animation-delay:.44s}
+@keyframes waitBounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-12px);opacity:1}}
+
+/* ── Right sidebar ── */
+#sidebar{
+  position:fixed;right:0;top:50%;transform:translateY(-50%);
+  z-index:40;display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:14px 10px;
+  background:rgba(0,0,0,.65);border-radius:18px 0 0 18px;
+  border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px)
+}
+.sb-btn{
+  width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-family:inherit;transition:transform .2s
+}
+.sb-btn:hover{transform:scale(1.12)}
+.sb-btn:active{transform:scale(.88)}
+#btn-back{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.45)}
+#btn-lang{
+  background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;
+  box-shadow:0 4px 14px rgba(245,158,11,.45);
+  font-size:13px;font-weight:900;letter-spacing:.5px
+}
+
+/* ── Round result toast ── */
+#round-result{
+  position:fixed;top:68px;left:0;right:0;z-index:35;
+  display:flex;align-items:center;justify-content:center;
+  padding:12px;pointer-events:none;
+  opacity:0;transition:opacity .3s
+}
+#round-result.show{opacity:1}
+.rr-inner{
+  background:rgba(10,10,10,.82);backdrop-filter:blur(12px);
+  border-radius:18px;padding:12px 32px;
+  font-size:clamp(13px,1.8vw,22px);font-weight:900;color:#fff;
+  text-align:center;letter-spacing:.5px;
+  border:1px solid rgba(255,255,255,.15)
+}
+
+/* ── Wrong flash ── */
+#wrong-flash{
+  position:fixed;inset:0;pointer-events:none;z-index:8;
+  background:rgba(220,38,38,0);transition:background .15s
+}
+#wrong-flash.active{background:rgba(220,38,38,.14)}
+
+/* ── Pre-game overlay ── */
+#pregame{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:rgba(0,0,0,.78);backdrop-filter:blur(18px)
+}
+#pregame.hidden{display:none}
+.pg-title{font-size:clamp(28px,5.5vw,76px);font-weight:900;color:#fbbf24;text-align:center}
+.pg-sub{font-size:clamp(13px,1.6vw,20px);color:rgba(255,255,255,.7);font-weight:700;text-align:center}
+.pg-lang-row{display:flex;gap:12px}
+.pg-lang-btn{
+  padding:10px 28px;border-radius:50px;border:2px solid rgba(255,255,255,.3);
+  cursor:pointer;font-size:clamp(13px,1.7vw,19px);font-weight:900;font-family:inherit;
+  background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);transition:all .2s
+}
+.pg-lang-btn.active{
+  background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;
+  border-color:transparent;box-shadow:0 4px 14px rgba(245,158,11,.5)
+}
+.pg-lang-btn:active{transform:scale(.93)}
+.pg-players-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.pg-player-card{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:14px 22px;border-radius:18px;
+  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);min-width:110px
+}
+.pg-player-emoji{font-size:clamp(28px,4vw,44px)}
+.pg-player-lbl{font-size:clamp(11px,1.3vw,16px);font-weight:900;color:#fff}
+.pg-start-btn{
+  padding:18px 70px;border-radius:28px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;
+  font-size:clamp(20px,3vw,32px);font-weight:900;font-family:inherit;
+  box-shadow:0 8px 28px rgba(34,197,94,.55);transition:transform .2s
+}
+.pg-start-btn:hover{transform:translateY(-3px) scale(1.04)}
+.pg-start-btn:active{transform:scale(.97)}
+
+/* ── Completion overlay ── */
+#completion{
+  position:fixed;inset:0;z-index:300;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(18px)
+}
+#completion.show{display:flex}
+.end-title{font-size:clamp(28px,6vw,80px);font-weight:900;color:#fbbf24;animation:coPop .6s ease;text-align:center}
+.end-scoreboard{
+  display:flex;gap:16px;flex-wrap:wrap;justify-content:center;
+  animation:coPop .6s .2s ease both
+}
+.end-player-card{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:18px 26px;border-radius:22px;min-width:140px;
+  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2)
+}
+.end-player-card.winner{
+  background:linear-gradient(135deg,rgba(251,191,36,.3),rgba(245,158,11,.2));
+  border-color:#fbbf24;box-shadow:0 0 34px rgba(251,191,36,.45)
+}
+.end-rank {font-size:clamp(30px,5vw,60px)}
+.end-pname{font-size:clamp(13px,1.7vw,20px);font-weight:900;color:#fff}
+.end-pscore{font-size:clamp(20px,3vw,36px);font-weight:900;color:#fbbf24}
+.end-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:coPop .6s .4s ease both}
+.end-btn{
+  padding:14px 38px;border-radius:22px;border:none;cursor:pointer;
+  font-size:clamp(15px,2vw,24px);font-weight:800;font-family:inherit;transition:transform .2s
+}
+.end-btn:hover{transform:translateY(-3px) scale(1.04)}
+.end-btn:active{transform:scale(.97)}
+.end-replay{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 6px 22px rgba(34,197,94,.4)}
+.end-menu  {background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 6px 22px rgba(59,130,246,.4)}
+@keyframes coPop{from{opacity:0;transform:scale(.5) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="bg-overlay"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-round">Round 1 / 8</div>
+  <div id="hud-timer">10</div>
+</div>
+
+<!-- 3 player panels (built by JS) -->
+<div id="players-area"></div>
+
+<!-- Round result toast -->
+<div id="round-result"><div class="rr-inner" id="rr-inner"></div></div>
+
+<!-- Wrong flash -->
+<div id="wrong-flash"></div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <button class="sb-btn" id="btn-back" title="Back to Menu">🏠</button>
+  <button class="sb-btn" id="btn-lang" title="Toggle Language">EN</button>
+</div>
+
+<!-- Pre-game overlay -->
+<div id="pregame">
+  <div class="pg-title">🐘 Size Quiz</div>
+  <div class="pg-sub">Tap the correct animal – 3 players compete!</div>
+  <div class="pg-lang-row">
+    <button class="pg-lang-btn active" id="pg-lang-en">English</button>
+    <button class="pg-lang-btn"        id="pg-lang-ml">മലയാളം</button>
+  </div>
+  <div class="pg-players-row">
+    <div class="pg-player-card"><div class="pg-player-emoji">🔵</div><div class="pg-player-lbl">Player 1</div></div>
+    <div class="pg-player-card"><div class="pg-player-emoji">🟢</div><div class="pg-player-lbl">Player 2</div></div>
+    <div class="pg-player-card"><div class="pg-player-emoji">🟡</div><div class="pg-player-lbl">Player 3</div></div>
+  </div>
+  <button class="pg-start-btn" id="pg-start">▶ Start Quiz</button>
+</div>
+
+<!-- Completion -->
+<div id="completion">
+  <div class="end-title"      id="end-title">Game Over!</div>
+  <div class="end-scoreboard" id="end-scoreboard"></div>
+  <div class="end-btns">
+    <button class="end-btn end-replay" id="btn-replay">🔄 Play Again</button>
+    <button class="end-btn end-menu"   id="btn-menu2">🏠 Menu</button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────
+   ANIMAL DATA  (sizeRank = real-world size order 1=tiny → 8=huge)
+───────────────────────────────────────── */
+const ANIMALS = [
+  { key:'rabbit',   name:{en:'Rabbit',   ml:'മുയൽ'},          img:'../assets/animals%20img/rabbit.png',   sizeRank:1 },
+  { key:'dog',      name:{en:'Dog',      ml:'നായ'},            img:'../assets/animals%20img/dog.webp',     sizeRank:2 },
+  { key:'monkey',   name:{en:'Monkey',   ml:'കുരങ്ങ്'},        img:'../assets/animals%20img/monkey.png',   sizeRank:3 },
+  { key:'lion',     name:{en:'Lion',     ml:'സിംഹം'},          img:'../assets/animals%20img/lion.png',     sizeRank:5 },
+  { key:'rhino',    name:{en:'Rhino',    ml:'കണ്ടാമൃഗം'},      img:'../assets/animals%20img/rhino.png',    sizeRank:6 },
+  { key:'elephant', name:{en:'Elephant', ml:'ആന'},             img:'../assets/animals%20img/Elephant.png', sizeRank:7 },
+  { key:'giraffe',  name:{en:'Giraffe',  ml:'ജിറാഫ്'},         img:'../assets/animals%20img/giraffe.png',  sizeRank:8 },
+];
+
+const PLAYER_EMOJIS = ['🔵','🟢','🟡'];
+const TOTAL_ROUNDS  = 8;
+const SECS_PER_ROUND = 10;
+
+/* ─────────────────────────────────────────
+   STATE
+───────────────────────────────────────── */
+let lang          = 'en';
+let rounds        = [];
+let currentRound  = 0;
+let playerScores  = [0, 0, 0];
+let playerAnswers = [null, null, null];
+let roundActive   = false;
+let timerLeft     = SECS_PER_ROUND;
+let timerHandle   = null;
+
+/* ─────────────────────────────────────────
+   UTILITY
+───────────────────────────────────────── */
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){ const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+/* Map sizeRank to a CSS height value so animals look visually different in size.
+   rank 1 (rabbit) ≈ 14 vh  ·  rank 8 (giraffe) ≈ 47 vh */
+function rankToHeight(rank){ return (10 + rank * 4.6) + 'vh'; }
+
+/* ─────────────────────────────────────────
+   CONFETTI
+───────────────────────────────────────── */
+const confettiC   = document.getElementById('confetti-canvas');
+const confettiCtx = confettiC.getContext('2d');
+let cParticles    = [];
+const C_COLORS    = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#00d2d3','#ff9f43','#10ac84','#f9ca24','#6ab04c'];
+
+function resizeConfetti(){ confettiC.width=innerWidth; confettiC.height=innerHeight; }
+resizeConfetti();
+addEventListener('resize', resizeConfetti);
+
+function burstConfetti(sx, sy, count=55){
+  for(let i=0;i<count;i++){
+    const a=Math.random()*Math.PI*2, s=4+Math.random()*12;
+    cParticles.push({
+      x:sx,y:sy,vx:Math.cos(a)*s,vy:Math.sin(a)*s-5,
+      color:C_COLORS[Math.floor(Math.random()*C_COLORS.length)],
+      w:5+Math.random()*8,h:4+Math.random()*5,
+      rot:Math.random()*360,rotV:(Math.random()-.5)*14,
+      grav:.35,life:1,decay:.013+Math.random()*.009
+    });
+  }
+}
+
+(function loop(){
+  requestAnimationFrame(loop);
+  confettiCtx.clearRect(0,0,confettiC.width,confettiC.height);
+  cParticles=cParticles.filter(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=p.grav;p.vx*=.98;p.rot+=p.rotV;p.life-=p.decay;
+    if(p.life<=0) return false;
+    confettiCtx.save();confettiCtx.globalAlpha=p.life;confettiCtx.fillStyle=p.color;
+    confettiCtx.translate(p.x,p.y);confettiCtx.rotate(p.rot*Math.PI/180);
+    confettiCtx.fillRect(-p.w/2,-p.h/2,p.w,p.h);confettiCtx.restore();
+    return true;
+  });
+})();
+
+/* ─────────────────────────────────────────
+   ROUND GENERATION
+   Each round picks 3 animals with a sizeRank spread ≥ 4
+   so the size difference is visually clear.
+───────────────────────────────────────── */
+function generateRounds(){
+  const result  = [];
+  const types   = ['biggest','smallest'];
+  let attempts  = 0;
+  while(result.length < TOTAL_ROUNDS && attempts < 300){
+    attempts++;
+    const trio  = shuffle([...ANIMALS]).slice(0, 3);
+    const ranks = trio.map(a => a.sizeRank);
+    if(Math.max(...ranks) - Math.min(...ranks) < 4) continue;
+    const type    = types[result.length % 2];
+    const correct = type === 'biggest'
+      ? trio.reduce((a,b) => a.sizeRank > b.sizeRank ? a : b)
+      : trio.reduce((a,b) => a.sizeRank < b.sizeRank ? a : b);
+    result.push({ type, animals:trio, correctKey:correct.key });
+  }
+  return result;
+}
+
+/* ─────────────────────────────────────────
+   BUILD PLAYER PANELS  (called once on start)
+───────────────────────────────────────── */
+function buildPanels(){
+  const area = document.getElementById('players-area');
+  area.innerHTML = '';
+  for(let p = 0; p < 3; p++){
+    const panel = document.createElement('div');
+    panel.className = 'player-panel';
+    panel.dataset.player = p;
+
+    /* header */
+    const hdr     = document.createElement('div');
+    hdr.className = 'player-header';
+
+    /* top strip: name | score | check */
+    const phTop = document.createElement('div');
+    phTop.className = 'ph-top';
+
+    const nameEl  = document.createElement('div');
+    nameEl.className   = 'player-name';
+    nameEl.textContent = lang==='ml' ? `കളിക്കാരൻ ${p+1}` : `Player ${p+1}`;
+
+    const scoreEl = document.createElement('div');
+    scoreEl.className   = 'player-score';
+    scoreEl.id          = `score-${p}`;
+    scoreEl.textContent = '⭐ 0';
+
+    const checkEl = document.createElement('div');
+    checkEl.className   = 'player-check';
+    checkEl.textContent = '✅';
+
+    phTop.appendChild(nameEl);
+    phTop.appendChild(scoreEl);
+    phTop.appendChild(checkEl);
+
+    /* question row – big text each player can read */
+    const qEl = document.createElement('div');
+    qEl.className = 'panel-question';
+    qEl.innerHTML = `<span class="pq-label" id="pq-label-${p}">WHICH IS THE</span>`
+                  + `<span class="pq-word"  id="pq-word-${p}">?</span>`;
+
+    hdr.appendChild(phTop);
+    hdr.appendChild(qEl);
+
+    /* animals area */
+    const animArea = document.createElement('div');
+    animArea.className = 'animals-area';
+    animArea.id        = `aarea-${p}`;
+
+    const waitEl = document.createElement('div');
+    waitEl.className = 'waiting-indicator';
+    waitEl.innerHTML = '<div class="wait-dot"></div><div class="wait-dot"></div><div class="wait-dot"></div>';
+    animArea.appendChild(waitEl);
+
+    panel.appendChild(hdr);
+    panel.appendChild(animArea);
+    area.appendChild(panel);
+  }
+}
+
+/* ─────────────────────────────────────────
+   POPULATE ANIMALS INTO EACH PANEL
+   Each panel gets the same 3 animals in a different random order.
+───────────────────────────────────────── */
+function populateRound(round){
+  for(let p = 0; p < 3; p++){
+    const aarea = document.getElementById(`aarea-${p}`);
+    aarea.querySelectorAll('.animal-btn').forEach(b => b.remove());
+
+    const ordered = shuffle([...round.animals]);
+    ordered.forEach(def => {
+      const btn = document.createElement('button');
+      btn.className  = 'animal-btn';
+      btn.dataset.key = def.key;
+
+      const img = document.createElement('img');
+      img.src       = def.img;
+      img.alt       = def.name.en;
+      img.className = 'animal-btn-img';
+      img.style.height = rankToHeight(def.sizeRank);
+      img.draggable = false;
+
+      const lbl = document.createElement('div');
+      lbl.className   = 'animal-btn-name';
+      lbl.textContent = lang==='ml' ? def.name.ml : def.name.en;
+
+      btn.appendChild(img);
+      btn.appendChild(lbl);
+      aarea.appendChild(btn);
+
+      /* touchstart for instant response on wall touch screens */
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const t = e.touches[0];
+        handleTap(p, def.key, btn, t.clientX, t.clientY);
+      }, {passive:false});
+      /* click fallback for mouse / desktop */
+      btn.addEventListener('click', (e) => {
+        handleTap(p, def.key, btn, e.clientX, e.clientY);
+      });
+    });
+  }
+}
+
+/* ─────────────────────────────────────────
+   TIMER
+───────────────────────────────────────── */
+function startTimer(){
+  timerLeft = SECS_PER_ROUND;
+  const el  = document.getElementById('hud-timer');
+  el.textContent = timerLeft;
+  el.classList.remove('urgent');
+  clearInterval(timerHandle);
+  timerHandle = setInterval(() => {
+    timerLeft--;
+    el.textContent = timerLeft;
+    el.classList.toggle('urgent', timerLeft <= 3);
+    if(timerLeft <= 0){ clearInterval(timerHandle); forceReveal(); }
+  }, 1000);
+}
+function stopTimer(){ clearInterval(timerHandle); }
+
+/* ─────────────────────────────────────────
+   GAME FLOW
+───────────────────────────────────────── */
+function startRound(idx){
+  if(idx >= rounds.length){ endGame(); return; }
+  currentRound  = idx;
+  playerAnswers = [null, null, null];
+  roundActive   = true;
+
+  const r = rounds[idx];
+
+  document.getElementById('hud-round').textContent = `Round ${idx+1} / ${TOTAL_ROUNDS}`;
+  updateQuestionText(r.type);
+
+  document.querySelectorAll('.player-panel').forEach(p => p.classList.remove('answered'));
+  document.querySelectorAll('.waiting-indicator').forEach(w => w.classList.add('show'));
+  document.getElementById('round-result').classList.remove('show');
+
+  populateRound(r);
+  startTimer();
+}
+
+function updateQuestionText(type){
+  const label = lang==='ml' ? 'ഏതാണ് ഏറ്റവും' : 'WHICH IS THE';
+  const word  = type==='biggest'
+    ? (lang==='ml' ? 'വലുത്?' : 'BIGGEST?')
+    : (lang==='ml' ? 'ചെറുത്?' : 'SMALLEST?');
+  for(let p = 0; p < 3; p++){
+    const lEl = document.getElementById(`pq-label-${p}`);
+    const wEl = document.getElementById(`pq-word-${p}`);
+    if(lEl) lEl.textContent = label;
+    if(wEl) wEl.textContent = word;
+  }
+}
+
+function handleTap(playerIdx, key, btnEl, cx, cy){
+  if(!roundActive) return;
+  if(playerAnswers[playerIdx] !== null) return;
+
+  playerAnswers[playerIdx] = key;
+  btnEl.classList.add('selected');
+
+  const panel = document.querySelectorAll('.player-panel')[playerIdx];
+  panel.classList.add('answered');
+  document.getElementById(`aarea-${playerIdx}`)
+    .querySelector('.waiting-indicator')?.classList.remove('show');
+
+  if(playerAnswers.every(a => a !== null)){
+    stopTimer();
+    setTimeout(revealResults, 400);
+  }
+}
+
+function forceReveal(){
+  playerAnswers = playerAnswers.map(a => a ?? '__none__');
+  revealResults();
+}
+
+function revealResults(){
+  roundActive = false;
+  stopTimer();
+
+  const round      = rounds[currentRound];
+  const correctKey = round.correctKey;
+  let correctCount = 0;
+
+  for(let p = 0; p < 3; p++){
+    const ans   = playerAnswers[p];
+    const aarea = document.getElementById(`aarea-${p}`);
+    aarea.querySelectorAll('.animal-btn').forEach(btn => {
+      btn.classList.remove('selected');
+      if(btn.dataset.key === correctKey)            btn.classList.add('correct');
+      else if(btn.dataset.key === ans)              btn.classList.add('wrong');
+    });
+    if(ans === correctKey){
+      correctCount++;
+      playerScores[p]++;
+      document.getElementById(`score-${p}`).textContent = `⭐ ${playerScores[p]}`;
+      const panel = document.querySelectorAll('.player-panel')[p];
+      const rect  = panel.getBoundingClientRect();
+      burstConfetti(rect.left + rect.width/2, rect.top + rect.height*0.55, 55);
+    }
+  }
+
+  /* Wrong flash if nobody got it */
+  if(correctCount === 0){
+    const wf = document.getElementById('wrong-flash');
+    wf.classList.add('active');
+    setTimeout(() => wf.classList.remove('active'), 300);
+  }
+
+  const correctAnimal = ANIMALS.find(a => a.key === correctKey);
+  const animalName    = lang==='ml' ? correctAnimal.name.ml : correctAnimal.name.en;
+  const typeWord      = round.type==='biggest'
+    ? (lang==='ml' ? 'ഏറ്റവും വലുത്' : 'Biggest')
+    : (lang==='ml' ? 'ഏറ്റവും ചെറുത്' : 'Smallest');
+
+  document.getElementById('rr-inner').textContent = lang==='ml'
+    ? `${typeWord}: ${animalName} · ${correctCount} പേർ ശരി!`
+    : `${typeWord}: ${animalName} · ${correctCount} player${correctCount!==1?'s':''} correct!`;
+  document.getElementById('round-result').classList.add('show');
+
+  setTimeout(() => startRound(currentRound + 1), 2800);
+}
+
+/* ─────────────────────────────────────────
+   END GAME
+───────────────────────────────────────── */
+function endGame(){
+  roundActive = false; stopTimer();
+  document.getElementById('round-result').classList.remove('show');
+
+  const sorted   = [0,1,2].map(i => ({p:i, score:playerScores[i]})).sort((a,b) => b.score - a.score);
+  const maxScore = sorted[0].score;
+  const medals   = ['🥇','🥈','🥉'];
+
+  const sb = document.getElementById('end-scoreboard');
+  sb.innerHTML = '';
+  sorted.forEach((entry, rank) => {
+    const card    = document.createElement('div');
+    const isWinner = entry.score === maxScore && rank === 0;
+    card.className = 'end-player-card' + (isWinner ? ' winner' : '');
+    const pName   = lang==='ml' ? `കളിക്കാരൻ ${entry.p+1}` : `Player ${entry.p+1}`;
+    card.innerHTML = `
+      <div class="end-rank">${medals[rank]}</div>
+      <div class="end-pname">${PLAYER_EMOJIS[entry.p]} ${pName}</div>
+      <div class="end-pscore">${entry.score} pts</div>
+    `;
+    sb.appendChild(card);
+  });
+
+  const winners = sorted.filter(e => e.score === maxScore).map(e => e.p+1);
+  document.getElementById('end-title').textContent = winners.length === 3
+    ? (lang==='ml' ? '🤝 ഇത് ഡ്രോ!' : "🤝 It's a Tie!")
+    : (lang==='ml' ? `🎉 കളിക്കാരൻ ${winners[0]} ജയിച്ചു!` : `🎉 Player ${winners[0]} Wins!`);
+
+  document.getElementById('completion').classList.add('show');
+  for(let i=0; i<8; i++)
+    setTimeout(() => burstConfetti(
+      innerWidth*(.1+Math.random()*.8),
+      innerHeight*(.15+Math.random()*.5), 80
+    ), i*240);
+}
+
+/* ─────────────────────────────────────────
+   START GAME
+───────────────────────────────────────── */
+function startGame(){
+  rounds        = generateRounds();
+  playerScores  = [0, 0, 0];
+  playerAnswers = [null, null, null];
+  cParticles    = [];
+
+  buildPanels();
+  document.getElementById('completion').classList.remove('show');
+  document.getElementById('pregame').classList.add('hidden');
+  startRound(0);
+}
+
+/* ─────────────────────────────────────────
+   LANGUAGE
+───────────────────────────────────────── */
+function setLang(l){
+  lang = l;
+  document.getElementById('btn-lang').textContent = l.toUpperCase();
+  document.getElementById('pg-lang-en').classList.toggle('active', l==='en');
+  document.getElementById('pg-lang-ml').classList.toggle('active', l==='ml');
+}
+
+/* ─────────────────────────────────────────
+   EVENT WIRING
+───────────────────────────────────────── */
+['en','ml'].forEach(l => {
+  const btn = document.getElementById(`pg-lang-${l}`);
+  btn.addEventListener('touchstart', e => { e.preventDefault(); setLang(l); }, {passive:false});
+  btn.addEventListener('click', () => setLang(l));
+});
+
+document.getElementById('pg-start').addEventListener('touchstart', e => { e.preventDefault(); startGame(); }, {passive:false});
+document.getElementById('pg-start').addEventListener('click', startGame);
+
+document.getElementById('btn-back').addEventListener('touchstart', e => { e.preventDefault(); location.href='../index.html'; }, {passive:false});
+document.getElementById('btn-back').addEventListener('click', () => location.href='../index.html');
+
+document.getElementById('btn-lang').addEventListener('click', () => {
+  setLang(lang==='en' ? 'ml' : 'en');
+  if(roundActive) updateQuestionText(rounds[currentRound].type);
+});
+
+document.getElementById('btn-replay').addEventListener('click', () => {
+  document.getElementById('completion').classList.remove('show');
+  document.getElementById('pregame').classList.remove('hidden');
+});
+document.getElementById('btn-menu2').addEventListener('click', () => location.href='../index.html');
+
+addEventListener('keydown', e => { if(e.key==='Escape') location.href='../index.html'; });
+</script>
+</body>
+</html>

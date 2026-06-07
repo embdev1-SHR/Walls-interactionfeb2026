@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(read f *)",
-      "Bash([ -f \"d:/Git/Sibbcs/Walls-interactionfeb2026/games/$f\" ])"
+      "Bash([ -f \"d:/Git/Sibbcs/Walls-interactionfeb2026/games/$f\" ])",
+      "Bash(dir \"c:\\\\Users\\\\Sreejith SHR\\\\Documents\\\\GitHub\\\\Walls-interactionfeb2026\\\\draw\")",
+      "Bash(dir \"c:\\\\Users\\\\Sreejith SHR\\\\Documents\\\\GitHub\\\\Walls-interactionfeb2026\\\\assets\\\\Draw\")"
     ]
   }
 }

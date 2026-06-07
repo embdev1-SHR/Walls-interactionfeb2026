@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Animal Hunt – Pre-Primary</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;user-select:none;-webkit-user-select:none}
+
+/* Background – 100%×100% so it resizes in both axes with screen */
+#bg{
+  position:fixed;inset:0;z-index:0;
+  background:url('../assets/bg%20forest.jpg') center center / 100% 100% no-repeat;
+}
+#bg-overlay{position:fixed;inset:0;z-index:1;background:rgba(0,0,0,.22)}
+
+canvas#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:60}
+
+/* ── HUD top bar ── */
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:30;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 90px 8px 20px;
+  background:rgba(0,0,0,.62);backdrop-filter:blur(10px);
+  border-bottom:2px solid rgba(255,255,255,.12);min-height:64px;
+}
+.hud-group{display:flex;align-items:center;gap:16px}
+#hud-score{font-size:clamp(14px,2.2vw,24px);font-weight:900;color:#fff}
+#hud-tier{
+  font-size:clamp(11px,1.5vw,17px);font-weight:800;
+  padding:4px 14px;border-radius:20px;letter-spacing:.5px
+}
+.tier-none  {background:rgba(255,255,255,.2);color:#ddd}
+.tier-bronze{background:linear-gradient(135deg,#92400e,#b45309);color:#fde68a}
+.tier-silver{background:linear-gradient(135deg,#475569,#94a3b8);color:#f1f5f9}
+.tier-gold  {background:linear-gradient(135deg,#78350f,#fbbf24);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+#hud-lives{font-size:clamp(16px,2.4vw,26px);letter-spacing:2px}
+#hud-timer{
+  font-size:clamp(32px,5vw,62px);font-weight:900;color:#fff;
+  min-width:90px;text-align:center;line-height:1;
+  text-shadow:0 0 22px rgba(255,255,100,.4);transition:color .3s
+}
+#hud-timer.urgent{color:#ff4444;animation:timerPulse .45s ease-in-out infinite}
+@keyframes timerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+
+/* ── Task display – fills space between HUD and animal grid ── */
+#task-display{
+  position:fixed;top:64px;left:0;right:0;bottom:50vh;z-index:25;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;padding:0 20px;
+}
+.td-prompt{
+  font-size:clamp(13px,1.8vw,22px);font-weight:700;
+  color:rgba(255,255,255,.85);letter-spacing:3px;text-transform:uppercase;
+  text-shadow:0 2px 8px rgba(0,0,0,.95);margin-bottom:4px
+}
+.td-name{
+  font-size:clamp(38px,8vw,100px);font-weight:900;color:#fbbf24;line-height:1;
+  text-shadow:0 0 50px rgba(251,191,36,.8),0 4px 20px rgba(0,0,0,.95);
+  animation:namePulse 2.4s ease-in-out infinite
+}
+@keyframes namePulse{
+  0%,100%{text-shadow:0 0 50px rgba(251,191,36,.8),0 4px 20px rgba(0,0,0,.95)}
+  50%{text-shadow:0 0 90px rgba(251,191,36,1),0 0 50px rgba(251,191,36,.5),0 4px 20px rgba(0,0,0,.95)}
+}
+
+/* ── Animal grid – lower 50% of screen ── */
+#animal-grid{
+  position:fixed;bottom:0;left:0;right:0;z-index:15;
+  height:50vh;display:flex;align-items:stretch
+}
+
+.animal-slot{
+  flex:1;cursor:pointer;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:10px;
+  border-right:1px solid rgba(255,255,255,.14);
+  transition:background .18s
+}
+.animal-slot:last-child{border-right:none}
+.animal-slot:hover{background:rgba(255,255,255,.07)}
+.animal-slot:active{background:rgba(255,255,255,.15)}
+
+.animal-img-wrap{
+  flex:1;width:100%;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:6px 4px 0 4px;overflow:visible
+}
+.animal-img{
+  max-width:88%;max-height:100%;
+  object-fit:contain;display:block;
+  filter:brightness(0);
+  transition:filter .7s ease
+}
+.animal-img.revealed{filter:none}
+.animal-img.pop-anim{animation:popReveal .65s cubic-bezier(.36,.07,.19,.97)}
+@keyframes popReveal{
+  0%  {transform:scale(.6)}
+  45% {transform:scale(1.26)}
+  72% {transform:scale(.93)}
+  100%{transform:scale(1)}
+}
+
+/* Staggered idle float for silhouettes */
+.animal-img:not(.revealed){animation:animalFloat 2.6s ease-in-out infinite}
+@keyframes animalFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+.animal-lbl{
+  margin-top:6px;
+  font-size:clamp(9px,1.3vw,15px);font-weight:900;color:#fff;
+  background:rgba(0,0,0,.72);padding:3px 12px;border-radius:16px;
+  white-space:nowrap;opacity:0;transition:opacity .5s .3s;
+  text-shadow:0 1px 3px rgba(0,0,0,.8)
+}
+.animal-lbl.show{opacity:1}
+
+/* Shake on wrong */
+@keyframes slotShake{
+  0%,100%{transform:translateX(0)}
+  15%{transform:translateX(-14px)}
+  30%{transform:translateX(14px)}
+  50%{transform:translateX(-9px)}
+  70%{transform:translateX(9px)}
+  85%{transform:translateX(-4px)}
+}
+.animal-slot.shake{animation:slotShake .5s ease}
+
+/* Correct flash */
+@keyframes slotCorrect{0%{background:rgba(74,222,128,.45)}100%{background:rgba(74,222,128,0)}}
+.animal-slot.correct-flash{animation:slotCorrect .8s ease}
+
+/* ── Right sidebar ── */
+#sidebar{
+  position:fixed;right:0;top:50%;transform:translateY(-50%);
+  z-index:40;display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:14px 10px;
+  background:rgba(0,0,0,.65);border-radius:18px 0 0 18px;
+  border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px)
+}
+.sb-btn{
+  width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-family:inherit;transition:transform .2s,box-shadow .2s
+}
+.sb-btn:hover{transform:scale(1.12)}
+.sb-btn:active{transform:scale(.88)}
+#btn-back {background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.45)}
+#btn-audio{background:linear-gradient(135deg,#10b981,#047857);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.45)}
+#btn-lang {
+  background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;
+  box-shadow:0 4px 14px rgba(245,158,11,.45);
+  font-size:13px;font-weight:900;letter-spacing:.5px
+}
+
+/* ── Feedback pop ── */
+.fb-pop{
+  position:fixed;pointer-events:none;z-index:50;
+  font-size:clamp(22px,4vw,52px);font-weight:900;
+  animation:fbFly 1s ease-out forwards;
+  text-shadow:0 2px 10px rgba(0,0,0,.7)
+}
+@keyframes fbFly{
+  0%  {opacity:1;transform:translate(-50%,0) scale(.5)}
+  30% {opacity:1;transform:translate(-50%,-30px) scale(1.25)}
+  100%{opacity:0;transform:translate(-50%,-100px) scale(.85)}
+}
+
+/* ── Wrong flash ── */
+#wrong-flash{
+  position:fixed;inset:0;pointer-events:none;z-index:8;
+  background:rgba(220,38,38,0);transition:background .15s
+}
+#wrong-flash.active{background:rgba(220,38,38,.2)}
+
+/* ── Pre-game overlay ── */
+#pregame{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:rgba(0,0,0,.76);backdrop-filter:blur(16px)
+}
+#pregame.hidden{display:none}
+.pg-title{font-size:clamp(28px,6vw,80px);font-weight:900;color:#fbbf24;text-align:center}
+.pg-sub{font-size:clamp(14px,1.8vw,22px);color:rgba(255,255,255,.75);font-weight:700}
+.pg-timer-row{display:flex;align-items:center;gap:24px}
+.pg-adj-btn{
+  width:64px;height:64px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;
+  font-size:36px;font-weight:900;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(59,130,246,.5);transition:transform .15s
+}
+.pg-adj-btn:active{transform:scale(.88)}
+#pg-timer-val{
+  font-size:clamp(60px,10vw,115px);font-weight:900;color:#fff;
+  min-width:130px;text-align:center;line-height:1
+}
+.pg-unit{font-size:clamp(12px,1.4vw,17px);color:rgba(255,255,255,.5)}
+.pg-start-btn{
+  padding:18px 70px;border-radius:28px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;
+  font-size:clamp(20px,3vw,32px);font-weight:900;font-family:inherit;
+  box-shadow:0 8px 28px rgba(34,197,94,.55);transition:transform .2s;letter-spacing:.5px
+}
+.pg-start-btn:hover{transform:translateY(-3px) scale(1.04)}
+.pg-start-btn:active{transform:scale(.97)}
+
+/* ── Completion overlay ── */
+#completion{
+  position:fixed;inset:0;z-index:300;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(16px)
+}
+#completion.show{display:flex}
+.co-title{font-size:clamp(32px,7vw,90px);font-weight:900;color:#fbbf24;text-shadow:0 0 60px rgba(251,191,36,.7);animation:coPop .6s ease}
+.co-tier {font-size:clamp(60px,10vw,130px);animation:coPop .6s .15s ease both}
+.co-score{font-size:clamp(16px,2.5vw,30px);font-weight:700;color:#a3e635;animation:coPop .6s .3s ease both}
+.co-btns {display:flex;gap:16px;flex-wrap:wrap;justify-content:center;animation:coPop .6s .45s ease both}
+.co-btn{
+  padding:14px 38px;border-radius:22px;border:none;cursor:pointer;
+  font-size:clamp(15px,2vw,24px);font-weight:800;font-family:inherit;transition:transform .2s
+}
+.co-btn:hover{transform:translateY(-3px) scale(1.04)}
+.co-btn:active{transform:scale(.97)}
+.co-replay{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 6px 22px rgba(34,197,94,.4)}
+.co-menu  {background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 6px 22px rgba(59,130,246,.4)}
+@keyframes coPop{from{opacity:0;transform:scale(.5) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+/* ── Description popup ── */
+#desc-popup{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);
+  z-index:150;width:min(520px,88vw);
+  background:linear-gradient(145deg,#fffdf4,#fff9e6);
+  border-radius:24px;padding:28px 32px 22px;text-align:center;
+  box-shadow:0 24px 70px rgba(0,0,0,.65),0 0 0 3px rgba(251,191,36,.5);
+  display:none;flex-direction:column;align-items:center;gap:10px;
+  opacity:0;transition:opacity .3s,transform .3s
+}
+#desc-popup.show{display:flex;opacity:1;transform:translate(-50%,-50%) scale(1)}
+.dp-name{font-size:clamp(22px,4vw,42px);font-weight:900;color:#1e3a5f}
+.dp-divider{width:60px;height:3px;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:4px}
+.dp-text{
+  font-size:clamp(13px,1.7vw,19px);font-weight:700;color:#374151;
+  line-height:1.65;max-width:420px
+}
+.dp-dismiss{
+  margin-top:6px;font-size:clamp(10px,1.1vw,13px);color:#9ca3af;font-weight:600;
+  letter-spacing:.5px
+}
+.dp-progress{
+  width:100%;height:4px;border-radius:4px;
+  background:rgba(0,0,0,.1);overflow:hidden;margin-top:4px
+}
+.dp-progress-bar{
+  height:100%;background:linear-gradient(90deg,#fbbf24,#f59e0b);
+  width:100%;transform-origin:left;
+}
+
+/* ── Pregame language toggle ── */
+.pg-lang-row{display:flex;align-items:center;gap:10px}
+.pg-lang-btn{
+  padding:10px 28px;border-radius:50px;border:2px solid rgba(255,255,255,.3);
+  cursor:pointer;font-size:clamp(14px,1.8vw,20px);font-weight:900;font-family:inherit;
+  background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);
+  transition:all .2s;letter-spacing:.5px
+}
+.pg-lang-btn.active{
+  background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;
+  border-color:transparent;box-shadow:0 4px 14px rgba(245,158,11,.5)
+}
+.pg-lang-btn:active{transform:scale(.93)}
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="bg-overlay"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-group">
+    <div id="hud-score">🎯 <span id="score-val">0</span> / <span id="total-val">0</span></div>
+    <div id="hud-tier" class="tier-none">🏅 Ready!</div>
+    <div id="hud-lives">❤️❤️❤️</div>
+  </div>
+  <div id="hud-timer">–</div>
+</div>
+
+<!-- Task display -->
+<div id="task-display">
+  <div class="td-prompt" id="td-prompt">FIND THE</div>
+  <div class="td-name"   id="td-name">…</div>
+</div>
+
+<!-- Animal grid (built by JS) -->
+<div id="animal-grid"></div>
+
+<!-- Right sidebar -->
+<div id="sidebar">
+  <button class="sb-btn" id="btn-back"  title="Back to Menu">🏠</button>
+  <button class="sb-btn" id="btn-audio" title="Toggle Audio">🔊</button>
+  <button class="sb-btn" id="btn-lang"  title="Toggle Language">EN</button>
+</div>
+
+<!-- Wrong flash -->
+<div id="wrong-flash"></div>
+
+<!-- Description popup -->
+<div id="desc-popup">
+  <div class="dp-name" id="dp-name"></div>
+  <div class="dp-divider"></div>
+  <div class="dp-text" id="dp-text"></div>
+  <div class="dp-progress"><div class="dp-progress-bar" id="dp-bar"></div></div>
+  <div class="dp-dismiss">Tap anywhere to continue</div>
+</div>
+
+<!-- Pre-game overlay -->
+<div id="pregame">
+  <div class="pg-title">🦁 Animal Hunt</div>
+  <div class="pg-sub">Choose language</div>
+  <div class="pg-lang-row">
+    <button class="pg-lang-btn active" id="pg-lang-en">English</button>
+    <button class="pg-lang-btn"        id="pg-lang-ml">മലയാളം</button>
+  </div>
+  <div class="pg-sub" style="margin-top:8px">Seconds per animal</div>
+  <div class="pg-timer-row">
+    <button class="pg-adj-btn" id="pg-minus">−</button>
+    <div id="pg-timer-val">10</div>
+    <button class="pg-adj-btn" id="pg-plus">+</button>
+  </div>
+  <div class="pg-unit">seconds per animal</div>
+  <button class="pg-start-btn" id="pg-start">▶ Start Game</button>
+</div>
+
+<!-- Completion -->
+<div id="completion">
+  <div class="co-title" id="co-title">Amazing!</div>
+  <div class="co-tier"  id="co-tier">🥇</div>
+  <div class="co-score" id="co-score"></div>
+  <div class="co-btns">
+    <button class="co-btn co-replay" id="btn-replay">🔄 Play Again</button>
+    <button class="co-btn co-menu"   id="btn-menu2">🏠 Menu</button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────
+   ANIMAL DEFINITIONS
+───────────────────────────────────────── */
+const ANIMAL_DEFS = [
+  { key:'elephant', name:{en:'Elephant', ml:'ആന'},
+    desc:{en:'The largest land animal. It uses its long trunk to drink water and pick up food.',
+          ml:'ഭൂമിയിലെ ഏറ്റവും വലിയ ജന്തു. ജലം കുടിക്കാനും ഭക്ഷണം എടുക്കാനും നീണ്ട തുമ്പിക്കൈ ഉപയോഗിക്കുന്നു.'},
+    img:'../assets/animals%20img/Elephant.png', audio:'../assets/Audio/animals/elephant.mp3', scale:1.0 },
+  { key:'rabbit',   name:{en:'Rabbit',   ml:'മുയൽ'},
+    desc:{en:'A small fluffy animal with long ears. Rabbits love to hop and eat vegetables.',
+          ml:'നീണ്ട ചെവികളുള്ള ഒരു ചെറിയ മൃഗം. മുയലുകൾ ചാടിക്കളിക്കാനും പച്ചക്കറി തിന്നാനും ഇഷ്ടപ്പെടുന്നു.'},
+    img:'../assets/animals%20img/rabbit.png',   audio:'../assets/Audio/animals/rabbit.mp3',   scale:0.52 },
+  { key:'lion',     name:{en:'Lion',     ml:'സിംഹം'},
+    desc:{en:'The king of the jungle! Lions live in groups called prides and have a loud roar.',
+          ml:'കാടിന്റെ രാജാവ്! സിംഹങ്ങൾ കൂട്ടമായി ജീവിക്കുന്നു, ഉച്ചത്തിൽ അലറും.'},
+    img:'../assets/animals%20img/lion.png',     audio:null,                                    scale:1.0 },
+  { key:'monkey',   name:{en:'Monkey',   ml:'കുരങ്ങ്'},
+    desc:{en:'A clever and playful animal that loves climbing trees and eating bananas.',
+          ml:'മരം കയറ്റത്തിൽ മിടുക്കനായ ഒരു കുസൃതി ജന്തു. വാഴപ്പഴം ഇഷ്ടഭക്ഷണം.'},
+    img:'../assets/animals%20img/monkey.png',   audio:null,                                    scale:1.0 },
+  { key:'dog',      name:{en:'Dog',      ml:'നായ'},
+    desc:{en:'A loyal and friendly animal. Dogs are great pets and can learn many tricks!',
+          ml:'മനുഷ്യന്റെ വിശ്വസ്ത കൂട്ടുകാരൻ. നായ്ക്കൾ പല തന്ത്രങ്ങളും പഠിക്കും!'},
+    img:'../assets/animals%20img/dog.webp',     audio:null,                                    scale:1.0 },
+  { key:'rhino',    name:{en:'Rhino',    ml:'കണ്ടാമൃഗം'},
+    desc:{en:'A huge animal with thick grey skin and a big horn on its nose.',
+          ml:'കട്ടിയുള്ള ചാരനിറ തൊലിയും മൂക്കിൽ വലിയ കൊമ്പുമുള്ള ഒരു ഭീമൻ ജന്തു.'},
+    img:'../assets/animals%20img/rhino.png',    audio:'../assets/Audio/animals/rhinoceros.mp3', scale:1.65 },
+  { key:'giraffe',  name:{en:'Giraffe',  ml:'ജിറാഫ്'},
+    desc:{en:'The tallest animal in the world. Its long neck helps it eat leaves from tall trees.',
+          ml:'ലോകത്തിലെ ഏറ്റവും ഉയരമുള്ള ജന്തു. ഉയരമുള്ള മരങ്ങളിൽ നിന്ന് ഇലകൾ തിന്നാൻ നീണ്ട കഴുത്ത് സഹായിക്കുന്നു.'},
+    img:'../assets/animals%20img/giraffe.png',  audio:'../assets/Audio/animals/giraffe.mp3',   scale:1.0 },
+];
+
+/* ─────────────────────────────────────────
+   STATE
+───────────────────────────────────────── */
+let lang          = 'en';
+let audioEnabled  = true;
+let bgAudio       = null;
+let secsPerAnimal = 10;
+let timerLeft     = 0;
+let timerHandle   = null;
+let queue         = [];
+let qIdx          = 0;
+let score         = 0;
+let lives         = 3;
+let started       = false;
+let finished      = false;
+let canClick      = true;
+let currentKey    = null;
+const revealed    = {};   // key → bool
+
+/* ─────────────────────────────────────────
+   TIERS
+───────────────────────────────────────── */
+const TIERS = [
+  { min:0, label:'Ready!', cls:'tier-none',   icon:'🏅' },
+  { min:2, label:'Bronze', cls:'tier-bronze', icon:'🥉' },
+  { min:4, label:'Silver', cls:'tier-silver', icon:'🥈' },
+  { min:6, label:'Gold',   cls:'tier-gold',   icon:'🥇' },
+];
+function getTier(s){ let t=TIERS[0]; TIERS.forEach(tr=>{ if(s>=tr.min) t=tr; }); return t; }
+
+/* ─────────────────────────────────────────
+   BUILD ANIMAL GRID
+───────────────────────────────────────── */
+const grid = document.getElementById('animal-grid');
+ANIMAL_DEFS.forEach((def, i) => {
+  const slot = document.createElement('div');
+  slot.className = 'animal-slot';
+  slot.dataset.key = def.key;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'animal-img-wrap';
+
+  const sizeDiv = document.createElement('div');
+  sizeDiv.id = 'size-' + def.key;
+  sizeDiv.style.cssText = `transform:scale(${def.scale});transform-origin:bottom center;display:flex;align-items:flex-end;justify-content:center;max-width:100%;max-height:100%`;
+
+  const img = document.createElement('img');
+  img.src = def.img;
+  img.alt = def.name.en;
+  img.className = 'animal-img';
+  img.id = 'img-' + def.key;
+  img.draggable = false;
+  img.style.animationDelay = (i * 0.38) + 's';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'animal-lbl';
+  lbl.id = 'lbl-' + def.key;
+  lbl.textContent = def.name.en;
+
+  sizeDiv.appendChild(img);
+  wrap.appendChild(sizeDiv);
+  slot.appendChild(wrap);
+  slot.appendChild(lbl);
+  grid.appendChild(slot);
+
+  const onTap = (e) => {
+    if (e.type === 'click' && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+    if (e.type === 'touchend') e.preventDefault();
+    const cx = e.clientX ?? e.changedTouches?.[0]?.clientX ?? innerWidth / 2;
+    const cy = e.clientY ?? e.changedTouches?.[0]?.clientY ?? innerHeight / 2;
+    handleClick(def.key, slot, cx, cy);
+  };
+  slot.addEventListener('click', onTap);
+  slot.addEventListener('touchend', onTap, { passive: false });
+});
+
+/* ─────────────────────────────────────────
+   CONFETTI
+───────────────────────────────────────── */
+const confettiC   = document.getElementById('confetti-canvas');
+const confettiCtx = confettiC.getContext('2d');
+let cParticles    = [];
+const C_COLORS = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#00d2d3','#ff9f43','#10ac84','#ee5a24','#f9ca24','#6ab04c'];
+
+function resizeConfetti(){ confettiC.width = innerWidth; confettiC.height = innerHeight; }
+resizeConfetti();
+addEventListener('resize', resizeConfetti);
+
+function burstConfetti(sx, sy, count = 90){
+  for(let i = 0; i < count; i++){
+    const angle = Math.random() * Math.PI * 2;
+    const spd   = 5 + Math.random() * 13;
+    cParticles.push({
+      x:sx, y:sy, vx:Math.cos(angle)*spd, vy:Math.sin(angle)*spd - 6,
+      color:C_COLORS[Math.floor(Math.random()*C_COLORS.length)],
+      w:5+Math.random()*9, h:4+Math.random()*6,
+      rot:Math.random()*360, rotV:(Math.random()-.5)*15,
+      grav:.38, life:1, decay:.011+Math.random()*.009
+    });
+  }
+}
+
+(function confettiLoop(){
+  requestAnimationFrame(confettiLoop);
+  confettiCtx.clearRect(0, 0, confettiC.width, confettiC.height);
+  cParticles = cParticles.filter(p => {
+    p.x+=p.vx; p.y+=p.vy; p.vy+=p.grav;
+    p.vx*=.98; p.rot+=p.rotV; p.life-=p.decay;
+    if(p.life <= 0) return false;
+    confettiCtx.save();
+    confettiCtx.globalAlpha = p.life;
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate(p.rot * Math.PI / 180);
+    confettiCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    confettiCtx.restore();
+    return true;
+  });
+})();
+
+/* ─────────────────────────────────────────
+   AUDIO + TTS
+───────────────────────────────────────── */
+function initBg(){
+  if(bgAudio) return;
+  bgAudio = new Audio('../assets/Audio/forest.mp3');
+  bgAudio.loop = true; bgAudio.volume = 0.2;
+  if(audioEnabled) bgAudio.play().catch(() => {});
+}
+
+function ttsSpeak(text, code, rate = 0.82, pitch = 1.15){
+  if(!audioEnabled || !speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = code; u.rate = rate; u.pitch = pitch; u.volume = 1;
+  speechSynthesis.speak(u);
+}
+
+function speakName(def, delay = 0){
+  setTimeout(() => {
+    const txt = lang === 'ml' ? def.name.ml : def.name.en;
+    ttsSpeak(txt, lang === 'ml' ? 'ml-IN' : 'en-US');
+  }, delay);
+}
+
+function playRevealAudio(def){
+  if(!audioEnabled) return;
+  if(def.audio){
+    const a = new Audio(def.audio);
+    a.volume = 0.85; a.play().catch(() => {});
+    speakName(def, 900);
+  } else {
+    speakName(def, 100);
+  }
+}
+
+/* ─────────────────────────────────────────
+   HUD
+───────────────────────────────────────── */
+function updateHUD(){
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('total-val').textContent = queue.length;
+  const t  = getTier(score);
+  const tb = document.getElementById('hud-tier');
+  tb.textContent = t.icon + ' ' + t.label;
+  tb.className   = t.cls;
+  const hearts = Array.from({length:3}, (_,i) => i < lives ? '❤️' : '🖤').join('');
+  document.getElementById('hud-lives').textContent = hearts;
+}
+
+function setTimerDisplay(val){
+  const el = document.getElementById('hud-timer');
+  el.textContent = (val === null) ? '–' : val;
+  el.classList.toggle('urgent', val !== null && val <= 3);
+}
+
+/* ─────────────────────────────────────────
+   COUNTDOWN TIMER
+───────────────────────────────────────── */
+function startCountdown(){
+  clearInterval(timerHandle);
+  timerLeft = secsPerAnimal;
+  setTimerDisplay(timerLeft);
+  timerHandle = setInterval(() => {
+    if(!started || finished){ clearInterval(timerHandle); return; }
+    timerLeft--;
+    setTimerDisplay(timerLeft);
+    if(timerLeft <= 0){
+      clearInterval(timerHandle);
+      onTimerExpired();
+    }
+  }, 1000);
+}
+
+function stopCountdown(){ clearInterval(timerHandle); }
+
+function onTimerExpired(){
+  if(!started || finished || !canClick) return;
+  canClick = false;
+  lives--;
+  updateHUD();
+  feedbackPop('⏰ Time!', '#facc15', innerWidth / 2, innerHeight * 0.35);
+  flashWrong();
+  if(lives <= 0){ finished = true; setTimeout(endGame, 800); return; }
+  setTimeout(() => { qIdx++; showTask(); }, 1000);
+}
+
+/* ─────────────────────────────────────────
+   GAME FLOW
+───────────────────────────────────────── */
+function shuffle(arr){
+  const a = [...arr];
+  for(let i = a.length - 1; i > 0; i--){
+    const j = 0 | Math.random() * (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showTask(){
+  if(qIdx >= queue.length){ endGame(); return; }
+  const def  = queue[qIdx];
+  currentKey = def.key;
+  canClick   = true;
+  const nm   = lang === 'ml' ? def.name.ml : def.name.en;
+  document.getElementById('td-prompt').textContent = lang === 'ml' ? 'ഈ മൃഗത്തെ കണ്ടെത്തൂ' : 'FIND THE';
+  document.getElementById('td-name').textContent   = nm;
+  speakName(def, 350);
+  startCountdown();
+}
+
+function handleClick(key, slotEl, cx, cy){
+  if(!started || finished || !canClick) return;
+  if(revealed[key]) return;
+
+  if(key === currentKey){
+    canClick = false;
+    stopCountdown();
+    score++;
+    revealed[key] = true;
+
+    const img = document.getElementById('img-' + key);
+    img.classList.add('revealed');
+    img.style.animationName = 'none';   // stop float
+    img.classList.add('pop-anim');
+    img.addEventListener('animationend', () => img.classList.remove('pop-anim'), { once:true });
+
+    const lbl = document.getElementById('lbl-' + key);
+    const def = ANIMAL_DEFS.find(d => d.key === key);
+    lbl.textContent = lang === 'ml' ? def.name.ml : def.name.en;
+    lbl.classList.add('show');
+
+    slotEl.classList.add('correct-flash');
+    setTimeout(() => slotEl.classList.remove('correct-flash'), 800);
+
+    burstConfetti(cx, cy, 100);
+    playRevealAudio(def);
+    feedbackPop('✅ Great!', '#4ade80', cx, cy);
+    updateHUD();
+    setTimeout(() => showDesc(def), 500);
+
+  } else {
+    lives--;
+    slotEl.classList.add('shake');
+    slotEl.addEventListener('animationend', () => slotEl.classList.remove('shake'), { once:true });
+    flashWrong();
+    feedbackPop('❌ Try Again!', '#f87171', cx, cy);
+    updateHUD();
+    if(lives <= 0){ canClick = false; finished = true; stopCountdown(); setTimeout(endGame, 600); }
+  }
+}
+
+/* ─────────────────────────────────────────
+   DESCRIPTION POPUP  (no audio)
+───────────────────────────────────────── */
+let descTimer    = null;
+let descDuration = 4000;
+
+function showDesc(def){
+  const popup  = document.getElementById('desc-popup');
+  const bar    = document.getElementById('dp-bar');
+  document.getElementById('dp-name').textContent = lang === 'ml' ? def.name.ml : def.name.en;
+  document.getElementById('dp-text').textContent = lang === 'ml' ? def.desc.ml : def.desc.en;
+
+  popup.classList.add('show');
+
+  /* Shrink progress bar over descDuration */
+  bar.style.transition = 'none';
+  bar.style.transform  = 'scaleX(1)';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transition = `transform ${descDuration}ms linear`;
+    bar.style.transform  = 'scaleX(0)';
+  }));
+
+  clearTimeout(descTimer);
+  descTimer = setTimeout(closeDesc, descDuration);
+}
+
+function closeDesc(){
+  clearTimeout(descTimer);
+  const popup = document.getElementById('desc-popup');
+  popup.classList.remove('show');
+  if(!finished) setTimeout(() => { qIdx++; showTask(); }, 300);
+}
+
+/* Tap anywhere on popup to dismiss early */
+document.getElementById('desc-popup').addEventListener('click', closeDesc);
+document.getElementById('desc-popup').addEventListener('touchend', e => { e.preventDefault(); closeDesc(); });
+
+function flashWrong(){
+  const wf = document.getElementById('wrong-flash');
+  wf.classList.add('active');
+  setTimeout(() => wf.classList.remove('active'), 300);
+}
+
+function feedbackPop(text, color, cx, cy){
+  const el = document.createElement('div');
+  el.className   = 'fb-pop';
+  el.textContent = text;
+  el.style.left  = cx + 'px';
+  el.style.top   = (cy - 20) + 'px';
+  el.style.color = color;
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove(), { once:true });
+}
+
+/* ─────────────────────────────────────────
+   END GAME
+───────────────────────────────────────── */
+function endGame(){
+  finished = true; stopCountdown(); setTimerDisplay(null);
+  const t   = getTier(score);
+  const won = qIdx >= queue.length;
+  document.getElementById('co-title').textContent = won ? 'Amazing! 🎉' : 'Good Try! 💪';
+  document.getElementById('co-tier').textContent  = t.icon;
+  document.getElementById('co-score').textContent = `Found ${score} of ${queue.length} animals · ${t.label} Tier`;
+  document.getElementById('completion').classList.add('show');
+  if(score >= 3){
+    for(let i = 0; i < 6; i++)
+      setTimeout(() => burstConfetti(
+        innerWidth * (.15 + Math.random() * .7),
+        innerHeight * (.2  + Math.random() * .5), 120
+      ), i * 280);
+  }
+}
+
+/* ─────────────────────────────────────────
+   START / RESET
+───────────────────────────────────────── */
+function shufflePositions(){
+  const slots = Array.from(document.querySelectorAll('.animal-slot'));
+  const orders = shuffle(slots.map((_, i) => i));
+  slots.forEach((slot, i) => slot.style.order = orders[i]);
+}
+
+/* Randomise positions on first page load */
+shufflePositions();
+
+function startGame(){
+  clearTimeout(descTimer);
+  document.getElementById('desc-popup').classList.remove('show');
+  shufflePositions();
+  queue = shuffle([...ANIMAL_DEFS]);
+  qIdx = 0; score = 0; lives = 3;
+  started = true; finished = false; canClick = true;
+  Object.keys(revealed).forEach(k => delete revealed[k]);
+
+  ANIMAL_DEFS.forEach(def => {
+    const img = document.getElementById('img-' + def.key);
+    img.classList.remove('revealed', 'pop-anim');
+    img.style.animationName = '';
+    const lbl = document.getElementById('lbl-' + def.key);
+    lbl.classList.remove('show');
+  });
+
+  document.getElementById('total-val').textContent = queue.length;
+  updateHUD();
+  initBg();
+  document.getElementById('pregame').classList.add('hidden');
+  document.getElementById('completion').classList.remove('show');
+  setTimeout(showTask, 600);
+}
+
+/* ─────────────────────────────────────────
+   PRE-GAME LANGUAGE TOGGLE
+───────────────────────────────────────── */
+function setPgLang(l){
+  lang = l;
+  document.getElementById('pg-lang-en').classList.toggle('active', l === 'en');
+  document.getElementById('pg-lang-ml').classList.toggle('active', l === 'ml');
+  document.getElementById('btn-lang').textContent = l.toUpperCase();
+}
+document.getElementById('pg-lang-en').addEventListener('click', () => setPgLang('en'));
+document.getElementById('pg-lang-ml').addEventListener('click', () => setPgLang('ml'));
+document.getElementById('pg-lang-en').addEventListener('touchend', e => { e.preventDefault(); setPgLang('en'); });
+document.getElementById('pg-lang-ml').addEventListener('touchend', e => { e.preventDefault(); setPgLang('ml'); });
+
+/* ─────────────────────────────────────────
+   PRE-GAME CONTROLS
+───────────────────────────────────────── */
+document.getElementById('pg-minus').addEventListener('click', () => {
+  secsPerAnimal = Math.max(5, secsPerAnimal - 5);
+  document.getElementById('pg-timer-val').textContent = secsPerAnimal;
+});
+document.getElementById('pg-plus').addEventListener('click', () => {
+  secsPerAnimal = Math.min(60, secsPerAnimal + 5);
+  document.getElementById('pg-timer-val').textContent = secsPerAnimal;
+});
+['click','touchend'].forEach(ev => {
+  document.getElementById('pg-start').addEventListener(ev, e => {
+    if(ev === 'touchend') e.preventDefault();
+    startGame();
+  });
+});
+
+/* Touch support for adj buttons */
+['pg-minus','pg-plus'].forEach(id => {
+  document.getElementById(id).addEventListener('touchend', e => {
+    e.preventDefault();
+    document.getElementById(id).click();
+  });
+});
+
+/* ─────────────────────────────────────────
+   SIDEBAR BUTTONS
+───────────────────────────────────────── */
+document.getElementById('btn-back').addEventListener('click', () => location.href = '../index.html');
+document.getElementById('btn-back').addEventListener('touchend', e => { e.preventDefault(); location.href = '../index.html'; });
+
+document.getElementById('btn-audio').addEventListener('click', () => {
+  audioEnabled = !audioEnabled;
+  document.getElementById('btn-audio').textContent = audioEnabled ? '🔊' : '🔇';
+  if(bgAudio){ audioEnabled ? bgAudio.play().catch(() => {}) : bgAudio.pause(); }
+  if(!audioEnabled) speechSynthesis?.cancel();
+});
+
+document.getElementById('btn-lang').addEventListener('click', () => {
+  lang = lang === 'en' ? 'ml' : 'en';
+  document.getElementById('btn-lang').textContent = lang.toUpperCase();
+  ANIMAL_DEFS.forEach(def => {
+    document.getElementById('lbl-' + def.key).textContent =
+      lang === 'ml' ? def.name.ml : def.name.en;
+  });
+  if(started && !finished && currentKey){
+    const def = ANIMAL_DEFS.find(d => d.key === currentKey);
+    const nm  = lang === 'ml' ? def.name.ml : def.name.en;
+    document.getElementById('td-prompt').textContent = lang === 'ml' ? 'ഈ മൃഗത്തെ കണ്ടെത്തൂ' : 'FIND THE';
+    document.getElementById('td-name').textContent   = nm;
+    speakName(def, 300);
+  }
+});
+
+document.getElementById('btn-replay').addEventListener('click', () => {
+  document.getElementById('completion').classList.remove('show');
+  document.getElementById('pregame').classList.remove('hidden');
+});
+document.getElementById('btn-menu2').addEventListener('click', () => location.href = '../index.html');
+
+addEventListener('keydown', e => { if(e.key === 'Escape') location.href = '../index.html'; });
+</script>
+</body>
+</html>

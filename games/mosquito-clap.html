@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Mosquito Clap</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    background: url('../assets/bg forest.jpg') center/cover no-repeat fixed;
+    overflow:hidden; touch-action:none; user-select:none;
+    font-family:'Comic Sans MS','Chalkboard SE',cursive;
+  }
+  body::before{
+    content:''; position:fixed; inset:0;
+    background:rgba(0,20,5,.45); pointer-events:none; z-index:0;
+  }
+
+  /* ── SCREENS ── */
+  .screen{
+    position:fixed; inset:0; display:flex;
+    flex-direction:column; align-items:center; justify-content:center;
+    z-index:200;
+  }
+  .screen.off{ display:none; }
+
+  .card{
+    background:rgba(8,36,8,.93);
+    border:2px solid rgba(52,211,153,.45);
+    border-radius:28px; padding:48px 64px;
+    backdrop-filter:blur(20px);
+    text-align:center; color:#a7f3d0;
+  }
+  .card h1{ font-size:52px; margin-bottom:14px; }
+  .card p { font-size:19px; line-height:1.6; opacity:.88; margin-bottom:32px; }
+  .big-btn{
+    background:rgba(52,211,153,.2); border:2px solid #34d399;
+    border-radius:18px; color:#a7f3d0;
+    font-size:22px; font-weight:bold; font-family:inherit;
+    padding:14px 44px; cursor:pointer;
+    transition:transform .12s, background .12s; touch-action:auto;
+  }
+  .big-btn:active{ transform:scale(.95); background:rgba(52,211,153,.38); }
+
+  /* ── HUD ── */
+  #hud{
+    position:fixed; top:0; left:0; right:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 30px; z-index:40; pointer-events:none;
+    background:rgba(0,18,4,.65); backdrop-filter:blur(10px);
+    border-bottom:1.5px solid rgba(52,211,153,.28);
+  }
+  #hud.off{ display:none; }
+  .hud-pill{
+    background:rgba(0,36,8,.8); border:1.5px solid rgba(52,211,153,.5);
+    border-radius:22px; padding:7px 20px;
+    color:#a7f3d0; font-size:20px; font-weight:bold; min-width:100px; text-align:center;
+  }
+  #timer-bar-wrap{
+    flex:1; max-width:340px; margin:0 22px;
+    height:13px; background:rgba(255,255,255,.12); border-radius:7px; overflow:hidden;
+  }
+  #timer-bar{
+    height:100%; width:100%; border-radius:7px;
+    transition:width .8s linear, background .5s;
+    background:linear-gradient(90deg,#34d399,#10b981);
+  }
+
+  /* ── GAME AREA ── */
+  #game-area{ position:fixed; inset:0; z-index:10; }
+
+  /* ── MOSQUITO ── */
+  .mosq{
+    position:absolute;
+    width:88px; height:88px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:62px; line-height:1;
+    cursor:pointer; pointer-events:all; touch-action:none;
+    animation:wf .13s ease-in-out infinite alternate;
+    will-change:left,top;
+    filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));
+    z-index:20;
+  }
+  @keyframes wf{
+    from{ transform:scaleY(1) rotate(-4deg); }
+    to  { transform:scaleY(.85) rotate(4deg); }
+  }
+  .mosq.flip{ animation-name:wff; }
+  @keyframes wff{
+    from{ transform:scaleX(-1) scaleY(1) rotate(4deg); }
+    to  { transform:scaleX(-1) scaleY(.85) rotate(-4deg); }
+  }
+  .mosq.dead{ visibility:hidden; pointer-events:none; }
+
+  /* ── SPARKLES ── */
+  .spark{
+    position:fixed; width:11px; height:11px; border-radius:50%;
+    pointer-events:none; z-index:100;
+    animation:sf .55s ease-out forwards;
+  }
+  @keyframes sf{
+    0%  { transform:translate(0,0) scale(1.3); opacity:1; }
+    100%{ transform:translate(var(--tx),var(--ty)) scale(0); opacity:0; }
+  }
+  /* ring ripple on hit */
+  .ripple{
+    position:fixed; border-radius:50%; pointer-events:none; z-index:99;
+    border:3px solid #FFD700;
+    animation:rpl .5s ease-out forwards;
+    transform:translate(-50%,-50%);
+  }
+  @keyframes rpl{
+    0%  { width:10px; height:10px; opacity:1; }
+    100%{ width:130px; height:130px; opacity:0; }
+  }
+
+  /* ── SPLAT TEXT ── */
+  .splat{
+    position:fixed; pointer-events:none; z-index:101;
+    font-size:38px; font-weight:bold; color:#FFD700;
+    text-shadow:2px 2px 0 #333;
+    transform:translate(-50%,-50%);
+    animation:stxt .7s ease-out forwards;
+  }
+  @keyframes stxt{
+    0%  { opacity:1; transform:translate(-50%,-50%) scale(.5); }
+    35% { opacity:1; transform:translate(-50%,-80%) scale(1.25); }
+    100%{ opacity:0; transform:translate(-50%,-130%) scale(.9); }
+  }
+
+  /* ── MISS HAND ── */
+  .miss-hand{
+    position:fixed; font-size:38px; pointer-events:none; z-index:99;
+    transform:translate(-50%,-50%);
+    animation:mh .5s ease-out forwards;
+  }
+  @keyframes mh{
+    0%  { opacity:.9; transform:translate(-50%,-50%) scale(1.1) rotate(-20deg); }
+    100%{ opacity:0;  transform:translate(-50%,-90%) scale(.7) rotate(10deg); }
+  }
+
+  /* ── GAME-OVER SCORE ── */
+  #final-num { font-size:80px; font-weight:bold; color:#FFD700; margin:14px 0 6px; }
+  #final-msg { font-size:22px; margin-bottom:30px; opacity:.9; }
+
+  /* ── SIDE CTRL ── */
+  #side-ctrl{
+    position:fixed; right:0; top:50%; transform:translateY(-50%);
+    z-index:100; display:flex; flex-direction:column; gap:10px;
+    background:rgba(0,36,8,.9); border:1.5px solid rgba(52,211,153,.4);
+    border-radius:14px 0 0 14px; padding:14px 10px;
+    backdrop-filter:blur(10px);
+  }
+  .sc-btn{
+    background:rgba(52,211,153,.15); border:1.5px solid rgba(52,211,153,.45);
+    border-radius:10px; color:#a7f3d0;
+    font-size:13px; font-weight:bold; font-family:inherit;
+    padding:10px 10px; cursor:pointer; touch-action:auto;
+    text-align:center; line-height:1.4; min-width:54px;
+    transition:background .15s, transform .1s;
+  }
+  .sc-btn:active{ background:rgba(52,211,153,.35); transform:scale(.93); }
+</style>
+</head>
+<body>
+
+<!-- Start -->
+<div id="start-screen" class="screen">
+  <div class="card">
+    <h1>🦟 Mosquito Clap!</h1>
+    <p>Mosquitoes are buzzing everywhere!<br>
+       <strong>Clap your hands</strong> on them to squash them!<br>
+       Be fast — you have <strong>60 seconds!</strong></p>
+    <button class="big-btn" id="start-btn">▶ Let's Play!</button>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div id="gameover-screen" class="screen off">
+  <div class="card">
+    <h1>⏱ Time's Up!</h1>
+    <div id="final-num">0</div>
+    <div id="final-msg">mosquitoes clapped!</div>
+    <button class="big-btn" id="replay-btn">🔄 Play Again</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="off">
+  <div class="hud-pill" id="score-pill">🦟 0</div>
+  <div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+  <div class="hud-pill" id="time-pill">⏱ 60s</div>
+</div>
+
+<!-- Game -->
+<div id="game-area"></div>
+
+<!-- SIDE CTRL -->
+<div id="side-ctrl">
+  <button class="sc-btn" onclick="location.href='../index.html'">🔙<br>Menu</button>
+</div>
+
+<script>
+(function(){
+
+const TOTAL_TIME   = 60;
+const MOSQ_COUNT   = 3;
+const RESPAWN_MS   = 1600;
+const MAX_SPD      = 5.8;
+const MIN_SPD      = 2.8;
+const MARGIN       = 70;
+
+let audioCtx = null;
+let score = 0, timeLeft = TOTAL_TIME;
+let running = false;
+let raf = null, timerInt = null, lastTs = 0;
+let mosqs = [];
+
+// ── AUDIO ─────────────────────────────────────────────────
+function ensureAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+
+function makeBuzz(freq){
+  if(!audioCtx) return null;
+  const osc=audioCtx.createOscillator(),
+        gain=audioCtx.createGain(),
+        lfo=audioCtx.createOscillator(),
+        lfoG=audioCtx.createGain();
+  lfo.connect(lfoG); lfoG.connect(osc.frequency);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.type='sawtooth'; osc.frequency.value=freq;
+  gain.gain.value=0.022;
+  lfo.type='sine'; lfo.frequency.value=52; lfoG.gain.value=38;
+  osc.start(); lfo.start();
+  return {osc,gain,lfo};
+}
+function setBuzz(b, val){
+  if(!b||!audioCtx) return;
+  b.gain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.04);
+}
+function stopBuzz(b){
+  if(!b) return;
+  try{ b.osc.stop(); b.lfo.stop(); }catch(e){}
+}
+function playSplat(){
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type='sine';
+  o.frequency.setValueAtTime(420, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime+0.28);
+  g.gain.setValueAtTime(0.38, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.28);
+  o.start(); o.stop(audioCtx.currentTime+0.28);
+}
+
+// ── MOSQUITO ──────────────────────────────────────────────
+function spawnMosq(id){
+  const W=window.innerWidth, H=window.innerHeight;
+  const el=document.createElement('div');
+  el.className='mosq'; el.textContent='🦟';
+  document.getElementById('game-area').appendChild(el);
+
+  const ang=Math.random()*Math.PI*2;
+  const spd=MIN_SPD+Math.random()*(MAX_SPD-MIN_SPD);
+  const m={
+    id, el, alive:true, respawn:0, flipped:false,
+    x: MARGIN+Math.random()*(W-MARGIN*2),
+    y: MARGIN+Math.random()*(H-MARGIN*2),
+    vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd,
+    buzz:null
+  };
+
+  el.addEventListener('pointerdown', e=>{
+    e.stopPropagation();
+    if(!m.alive||!running) return;
+    clap(m, e.clientX, e.clientY);
+  });
+  return m;
+}
+
+function clap(m, px, py){
+  m.alive=false;
+  m.el.classList.add('dead');
+  m.respawn=RESPAWN_MS;
+  score++;
+  document.getElementById('score-pill').textContent='🦟 '+score;
+  setBuzz(m.buzz, 0);
+  playSplat();
+  doSparkles(px, py);
+  doRipple(px, py);
+  doSplat(px, py);
+}
+
+function tickMosq(m, dt){
+  const W=window.innerWidth, H=window.innerHeight;
+  if(!m.alive){
+    m.respawn-=dt;
+    if(m.respawn<=0){
+      m.alive=true; m.el.classList.remove('dead');
+      m.x=MARGIN+Math.random()*(W-MARGIN*2);
+      m.y=MARGIN+Math.random()*(H-MARGIN*2);
+      const a=Math.random()*Math.PI*2, s=MIN_SPD+Math.random()*2;
+      m.vx=Math.cos(a)*s; m.vy=Math.sin(a)*s;
+      setBuzz(m.buzz, 0.022);
+    }
+    return;
+  }
+
+  // erratic perturbation
+  m.vx+=(Math.random()-.5)*0.75;
+  m.vy+=(Math.random()-.5)*0.75;
+  const spd=Math.sqrt(m.vx*m.vx+m.vy*m.vy);
+  if(spd>MAX_SPD){ m.vx=(m.vx/spd)*MAX_SPD; m.vy=(m.vy/spd)*MAX_SPD; }
+  if(spd<MIN_SPD){ m.vx=(m.vx/spd)*MIN_SPD; m.vy=(m.vy/spd)*MIN_SPD; }
+
+  m.x+=m.vx; m.y+=m.vy;
+
+  if(m.x<MARGIN)   { m.x=MARGIN;    m.vx= Math.abs(m.vx)+(Math.random()-.3); }
+  if(m.x>W-MARGIN) { m.x=W-MARGIN;  m.vx=-Math.abs(m.vx)-(Math.random()-.3); }
+  if(m.y<MARGIN)   { m.y=MARGIN;    m.vy= Math.abs(m.vy)+(Math.random()-.3); }
+  if(m.y>H-MARGIN) { m.y=H-MARGIN;  m.vy=-Math.abs(m.vy)-(Math.random()-.3); }
+
+  const nowFlip = m.vx<0;
+  if(nowFlip!==m.flipped){
+    m.flipped=nowFlip;
+    m.el.classList.toggle('flip', nowFlip);
+  }
+  m.el.style.left=(m.x-44)+'px';
+  m.el.style.top =(m.y-44)+'px';
+}
+
+// ── FX ────────────────────────────────────────────────────
+const SCOLS=['#FFD700','#FF6B6B','#4ECDC4','#a7f3d0','#FF1493','#FFA07A','#fff','#c084fc'];
+
+function doSparkles(x,y){
+  for(let i=0;i<16;i++){
+    const sp=document.createElement('div'); sp.className='spark';
+    const a=(i/16)*Math.PI*2+Math.random()*.4;
+    const d=45+Math.random()*70;
+    sp.style.cssText=`left:${x}px;top:${y}px;`+
+      `background:${SCOLS[i%SCOLS.length]};`+
+      `--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px;`+
+      `animation-duration:${.38+Math.random()*.22}s;`;
+    document.body.appendChild(sp);
+    setTimeout(()=>sp.remove(), 650);
+  }
+}
+function doRipple(x,y){
+  const r=document.createElement('div'); r.className='ripple';
+  r.style.left=x+'px'; r.style.top=y+'px';
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(), 520);
+}
+function doSplat(x,y){
+  const labels=['SPLAT!','GOT IT!','CLAP!','SMASH!','YAY!','🎯'];
+  const el=document.createElement('div'); el.className='splat';
+  el.textContent=labels[Math.floor(Math.random()*labels.length)];
+  el.style.left=x+'px'; el.style.top=y+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 730);
+}
+function doMiss(x,y){
+  const el=document.createElement('div'); el.className='miss-hand';
+  el.textContent='👋'; el.style.left=x+'px'; el.style.top=y+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 520);
+}
+
+// ── GAME LOOP ─────────────────────────────────────────────
+function loop(ts){
+  if(!running) return;
+  const dt=lastTs?(ts-lastTs):16; lastTs=ts;
+  mosqs.forEach(m=>tickMosq(m,dt));
+  raf=requestAnimationFrame(loop);
+}
+
+// ── TIMER ─────────────────────────────────────────────────
+function startTimer(){
+  timeLeft=TOTAL_TIME; updateTimer();
+  timerInt=setInterval(()=>{ timeLeft--; updateTimer(); if(timeLeft<=0) endGame(); },1000);
+}
+function updateTimer(){
+  document.getElementById('time-pill').textContent='⏱ '+timeLeft+'s';
+  const pct=(timeLeft/TOTAL_TIME)*100;
+  const bar=document.getElementById('timer-bar');
+  bar.style.width=pct+'%';
+  bar.style.background=pct>40
+    ?'linear-gradient(90deg,#34d399,#10b981)'
+    :pct>20
+    ?'linear-gradient(90deg,#fbbf24,#f59e0b)'
+    :'linear-gradient(90deg,#f87171,#ef4444)';
+}
+
+// ── START / END ───────────────────────────────────────────
+function startGame(){
+  ensureAudio();
+  score=0;
+  document.getElementById('score-pill').textContent='🦟 0';
+  document.getElementById('start-screen').classList.add('off');
+  document.getElementById('gameover-screen').classList.add('off');
+  document.getElementById('hud').classList.remove('off');
+
+  mosqs.forEach(m=>{ stopBuzz(m.buzz); m.el.remove(); });
+  mosqs=[]; document.getElementById('game-area').innerHTML='';
+
+  const freqs=[190,210,228];
+  for(let i=0;i<MOSQ_COUNT;i++){
+    const m=spawnMosq(i);
+    m.buzz=makeBuzz(freqs[i]);
+    mosqs.push(m);
+  }
+
+  running=true; lastTs=0;
+  raf=requestAnimationFrame(loop);
+  startTimer();
+}
+
+function endGame(){
+  running=false;
+  clearInterval(timerInt);
+  cancelAnimationFrame(raf);
+  mosqs.forEach(m=>setBuzz(m.buzz,0));
+  document.getElementById('hud').classList.add('off');
+  document.getElementById('final-num').textContent=score;
+  const msg=score>=35?'🏆 Lightning reflexes!'
+            :score>=22?'⭐ Super fast!'
+            :score>=12?'👍 Good job!'
+            :'🦟 Keep practising!';
+  document.getElementById('final-msg').textContent=msg+' mosquitoes clapped!';
+  document.getElementById('gameover-screen').classList.remove('off');
+}
+
+// miss tap on background
+document.getElementById('game-area').addEventListener('pointerdown',e=>{
+  if(e.target.id==='game-area'&&running) doMiss(e.clientX,e.clientY);
+});
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('replay-btn').addEventListener('click', startGame);
+
+})();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

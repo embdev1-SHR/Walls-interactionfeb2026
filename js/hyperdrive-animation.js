@@ -1,137 +1,171 @@
-class Particle {
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.reset();
-        this.maxSpeed = 1.0;
-        this.maxForce = 0.1;
-        this.particleSize = 10;
-        this.isKilled = false;
-
-        this.startColor = { r: 255, g: 255, b: 255 };
-        this.targetColor = { r: 255, g: 255, b: 255 };
-        this.colorWeight = 0;
-        this.colorBlendRate = 0.01;
-
-        this.speed = Math.random() * 8 + 4;
-        this.z = Math.random() * 2000;
-    }
-
-    reset() {
-        this.x = (Math.random() - 0.5) * this.canvas.width;
-        this.y = (Math.random() - 0.5) * this.canvas.height;
-        this.z = Math.random() * 2000;
-        this.speed = Math.random() * 8 + 4;
-    }
-
-    update() {
-        this.z -= this.speed;
-
-        if (this.z <= 0) {
-            this.reset();
-            this.z = 2000;
-        }
-    }
-
-    draw(ctx) {
-        const cx = this.canvas.width / 2;
-        const cy = this.canvas.height / 2;
-
-        const k = 200 / this.z;
-        const px = this.x * k + cx;
-        const py = this.y * k + cy;
-
-        const pz = 200 / (this.z + this.speed);
-        const px2 = this.x * pz + cx;
-        const py2 = this.y * pz + cy;
-
-        if (this.colorWeight < 1.0) {
-            this.colorWeight = Math.min(this.colorWeight + this.colorBlendRate, 1.0);
-        }
-
-        const currentColor = {
-            r: Math.round(this.startColor.r + (this.targetColor.r - this.startColor.r) * this.colorWeight),
-            g: Math.round(this.startColor.g + (this.targetColor.g - this.startColor.g) * this.colorWeight),
-            b: Math.round(this.startColor.b + (this.targetColor.b - this.startColor.b) * this.colorWeight)
-        };
-
-        const size = (1 - this.z / 2000) * 4;
-        const alpha = 1 - this.z / 2000;
-
-        ctx.strokeStyle = `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${alpha})`;
-        ctx.lineWidth = size;
-        ctx.beginPath();
-        ctx.moveTo(px2, py2);
-        ctx.lineTo(px, py);
-        ctx.stroke();
-
-        ctx.fillStyle = `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${alpha})`;
-        ctx.beginPath();
-        ctx.arc(px, py, size / 2, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}
-
 const canvas = document.getElementById('particle-canvas');
-const ctx = canvas.getContext('2d');
+const ctx    = canvas.getContext('2d');
 
-canvas.width = window.innerWidth;
+canvas.width  = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const particles = [];
-const particleCount = 800;
-
-for (let i = 0; i < particleCount; i++) {
-    particles.push(new Particle(canvas));
-}
-
-const colors = [
-    { r: 186, g: 225, b: 255 },
-    { r: 255, g: 179, b: 186 },
-    { r: 224, g: 187, b: 228 },
-    { r: 186, g: 255, b: 201 },
-    { r: 255, g: 249, b: 196 },
-    { r: 255, g: 222, b: 186 }
+const PALETTE = [
+  { r: 99,  g: 102, b: 241 }, // indigo
+  { r: 139, g: 92,  b: 246 }, // violet
+  { r: 6,   g: 182, b: 212 }, // cyan
+  { r: 236, g: 72,  b: 153 }, // pink
+  { r: 245, g: 158, b: 11  }, // amber
+  { r: 16,  g: 185, b: 129 }, // emerald
+  { r: 59,  g: 130, b: 246 }, // blue
 ];
 
-let colorIndex = 0;
-let frameCount = 0;
+function randColor() {
+  return PALETTE[Math.floor(Math.random() * PALETTE.length)];
+}
 
-particles.forEach((particle, index) => {
-    const color = colors[index % colors.length];
-    particle.targetColor = color;
-    particle.startColor = color;
-});
+// ── TUNNEL RINGS ─────────────────────────────────────────
+class Ring {
+  constructor(phase) {
+    const c = randColor();
+    this.r = c.r; this.g = c.g; this.b = c.b;
+    this.speed = Math.random() * 3.5 + 2.5;
+    this.maxR  = Math.max(canvas.width, canvas.height) * 0.95;
+    // phase: 0-1 spread rings evenly across full extent at start
+    this.radius = phase !== undefined ? phase * this.maxR : 0;
+  }
 
-function animate() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    particles.forEach(particle => {
-        particle.update();
-        particle.draw(ctx);
-    });
-
-    frameCount++;
-
-    if (frameCount % 180 === 0) {
-        colorIndex = (colorIndex + 1) % colors.length;
-        particles.forEach(particle => {
-            particle.startColor = {
-                r: particle.startColor.r + (particle.targetColor.r - particle.startColor.r) * particle.colorWeight,
-                g: particle.startColor.g + (particle.targetColor.g - particle.startColor.g) * particle.colorWeight,
-                b: particle.startColor.b + (particle.targetColor.b - particle.startColor.b) * particle.colorWeight
-            };
-            particle.targetColor = colors[(colorIndex + Math.floor(Math.random() * 3)) % colors.length];
-            particle.colorWeight = 0;
-        });
+  update(warp) {
+    this.radius += this.speed * warp;
+    if (this.radius > this.maxR) {
+      const c = randColor();
+      this.r = c.r; this.g = c.g; this.b = c.b;
+      this.speed  = Math.random() * 3.5 + 2.5;
+      this.maxR   = Math.max(canvas.width, canvas.height) * 0.95;
+      this.radius = 0;
     }
+  }
 
-    requestAnimationFrame(animate);
+  draw() {
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const t  = this.radius / this.maxR;          // 0 → 1
+    const alpha = Math.sin(t * Math.PI) * 0.55;  // peaks mid-travel
+    if (alpha < 0.01) return;
+
+    const lw = Math.max(0.5, (1 - t) * 2.8 + 0.5);
+
+    // soft outer glow
+    ctx.save();
+    ctx.strokeStyle = `rgba(${this.r},${this.g},${this.b},${alpha * 0.25})`;
+    ctx.lineWidth   = lw * 5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, this.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // crisp ring
+    ctx.strokeStyle = `rgba(${this.r},${this.g},${this.b},${alpha})`;
+    ctx.lineWidth   = lw;
+    ctx.beginPath();
+    ctx.arc(cx, cy, this.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ── HYPERDRIVE STREAKS ────────────────────────────────────
+class Streak {
+  constructor(initial) {
+    this.reset(initial);
+  }
+
+  reset(initial) {
+    const spread = 1.8;
+    this.x = (Math.random() - 0.5) * canvas.width  * spread;
+    this.y = (Math.random() - 0.5) * canvas.height * spread;
+    this.z = initial ? Math.random() * 2000 : 2000;
+    const c = randColor();
+    this.r = c.r; this.g = c.g; this.b = c.b;
+    this.baseSpeed = Math.random() * 10 + 5;
+  }
+
+  update(warp) {
+    this.z -= this.baseSpeed * warp;
+    if (this.z <= 1) this.reset(false);
+  }
+
+  draw() {
+    const cx = canvas.width  / 2;
+    const cy = canvas.height / 2;
+
+    const k1 = 260 / this.z;
+    const k2 = 260 / (this.z + this.baseSpeed * 4);
+
+    const x1 = this.x * k1 + cx;
+    const y1 = this.y * k1 + cy;
+    const x2 = this.x * k2 + cx;
+    const y2 = this.y * k2 + cy;
+
+    const progress = 1 - this.z / 2000;
+    const alpha    = Math.min(1, progress * 1.5);
+    const lw       = Math.max(0.4, progress * 3.2);
+
+    // gradient streak
+    const grad = ctx.createLinearGradient(x2, y2, x1, y1);
+    grad.addColorStop(0, `rgba(${this.r},${this.g},${this.b},0)`);
+    grad.addColorStop(1, `rgba(${this.r},${this.g},${this.b},${alpha * 0.85})`);
+
+    ctx.save();
+    ctx.strokeStyle = grad;
+    ctx.lineWidth   = lw;
+    ctx.lineCap     = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+
+    // bright dot at tip
+    ctx.fillStyle = `rgba(${this.r},${this.g},${this.b},${alpha})`;
+    ctx.beginPath();
+    ctx.arc(x1, y1, lw * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+
+    // soft halo on close streaks
+    if (progress > 0.7) {
+      ctx.fillStyle = `rgba(${this.r},${this.g},${this.b},${(progress - 0.7) * 0.16})`;
+      ctx.beginPath();
+      ctx.arc(x1, y1, lw * 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────
+const RING_COUNT   = 12;
+const STREAK_COUNT = 600;
+
+// Evenly space rings across the tunnel at startup
+const rings   = Array.from({ length: RING_COUNT },   (_, i) => new Ring(i / RING_COUNT));
+const streaks = Array.from({ length: STREAK_COUNT }, ()     => new Streak(true));
+
+let warp = 0.5;
+
+// ── LOOP ──────────────────────────────────────────────────
+function animate() {
+  if (warp < 1.9) warp += 0.0016;
+
+  // white trail fade — longer persistence = more dramatic
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // draw rings behind streaks
+  rings.forEach(r => { r.update(warp); r.draw(); });
+
+  // draw streaks on top
+  streaks.forEach(s => { s.update(warp); s.draw(); });
+
+  requestAnimationFrame(animate);
 }
 
 window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  rings.forEach(r => r.maxR = Math.max(canvas.width, canvas.height) * 0.95);
 });
 
 animate();

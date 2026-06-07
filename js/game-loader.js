@@ -60,42 +60,21 @@ const CATEGORIES = {
         title: 'Money Shop',
         game: 'money-counter'
     },
-
-    /* ══════════════════════════════════════════════════
-       PRE-PRIMARY  (Modules 2 & 3)
-       ══════════════════════════════════════════════════ */
     'pre-primary': {
         title: 'Pre-Primary',
-        subcategories: [
-            { name: 'Module 2', key: 'pp-module-2' },
-            { name: 'Module 3', key: 'pp-module-3' }
+        options: [
+            { name: '🦁 Animal Hunt',        game: 'pp-animal-hunt'  },
+            { name: '🐘 Size Quiz',          game: 'pp-size-quiz'    },
+            { name: '🐾 3D Animal Explorer', game: 'model-cards'     },
+            { name: '🦉 Animal Parts',       game: 'model-cards-2'   },
+            { name: '🎨 Animal Drawing',     game: 'animal-drawing'  },
+            { name: '🦟 Mosquito Clap',      game: 'mosquito-clap'   },
+            { name: '😊 Feelings',           game: 'feelings'        },
+            { name: '🔢 Pattern Finder',     game: 'pattern-finder'  },
+            { name: '🎨 Colour Match',       game: 'colour-match'    }
         ]
     },
-    'pp-module-2': {
-        title: 'Module 2',
-        parent: 'pre-primary',
-        options: [
-            { name: 'Big / Small / Green',   game: 'pp-size-color' },
-            { name: 'Firefly Path',          game: 'pp-firefly-path' },
-            { name: 'Mosquito Clap',         game: 'pp-mosquito-clap' },
-            { name: 'Elephant Parts',        game: 'pp-parts-elephant' },
-            { name: 'Rabbit Parts',          game: 'pp-parts-rabbit' },
-            { name: 'Turtle Parts',          game: 'pp-parts-turtle' },
-            { name: 'Rabbit Fill',           game: 'pp-fill-rabbit' },
-            { name: 'Parrot Path',           game: 'pp-path-parrot' },
-            { name: 'Turtle Path',           game: 'pp-path-turtle' }
-        ]
-    },
-    'pp-module-3': {
-        title: 'Module 3',
-        parent: 'pre-primary',
-        options: [
-            { name: '1-2-3 Egg Tap',   game: 'pp-egg-count' },
-            { name: 'Block Stack',     game: 'pp-block-stack' },
-            { name: 'Crow Fill',       game: 'pp-fill-crow' },
-            { name: 'Crow Path',       game: 'pp-path-crow' }
-        ]
-    }
+
 };
 
 const gameCards = document.querySelectorAll('.game-card');
@@ -145,15 +124,7 @@ gameCards.forEach(card => {
     });
 });
 
-function _isPpCategory(key) {
-    return key === 'pre-primary' || key === 'pp-module-2' || key === 'pp-module-3';
-}
-
 function handleOptionTap(option) {
-    // Placeholder games: stay in submenu, do nothing at all
-    const PLACEHOLDER_GAMES = ['pp-parts-elephant','pp-parts-rabbit','pp-parts-turtle','pp-fill-rabbit','pp-fill-crow'];
-    if (PLACEHOLDER_GAMES.includes(option.game)) return;
-
     playSound('click');
     closeSubmenu();
     setTimeout(() => loadGame(option.game), 300);
@@ -167,17 +138,10 @@ function showSubmenu(categoryName) {
     const box       = document.getElementById('submenu-box');
     const titleEl   = document.getElementById('submenu-title');
     const optsCont  = document.getElementById('submenu-options');
-    const ispp      = _isPpCategory(categoryName);
-
     titleEl.textContent = category.title;
     optsCont.innerHTML  = '';
-
-    // Wide 3-col grid for PP option pages; narrow list for everything else
-    if (ispp && category.options) {
-        box.classList.add('pp-grid');
-    } else {
-        box.classList.remove('pp-grid');
-    }
+    box.classList.remove('pp-grid');
+    if (categoryName === 'pre-primary') box.classList.add('pp-grid');
 
     // \u2500\u2500 Back button \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.parent) {
@@ -268,13 +232,6 @@ document.getElementById('submenu-overlay').addEventListener('touchend', (e) => {
 });
 
 function loadGame(gameName) {
-    // Placeholder games — keep as visible buttons but do nothing when tapped
-    const PLACEHOLDER_GAMES = [
-        'pp-parts-elephant', 'pp-parts-rabbit', 'pp-parts-turtle',
-        'pp-fill-rabbit', 'pp-fill-crow'
-    ];
-    if (PLACEHOLDER_GAMES.includes(gameName)) return;
-
     const mainMenu = document.getElementById('main-menu');
     const menuAudio = document.getElementById('menu-audio');
 
@@ -406,24 +363,33 @@ function loadGame(gameName) {
             case 'video-360-player':
                 window.location.href = 'games/video-360-player.html';
                 break;
-            /* ── Pre-Primary — routed through player-selector ─── */
-            case 'pp-size-color':
-                window.location.href = 'games/pp-multiplayer.html?src=' + encodeURIComponent('pp-size-color.html'); break;
-            /* bird path games — auto 3-player split with different procedural seeds */
-            case 'pp-firefly-path':
-                window.location.href = 'games/pp-multiplayer.html?auto=3&src=' + encodeURIComponent('pp-firefly-path.html'); break;
-            case 'pp-path-parrot':
-                window.location.href = 'games/pp-multiplayer.html?auto=3&src=' + encodeURIComponent('pp-path-tracer.html?path=parrot'); break;
-            case 'pp-path-turtle':
-                window.location.href = 'games/pp-multiplayer.html?auto=3&src=' + encodeURIComponent('pp-path-tracer.html?path=turtle'); break;
-            case 'pp-path-crow':
-                window.location.href = 'games/pp-multiplayer.html?auto=3&src=' + encodeURIComponent('pp-path-tracer.html?path=crow'); break;
-            case 'pp-mosquito-clap':
-                window.location.href = 'games/pp-multiplayer.html?src=' + encodeURIComponent('pp-mosquito-clap.html'); break;
-            case 'pp-egg-count':
-                window.location.href = 'games/pp-multiplayer.html?src=' + encodeURIComponent('pp-egg-count.html'); break;
-            case 'pp-block-stack':
-                window.location.href = 'games/pp-multiplayer.html?src=' + encodeURIComponent('pp-block-stack.html'); break;
+            case 'pp-animal-hunt':
+                window.location.href = 'games/pp-animal-hunt.html';
+                break;
+            case 'pp-size-quiz':
+                window.location.href = 'games/pp-size-quiz.html';
+                break;
+            case 'model-cards':
+                window.location.href = 'games/model-cards.html';
+                break;
+            case 'model-cards-2':
+                window.location.href = 'games/model-cards-2.html';
+                break;
+            case 'animal-drawing':
+                window.location.href = 'games/animal-drawing.html';
+                break;
+            case 'mosquito-clap':
+                window.location.href = 'games/mosquito-clap.html';
+                break;
+            case 'feelings':
+                window.location.href = 'games/feelings.html';
+                break;
+            case 'pattern-finder':
+                window.location.href = 'games/pattern-finder.html';
+                break;
+            case 'colour-match':
+                window.location.href = 'games/colour-match.html';
+                break;
             default:
                 console.log('Game not found:', gameName);
                 mainMenu.style.display = 'block';
