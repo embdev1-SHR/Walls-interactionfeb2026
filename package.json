@@ -24,6 +24,7 @@
     },
     "files": [
       "main.js",
+      "login.html",
       "index.html",
       "intro.html",
       "FreeCanvas.html",

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Auticare Blueroom — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+  html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;
+    background:radial-gradient(circle at 30% 20%,#1e1b4b,#0f172a 70%);color:#e5e7eb}
+  .wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  .screen{display:none;width:min(460px,90vw);background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:38px 34px;
+    box-shadow:0 30px 80px rgba(0,0,0,.5);backdrop-filter:blur(14px);text-align:center}
+  .screen.active{display:block;animation:pop .35s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+  h1{font-size:26px;font-weight:900;margin-bottom:6px;
+    background:linear-gradient(90deg,#818cf8,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent}
+  p.sub{font-size:13px;color:#9ca3af;margin-bottom:26px;font-weight:600}
+  label{display:block;text-align:left;font-size:12px;font-weight:800;letter-spacing:.5px;
+    text-transform:uppercase;color:#a5b4fc;margin:14px 2px 6px}
+  input,select{width:100%;padding:13px 15px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.25);color:#fff;font-size:15px;font-family:inherit;outline:none;transition:.2s}
+  input:focus,select:focus{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.25)}
+  select option{background:#1e1b4b}
+  button{width:100%;margin-top:22px;padding:14px;border:none;border-radius:12px;cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,#6366f1,#ec4899);transition:transform .12s,filter .2s}
+  button:hover{filter:brightness(1.08)}
+  button:active{transform:scale(.97)}
+  button.ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15)}
+  .mode-grid{display:grid;gap:14px;margin-top:8px}
+  .mode-card{padding:22px;border-radius:16px;cursor:pointer;text-align:left;
+    border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);transition:.2s}
+  .mode-card:hover{border-color:#818cf8;background:rgba(129,140,248,.12);transform:translateY(-2px)}
+  .mode-card .t{font-size:18px;font-weight:900;margin-bottom:4px}
+  .mode-card .d{font-size:12.5px;color:#9ca3af;font-weight:600}
+  .err{min-height:18px;margin-top:14px;font-size:13px;font-weight:700;color:#f87171}
+  .muted{font-size:11px;color:#6b7280;margin-top:18px;font-weight:600}
+  .spin{display:inline-block;width:34px;height:34px;border:3px solid rgba(255,255,255,.2);
+    border-top-color:#818cf8;border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .row{display:flex;gap:12px}.row>*{flex:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 0 · loading / checking activation -->
+  <div class="screen" id="screen-loading"><div class="spin"></div><p class="sub" style="margin-top:18px">Loading…</p></div>
+
+  <!-- 1 · license activation (one-time) -->
+  <div class="screen" id="screen-activate">
+    <h1>Activate Center</h1>
+    <p class="sub">Enter the Center API Key from your Auticare dashboard. This device will be locked to this center.</p>
+    <label for="apiKey">Center API Key</label>
+    <input id="apiKey" type="text" placeholder="64-character key" autocomplete="off" spellcheck="false">
+    <div class="err" id="activate-err"></div>
+    <button id="btn-activate">Activate this Device</button>
+    <div class="muted">One device · one center · one-time setup</div>
+  </div>
+
+  <!-- 2 · mode selection -->
+  <div class="screen" id="screen-mode">
+    <h1 id="mode-center">Choose Mode</h1>
+    <p class="sub">How do you want to run this session?</p>
+    <div class="mode-grid">
+      <div class="mode-card" id="pick-guest">
+        <div class="t">🛜 Guest / Offline</div>
+        <div class="d">Play all local content. No web data, no student records.</div>
+      </div>
+      <div class="mode-card" id="pick-online">
+        <div class="t">🔐 Online Mode</div>
+        <div class="d">Sign in to access classes, students and record activity.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 · online operator login -->
+  <div class="screen" id="screen-login">
+    <h1>Online Sign In</h1>
+    <p class="sub">Enter your center login credentials.</p>
+    <label for="user">Username / Email</label>
+    <input id="user" type="text" autocomplete="off">
+    <label for="pass">Password</label>
+    <input id="pass" type="password">
+    <div class="err" id="login-err"></div>
+    <button id="btn-login">Sign In</button>
+    <button class="ghost" id="btn-login-back">Back</button>
+  </div>
+
+  <!-- 4 · class selection + class password -->
+  <div class="screen" id="screen-class">
+    <h1>Select Class</h1>
+    <p class="sub">Choose a class and enter its password.</p>
+    <label for="classSel">Class</label>
+    <select id="classSel"></select>
+    <label for="classPass">Class Password</label>
+    <input id="classPass" type="password">
+    <div class="err" id="class-err"></div>
+    <button id="btn-class">Continue</button>
+    <button class="ghost" id="btn-class-back">Back</button>
+  </div>
+
+  <!-- 5 · submode popup -->
+  <div class="screen" id="screen-submode">
+    <h1>Session Type</h1>
+    <p class="sub" id="submode-class-name">Choose how this class will play.</p>
+    <div class="mode-grid">
+      <div class="mode-card" id="pick-class-mode">
+        <div class="t">👥 Class Mode</div>
+        <div class="d">Multiple children together. Only multiplayer scenarios are shown.</div>
+      </div>
+      <div class="mode-card" id="pick-individual-mode">
+        <div class="t">🧒 Individual Mode</div>
+        <div class="d">One child at a time. Multiplayer hidden; activity is recorded.</div>
+      </div>
+    </div>
+    <button class="ghost" id="btn-submode-back">Back</button>
+  </div>
+
+  <!-- 6 · student selection (individual) -->
+  <div class="screen" id="screen-student">
+    <h1>Select Student</h1>
+    <p class="sub">Everything this session is recorded to this student.</p>
+    <label for="studentSel">Student</label>
+    <select id="studentSel"></select>
+    <div class="err" id="student-err"></div>
+    <button id="btn-student">Start Session</button>
+    <button class="ghost" id="btn-student-back">Back</button>
+  </div>
+
+</div>
+
+<script src="./js/auticare-config.js"></script>
+<script src="./js/api-client.js"></script>
+<script src="./js/license-manager.js"></script>
+<script src="./js/session.js"></script>
+<script>
+// While the placeholder endpoints don't exist yet, tolerate their
+// failures so the whole flow stays clickable. Flip to false once the
+// Neon-backed endpoints are live.
+const TOLERATE_PLACEHOLDER = true;
+
+// Local mock data used ONLY when placeholder endpoints fail.
+const MOCK_CLASSES = [
+  { ClassID: 1, ClassName: 'Sunrise (Class A)' },
+  { ClassID: 2, ClassName: 'Rainbow (Class B)' }
+];
+const MOCK_STUDENTS = {
+  1: [{ StudentID: 101, StudentName: 'Aarav' }, { StudentID: 102, StudentName: 'Diya' }],
+  2: [{ StudentID: 201, StudentName: 'Ishaan' }, { StudentID: 202, StudentName: 'Meera' }]
+};
+
+let LICENSE = null;                 // { token, center, ... }
+let draft = { classId:null, className:null }; // in-progress online selection
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function setErr(id,msg){ document.getElementById(id).textContent = msg||''; }
+
+// ---- boot: activated? --------------------------------------
+(async function boot(){
+  show('screen-loading');
+  Session.clear(); // fresh session on every launch
+  try {
+    if (await LicenseManager.isActivated()) {
+      LICENSE = await LicenseManager.getLicense();
+      document.getElementById('mode-center').textContent = LICENSE.center.CenterName;
+      show('screen-mode');
+    } else {
+      show('screen-activate');
+    }
+  } catch (e) {
+    show('screen-activate');
+  }
+})();
+
+// ---- 1 · activation ----------------------------------------
+document.getElementById('btn-activate').onclick = async () => {
+  const key = document.getElementById('apiKey').value.trim();
+  setErr('activate-err','');
+  if (!key) return setErr('activate-err','Please enter the Center API Key.');
+  const btn = document.getElementById('btn-activate');
+  btn.disabled = true; btn.textContent = 'Activating…';
+  try {
+    LICENSE = await LicenseManager.activate(key);
+    document.getElementById('mode-center').textContent = LICENSE.center.CenterName;
+    show('screen-mode');
+  } catch (e) {
+    setErr('activate-err', e.message || 'Activation failed.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Activate this Device';
+  }
+};
+
+// ---- 2 · mode selection ------------------------------------
+document.getElementById('pick-guest').onclick = () => {
+  Session.set({ mode:'guest', submode:null, token:null,
+    center: LICENSE ? LICENSE.center : null,
+    classId:null, className:null, studentId:null, studentName:null });
+  location.href = 'index.html';
+};
+document.getElementById('pick-online').onclick = () => { setErr('login-err',''); show('screen-login'); };
+
+// ---- 3 · operator login ------------------------------------
+document.getElementById('btn-login-back').onclick = () => show('screen-mode');
+document.getElementById('btn-login').onclick = async () => {
+  const u = document.getElementById('user').value.trim();
+  const p = document.getElementById('pass').value;
+  setErr('login-err','');
+  if (!u || !p) return setErr('login-err','Enter username and password.');
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    // token may be >1h old — refresh the center JWT first.
+    await LicenseManager.refreshToken();
+    LICENSE = await LicenseManager.getLicense();
+    try {
+      await AuticareAPI.operatorLogin(u, p, LICENSE.token);
+    } catch (e) {
+      if (!TOLERATE_PLACEHOLDER) throw e;
+      console.warn('[login] operatorLogin placeholder:', e.message);
+    }
+    await loadClasses();
+    show('screen-class');
+  } catch (e) {
+    setErr('login-err', e.message || 'Login failed.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+};
+
+// ---- 4 · classes -------------------------------------------
+async function loadClasses(){
+  let classes;
+  try {
+    classes = await AuticareAPI.getClasses(LICENSE.token);
+    if (!Array.isArray(classes)) throw new Error('bad shape');
+  } catch (e) {
+    if (!TOLERATE_PLACEHOLDER) throw e;
+    console.warn('[class] getClasses placeholder, using mock:', e.message);
+    classes = MOCK_CLASSES;
+  }
+  const sel = document.getElementById('classSel');
+  sel.innerHTML = classes.map(c => `<option value="${c.ClassID}">${c.ClassName}</option>`).join('');
+}
+document.getElementById('btn-class-back').onclick = () => show('screen-login');
+document.getElementById('btn-class').onclick = async () => {
+  const sel = document.getElementById('classSel');
+  const classId = sel.value;
+  const className = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  const pass = document.getElementById('classPass').value;
+  setErr('class-err','');
+  if (!classId) return setErr('class-err','Select a class.');
+  if (!pass)    return setErr('class-err','Enter the class password.');
+  const btn = document.getElementById('btn-class');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    try {
+      await AuticareAPI.verifyClassPassword(classId, pass, LICENSE.token);
+    } catch (e) {
+      if (!TOLERATE_PLACEHOLDER) throw e;
+      console.warn('[class] verifyClassPassword placeholder:', e.message);
+    }
+    draft.classId = classId; draft.className = className;
+    document.getElementById('submode-class-name').textContent = className + ' — choose how this class will play.';
+    show('screen-submode');
+  } catch (e) {
+    setErr('class-err', e.message || 'Wrong class password.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Continue';
+  }
+};
+
+// ---- 5 · submode -------------------------------------------
+document.getElementById('btn-submode-back').onclick = () => show('screen-class');
+document.getElementById('pick-class-mode').onclick = () => {
+  Session.set({ mode:'online', submode:'class', token: LICENSE.token, center: LICENSE.center,
+    classId: draft.classId, className: draft.className, studentId:null, studentName:null });
+  location.href = 'index.html';
+};
+document.getElementById('pick-individual-mode').onclick = async () => {
+  setErr('student-err','');
+  await loadStudents();
+  show('screen-student');
+};
+
+// ---- 6 · student -------------------------------------------
+async function loadStudents(){
+  let students;
+  try {
+    students = await AuticareAPI.getStudents(draft.classId, LICENSE.token);
+    if (!Array.isArray(students)) throw new Error('bad shape');
+  } catch (e) {
+    if (!TOLERATE_PLACEHOLDER) throw e;
+    console.warn('[student] getStudents placeholder, using mock:', e.message);
+    students = MOCK_STUDENTS[draft.classId] || [];
+  }
+  const sel = document.getElementById('studentSel');
+  sel.innerHTML = students.map(s => `<option value="${s.StudentID}">${s.StudentName}</option>`).join('');
+}
+document.getElementById('btn-student-back').onclick = () => show('screen-submode');
+document.getElementById('btn-student').onclick = () => {
+  const sel = document.getElementById('studentSel');
+  if (!sel.value) return setErr('student-err','Select a student.');
+  const studentName = sel.options[sel.selectedIndex].text;
+  Session.set({ mode:'online', submode:'individual', token: LICENSE.token, center: LICENSE.center,
+    classId: draft.classId, className: draft.className,
+    studentId: sel.value, studentName });
+  location.href = 'index.html';
+};
+
+// DEV: Ctrl+Shift+R clears activation to re-test the whole flow.
+document.addEventListener('keydown', async (e)=>{
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='r'){
+    await LicenseManager.deactivate(); Session.clear(); location.reload();
+  }
+});
+</script>
+</body>
+</html>

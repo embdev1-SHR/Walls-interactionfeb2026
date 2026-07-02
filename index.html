@@ -418,6 +418,15 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
   </div>
 </div>
 
+<!-- Auticare session/mode layer — must load before game-loader.js -->
+<script src="./js/auticare-config.js"></script>
+<script src="./js/api-client.js"></script>
+<script src="./js/session.js"></script>
+<script>
+  // Gate: no active session -> back to the login/license screen.
+  if (!Session.get()) { location.href = 'login.html'; }
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="./js/hyperdrive-animation.js"></script>
 <script src="./js/menu-background.js"></script>

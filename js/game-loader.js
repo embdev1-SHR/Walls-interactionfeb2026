@@ -79,6 +79,45 @@ const CATEGORIES = {
 
 const gameCards = document.querySelectorAll('.game-card');
 
+// ─────────────────────────────────────────────────────────────
+//  Session mode gating (Class = multiplayer only, Individual =
+//  no multiplayer, Guest = everything). Safe no-op if Session
+//  isn't loaded.
+// ─────────────────────────────────────────────────────────────
+function gameAllowed(gameKey) {
+  return (typeof Session === 'undefined') ? true : Session.isGameAllowed(gameKey);
+}
+
+// All game keys reachable under a category (recurses subcategories).
+function collectCategoryGames(catKey, seen) {
+  seen = seen || new Set();
+  const cat = CATEGORIES[catKey];
+  if (!cat || seen.has(catKey)) return [];
+  seen.add(catKey);
+  let games = [];
+  if (cat.game) games.push(cat.game);
+  if (cat.options) cat.options.forEach(o => { if (o.game) games.push(o.game); });
+  if (cat.subcategories) cat.subcategories.forEach(s => { games = games.concat(collectCategoryGames(s.key, seen)); });
+  return games;
+}
+
+function categoryAllowed(catKey) {
+  return collectCategoryGames(catKey).some(gameAllowed);
+}
+
+// Hide top-level cards that this session mode can't use.
+function applyModeVisibility() {
+  gameCards.forEach(card => {
+    const g = card.getAttribute('data-game');
+    const c = card.getAttribute('data-category');
+    let ok = true;
+    if (g) ok = gameAllowed(g);
+    else if (c) ok = categoryAllowed(c);
+    card.style.display = ok ? '' : 'none';
+  });
+}
+applyModeVisibility();
+
 function handleCardTap(card) {
     const gameName = card.getAttribute('data-game');
     const categoryName = card.getAttribute('data-category');
@@ -164,6 +203,7 @@ function showSubmenu(categoryName) {
     // \u2500\u2500 Subcategory buttons \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.subcategories) {
         category.subcategories.forEach(sub => {
+            if (!categoryAllowed(sub.key)) return; // mode gating
             const subEl = document.createElement('div');
             subEl.className   = 'submenu-option';
             subEl.textContent = sub.name;
@@ -182,6 +222,7 @@ function showSubmenu(categoryName) {
     // \u2500\u2500 Option buttons \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.options) {
         category.options.forEach(option => {
+            if (option.game && !gameAllowed(option.game)) return; // mode gating
             option._parentKey = categoryName; // tag for routing
             const optEl = document.createElement('div');
             optEl.className   = 'submenu-option';
@@ -232,6 +273,14 @@ document.getElementById('submenu-overlay').addEventListener('touchend', (e) => {
 });
 
 function loadGame(gameName) {
+    // Defensive: block games this session mode isn't allowed to open.
+    if (!gameAllowed(gameName)) { playSound('error'); return; }
+
+    // Individual mode: record which game the student opened.
+    if (typeof Session !== 'undefined' && Session.isIndividual()) {
+        Session.logActivity('game_open', { game: gameName });
+    }
+
     const mainMenu = document.getElementById('main-menu');
     const menuAudio = document.getElementById('menu-audio');
 
