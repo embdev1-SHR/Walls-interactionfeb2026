@@ -47,7 +47,7 @@
       //    Placeholder endpoint — treat a soft failure as non-fatal for
       //    barebones so local activation still works while the server
       //    side is being built. Flip STRICT to true once live.
-      const STRICT_DEVICE_BINDING = false;
+      const STRICT_DEVICE_BINDING = true;
       try {
         await global.AuticareAPI.registerDevice(center.CenterID, deviceId, token);
       } catch (e) {
