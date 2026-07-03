@@ -18,12 +18,10 @@
       deviceRegister:    '/api/v1/external/device-register',    // POST { CenterID, deviceId } -> { ok } | 409 if bound elsewhere
       deviceCheck:       '/api/v1/external/device-check',       // GET  ?deviceId=... -> { CenterID | null }
 
-      // PLACEHOLDER — "online mode" operator login (2nd login)
-      operatorLogin:     '/api/v1/external/login',              // POST { username, password } (Bearer center token) -> { operator }
+      // Department login — identifies which dept this session belongs to
+      operatorLogin:     '/api/v1/external/login',              // POST { username, password } (Bearer center token) -> { department }
 
-      // PLACEHOLDER — classes / students under the center
-      classes:           '/api/v1/external/classes',            // GET  -> [{ ClassID, ClassName }]
-      classVerify:       '/api/v1/external/classes/verify',     // POST { ClassID, password } -> { ok }
+      // Students under a department
       students:          '/api/v1/external/classes/:classId/students', // GET -> [{ StudentID, StudentName }]
 
       // PLACEHOLDER — patient activity capture (individual mode)

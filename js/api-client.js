@@ -60,27 +60,15 @@
       return request(CFG.ENDPOINTS.deviceCheck + '?deviceId=' + encodeURIComponent(deviceId));
     },
 
-    // ---- PLACEHOLDER: online-mode operator login (2nd login) --
+    // ---- Department login — identifies dept, skips class selection --
     async operatorLogin(username, password, token) {
-      return request(CFG.ENDPOINTS.operatorLogin, {
+      const data = await request(CFG.ENDPOINTS.operatorLogin, {
         method: 'POST',
         token,
         body: { username, password }
       });
-    },
-
-    // ---- PLACEHOLDER: classes & students ----------------------
-    async getClasses(token) {
-      const data = await request(CFG.ENDPOINTS.classes, { token });
-      return (data && data.results) || data;
-    },
-
-    async verifyClassPassword(classId, password, token) {
-      return request(CFG.ENDPOINTS.classVerify, {
-        method: 'POST',
-        token,
-        body: { ClassID: classId, password }
-      });
+      // returns { success, results: { department: { DepartmentID, DepartmentName } } }
+      return data.results.department;
     },
 
     async getStudents(classId, token) {

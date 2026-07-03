@@ -77,11 +77,11 @@
     </div>
   </div>
 
-  <!-- 3 · online operator login -->
+  <!-- 3 · department login -->
   <div class="screen" id="screen-login">
-    <h1>Online Sign In</h1>
-    <p class="sub">Enter your center login credentials.</p>
-    <label for="user">Username / Email</label>
+    <h1>Department Sign In</h1>
+    <p class="sub">Enter the department username and password set in your Auticare dashboard.</p>
+    <label for="user">Department Username</label>
     <input id="user" type="text" autocomplete="off">
     <label for="pass">Password</label>
     <input id="pass" type="password">
@@ -206,27 +206,25 @@ document.getElementById('pick-guest').onclick = () => {
 };
 document.getElementById('pick-online').onclick = () => { setErr('login-err',''); show('screen-login'); };
 
-// ---- 3 · operator login ------------------------------------
+// ---- 3 · department login ----------------------------------
 document.getElementById('btn-login-back').onclick = () => show('screen-mode');
 document.getElementById('btn-login').onclick = async () => {
   const u = document.getElementById('user').value.trim();
   const p = document.getElementById('pass').value;
   setErr('login-err','');
-  if (!u || !p) return setErr('login-err','Enter username and password.');
+  if (!u || !p) return setErr('login-err','Enter department username and password.');
   const btn = document.getElementById('btn-login');
   btn.disabled = true; btn.textContent = 'Signing in…';
   try {
-    // token may be >1h old — refresh the center JWT first.
+    // Refresh center JWT if it expired (1h token).
     await LicenseManager.refreshToken();
     LICENSE = await LicenseManager.getLicense();
-    try {
-      await AuticareAPI.operatorLogin(u, p, LICENSE.token);
-    } catch (e) {
-      if (!TOLERATE_PLACEHOLDER) throw e;
-      console.warn('[login] operatorLogin placeholder:', e.message);
-    }
-    await loadClasses();
-    show('screen-class');
+    // Login identifies the department directly — no separate class selection needed.
+    const dept = await AuticareAPI.operatorLogin(u, p, LICENSE.token);
+    draft.classId = String(dept.DepartmentID);
+    draft.className = dept.DepartmentName;
+    document.getElementById('submode-class-name').textContent = dept.DepartmentName + ' — choose how this session will run.';
+    show('screen-submode');
   } catch (e) {
     setErr('login-err', e.message || 'Login failed.');
   } finally {
@@ -234,50 +232,8 @@ document.getElementById('btn-login').onclick = async () => {
   }
 };
 
-// ---- 4 · classes -------------------------------------------
-async function loadClasses(){
-  let classes;
-  try {
-    classes = await AuticareAPI.getClasses(LICENSE.token);
-    if (!Array.isArray(classes)) throw new Error('bad shape');
-  } catch (e) {
-    if (!TOLERATE_PLACEHOLDER) throw e;
-    console.warn('[class] getClasses placeholder, using mock:', e.message);
-    classes = MOCK_CLASSES;
-  }
-  const sel = document.getElementById('classSel');
-  sel.innerHTML = classes.map(c => `<option value="${c.ClassID}">${c.ClassName}</option>`).join('');
-}
-document.getElementById('btn-class-back').onclick = () => show('screen-login');
-document.getElementById('btn-class').onclick = async () => {
-  const sel = document.getElementById('classSel');
-  const classId = sel.value;
-  const className = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
-  const pass = document.getElementById('classPass').value;
-  setErr('class-err','');
-  if (!classId) return setErr('class-err','Select a class.');
-  if (!pass)    return setErr('class-err','Enter the class password.');
-  const btn = document.getElementById('btn-class');
-  btn.disabled = true; btn.textContent = 'Checking…';
-  try {
-    try {
-      await AuticareAPI.verifyClassPassword(classId, pass, LICENSE.token);
-    } catch (e) {
-      if (!TOLERATE_PLACEHOLDER) throw e;
-      console.warn('[class] verifyClassPassword placeholder:', e.message);
-    }
-    draft.classId = classId; draft.className = className;
-    document.getElementById('submode-class-name').textContent = className + ' — choose how this class will play.';
-    show('screen-submode');
-  } catch (e) {
-    setErr('class-err', e.message || 'Wrong class password.');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Continue';
-  }
-};
-
 // ---- 5 · submode -------------------------------------------
-document.getElementById('btn-submode-back').onclick = () => show('screen-class');
+document.getElementById('btn-submode-back').onclick = () => show('screen-login');
 document.getElementById('pick-class-mode').onclick = () => {
   Session.set({ mode:'online', submode:'class', token: LICENSE.token, center: LICENSE.center,
     classId: draft.classId, className: draft.className, studentId:null, studentName:null });
