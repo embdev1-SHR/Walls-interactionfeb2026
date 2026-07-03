@@ -71,11 +71,33 @@
     });
   }
 
+  // ---- global hook games can OPTIONALLY call to report score/timing ----
+  // Usage from any game:  window.Blueroom.reportScore({ score: 85, completionPct: 90, durationMs: 40000 });
+  // Timing is auto-derived even without this; score needs this call.
+  function installGlobalHook(act) {
+    window.Blueroom = window.Blueroom || {};
+    window.Blueroom.reportScore = function (r) {
+      r = r || {};
+      logActivity('scenario_complete', {
+        scenarioId: act, gameKey: act,
+        completionPct: (r.completionPct != null ? r.completionPct : null),
+        durationMs: (r.durationMs != null ? r.durationMs : (Date.now() - START_TS)),
+        label: (r.score != null ? String(r.score) : null)
+      });
+    };
+    // Generic event passthrough for anything else a game wants to record.
+    window.Blueroom.logEvent = function (type, data) { logActivity(type, data || {}); };
+  }
+
+  var START_TS = Date.now();
+
   function start() {
     if (!activeSession()) return; // guest/offline or no session — do nothing
 
     var act = currentActivity();
     var lastTouch = 0;
+    START_TS = Date.now();
+    installGlobalHook(act);
 
     // ---- touch / pointer coordinates ----
     function onPoint(e) {
@@ -111,9 +133,12 @@
     heartbeat();
     setInterval(heartbeat, HEARTBEAT_MS);
 
-    // ---- mark the activity ended when leaving the page ----
+    // ---- mark the activity ended (with time-on-task) when leaving ----
     window.addEventListener('beforeunload', function () {
-      logActivity('scenario_end', { scenarioId: act, gameKey: act });
+      logActivity('scenario_end', {
+        scenarioId: act, gameKey: act,
+        durationMs: (Date.now() - START_TS)
+      });
     });
   }
 
