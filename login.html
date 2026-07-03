@@ -3,132 +3,309 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Auticare Blueroom — Sign In</title>
+<title>Auticare Blueroom</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
-  html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;
-    background:radial-gradient(circle at 30% 20%,#1e1b4b,#0f172a 70%);color:#e5e7eb}
-  .wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-  .screen{display:none;width:min(460px,90vw);background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:38px 34px;
-    box-shadow:0 30px 80px rgba(0,0,0,.5);backdrop-filter:blur(14px);text-align:center}
-  .screen.active{display:block;animation:pop .35s ease}
-  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
-  h1{font-size:26px;font-weight:900;margin-bottom:6px;
-    background:linear-gradient(90deg,#818cf8,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent}
-  p.sub{font-size:13px;color:#9ca3af;margin-bottom:26px;font-weight:600}
-  label{display:block;text-align:left;font-size:12px;font-weight:800;letter-spacing:.5px;
-    text-transform:uppercase;color:#a5b4fc;margin:14px 2px 6px}
-  input,select{width:100%;padding:13px 15px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
-    background:rgba(0,0,0,.25);color:#fff;font-size:15px;font-family:inherit;outline:none;transition:.2s}
-  input:focus,select:focus{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.25)}
-  select option{background:#1e1b4b}
-  button{width:100%;margin-top:22px;padding:14px;border:none;border-radius:12px;cursor:pointer;
-    font-family:inherit;font-size:15px;font-weight:800;color:#fff;
-    background:linear-gradient(135deg,#6366f1,#ec4899);transition:transform .12s,filter .2s}
-  button:hover{filter:brightness(1.08)}
+
+  html,body{
+    width:100%;height:100%;overflow:hidden;
+    font-family:'Nunito','Segoe UI',sans-serif;
+    background:#f4f6ff;
+    color:#2d3748;
+  }
+
+  /* ── Floating background bubbles ── */
+  body::before,body::after{
+    content:'';position:fixed;border-radius:50%;opacity:.18;pointer-events:none;
+  }
+  body::before{
+    width:420px;height:420px;
+    background:radial-gradient(circle,#556ee6,#a78bfa);
+    top:-120px;left:-120px;
+  }
+  body::after{
+    width:320px;height:320px;
+    background:radial-gradient(circle,#34c38f,#6ee7b7);
+    bottom:-80px;right:-80px;
+  }
+
+  .bubble{
+    position:fixed;border-radius:50%;opacity:.12;pointer-events:none;
+  }
+  .bubble-1{width:180px;height:180px;background:#f1b44c;bottom:15%;left:5%;}
+  .bubble-2{width:100px;height:100px;background:#f46a6a;top:20%;right:8%;}
+  .bubble-3{width:60px;height:60px;background:#556ee6;top:60%;right:12%;}
+
+  /* ── Wrap + card ── */
+  .wrap{
+    position:fixed;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:16px;
+  }
+
+  .screen{
+    display:none;
+    width:min(480px,100%);
+    background:#fff;
+    border-radius:28px;
+    padding:40px 36px 36px;
+    box-shadow:0 8px 40px rgba(85,110,230,.12), 0 2px 8px rgba(0,0,0,.06);
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .screen.active{display:block;animation:pop .32s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pop{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
+
+  /* Colored top stripe per screen */
+  .screen::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg,#556ee6,#a78bfa,#f46a6a);
+    border-radius:28px 28px 0 0;
+  }
+
+  /* ── Logo / brand mark ── */
+  .brand{
+    display:inline-flex;align-items:center;gap:10px;
+    margin-bottom:22px;
+  }
+  .brand-icon{
+    width:48px;height:48px;border-radius:14px;
+    background:linear-gradient(135deg,#556ee6,#818cf8);
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;box-shadow:0 4px 12px rgba(85,110,230,.35);
+    flex-shrink:0;
+  }
+  .brand-name{
+    font-size:20px;font-weight:900;
+    background:linear-gradient(135deg,#556ee6,#818cf8);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    line-height:1.1;text-align:left;
+  }
+  .brand-name small{
+    display:block;font-size:11px;font-weight:700;color:#94a3b8;
+    background:none;-webkit-text-fill-color:#94a3b8;letter-spacing:.5px;
+    text-transform:uppercase;
+  }
+
+  h1{font-size:22px;font-weight:900;color:#1e293b;margin-bottom:6px}
+  p.sub{font-size:13px;color:#64748b;margin-bottom:24px;font-weight:600;line-height:1.5}
+
+  label{
+    display:block;text-align:left;font-size:11.5px;font-weight:800;
+    letter-spacing:.6px;text-transform:uppercase;color:#556ee6;
+    margin:16px 2px 6px;
+  }
+  input,select{
+    width:100%;padding:13px 16px;border-radius:14px;
+    border:1.5px solid #e2e8f0;
+    background:#f8fafc;color:#1e293b;
+    font-size:15px;font-family:inherit;outline:none;transition:.2s;
+  }
+  input:focus,select:focus{
+    border-color:#556ee6;
+    box-shadow:0 0 0 3px rgba(85,110,230,.15);
+    background:#fff;
+  }
+  select option{background:#fff}
+
+  /* ── Buttons ── */
+  button{
+    width:100%;margin-top:20px;padding:14px;border:none;border-radius:14px;
+    cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;
+    color:#fff;transition:transform .12s, box-shadow .15s, filter .15s;
+    background:linear-gradient(135deg,#556ee6,#818cf8);
+    box-shadow:0 4px 14px rgba(85,110,230,.35);
+  }
+  button:hover{filter:brightness(1.06);box-shadow:0 6px 20px rgba(85,110,230,.4)}
   button:active{transform:scale(.97)}
-  button.ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15)}
-  .mode-grid{display:grid;gap:14px;margin-top:8px}
-  .mode-card{padding:22px;border-radius:16px;cursor:pointer;text-align:left;
-    border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);transition:.2s}
-  .mode-card:hover{border-color:#818cf8;background:rgba(129,140,248,.12);transform:translateY(-2px)}
-  .mode-card .t{font-size:18px;font-weight:900;margin-bottom:4px}
-  .mode-card .d{font-size:12.5px;color:#9ca3af;font-weight:600}
-  .err{min-height:18px;margin-top:14px;font-size:13px;font-weight:700;color:#f87171}
-  .muted{font-size:11px;color:#6b7280;margin-top:18px;font-weight:600}
-  .spin{display:inline-block;width:34px;height:34px;border:3px solid rgba(255,255,255,.2);
-    border-top-color:#818cf8;border-radius:50%;animation:sp 1s linear infinite}
+  button.ghost{
+    background:#f1f5f9;color:#475569;
+    box-shadow:none;border:1.5px solid #e2e8f0;
+  }
+  button.ghost:hover{background:#e8f0fe;color:#556ee6;border-color:#c7d5fb;box-shadow:none}
+  button:disabled{opacity:.6;cursor:not-allowed}
+
+  /* ── Mode cards ── */
+  .mode-grid{display:grid;gap:12px;margin-top:4px}
+  .mode-card{
+    padding:20px 20px 20px 18px;border-radius:18px;cursor:pointer;
+    text-align:left;border:2px solid #e8edf5;
+    background:#f8fafc;transition:.2s;
+    display:flex;align-items:flex-start;gap:14px;
+  }
+  .mode-card:hover{
+    border-color:#556ee6;
+    background:#eef1ff;
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(85,110,230,.15);
+  }
+  .mode-card .mc-icon{
+    width:44px;height:44px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;flex-shrink:0;
+  }
+  .mode-card .mc-body{flex:1}
+  .mode-card .t{font-size:16px;font-weight:900;color:#1e293b;margin-bottom:3px}
+  .mode-card .d{font-size:12.5px;color:#64748b;font-weight:600;line-height:1.4}
+
+  #pick-guest   .mc-icon{background:#fff7ed}
+  #pick-online  .mc-icon{background:#eef1ff}
+  #pick-class-mode      .mc-icon{background:#f0fdf4}
+  #pick-individual-mode .mc-icon{background:#fdf4ff}
+
+  /* ── Misc ── */
+  .err{min-height:16px;margin-top:12px;font-size:13px;font-weight:700;color:#f46a6a;text-align:left}
+  .muted{font-size:11.5px;color:#94a3b8;margin-top:16px;font-weight:600}
+
+  .spin{
+    display:inline-block;width:40px;height:40px;
+    border:3px solid #e2e8f0;border-top-color:#556ee6;
+    border-radius:50%;animation:sp 1s linear infinite;
+  }
   @keyframes sp{to{transform:rotate(360deg)}}
-  .row{display:flex;gap:12px}.row>*{flex:1}
+
+  /* ── Illustrated scene strip (decorative) ── */
+  .scene{
+    display:flex;justify-content:center;gap:12px;
+    margin-bottom:20px;
+  }
+  .scene-item{
+    width:56px;height:56px;border-radius:16px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+  }
 </style>
 </head>
 <body>
+
+<!-- Decorative bubbles -->
+<div class="bubble bubble-1"></div>
+<div class="bubble bubble-2"></div>
+<div class="bubble bubble-3"></div>
+
 <div class="wrap">
 
-  <!-- 0 · loading / checking activation -->
-  <div class="screen" id="screen-loading"><div class="spin"></div><p class="sub" style="margin-top:18px">Loading…</p></div>
+  <!-- 0 · loading -->
+  <div class="screen" id="screen-loading">
+    <div class="brand">
+      <div class="brand-icon">🌟</div>
+      <div class="brand-name">Auticare<small>Blueroom</small></div>
+    </div>
+    <div class="spin"></div>
+    <p class="sub" style="margin-top:16px;margin-bottom:0">Getting things ready…</p>
+  </div>
 
-  <!-- 1 · license activation (one-time) -->
+  <!-- 1 · activate -->
   <div class="screen" id="screen-activate">
+    <div class="brand">
+      <div class="brand-icon">🏫</div>
+      <div class="brand-name">Auticare<small>Blueroom</small></div>
+    </div>
     <h1>Activate Center</h1>
-    <p class="sub">Enter the Center API Key from your Auticare dashboard. This device will be locked to this center.</p>
+    <p class="sub">Enter the Center API Key from your Auticare dashboard.<br>This device will be locked to this center.</p>
     <label for="apiKey">Center API Key</label>
     <input id="apiKey" type="text" placeholder="64-character key" autocomplete="off" spellcheck="false">
     <div class="err" id="activate-err"></div>
     <button id="btn-activate">Activate this Device</button>
-    <div class="muted">One device · one center · one-time setup</div>
+    <p class="muted">One device &middot; one center &middot; one-time setup</p>
   </div>
 
-  <!-- 2 · mode selection -->
+  <!-- 2 · mode -->
   <div class="screen" id="screen-mode">
-    <h1 id="mode-center">Choose Mode</h1>
-    <p class="sub">How do you want to run this session?</p>
+    <div class="brand">
+      <div class="brand-icon">🌈</div>
+      <div class="brand-name" id="mode-center" style="font-size:17px">Auticare Blueroom</div>
+    </div>
+    <h1>How are we playing today?</h1>
+    <p class="sub">Choose a session mode to get started</p>
     <div class="mode-grid">
       <div class="mode-card" id="pick-guest">
-        <div class="t">🛜 Guest / Offline</div>
-        <div class="d">Play all local content. No web data, no student records.</div>
+        <div class="mc-icon">🛜</div>
+        <div class="mc-body">
+          <div class="t">Guest / Offline</div>
+          <div class="d">Play all local content. No login needed, no records saved.</div>
+        </div>
       </div>
       <div class="mode-card" id="pick-online">
-        <div class="t">🔐 Online Mode</div>
-        <div class="d">Sign in to access classes, students and record activity.</div>
+        <div class="mc-icon">🔐</div>
+        <div class="mc-body">
+          <div class="t">Online Mode</div>
+          <div class="d">Sign in to access your department and track student activity.</div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- 3 · department login -->
   <div class="screen" id="screen-login">
+    <div class="scene">
+      <div class="scene-item" style="background:#fff7ed">📚</div>
+      <div class="scene-item" style="background:#f0fdf4">🧒</div>
+      <div class="scene-item" style="background:#eef1ff">✏️</div>
+    </div>
     <h1>Department Sign In</h1>
-    <p class="sub">Enter the department username and password set in your Auticare dashboard.</p>
+    <p class="sub">Enter the credentials set for your department in the Auticare dashboard</p>
     <label for="user">Department Username</label>
-    <input id="user" type="text" autocomplete="off">
+    <input id="user" type="text" autocomplete="off" placeholder="e.g. sunrise-class">
     <label for="pass">Password</label>
-    <input id="pass" type="password">
+    <input id="pass" type="password" placeholder="Department password">
     <div class="err" id="login-err"></div>
     <button id="btn-login">Sign In</button>
-    <button class="ghost" id="btn-login-back">Back</button>
+    <button class="ghost" id="btn-login-back" style="margin-top:10px">Back</button>
   </div>
 
-  <!-- 4 · class selection + class password -->
-  <div class="screen" id="screen-class">
-    <h1>Select Class</h1>
-    <p class="sub">Choose a class and enter its password.</p>
-    <label for="classSel">Class</label>
-    <select id="classSel"></select>
-    <label for="classPass">Class Password</label>
-    <input id="classPass" type="password">
+  <!-- 4 · class screen (unused — kept for DOM completeness) -->
+  <div class="screen" id="screen-class" style="display:none">
     <div class="err" id="class-err"></div>
-    <button id="btn-class">Continue</button>
-    <button class="ghost" id="btn-class-back">Back</button>
+    <button id="btn-class" style="display:none">Continue</button>
+    <button id="btn-class-back" style="display:none">Back</button>
   </div>
 
-  <!-- 5 · submode popup -->
+  <!-- 5 · submode -->
   <div class="screen" id="screen-submode">
+    <div class="scene">
+      <div class="scene-item" style="background:#f0fdf4">🎮</div>
+      <div class="scene-item" style="background:#eef1ff">👥</div>
+      <div class="scene-item" style="background:#fdf4ff">⭐</div>
+    </div>
     <h1>Session Type</h1>
-    <p class="sub" id="submode-class-name">Choose how this class will play.</p>
+    <p class="sub" id="submode-class-name">Choose how this session will run</p>
     <div class="mode-grid">
       <div class="mode-card" id="pick-class-mode">
-        <div class="t">👥 Class Mode</div>
-        <div class="d">Multiple children together. Only multiplayer scenarios are shown.</div>
+        <div class="mc-icon">👥</div>
+        <div class="mc-body">
+          <div class="t">Class Mode</div>
+          <div class="d">Multiple children together. Only multiplayer games are shown.</div>
+        </div>
       </div>
       <div class="mode-card" id="pick-individual-mode">
-        <div class="t">🧒 Individual Mode</div>
-        <div class="d">One child at a time. Multiplayer hidden; activity is recorded.</div>
+        <div class="mc-icon">🧒</div>
+        <div class="mc-body">
+          <div class="t">Individual Mode</div>
+          <div class="d">One child at a time. Activity is recorded to their profile.</div>
+        </div>
       </div>
     </div>
-    <button class="ghost" id="btn-submode-back">Back</button>
+    <button class="ghost" id="btn-submode-back" style="margin-top:14px">Back</button>
   </div>
 
-  <!-- 6 · student selection (individual) -->
+  <!-- 6 · student -->
   <div class="screen" id="screen-student">
-    <h1>Select Student</h1>
-    <p class="sub">Everything this session is recorded to this student.</p>
+    <div class="scene">
+      <div class="scene-item" style="background:#fff7ed">🌟</div>
+      <div class="scene-item" style="background:#f0fdf4">🧒</div>
+      <div class="scene-item" style="background:#fdf4ff">📖</div>
+    </div>
+    <h1>Who's playing?</h1>
+    <p class="sub">Select the student — their activity will be recorded this session</p>
     <label for="studentSel">Student</label>
     <select id="studentSel"></select>
     <div class="err" id="student-err"></div>
-    <button id="btn-student">Start Session</button>
-    <button class="ghost" id="btn-student-back">Back</button>
+    <button id="btn-student">Start Session ✨</button>
+    <button class="ghost" id="btn-student-back" style="margin-top:10px">Back</button>
   </div>
 
 </div>
@@ -138,23 +315,12 @@
 <script src="./js/license-manager.js"></script>
 <script src="./js/session.js"></script>
 <script>
-// While the placeholder endpoints don't exist yet, tolerate their
-// failures so the whole flow stays clickable. Flip to false once the
-// Neon-backed endpoints are live.
 const TOLERATE_PLACEHOLDER = false;
 
-// Local mock data used ONLY when placeholder endpoints fail.
-const MOCK_CLASSES = [
-  { ClassID: 1, ClassName: 'Sunrise (Class A)' },
-  { ClassID: 2, ClassName: 'Rainbow (Class B)' }
-];
-const MOCK_STUDENTS = {
-  1: [{ StudentID: 101, StudentName: 'Aarav' }, { StudentID: 102, StudentName: 'Diya' }],
-  2: [{ StudentID: 201, StudentName: 'Ishaan' }, { StudentID: 202, StudentName: 'Meera' }]
-};
+const MOCK_STUDENTS = {};
 
-let LICENSE = null;                 // { token, center, ... }
-let draft = { classId:null, className:null }; // in-progress online selection
+let LICENSE = null;
+let draft = { classId:null, className:null };
 
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -162,10 +328,10 @@ function show(id){
 }
 function setErr(id,msg){ document.getElementById(id).textContent = msg||''; }
 
-// ---- boot: activated? --------------------------------------
+// ---- boot --------------------------------------------------
 (async function boot(){
   show('screen-loading');
-  Session.clear(); // fresh session on every launch
+  Session.clear();
   try {
     if (await LicenseManager.isActivated()) {
       LICENSE = await LicenseManager.getLicense();
@@ -197,7 +363,7 @@ document.getElementById('btn-activate').onclick = async () => {
   }
 };
 
-// ---- 2 · mode selection ------------------------------------
+// ---- 2 · mode ----------------------------------------------
 document.getElementById('pick-guest').onclick = () => {
   Session.set({ mode:'guest', submode:null, token:null,
     center: LICENSE ? LICENSE.center : null,
@@ -216,10 +382,8 @@ document.getElementById('btn-login').onclick = async () => {
   const btn = document.getElementById('btn-login');
   btn.disabled = true; btn.textContent = 'Signing in…';
   try {
-    // Refresh center JWT if it expired (1h token).
     await LicenseManager.refreshToken();
     LICENSE = await LicenseManager.getLicense();
-    // Login identifies the department directly — no separate class selection needed.
     const dept = await AuticareAPI.operatorLogin(u, p, LICENSE.token);
     draft.classId = String(dept.DepartmentID);
     draft.className = dept.DepartmentName;
@@ -253,7 +417,6 @@ async function loadStudents(){
     if (!Array.isArray(students)) throw new Error('bad shape');
   } catch (e) {
     if (!TOLERATE_PLACEHOLDER) throw e;
-    console.warn('[student] getStudents placeholder, using mock:', e.message);
     students = MOCK_STUDENTS[draft.classId] || [];
   }
   const sel = document.getElementById('studentSel');
@@ -270,7 +433,7 @@ document.getElementById('btn-student').onclick = () => {
   location.href = 'index.html';
 };
 
-// DEV: Ctrl+Shift+R clears activation to re-test the whole flow.
+// DEV: Ctrl+Shift+R clears activation
 document.addEventListener('keydown', async (e)=>{
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='r'){
     await LicenseManager.deactivate(); Session.clear(); location.reload();
