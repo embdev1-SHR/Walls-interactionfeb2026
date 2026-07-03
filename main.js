@@ -73,7 +73,10 @@ function createWindow() {
       webgl: true,
       enableWebSQL: false,
       webSecurity: false,
-      allowRunningInsecureContent: true
+      allowRunningInsecureContent: true,
+      // Global Blueroom monitor — runs on every page (menu + games)
+      // to capture touches, prompts and session heartbeats.
+      preload: path.join(__dirname, 'js', 'blueroom-monitor.js')
     }
   });
 

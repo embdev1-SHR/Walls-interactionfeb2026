@@ -397,10 +397,17 @@ document.getElementById('btn-login').onclick = async () => {
 };
 
 // ---- 5 · submode -------------------------------------------
+function newSessionId(){
+  return (window.crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : 's-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+}
 document.getElementById('btn-submode-back').onclick = () => show('screen-login');
-document.getElementById('pick-class-mode').onclick = () => {
+document.getElementById('pick-class-mode').onclick = async () => {
   Session.set({ mode:'online', submode:'class', token: LICENSE.token, center: LICENSE.center,
-    classId: draft.classId, className: draft.className, studentId:null, studentName:null });
+    classId: draft.classId, className: draft.className, studentId:null, studentName:null,
+    sessionId: newSessionId(), deviceId: LICENSE.deviceId });
+  await Session.startLiveSession();
   location.href = 'index.html';
 };
 document.getElementById('pick-individual-mode').onclick = async () => {
@@ -423,13 +430,15 @@ async function loadStudents(){
   sel.innerHTML = students.map(s => `<option value="${s.StudentID}">${s.StudentName}</option>`).join('');
 }
 document.getElementById('btn-student-back').onclick = () => show('screen-submode');
-document.getElementById('btn-student').onclick = () => {
+document.getElementById('btn-student').onclick = async () => {
   const sel = document.getElementById('studentSel');
   if (!sel.value) return setErr('student-err','Select a student.');
   const studentName = sel.options[sel.selectedIndex].text;
   Session.set({ mode:'online', submode:'individual', token: LICENSE.token, center: LICENSE.center,
     classId: draft.classId, className: draft.className,
-    studentId: sel.value, studentName });
+    studentId: sel.value, studentName,
+    sessionId: newSessionId(), deviceId: LICENSE.deviceId });
+  await Session.startLiveSession();
   location.href = 'index.html';
 };
 

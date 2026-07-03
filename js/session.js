@@ -52,19 +52,21 @@
       return true; // guest / unset
     },
 
-    // ---- patient activity capture (individual mode) ----------
+    // ---- patient activity capture ----------------------------
     /**
-     * Fire-and-forget activity log. Only sends when we're in
-     * individual online mode with a selected student.
+     * Fire-and-forget activity log. Sends for any ONLINE session
+     * (class or individual) so live monitoring + heatmaps work in
+     * both. StudentID is only present in individual mode.
      */
     async logActivity(eventType, payload = {}) {
       const s = this.get();
-      if (!s || !this.isIndividual() || !s.studentId || !s.token) return;
+      if (!s || !this.isOnline() || !s.token || !s.sessionId) return;
       try {
         await global.AuticareAPI.sendPatientActivity({
-          StudentID: s.studentId,
+          sessionId: s.sessionId,
+          StudentID: s.studentId || null,
           ClassID: s.classId,
-          CenterID: s.center ? s.center.CenterID : undefined,
+          mode: s.submode,
           eventType,
           at: new Date().toISOString(),
           data: payload
@@ -72,6 +74,47 @@
       } catch (e) {
         console.warn('[session] activity log failed:', e.message);
       }
+    },
+
+    // ---- live session lifecycle ------------------------------
+    /** Called once when an online session begins (from login.html). */
+    async startLiveSession() {
+      const s = this.get();
+      if (!s || !this.isOnline() || !s.token || !s.sessionId) return;
+      try {
+        await global.AuticareAPI.sessionStart({
+          sessionId: s.sessionId,
+          StudentID: s.studentId || null,
+          PatientName: s.studentName || null,
+          ClassID: s.classId || null,
+          ClassName: s.className || null,
+          mode: s.submode,
+          deviceId: s.deviceId || null,
+        }, s.token);
+      } catch (e) {
+        console.warn('[session] start failed:', e.message);
+      }
+    },
+
+    /** Periodic keepalive so the dashboard shows this session as live. */
+    async heartbeat(currentActivity) {
+      const s = this.get();
+      if (!s || !this.isOnline() || !s.token || !s.sessionId) return;
+      try {
+        await global.AuticareAPI.sessionHeartbeat({
+          sessionId: s.sessionId,
+          currentActivity: currentActivity || null,
+        }, s.token);
+      } catch (e) { /* silent */ }
+    },
+
+    /** End the live session (best-effort). */
+    async endLiveSession() {
+      const s = this.get();
+      if (!s || !this.isOnline() || !s.token || !s.sessionId) return;
+      try {
+        await global.AuticareAPI.sessionEnd({ sessionId: s.sessionId }, s.token);
+      } catch (e) { /* silent */ }
     }
   };
 

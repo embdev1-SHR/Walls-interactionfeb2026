@@ -77,13 +77,24 @@
       return (data && data.results) || data;
     },
 
-    // ---- PLACEHOLDER: patient activity capture ----------------
+    // ---- patient activity capture ----------------------------
     async sendPatientActivity(payload, token) {
       return request(CFG.ENDPOINTS.patientActivity, {
         method: 'POST',
         token,
         body: payload
       });
+    },
+
+    // ---- live session lifecycle ------------------------------
+    async sessionStart(payload, token) {
+      return request(CFG.ENDPOINTS.sessionStart, { method: 'POST', token, body: payload });
+    },
+    async sessionHeartbeat(payload, token) {
+      return request(CFG.ENDPOINTS.sessionHeartbeat, { method: 'POST', token, body: payload });
+    },
+    async sessionEnd(payload, token) {
+      return request(CFG.ENDPOINTS.sessionEnd, { method: 'POST', token, body: payload });
     }
   };
 

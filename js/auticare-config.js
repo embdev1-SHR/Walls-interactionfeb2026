@@ -24,8 +24,11 @@
       // Students under a department
       students:          '/api/v1/external/classes/:classId/students', // GET -> [{ StudentID, StudentName }]
 
-      // PLACEHOLDER — patient activity capture (individual mode)
-      patientActivity:   '/api/v1/external/patient-activity'    // POST { StudentID, ... } (Bearer center token)
+      // Patient activity capture + live session lifecycle
+      patientActivity:   '/api/v1/external/patient-activity',    // POST { sessionId, StudentID, eventType, data }
+      sessionStart:      '/api/v1/external/session/start',        // POST { sessionId, ... }
+      sessionHeartbeat:  '/api/v1/external/session/heartbeat',    // POST { sessionId, currentActivity }
+      sessionEnd:        '/api/v1/external/session/end'           // POST { sessionId }
     },
 
     // Games that HAVE / REQUIRE a multiplayer scenario.
