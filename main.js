@@ -60,6 +60,19 @@ ipcMain.handle('store:delete', (_e, key) => {
 });
 ipcMain.handle('device:id', () => getDeviceId());
 
+// Capture the current screen as a downscaled JPEG data URL (for the Blueroom
+// "screen replica" behind the touch heatmap).
+ipcMain.handle('capture-page', async () => {
+  try {
+    if (!mainWindow) return null;
+    const img = await mainWindow.webContents.capturePage();
+    const small = img.resize({ width: 800 });
+    return 'data:image/jpeg;base64,' + small.toJPEG(65).toString('base64');
+  } catch (e) {
+    return null;
+  }
+});
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1920,

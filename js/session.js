@@ -42,14 +42,12 @@
 
     /**
      * Should a given game card be visible/playable in this session?
-     *   guest       -> everything
-     *   class       -> ONLY multiplayer games
-     *   individual  -> everything EXCEPT multiplayer games
+     * All scenarios are available in every mode (guest / class / individual).
+     * The session mode still governs how activity is recorded, not which
+     * scenarios are shown.
      */
     isGameAllowed(gameKey) {
-      if (this.isClass())      return this.isMultiplayerGame(gameKey);
-      if (this.isIndividual()) return !this.isMultiplayerGame(gameKey);
-      return true; // guest / unset
+      return true;
     },
 
     // ---- patient activity capture ----------------------------

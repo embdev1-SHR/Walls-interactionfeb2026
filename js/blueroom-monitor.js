@@ -71,6 +71,22 @@
     });
   }
 
+  // Capture the scenario screen once (after it has rendered) so the dashboard
+  // can draw touches over the real screen instead of a black canvas.
+  function captureScenarioShot(act) {
+    var s = activeSession();
+    if (!s || !act || act === 'menu' || act === 'index') return;
+    try {
+      var ipc = require('electron').ipcRenderer;
+      ipc.invoke('capture-page').then(function (dataUrl) {
+        if (!dataUrl) return;
+        post('/api/v1/external/scenario-shot', {
+          sessionId: s.sessionId, gameKey: act, image: dataUrl
+        });
+      }).catch(function () {});
+    } catch (e) { /* not in Electron */ }
+  }
+
   // ---- global hook games can OPTIONALLY call to report score/timing ----
   // Usage from any game:  window.Blueroom.reportScore({ score: 85, completionPct: 90, durationMs: 40000 });
   // Timing is auto-derived even without this; score needs this call.
@@ -132,6 +148,9 @@
     logActivity('scenario_start', { scenarioId: act, gameKey: act, label: (document.title || act) });
     heartbeat();
     setInterval(heartbeat, HEARTBEAT_MS);
+
+    // Grab a screen replica once the scenario has painted.
+    setTimeout(function () { captureScenarioShot(act); }, 2500);
 
     // ---- mark the activity ended (with time-on-task) when leaving ----
     window.addEventListener('beforeunload', function () {

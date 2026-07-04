@@ -67,8 +67,15 @@
 
   /* ── Logo / brand mark ── */
   .brand{
-    display:inline-flex;align-items:center;gap:10px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
     margin-bottom:22px;
+  }
+  .brand-logo{
+    height:76px;width:auto;object-fit:contain;
+  }
+  .brand-tag{
+    font-size:12px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+    color:#556ee6;
   }
   .brand-icon{
     width:48px;height:48px;border-radius:14px;
@@ -191,8 +198,8 @@
   <!-- 0 · loading -->
   <div class="screen" id="screen-loading">
     <div class="brand">
-      <div class="brand-icon">🌟</div>
-      <div class="brand-name">Auticare<small>Blueroom</small></div>
+      <img class="brand-logo" src="./assets/images/Auticare_logo_Embright (1).png" alt="Auticare">
+      <div class="brand-tag">Blueroom</div>
     </div>
     <div class="spin"></div>
     <p class="sub" style="margin-top:16px;margin-bottom:0">Getting things ready…</p>
@@ -201,8 +208,8 @@
   <!-- 1 · activate -->
   <div class="screen" id="screen-activate">
     <div class="brand">
-      <div class="brand-icon">🏫</div>
-      <div class="brand-name">Auticare<small>Blueroom</small></div>
+      <img class="brand-logo" src="./assets/images/Auticare_logo_Embright (1).png" alt="Auticare">
+      <div class="brand-tag">Blueroom</div>
     </div>
     <h1>Activate Center</h1>
     <p class="sub">Enter the Center API Key from your Auticare dashboard.<br>This device will be locked to this center.</p>
@@ -216,8 +223,8 @@
   <!-- 2 · mode -->
   <div class="screen" id="screen-mode">
     <div class="brand">
-      <div class="brand-icon">🌈</div>
-      <div class="brand-name" id="mode-center" style="font-size:17px">Auticare Blueroom</div>
+      <img class="brand-logo" src="./assets/images/Auticare_logo_Embright (1).png" alt="Auticare">
+      <div class="brand-tag" id="mode-center">Blueroom</div>
     </div>
     <h1>How are we playing today?</h1>
     <p class="sub">Choose a session mode to get started</p>
