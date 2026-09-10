@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  KERALA FLOWERS FLASHCARDS — Pangappara Blueroom, Primary item #4
+  Six flowers · calm music only · no voice, no sound effects
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "All flower flashcards MUST load in EXTRA LARGE size by default using
+     clear, high-definition real photos on simple, clutter-free
+     backgrounds."
+    "Soft, calm background music plays softly in the room. No voice
+     narration or sound effects."
+    "The touched flashcard highlights with a bright, glowing green border.
+     The card does a gentle, cheerful bounce in place. A soft glowing star
+     icon appears at the top corner of the card."
+
+  THE QUIETEST ACTIVITY IN THE SET
+    This is the only board the brief asks to be silent on tap — no voice
+    AND no sound effects, just calm background music. So speak:false and
+    every card carries a no-op sound. The star, glow and bounce still
+    give the child their feedback; it is purely visual here by design.
+    Do not "fix" the silence.
+
+  ASSETS
+    Flowers come from js/flower-data.js, shared with Flower Matching and
+    Flower Bouquet. Photographs are optional and fall back to emoji.
+        ../assets/new/images/flowers/{rose,mulla,jamanti,lotus,
+                                      kanikonna,chembarathi}.jpg
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Kerala Flowers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 15% 15%, #fff1f2 0%, transparent 55%),
+      radial-gradient(circle at 85% 85%, #fefce8 0%, transparent 55%),
+      linear-gradient(160deg,#ffffff,#f7fbf6);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:16px 60px 6px;
+    font-size:calc(30px * var(--wall-scale,1));font-weight:800;color:#9d174d;
+  }
+  h1 .ml{display:block;font-size:calc(20px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="board"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flower-data.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Kerala Flowers', ml: 'കേരളത്തിലെ പൂക്കൾ' };
+
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+WALL.onLang(paintTitle);
+
+var deck = DECK.mount('#board', {
+  items: FLOWER_DATA.flashcardSet(),
+  speak: false,        // brief: no voice narration
+  silent: true,        // brief: no sound effects either — visual only
+  columns: 3,
+  // The brief describes no "Finish" step for this board, so the reward
+  // is balloons without the applause bed rather than nothing at all.
+  onAllExplored: function (d) {
+    WALL.celebrate(d.el.getBoundingClientRect(), true);
+  }
+});
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#board',
+  reset: function () { deck.reset(); },
+  home: true
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

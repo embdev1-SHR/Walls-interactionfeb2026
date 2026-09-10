@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  INDIAN COINS & CURRENCY NOTES — Pangappara Blueroom, Secondary item #5
+  Two boards (coins / notes) · extra-large · no voice narration
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "DISPLAY RULE: Extra-large, high-definition real photos of Indian
+     currency on a clean, clutter-free background. No speech or voice
+     narration."
+    "Load: Coins and Currency Notes load clearly spaced across the screen
+     in extra-large view."
+    "Touch: Child taps any coin or note -> Card glows green, gently
+     bounces, and marks a star."
+
+  ASSETS: NONE. Zero. Every coin and note on this screen is drawn at
+  runtime by js/currency-svg.js, which was lifted out of the Money Shop
+  game — it already covered exactly the denominations this brief asks
+  for (coins 1/2/5/10, notes 10/20/50/100/200/500). Nothing to source,
+  nothing to 404, and it stays razor sharp at any teacher zoom level,
+  which a photograph would not.
+
+  VOICE: deliberately off. The brief says "No speech or voice narration"
+  for this activity, so the toolbar carries no Voice button and DECK is
+  mounted with speak:false. The Malayalam names are still shown on screen.
+
+  DEPENDS ON
+    ../js/wall-common.js     toolbar, size/height, FX, synthesized SFX
+    ../js/flashcard-deck.js  the tap->glow->bounce->star board engine
+    ../js/currency-svg.js    coinSVG() / noteSVG()
+    ../js/audio-manager.js   background music (key 'sec-currency')
+
+  MALAYALAM: transcribed from the brief and corrected for the encoding
+  damage in the source PDF. Must be proofed by a teacher before wall
+  deployment — see DEV-DOC-additional-content.md section 8.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Indian Coins &amp; Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 18% 12%, #fff7ed 0%, transparent 55%),
+      radial-gradient(circle at 82% 88%, #ecfeff 0%, transparent 55%),
+      linear-gradient(150deg,#f8fafc,#eef2f7);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 2px;
+    font-size:calc(30px * var(--wall-scale,1));font-weight:800;color:#0f3b5c;
+    letter-spacing:.3px;
+  }
+  h1 .ml{display:block;font-size:calc(20px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #tabs{flex:0 0 auto}
+  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="tabs"></div>
+<div id="board"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/currency-svg.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DATA — denominations exactly as the brief lists them
+   ══════════════════════════════════════════════════════════════ */
+var COINS = [
+  { v: 1,  ml: 'ഒരു രൂപ നാണയം'   },
+  { v: 2,  ml: 'രണ്ട് രൂപ നാണയം'  },
+  { v: 5,  ml: 'അഞ്ച് രൂപ നാണയം'  },
+  { v: 10, ml: 'പത്ത് രൂപ നാണയം'  }
+];
+
+/* The colour word is the brief's own description of each note — it is
+   the identifying feature a child is being taught to read. */
+var NOTES = [
+  { v: 10,  ml: 'പത്ത് രൂപ നോട്ട്',      colour: { en: 'Brown',          ml: 'തവിട്ട്'      } },
+  { v: 20,  ml: 'ഇരുപത് രൂപ നോട്ട്',     colour: { en: 'Greenish Yellow', ml: 'പച്ചകലർന്ന മഞ്ഞ' } },
+  { v: 50,  ml: 'അമ്പത് രൂപ നോട്ട്',     colour: { en: 'Cyan Blue',      ml: 'നീലനിറം'      } },
+  { v: 100, ml: 'നൂറ് രൂപ നോട്ട്',       colour: { en: 'Lavender',       ml: 'ഇളംപർപ്പിൾ'   } },
+  { v: 200, ml: 'ഇരുനൂറ് രൂപ നോട്ട്',    colour: { en: 'Bright Yellow',  ml: 'തിളങ്ങുന്ന മഞ്ഞ' } },
+  { v: 500, ml: 'അഞ്ഞൂറ് രൂപ നോട്ട്',    colour: { en: 'Stone Grey',     ml: 'കൽച്ചാരനിറം'  } }
+];
+
+function coinItems() {
+  return COINS.map(function (c) {
+    return {
+      id: 'coin' + c.v,
+      label: { en: '₹' + c.v + ' Coin', ml: '₹' + c.v + ' ' + c.ml },
+      art: { html: coinSVG(c.v, 240) },
+      tint: '#fffdf5'
+    };
+  });
+}
+
+function noteItems() {
+  return NOTES.map(function (n) {
+    return {
+      id: 'note' + n.v,
+      label: { en: '₹' + n.v + ' Note', ml: '₹' + n.v + ' ' + n.ml },
+      sub: n.colour,
+      art: { html: noteSVG(n.v, 324, 168), aspect: 324 / 168 },
+      tint: '#fbfdff'
+    };
+  });
+}
+
+var BOARDS = [
+  { key: 'coins', title: { en: 'Coins', ml: 'നാണയങ്ങൾ' },        build: coinItems },
+  { key: 'notes', title: { en: 'Currency Notes', ml: 'നോട്ടുകൾ' }, build: noteItems }
+];
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+WALL.init();
+WALL.toolbar({
+  lang: true,
+  size: true,
+  height: true,
+  heightTarget: '#board',
+  reset: function () { deck.reset(); },
+  home: true
+  /* no voice button — the brief specifies no narration here */
+});
+
+var TITLE = { en: 'Indian Coins & Currency Notes', ml: 'നാണയങ്ങളും നോട്ടുകളും' };
+
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+WALL.onLang(paintTitle);
+
+var deck = DECK.mount('#board', {
+  items: coinItems(),
+  speak: false           // brief: no voice narration on this activity
+  // columns left on auto: 4 coins land as 2x2, 6 notes as 3x2
+});
+
+DECK.tabs('#tabs', BOARDS, function (b) {
+  deck.setItems(b.build());
+}).draw('coins');
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

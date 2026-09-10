@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  FLOATING LETTER SELECTION & NAME BUILDING — Pangappara Blueroom, Sec. #2
+  Drifting letter blocks · tap into slots · assembled name is spoken
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Top Display: An empty, extra-large target name box with open slots."
+    "Main Floating Canvas: Multiple alphabet blocks float, drift, and
+     bounce gently across the entire screen in soft continuous motion."
+    "Float Speed Control: Adjust drift speed (Slow Drift / Medium Drift /
+     Static)."
+    "The selected floating letter stops drifting and highlights with a
+     bright glowing green border. Animation: The letter smoothly flies up
+     from its floating position and snaps into the next open slot.
+     Audio Effect: A cheerful 'pop' sound plays upon each selection."
+    "Deselect / Clear Option: Tapping a letter inside the top box sends it
+     back into the floating screen area to float again."
+    "Once all slots are filled, the individual letter blocks snap together
+     into one continuous, extra-large name card ... flashes with a bright
+     glowing golden frame ... the system pronounces the full assembled
+     name."
+
+  GRAPHEME-AWARE
+    Same reason as sec-name-id: അരുൺ is four letters across five code
+    points. Intl.Segmenter keeps each block a real letter instead of
+    stranding a vowel sign on its own tile.
+
+  DISTRACTORS
+    The brief says "Multiple alphabet blocks" float, not only the name's
+    own letters, so extra letters drawn from the same script are mixed in.
+    A child who taps a wrong letter gets the gentle nudge cue and nothing
+    else — no buzzer, no penalty, consistent with the rest of the brief.
+
+  SHARED NAME LIST with sec-name-id, via WALL.names().
+
+  ASSETS: none.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Build My Name</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#eff6ff,#e0e7ff 55%,#f5f3ff);
+    -webkit-tap-highlight-color:transparent;user-select:none;
+    display:flex;flex-direction:column;
+  }
+
+  /* ── the target name box ──────────────────────────────────────── */
+  #slots{
+    display:flex;gap:calc(12px * var(--wall-scale,1));justify-content:center;
+    padding:calc(18px * var(--wall-scale,1)) 12px calc(10px * var(--wall-scale,1));
+    flex-wrap:wrap;z-index:20;position:relative;
+  }
+  .slot{
+    width:calc(96px * var(--wall-scale,1));height:calc(108px * var(--wall-scale,1));
+    border-radius:20px;border:5px dashed #94a3b8;background:rgba(255,255,255,.7);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:calc(56px * var(--wall-scale,1));color:#1e293b;
+    transition:border-color .25s,background .25s,transform .2s;
+  }
+  .slot.full{border-style:solid;border-color:#2563eb;background:#fff;cursor:pointer}
+  .slot.pop{animation:slotPop .4s cubic-bezier(.2,1.5,.4,1)}
+  @keyframes slotPop{0%{transform:scale(.4)}100%{transform:scale(1)}}
+
+  #nameBox.done .slot{
+    border-color:#f59e0b;background:#fffbeb;
+    box-shadow:0 0 0 5px rgba(245,158,11,.25),0 0 34px rgba(245,158,11,.55);
+  }
+  #nameBox.done{animation:goldFlash 1.1s ease}
+  @keyframes goldFlash{0%,100%{filter:none}50%{filter:brightness(1.25)}}
+
+  #hint{text-align:center;font-weight:800;color:#475569;
+        font-size:calc(17px * var(--wall-scale,1));z-index:20;position:relative}
+
+  /* ── floating canvas ──────────────────────────────────────────── */
+  #canvas{flex:1;position:relative;overflow:hidden}
+  .blk{
+    position:absolute;
+    width:calc(84px * var(--wall-scale,1));height:calc(84px * var(--wall-scale,1));
+    border-radius:20px;display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:calc(46px * var(--wall-scale,1));color:#fff;
+    box-shadow:0 8px 20px rgba(30,41,59,.22);cursor:pointer;
+    touch-action:manipulation;will-change:transform;
+    transition:box-shadow .2s,border-color .2s;
+    border:5px solid transparent;
+  }
+  .blk.sel{border-color:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.25),
+           0 0 28px rgba(34,197,94,.7)}
+  .blk.fly{transition:left .45s cubic-bezier(.3,0,.2,1),
+                      top .45s cubic-bezier(.3,0,.2,1),
+                      transform .45s ease,opacity .3s .3s;
+           opacity:0;z-index:60;pointer-events:none}
+</style>
+</head>
+<body>
+
+<div id="nameBox">
+  <div id="slots"></div>
+</div>
+<div id="hint"></div>
+<div id="canvas"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script>
+WALL.init();
+
+/* ══════════════════════════════════════════════════════════════
+   GRAPHEME SPLIT
+   ══════════════════════════════════════════════════════════════ */
+var seg = null;
+try {
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    seg = new Intl.Segmenter('ml', { granularity: 'grapheme' });
+  }
+} catch (e) { seg = null; }
+
+function letters(str) {
+  if (seg) return Array.from(seg.segment(str), function (s) { return s.segment; });
+  return Array.from(str);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+var names = WALL.names();
+if (!names.length) { names = ['ARUN', 'അരുൺ']; WALL.setNames(names); }
+var nameIdx = 0;
+var target = [];        // the letters we need, in order
+var slots  = [];        // { el, ch, filled, blockId }
+var blocks = [];        // floating blocks
+var speeds = { slow: 0.22, medium: 0.5, static: 0 };
+var speedKey = 'medium';
+var solved = false;
+var uid = 0;
+
+var COLOURS = ['#ef4444','#f59e0b','#22c55e','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#f97316'];
+
+var ML_POOL = Array.from('കഗചടതനപമയരലവശസഹളറ');
+var EN_POOL = Array.from('ABCDEFGHIJKLMNOPRSTUVY');
+
+function isMalayalam(s) { return /[ഀ-ൿ]/.test(s); }
+
+var canvas = document.getElementById('canvas');
+
+/* ══════════════════════════════════════════════════════════════
+   BUILD
+   ══════════════════════════════════════════════════════════════ */
+function buildSlots() {
+  var box = document.getElementById('slots');
+  box.innerHTML = '';
+  slots = [];
+  target.forEach(function (ch, i) {
+    var el = document.createElement('div');
+    el.className = 'slot';
+    var s = { el: el, ch: ch, filled: false, blockId: null, i: i };
+    WALL.bindTouch(el, function () { unfill(s); });
+    box.appendChild(el);
+    slots.push(s);
+  });
+  document.getElementById('nameBox').classList.remove('done');
+}
+
+function makeBlock(ch, colour) {
+  var el = document.createElement('div');
+  el.className = 'blk';
+  el.textContent = ch;
+  el.style.background = colour;
+
+  var w = canvas.clientWidth  || 900;
+  var h = canvas.clientHeight || 500;
+  var size = 84 * WALL.scale();
+
+  var b = {
+    id: ++uid, ch: ch, el: el,
+    x: Math.random() * Math.max(10, w - size),
+    y: Math.random() * Math.max(10, h - size),
+    vx: (Math.random() - 0.5) * 2,
+    vy: (Math.random() - 0.5) * 2,
+    placed: false
+  };
+  el.style.left = b.x + 'px';
+  el.style.top  = b.y + 'px';
+
+  WALL.bindTouch(el, function () { pick(b); });
+  canvas.appendChild(el);
+  return b;
+}
+
+function buildBlocks() {
+  canvas.innerHTML = '';
+  blocks = [];
+
+  var pool = isMalayalam(target.join('')) ? ML_POOL : EN_POOL;
+  var set = target.slice();
+
+  // a handful of distractors, as the brief's "multiple alphabet blocks"
+  var extra = Math.min(6, Math.max(3, 9 - target.length));
+  for (var i = 0; i < extra; i++) {
+    set.push(pool[Math.floor(Math.random() * pool.length)]);
+  }
+
+  // shuffle so the name's own letters are not in reading order
+  for (var j = set.length - 1; j > 0; j--) {
+    var k = Math.floor(Math.random() * (j + 1));
+    var t = set[j]; set[j] = set[k]; set[k] = t;
+  }
+
+  set.forEach(function (ch, i) {
+    blocks.push(makeBlock(ch, COLOURS[i % COLOURS.length]));
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SELECTION
+   ══════════════════════════════════════════════════════════════ */
+function nextSlot() {
+  for (var i = 0; i < slots.length; i++) if (!slots[i].filled) return slots[i];
+  return null;
+}
+
+function pick(b) {
+  if (solved || b.placed) return;
+  var s = nextSlot();
+  if (!s) return;
+
+  if (b.ch !== s.ch) {
+    // gentle only — the brief forbids punitive feedback throughout
+    WALL.sfx.nudge();
+    b.el.classList.add('sel');
+    setTimeout(function () { b.el.classList.remove('sel'); }, 350);
+    return;
+  }
+
+  b.placed = true;
+  b.el.classList.add('sel');
+
+  // Claim the slot NOW, not when the flight animation lands. A child
+  // tapping quickly would otherwise have the next tap measured against
+  // a slot that is visually filling but not yet marked, and be told the
+  // right letter is wrong.
+  s.filled = true;
+  s.blockId = b.id;
+
+  // fly the block from the canvas up into the slot
+  var from = b.el.getBoundingClientRect();
+  var to   = s.el.getBoundingClientRect();
+  b.el.classList.add('fly');
+  b.el.style.left = (b.x + (to.left - from.left)) + 'px';
+  b.el.style.top  = (b.y + (to.top  - from.top))  + 'px';
+
+  WALL.sfx.pop();
+
+  setTimeout(function () {
+    b.el.style.display = 'none';
+    s.el.textContent = s.ch;
+    s.el.classList.add('full', 'pop');
+    setTimeout(function () { s.el.classList.remove('pop'); }, 420);
+    checkDone();
+  }, 450);
+}
+
+function unfill(s) {
+  if (solved || !s.filled) return;
+  // the slot is claimed but its block is still in flight — let it land
+  if (!s.el.classList.contains('full')) return;
+  // only the last filled slot may be released, so the name stays ordered
+  var last = null;
+  for (var i = 0; i < slots.length; i++) if (slots[i].filled) last = slots[i];
+  if (!last || last.i !== s.i) { WALL.sfx.nudge(); return; }
+
+  var b = blocks.filter(function (x) { return x.id === s.blockId; })[0];
+  s.filled = false; s.blockId = null;
+  s.el.textContent = '';
+  s.el.classList.remove('full');
+
+  if (b) {
+    b.placed = false;
+    b.el.style.display = '';
+    b.el.classList.remove('fly', 'sel');
+    b.el.style.left = b.x + 'px';
+    b.el.style.top  = b.y + 'px';
+  }
+  WALL.sfx.tap();
+}
+
+function checkDone() {
+  if (slots.some(function (s) { return !s.filled; })) return;
+  solved = true;
+  var box = document.getElementById('nameBox');
+  box.classList.add('done');                 // brief: glowing golden frame
+  WALL.burstAt(box, ['#fbbf24','#fde68a','#f59e0b','#fff'], 26);
+  WALL.celebrate();
+  setTimeout(function () {
+    var full = target.join('');
+    WALL.say({ ml: full, en: full });         // brief: pronounce the name
+  }, 700);
+  document.getElementById('hint').textContent =
+    WALL.isMl() ? 'കൊള്ളാം! പേര് പൂർത്തിയായി!' : 'Well done! Name complete!';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DRIFT LOOP
+   ══════════════════════════════════════════════════════════════ */
+function tick() {
+  var sp = speeds[speedKey];
+  if (sp > 0) {
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    var size = 84 * WALL.scale();
+    blocks.forEach(function (b) {
+      if (b.placed) return;
+      b.x += b.vx * sp;
+      b.y += b.vy * sp;
+      if (b.x < 0)          { b.x = 0;          b.vx = Math.abs(b.vx); }
+      if (b.x > w - size)   { b.x = w - size;   b.vx = -Math.abs(b.vx); }
+      if (b.y < 0)          { b.y = 0;          b.vy = Math.abs(b.vy); }
+      if (b.y > h - size)   { b.y = h - size;   b.vy = -Math.abs(b.vy); }
+      b.el.style.left = b.x + 'px';
+      b.el.style.top  = b.y + 'px';
+    });
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+function load() {
+  solved = false;
+  names = WALL.names();
+  if (!names.length) names = ['ARUN'];
+  nameIdx = nameIdx % names.length;
+  target = letters(names[nameIdx]);
+  buildSlots();
+  buildBlocks();
+  document.getElementById('hint').textContent =
+    WALL.isMl() ? 'അക്ഷരങ്ങൾ തൊട്ട് പേര് ഉണ്ടാക്കൂ' : 'Tap the letters to build the name';
+}
+
+function cycleSpeed() {
+  speedKey = speedKey === 'slow' ? 'medium' : speedKey === 'medium' ? 'static' : 'slow';
+  var b = document.getElementById('wallSpeed');
+  if (b) b.textContent = WALL.isMl()
+    ? ({ slow: '🐢 പതുക്കെ', medium: '🚶 സാധാരണ', static: '⏸ നിശ്ചലം' })[speedKey]
+    : ({ slow: '🐢 Slow', medium: '🚶 Medium', static: '⏸ Static' })[speedKey];
+}
+
+WALL.onLang(function () { load(); cycleSpeed(); cycleSpeed(); cycleSpeed(); });
+WALL.onSize(function () { if (target.length) load(); });
+
+WALL.toolbar({
+  menu: { label: { en: '🔄 Next name', ml: '🔄 അടുത്ത പേര്' },
+          onTap: function () { nameIdx++; load(); } },
+  lang: true, voice: true, size: true, height: true,
+  reset: load,
+  home: true
+});
+
+/* The brief asks for a Float Speed control on top of the standard set,
+   so it is appended into the same toolbar rather than floating loose. */
+(function addSpeedButton() {
+  var body = document.querySelector('#wallToolbar .wall-tb-body');
+  if (!body) return;
+  var cap = document.createElement('div');
+  cap.className = 'wall-tb-cap';
+  cap.id = 'wallFloatCap';
+  cap.textContent = WALL.isMl() ? 'ഒഴുക്ക്' : 'FLOAT';
+  var btn = document.createElement('button');
+  btn.className = 'wall-tb';
+  btn.id = 'wallSpeed';
+  WALL.bindTouch(btn, cycleSpeed);
+  var reset = document.getElementById('wallReset');
+  body.insertBefore(cap, reset);
+  body.insertBefore(btn, reset);
+  cycleSpeed(); cycleSpeed(); cycleSpeed();   // land back on 'medium'
+})();
+
+load();
+tick();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

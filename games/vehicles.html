@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  VEHICLE CATEGORIZATION — Pangappara Blueroom, Additional Content item #12
+  Main menu (1 or 3 players) · landscape backgrounds · interactive 3D popups
+════════════════════════════════════════════════════════════════════════════
+
+  FLOW
+    Menu screen (bg-menu)  ->  pick 1 or 3 players
+    Player screen          ->  starts on LAND automatically. The three hubs
+                               are a PROGRESS TRACK, not a chooser — they are
+                               not tappable.
+    Tap a vehicle          ->  popup inside THAT player's panel with an
+                               interactive 3D model + a short fact, and the
+                               vehicle's real sound plays once.
+    Finish a group         ->  its hub ticks, a short announcement holds for
+                               1.7 s ("Now up to the sky!"), then the panel's
+                               background crossfades and the next group slides
+                               in.  Land -> Air -> Water -> celebration.
+    Each panel advances on its OWN progress, so in 3-player mode the three
+    children move through the journey independently.
+
+  ASSETS IN USE (all under ../assets/new/) — file names are mapped in the
+  VEHICLES / CATS arrays below, so re-downloading with a different name only
+  needs the map updated, not a rename on disk.
+    images/  bg-menu.png · bg-land.png · bg-air.png · bg_water.png
+    models/  car · KSRTC_BUS · bicycle_game_asset · train · air_india_plane
+             bell_huey_helicopter · hot_air_balloon · ship · boat
+             ancient_submarine   (.glb)
+    audio/   car-honk · bus · bicycle-bell · train-whistle · jet-engine
+             helicopter · baloon · ship-horn · motorboat · sonar  (.mp3)
+
+  ── SOUND DISCIPLINE (why this is not just <audio>.play()) ────────────────
+  The supplied clips run from 1.2 s (car) to 16.2 s (balloon) at wildly
+  different loudness. Played raw, three children tapping at once turns into
+  noise. Every clip therefore goes through Web Audio with:
+      · a per-vehicle gain trim (VOL below) to even them out
+      · a hard 2.6 s cap with a 400 ms fade-out, so a 16 s burner behaves
+        like a short cue
+      · one sound at a time per panel — a new tap replaces that panel's
+        previous sound rather than layering on it
+      · a global cap of 3 concurrent vehicle sounds
+  Background music ducks while any vehicle sound plays.
+
+  ── BACKGROUND MUSIC ──────────────────────────────────────────────────────
+  Prefers ../assets/new/audio/bgm-vehicles.mp3 (NOT YET SUPPLIED — one 404
+  on first start is expected). Falls back to the existing repo track
+  ../assets/Audio/jyproject-endless-shore-part2-399386.mp3. Music starts on
+  the menu tap, never on load, so the browser autoplay policy cannot block
+  it. audio-manager.js is deliberately NOT included here — it would start a
+  second, competing track.
+
+  ── PERFORMANCE NOTE ──────────────────────────────────────────────────────
+  The supplied models are heavy: train 34 MB, boat 28 MB, bicycle 14 MB,
+  submarine 13 MB (113 MB total) — well above the ~4 MB per model that was
+  requested. A <model-viewer> is therefore created ONLY when a popup opens
+  and destroyed when it closes, so at most three exist at once and GPU
+  memory is released on close. If the wall stutters, decimating train/boat/
+  bicycle/submarine is the fix.
+
+  ── OUTSTANDING ───────────────────────────────────────────────────────────
+  · Malayalam vehicle names AND the fact sentences below were written
+    without a native speaker's review. Get them checked.
+  · Optional: ../assets/new/audio/ui/{tap,star,popup,celebrate}.mp3 would
+    replace the synthesized UI blips. Not required.
+════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Vehicles — Land, Air &amp; Water</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{ --playTop: 31%; }   /* nothing interactive above this line */
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:'Nunito','Segoe UI',sans-serif;color:#22303c;
+  background:#eaf2f8;-webkit-user-select:none;user-select:none;touch-action:none;
+}
+
+/* ═══════════════ MENU SCREEN ═══════════════ */
+#menu{position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3.2vh;
+  background:#dbe9f4 center/cover no-repeat;transition:opacity .5s ease}
+#menu.hide{opacity:0;pointer-events:none}
+#menu .veil{position:absolute;inset:0;background:rgba(255,255,255,.34)}
+#menu .inner{position:relative;z-index:2;display:flex;flex-direction:column;
+  align-items:center;gap:2.6vh}
+#menu h1{font-size:clamp(28px,4.4vw,64px);font-weight:900;color:#1d5f96;
+  text-shadow:0 3px 0 rgba(255,255,255,.9),0 8px 22px rgba(0,0,0,.14);text-align:center;
+  display:flex;flex-direction:column;line-height:1.12}
+#menu h1 .ml{font-family:'Noto Sans Malayalam','Nunito',sans-serif}
+#menu .sub{font-size:clamp(13px,1.5vw,21px);font-weight:800;color:#3c6f96;
+  display:flex;flex-direction:column;align-items:center;line-height:1.2}
+#menu .sub .ml{font-family:'Noto Sans Malayalam','Nunito',sans-serif}
+.pbtns{display:flex;gap:3vw;margin-top:1vh}
+.pbtn{width:clamp(150px,15vw,240px);height:clamp(150px,15vw,240px);border-radius:30px;
+  border:5px solid #fff;cursor:pointer;touch-action:none;
+  background:linear-gradient(160deg,rgba(255,255,255,.95),rgba(230,243,253,.9));
+  box-shadow:0 12px 30px rgba(20,60,95,.24);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  transition:transform .22s cubic-bezier(.34,1.4,.64,1),box-shadow .22s}
+.pbtn:active{transform:scale(.95)}
+.pbtn .n{font-size:clamp(44px,5.5vw,86px);font-weight:900;line-height:1}
+.pbtn .cap{font-size:clamp(12px,1.3vw,18px);font-weight:900;
+  display:flex;flex-direction:column;align-items:center;line-height:1.18;color:#2a5f8a}
+.pbtn .cap .ml{font-family:'Noto Sans Malayalam','Nunito',sans-serif}
+.pbtn[data-n="1"] .n{color:#e08a2f}
+.pbtn[data-n="3"] .n{color:#2f8ac4}
+.pbtn .faces{font-size:clamp(17px,1.9vw,28px);letter-spacing:2px}
+
+/* ═══════════════ GAME ═══════════════ */
+#game{position:fixed;inset:0;z-index:1;display:none}
+#game.on{display:block}
+#panels{position:absolute;inset:0;display:flex}
+.panel{position:relative;flex:1 1 0;height:100%;overflow:hidden;background:#e7eff6}
+.divider{flex:0 0 3px;align-self:stretch;background:rgba(255,255,255,.75);
+  box-shadow:0 0 8px rgba(40,80,120,.25)}
+
+/* per-panel landscape background, two layers so it can crossfade */
+.p-bg{position:absolute;inset:0;z-index:0;background-position:center;
+  background-size:cover;opacity:0;transition:opacity .65s ease}
+.p-bg.on{opacity:1}
+.p-veil{position:absolute;inset:0;z-index:1;background:
+  linear-gradient(180deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.30) 34%,rgba(255,255,255,.62) 100%)}
+
+/* ─── panel head ─── */
+.p-head{position:absolute;top:3.5%;left:0;right:0;z-index:5;
+  display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
+.p-badge{width:clamp(28px,2.6vw,42px);height:clamp(28px,2.6vw,42px);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(14px,1.4vw,22px);font-weight:900;color:#fff;
+  box-shadow:0 4px 12px rgba(0,0,0,.22)}
+.panel[data-p="0"] .p-badge{background:linear-gradient(135deg,#fb923c,#ea580c)}
+.panel[data-p="1"] .p-badge{background:linear-gradient(135deg,#60a5fa,#2563eb)}
+.panel[data-p="2"] .p-badge{background:linear-gradient(135deg,#4ade80,#16a34a)}
+.p-bar{width:56%;max-width:340px;height:10px;background:rgba(255,255,255,.75);
+  border-radius:20px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.12)}
+.p-bar i{display:block;height:100%;width:0%;border-radius:20px;
+  background:linear-gradient(90deg,#fbbf24,#38bdf8,#22c55e);
+  transition:width .5s cubic-bezier(.34,1.4,.64,1)}
+.p-count{font-size:clamp(11px,1.05vw,15px);font-weight:800;color:#3f6c8e;
+  text-shadow:0 1px 0 rgba(255,255,255,.9)}
+.p-prompt{position:absolute;top:15.5%;left:0;right:0;z-index:5;text-align:center;
+  font-size:clamp(11px,1.15vw,18px);font-weight:900;color:#2f5f80;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;line-height:1.18;
+  text-shadow:0 1px 0 rgba(255,255,255,.95)}
+
+/* ── bilingual: Malayalam primary, English small beneath ── */
+#menu h1,#menu .sub,.pbtn .cap,.p-prompt,.hub-label,.pop-name{
+  display:flex;flex-direction:column;align-items:center;line-height:1.16}
+body.ml-mode #menu h1 .ml,body.ml-mode #menu .sub .ml,body.ml-mode .pbtn .cap .ml,
+body.ml-mode .p-prompt .ml,body.ml-mode .hub-label .ml,body.ml-mode .pop-name .ml{order:1}
+body.ml-mode #menu h1 .en,body.ml-mode #menu .sub .en,body.ml-mode .pbtn .cap .en,
+body.ml-mode .p-prompt .en,body.ml-mode .hub-label .en,body.ml-mode .pop-name .en{
+  order:2;font-size:.56em;opacity:.62;font-weight:800}
+body.ml-mode .vname.en,body.ml-mode .pop-fact.en,
+body.ml-mode .done-txt.en,body.ml-mode .done-again .en{display:none}
+body:not(.ml-mode) #menu h1 .en,body:not(.ml-mode) #menu .sub .en,
+body:not(.ml-mode) .pbtn .cap .en,body:not(.ml-mode) .p-prompt .en,
+body:not(.ml-mode) .hub-label .en,body:not(.ml-mode) .pop-name .en{order:1}
+body:not(.ml-mode) #menu h1 .ml,body:not(.ml-mode) #menu .sub .ml,
+body:not(.ml-mode) .pbtn .cap .ml,body:not(.ml-mode) .p-prompt .ml,
+body:not(.ml-mode) .hub-label .ml,body:not(.ml-mode) .pop-name .ml{
+  order:2;font-size:.6em;opacity:.62;font-weight:800}
+body:not(.ml-mode) .vname.ml,body:not(.ml-mode) .pop-fact.ml,
+body:not(.ml-mode) .done-txt.ml,body:not(.ml-mode) .done-again .ml{display:none}
+.ml,.p-prompt .ml,.hub-label .ml,.vname.ml,.pop-name .ml,.pop-fact.ml,.done-txt.ml{
+  font-family:'Noto Sans Malayalam','Nunito',sans-serif}
+
+/* ─── hubs ─── */
+.hubs{position:absolute;top:var(--playTop);left:3%;right:3%;height:17%;z-index:4;
+  display:flex;gap:2.5%}
+/* The three hubs are a PROGRESS TRACK, not a chooser. The journey always
+   runs Land -> Air -> Water and advances on its own. They stay on screen so
+   the child can see where they are and what is coming next — a small visual
+   schedule, which is easier to settle into than an open choice. */
+.hub{flex:1;position:relative;border-radius:16px;cursor:default;pointer-events:none;
+  overflow:hidden;border:4px solid rgba(255,255,255,.8);
+  box-shadow:0 6px 16px rgba(20,60,95,.22);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:6px;background-size:cover;background-position:center;
+  opacity:.40;filter:saturate(.45);
+  transition:transform .35s cubic-bezier(.34,1.4,.64,1),box-shadow .35s,
+             border-color .35s,opacity .5s ease,filter .5s ease}
+.hub.on{opacity:1;filter:none;border-color:#fff;transform:translateY(-5px) scale(1.04);
+  box-shadow:0 0 0 5px rgba(56,189,248,.55),0 12px 26px rgba(20,60,95,.32)}
+.hub.done{opacity:1;filter:none;border-color:rgba(74,222,128,.95);
+  box-shadow:0 6px 16px rgba(20,60,95,.22)}
+.hub-tick{position:absolute;top:4px;right:6px;z-index:3;font-size:clamp(11px,1.25vw,19px);
+  opacity:0;transform:scale(0);filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));
+  transition:opacity .3s,transform .45s cubic-bezier(.34,1.7,.64,1)}
+.hub.done .hub-tick{opacity:1;transform:scale(1)}
+.p-prompt.stage{color:#1d5f96;transform:scale(1.12)}
+.hub::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.42))}
+.hub-icon{position:relative;z-index:2;font-size:clamp(18px,2.3vw,38px);
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));margin-bottom:1px}
+.hub-label{position:relative;z-index:2;text-align:center;color:#fff;font-weight:900;
+  font-size:clamp(9px,.98vw,15px);text-shadow:0 2px 5px rgba(0,0,0,.7);padding:0 4px}
+
+/* ─── vehicle cards ─── */
+.cards{position:absolute;top:calc(var(--playTop) + 19.5%);left:3%;right:3%;bottom:3%;
+  z-index:3;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:3%}
+.vcard{position:relative;width:44%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:7px;border-radius:18px;
+  cursor:pointer;touch-action:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(240,248,254,.93));
+  border:4px solid rgba(255,255,255,.9);
+  box-shadow:0 6px 16px rgba(20,60,95,.2);
+  animation:slideIn .45s cubic-bezier(.34,1.4,.64,1) backwards;
+  transition:box-shadow .22s,border-color .22s}
+@keyframes slideIn{from{opacity:0;transform:translateY(26px) scale(.9)}to{opacity:1;transform:none}}
+.vcard:active{transform:scale(.96)}
+.vcard.playing{border-color:#38bdf8;box-shadow:0 0 0 6px rgba(56,189,248,.35),0 12px 26px rgba(20,60,95,.3)}
+.vcard.done{border-color:rgba(250,204,21,.9);
+  background:linear-gradient(180deg,rgba(255,253,243,.97),rgba(253,245,219,.94))}
+.vart{font-size:var(--vart);line-height:1;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.2))}
+.vart svg{width:var(--vart);height:var(--vart);display:block}
+.vart img{width:var(--vart);height:var(--vart);object-fit:contain}
+.vname{font-weight:900;color:#22303c;font-size:clamp(11px,1.15vw,18px);
+  text-align:center;pointer-events:none;padding:0 4px;line-height:1.15}
+.vstar{position:absolute;top:5px;right:7px;font-size:clamp(14px,1.5vw,24px);
+  opacity:0;transform:scale(0);pointer-events:none;
+  transition:opacity .3s,transform .45s cubic-bezier(.34,1.7,.64,1);
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.vcard.done .vstar{opacity:1;transform:scale(1)}
+
+/* ─── 3D POPUP (inside the player's own panel) ─── */
+/* The popup occupies only the reachable band, so its close button lands
+   where a small child can actually reach it — not at the top of the wall. */
+.pop{position:absolute;inset:0;z-index:60;display:none;
+  align-items:flex-end;justify-content:center;padding:0 3% 2.5%;
+  background:rgba(246,251,255,.90);backdrop-filter:blur(6px)}
+.pop.on{display:flex;animation:popIn .38s ease}      /* calm fade, no spring */
+@keyframes popIn{from{opacity:0}to{opacity:1}}
+.pop-box{width:100%;height:calc(100% - var(--playTop) - 2.5%);border-radius:22px;
+  background:linear-gradient(180deg,#fff,#f2f8fd);
+  border:4px solid rgba(120,180,220,.55);box-shadow:0 14px 40px rgba(20,60,95,.28);
+  display:flex;flex-direction:column;align-items:center;padding:2.5% 3%;position:relative;
+  animation:popRise .4s cubic-bezier(.25,.9,.4,1)}
+@keyframes popRise{from{transform:translateY(14px);opacity:.4}to{transform:none;opacity:1}}
+.pop-close{position:absolute;top:8px;right:9px;width:clamp(34px,3.2vw,50px);
+  height:clamp(34px,3.2vw,50px);border-radius:50%;border:3px solid #7fb4dc;
+  background:#eaf5ff;color:#1c4a75;font-size:clamp(16px,1.7vw,26px);font-weight:900;
+  cursor:pointer;touch-action:none;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 9px rgba(20,60,95,.2);z-index:3}
+.pop-close:active{transform:scale(.92)}
+.pop-stage{flex:1;width:100%;min-height:0;display:flex;align-items:center;justify-content:center;
+  position:relative}
+.pop-stage model-viewer{width:100%;height:100%;--poster-color:transparent;background:transparent}
+.pop-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;color:#5d87a8;font-weight:800;font-size:clamp(11px,1.1vw,15px);
+  pointer-events:none}
+.pop-load .spin{width:26px;height:26px;border:3px solid rgba(93,135,168,.3);
+  border-top-color:#38bdf8;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pop-name{font-size:clamp(15px,1.7vw,27px);font-weight:900;color:#1d5f96;
+  text-align:center;margin-top:2px}
+.pop-fact{font-size:clamp(10px,1.02vw,16px);font-weight:700;color:#41627d;text-align:center;
+  line-height:1.42;margin-top:5px;max-width:94%}
+.pop-hint{font-size:clamp(9px,.9vw,13px);font-weight:800;color:#7d9cb4;margin-top:5px;
+  display:flex;flex-direction:column;align-items:center;line-height:1.2}
+body.ml-mode .pop-hint .en,body:not(.ml-mode) .pop-hint .ml{display:none}
+.pop-replay{margin-top:7px;padding:8px 20px;border-radius:26px;border:3px solid #7fb4dc;
+  background:linear-gradient(135deg,#eaf5ff,#c8e2f7);color:#1c4a75;font-family:inherit;
+  font-weight:900;font-size:clamp(11px,1.1vw,16px);cursor:pointer;touch-action:none}
+.pop-replay:active{transform:scale(.94)}
+
+/* ─── done overlay ─── */
+.p-done{position:absolute;inset:0;z-index:120;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;background:rgba(248,252,255,.94)}
+.p-done.on{display:flex}
+.done-txt{font-size:clamp(18px,2.3vw,38px);font-weight:900;color:#1d5f96;text-align:center;
+  animation:popRise .5s ease}
+.done-txt.ml{color:#e0632f}
+.done-again{padding:11px 26px;border-radius:32px;border:3px solid #2c6ca8;
+  background:linear-gradient(135deg,#e6f3ff,#bfdcf5);color:#1c4a75;font-family:inherit;
+  font-weight:900;font-size:clamp(12px,1.4vw,20px);cursor:pointer;touch-action:none}
+.done-again:active{transform:scale(.94)}
+
+/* ═══════════════ TOOLBAR — right edge, vertically centred, collapsed ═══════════════ */
+#toolbar{position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:500;
+  display:flex;flex-direction:column;align-items:flex-end;gap:6px;touch-action:auto}
+#tbToggle{width:42px;height:42px;border-radius:50%;border:2px solid rgba(127,180,220,.8);
+  background:rgba(255,255,255,.9);color:#1c4a75;font-size:17px;font-weight:900;
+  cursor:pointer;touch-action:auto;box-shadow:0 3px 10px rgba(20,60,95,.22);
+  display:flex;align-items:center;justify-content:center;transition:transform .2s}
+#tbToggle:active{transform:scale(.9)}
+.tb-body{display:none;flex-direction:column;gap:5px;align-items:stretch;
+  padding:8px;border-radius:16px;background:rgba(255,255,255,.94);
+  border:2px solid rgba(127,180,220,.55);box-shadow:0 8px 24px rgba(20,60,95,.26)}
+#toolbar.open .tb-body{display:flex}
+.tb{padding:7px 11px;border-radius:13px;border:2px solid #7fb4dc;
+  background:linear-gradient(135deg,#eaf5ff,#c8e2f7);color:#1c4a75;font-weight:900;
+  font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap;touch-action:auto}
+.tb:active{transform:scale(.94)}
+.tb.off{opacity:.45}
+.tb-row{display:flex;gap:5px}
+.tb-row .tb{flex:1;text-align:center;padding:7px 6px}
+.tb-cap{font-size:9px;font-weight:800;color:#5d87a8;letter-spacing:.5px;text-align:center}
+
+/* ═══════════════ FX ═══════════════ */
+.spark{position:fixed;pointer-events:none;z-index:900;border-radius:50%;
+  animation:sparkFly var(--sd) ease-out forwards}
+@keyframes sparkFly{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
+  60%{opacity:1}
+  100%{transform:translate(calc(-50% + var(--sx)),calc(-50% + var(--sy))) scale(1);opacity:0}
+}
+.cstar{position:fixed;z-index:991;pointer-events:none;font-size:24px;
+  animation:rise var(--rd) ease-in forwards}
+.balloon{position:fixed;bottom:-140px;width:48px;height:62px;border-radius:50% 50% 48% 48%;
+  z-index:990;pointer-events:none;animation:rise var(--rd) ease-in forwards}
+@keyframes rise{
+  0%{transform:translateY(0) rotate(0);opacity:0}
+  12%{opacity:.95}
+  100%{transform:translateY(-118vh) rotate(var(--rr));opacity:0}
+}
+.touch-ring{position:fixed;width:56px;height:56px;border:3px solid rgba(56,189,248,.45);
+  border-radius:50%;pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%) scale(0);animation:ringPop .45s ease forwards}
+@keyframes ringPop{to{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
+</style>
+</head>
+<body class="ml-mode">
+
+<div id="game"><div id="panels"></div></div>
+
+<div id="menu">
+  <div class="veil"></div>
+  <div class="inner">
+    <h1><span class="en">Vehicles</span><span class="ml">വാഹനങ്ങൾ</span></h1>
+    <div class="sub"><span class="en">How many players?</span><span class="ml">എത്ര പേർ കളിക്കും?</span></div>
+    <div class="pbtns">
+      <div class="pbtn" data-n="1">
+        <div class="faces">🧒</div><div class="n">1</div>
+        <div class="cap"><span class="en">Player</span><span class="ml">ഒരാൾ</span></div>
+      </div>
+      <div class="pbtn" data-n="3">
+        <div class="faces">🧒🧒🧒</div><div class="n">3</div>
+        <div class="cap"><span class="en">Players</span><span class="ml">മൂന്ന് പേർ</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toolbar">
+  <button id="tbToggle">☰</button>
+  <div class="tb-body">
+    <button class="tb" id="btnMenu">↩ Players</button>
+    <button class="tb" id="btnLang">🌐 ML</button>
+    <button class="tb" id="btnVoice">🔊 Voice</button>
+    <div class="tb-cap">SIZE</div>
+    <div class="tb-row"><button class="tb" id="btnSmaller">➖</button><button class="tb" id="btnBigger">➕</button></div>
+    <div class="tb-cap">HEIGHT</div>
+    <div class="tb-row"><button class="tb" id="btnUp">⬆</button><button class="tb" id="btnDown">⬇</button></div>
+    <button class="tb" id="btnReset">↺ Restart</button>
+    <button class="tb" id="btnHome">🏠 Menu</button>
+  </div>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   ASSET MAPS — real file names live here and nowhere else
+   ══════════════════════════════════════════════════════════════ */
+var IMG = '../assets/new/images/', MDL = '../assets/new/models/', SND = '../assets/new/audio/';
+
+var CATS = [
+  { key:'land',  en:'Land Vehicles',  ml:'കരയിൽ പോകുന്നവ',      icon:'🛣️', bg: IMG + 'bg-land.png'  },
+  { key:'air',   en:'Air Vehicles',   ml:'ആകാശത്ത് പറക്കുന്നവ', icon:'☁️', bg: IMG + 'bg-air.png'   },
+  { key:'water', en:'Water Vehicles', ml:'വെള്ളത്തിൽ പോകുന്നവ', icon:'🌊', bg: IMG + 'bg_water.png' }
+];
+
+/* fact = one short sentence for the popup. NEEDS NATIVE-SPEAKER REVIEW. */
+var VEHICLES = [
+  { key:'car', en:'Car', ml:'കാർ', cat:'land', emoji:'🚗',
+    model: MDL+'car.glb', snd: SND+'car-honk.mp3', vol:0.85,
+    factEn:'A car takes us along the road. It has four wheels.',
+    factMl:'കാർ നമ്മെ റോഡിലൂടെ കൊണ്ടുപോകുന്നു. ഇതിന് നാല് ചക്രങ്ങളുണ്ട്.' },
+  { key:'bus', en:'Bus', ml:'ബസ്', cat:'land', emoji:'🚌',
+    model: MDL+'KSRTC_BUS.glb', snd: SND+'bus.mp3', vol:0.8,
+    factEn:'A bus carries many people together.',
+    factMl:'ബസ് ഒരുപാട് ആളുകളെ ഒരുമിച്ച് കൊണ്ടുപോകുന്നു.' },
+  { key:'bicycle', en:'Bicycle', ml:'സൈക്കിൾ', cat:'land', emoji:'🚲',
+    model: MDL+'bicycle_game_asset.glb', snd: SND+'bicycle-bell.mp3', vol:0.6,
+    factEn:'We pedal a bicycle with our legs. It has two wheels.',
+    factMl:'സൈക്കിൾ കാലുകൊണ്ട് ചവിട്ടി ഓടിക്കുന്നു. ഇതിന് രണ്ട് ചക്രങ്ങളുണ്ട്.' },
+  { key:'train', en:'Train', ml:'തീവണ്ടി', cat:'land', emoji:'🚂',
+    model: MDL+'train.glb', snd: SND+'train-whistle.mp3', vol:0.6,
+    factEn:'A train runs on rails and is very long.',
+    factMl:'തീവണ്ടി പാളത്തിലൂടെ ഓടുന്നു. ഇത് വളരെ നീളമുള്ളതാണ്.' },
+  { key:'aeroplane', en:'Aeroplane', ml:'വിമാനം', cat:'air', emoji:'✈️',
+    model: MDL+'air_india_plane.glb', snd: SND+'jet-engine.mp3', vol:0.85,
+    factEn:'An aeroplane flies high up in the sky.',
+    factMl:'വിമാനം ആകാശത്ത് ഉയരത്തിൽ പറക്കുന്നു.' },
+  { key:'helicopter', en:'Helicopter', ml:'ഹെലികോപ്റ്റർ', cat:'air', emoji:'🚁',
+    model: MDL+'bell_huey_helicopter.glb', anim:'Rotation', snd: SND+'helicopter.mp3', vol:0.55,
+    factEn:'A helicopter has spinning blades on top.',
+    factMl:'ഹെലികോപ്റ്ററിന് മുകളിൽ കറങ്ങുന്ന ചിറകുകളുണ്ട്.' },
+  { key:'balloon', en:'Hot Air Balloon', ml:'ചൂടുവായു ബലൂൺ', cat:'air', emoji:'🎈',
+    model: MDL+'hot_air_balloon.glb', snd: SND+'baloon.mp3', vol:0.7,
+    factEn:'Hot air makes this balloon float up into the sky.',
+    factMl:'ചൂടുവായു ഈ ബലൂണിനെ ആകാശത്തേക്ക് ഉയർത്തുന്നു.' },
+  { key:'ship', en:'Ship', ml:'കപ്പൽ', cat:'water', emoji:'🚢',
+    model: MDL+'ship.glb', snd: SND+'ship-horn.mp3', vol:0.7,
+    factEn:'A big ship sails across the sea.',
+    factMl:'വലിയ കപ്പൽ കടലിലൂടെ സഞ്ചരിക്കുന്നു.' },
+  { key:'boat', en:'Boat', ml:'വള്ളം', cat:'water', emoji:'🚤',
+    model: MDL+'boat.glb', snd: SND+'motorboat.mp3', vol:0.55,
+    factEn:'A small boat moves on the water.',
+    factMl:'ചെറിയ വള്ളം വെള്ളത്തിലൂടെ നീങ്ങുന്നു.' },
+  { key:'submarine', en:'Submarine', ml:'അന്തർവാഹിനി', cat:'water', emoji:'🌊',
+    model: MDL+'ancient_submarine.glb', snd: SND+'sonar.mp3', vol:0.7,
+    factEn:'A submarine goes deep down under the water.',
+    factMl:'അന്തർവാഹിനി വെള്ളത്തിനടിയിൽ ആഴത്തിൽ പോകുന്നു.' }
+];
+
+var TOTAL = VEHICLES.length;
+var SIZE_STEPS = [0.75, 0.88, 1.0, 1.15, 1.35, 1.6];
+var sizeIdx = 2, heightShift = 0, HEIGHT_STEP = 34, HEIGHT_MAX = 120;
+var isMl = true, voiceOn = true;
+var P = [], nPlayers = 0;
+
+/* ══════════════════════════════════════════════════════════════
+   AUDIO ENGINE
+   Per-vehicle gain trim, a hard 2.6 s cap with a fade, one sound
+   per panel and three globally — see the banner for why.
+   ══════════════════════════════════════════════════════════════ */
+var actx = null, bufs = {}, playing = [], MAXPLAY = 2.6, FADE = 0.4, MAX_CONCURRENT = 3;
+function ac() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (actx && actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function loadBuf(v) {
+  if (bufs[v.key] !== undefined) return Promise.resolve(bufs[v.key]);
+  bufs[v.key] = null;
+  var a = ac(); if (!a) return Promise.resolve(null);
+  return fetch(v.snd).then(function (r) { return r.arrayBuffer(); })
+    .then(function (ab) { return a.decodeAudioData(ab); })
+    .then(function (b) { bufs[v.key] = b; return b; })
+    .catch(function () { bufs[v.key] = null; return null; });
+}
+function stopPanelSound(pi) {
+  playing = playing.filter(function (h) {
+    if (h.panel !== pi) return true;
+    try { h.gain.gain.cancelScheduledValues(actx.currentTime);
+          h.gain.gain.setTargetAtTime(0.0001, actx.currentTime, 0.05);
+          h.src.stop(actx.currentTime + 0.25); } catch (e) {}
+    return false;
+  });
+}
+function playVehicle(v, pi) {
+  var a = ac(); if (!a) return;
+  stopPanelSound(pi);                              // one per panel
+  while (playing.length >= MAX_CONCURRENT) {       // global ceiling
+    var old = playing.shift();
+    try { old.src.stop(); } catch (e) {}
+  }
+  loadBuf(v).then(function (buf) {
+    if (!buf) return;
+    var t0 = a.currentTime, dur = Math.min(buf.duration, MAXPLAY);
+    var src = a.createBufferSource(); src.buffer = buf;
+    var g = a.createGain();
+    src.connect(g); g.connect(a.destination);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(v.vol, t0 + 0.04);
+    if (buf.duration > MAXPLAY) {                  // long clip -> fade it out
+      g.gain.setValueAtTime(v.vol, t0 + dur - FADE);
+      g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+    }
+    src.start(t0); src.stop(t0 + dur + 0.05);
+    var h = { src: src, gain: g, panel: pi };
+    playing.push(h);
+    duck(true);
+    src.onended = function () {
+      playing = playing.filter(function (x) { return x !== h; });
+      if (!playing.length) duck(false);
+    };
+  });
+}
+function tone(f, dur, type, vol, delay) {
+  var a = ac(); if (!a) return;
+  var t0 = a.currentTime + (delay || 0);
+  var o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t0);
+  o.connect(g); g.connect(a.destination);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol || 0.08, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.start(t0); o.stop(t0 + dur + 0.03);
+}
+function sfxTap()  { tone(660, 0.07, 'sine', 0.05); }
+function sfxStar() { tone(880, 0.1, 'triangle', 0.07); tone(1320, 0.14, 'triangle', 0.05, 0.08); }
+function sfxCele() { [523,659,784,1047].forEach(function (f, i) { tone(f, 0.4, 'triangle', 0.08, i * 0.09); }); }
+
+/* ── background music: prefers the new asset, falls back to the repo track ── */
+var bgm = null;
+function startBgm() {
+  if (bgm) { bgm.play().catch(function () {}); return; }
+  bgm = new Audio(SND + 'bgm-vehicles.mp3');
+  bgm.loop = true; bgm.volume = 0.32;
+  bgm.addEventListener('error', function () {
+    bgm.src = '../assets/Audio/jyproject-endless-shore-part2-399386.mp3';
+    bgm.load(); bgm.play().catch(function () {});
+  }, { once: true });
+  bgm.play().catch(function () {});
+}
+function duck(on) { if (bgm) bgm.volume = on ? 0.12 : 0.32; }
+
+var praiseIdx = 0, praiseUntil = 0;
+var PRAISE_ML = ['നന്നായി!', 'കൊള്ളാം!', 'മിടുക്ക്!'];
+var PRAISE_EN = ['Nice!', 'Well done!', 'Great!'];
+function say(t, l) {
+  if (!voiceOn || Date.now() < praiseUntil) return;
+  try {
+    if (typeof TTSEngine === 'undefined') return;
+    if (window.speechSynthesis && window.speechSynthesis.speaking) return;
+    TTSEngine.speak(t, l, null);
+  } catch (e) {}
+}
+function sayPraise() {
+  if (!voiceOn) return;
+  var now = Date.now(); if (now < praiseUntil) return;
+  try {
+    if (typeof TTSEngine === 'undefined') return;
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    praiseUntil = now + 1100;
+    var l = isMl ? PRAISE_ML : PRAISE_EN;
+    TTSEngine.speak(l[praiseIdx++ % l.length], isMl ? 'ml' : 'en', null);
+  } catch (e) {}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUILD
+   ══════════════════════════════════════════════════════════════ */
+function hubsHTML() {
+  return CATS.map(function (c) {
+    return '<div class="hub" data-cat="' + c.key + '" style="background-image:url(\'' + c.bg + '\')">' +
+      '<div class="hub-tick">✅</div>' +
+      '<div class="hub-icon">' + c.icon + '</div>' +
+      '<div class="hub-label"><span class="en">' + c.en + '</span><span class="ml">' + c.ml + '</span></div>' +
+    '</div>';
+  }).join('');
+}
+function panelHTML() {
+  return '<div class="p-bg" data-layer="0"></div><div class="p-bg" data-layer="1"></div>' +
+    '<div class="p-veil"></div>' +
+    '<div class="p-head"><div class="p-badge"></div><div class="p-bar"><i></i></div>' +
+    '<div class="p-count">0 / ' + TOTAL + '</div></div>' +
+    '<div class="p-prompt"></div>' +
+    '<div class="hubs">' + hubsHTML() + '</div>' +
+    '<div class="cards"></div>' +
+    '<div class="pop"><div class="pop-box">' +
+      '<button class="pop-close">✕</button>' +
+      '<div class="pop-stage"><div class="pop-load"><div class="spin"></div><span>…</span></div></div>' +
+      '<div class="pop-name"></div>' +
+      '<div class="pop-fact en"></div><div class="pop-fact ml"></div>' +
+      '<div class="pop-hint"><span class="en">↔ Turn it with your finger</span><span class="ml">↔ വിരൽ കൊണ്ട് തിരിക്കൂ</span></div>' +
+      '<button class="pop-replay">🔊</button>' +
+    '</div></div>' +
+    '<div class="p-done">' +
+      '<div class="done-txt en">All explored! 🎉</div><div class="done-txt ml">എല്ലാം കണ്ടു! 🎉</div>' +
+      '<button class="done-again"><span class="en">Play Again</span><span class="ml">വീണ്ടും</span></button>' +
+    '</div>';
+}
+
+function startGame(n) {
+  nPlayers = n;
+  var wrap = document.getElementById('panels');
+  wrap.innerHTML = '';
+  P = [];
+  for (var i = 0; i < n; i++) {
+    if (i > 0) { var d = document.createElement('div'); d.className = 'divider'; wrap.appendChild(d); }
+    var el = document.createElement('div');
+    el.className = 'panel'; el.dataset.p = String(i);
+    el.innerHTML = panelHTML();
+    wrap.appendChild(el);
+    var p = {
+      i: i, root: el,
+      bgs: el.querySelectorAll('.p-bg'), bgTop: 0,
+      cards: el.querySelector('.cards'), bar: el.querySelector('.p-bar i'),
+      count: el.querySelector('.p-count'), prompt: el.querySelector('.p-prompt'),
+      pop: el.querySelector('.pop'), done: el.querySelector('.p-done'),
+      cat: null, explored: {}, n: 0
+    };
+    el.querySelector('.p-badge').textContent = String(i + 1);
+    if (n === 1) el.querySelector('.p-badge').style.display = 'none';
+    P.push(p);
+  }
+  document.getElementById('game').classList.add('on');
+  document.getElementById('menu').classList.add('hide');
+  P.forEach(resetPanel);
+  startBgm();
+}
+
+function resetPanel(p) {
+  p.catIdx = 0; p.cat = null; p.explored = {}; p.n = 0;
+  p.cards.innerHTML = '';
+  p.done.classList.remove('on');
+  p.prompt.classList.remove('stage');
+  closePop(p);
+  [].forEach.call(p.root.querySelectorAll('.hub'), function (h) {
+    h.classList.remove('on'); h.classList.remove('done');
+  });
+  [].forEach.call(p.bgs, function (b) { b.classList.remove('on'); });
+  refresh(p);
+  showCategory(p, CATS[0].key);          // every run begins on the road
+}
+function resetAll() { P.forEach(resetPanel); }
+function setPrompt(p, en, ml) {
+  p.prompt.innerHTML = '<span class="en">' + en + '</span><span class="ml">' + ml + '</span>';
+}
+function refresh(p) {
+  p.count.textContent = p.n + ' / ' + TOTAL;
+  p.bar.style.width = (p.n / TOTAL * 100) + '%';
+}
+function cardArtPx(p) {
+  /* Bound by BOTH card width and height: in 1-player the panel is three
+     times wider, so a width-only cap left the art marooned in empty space. */
+  var base = Math.max(28, Math.min(p.cards.clientWidth * 0.155,
+                                   p.cards.clientHeight * 0.38, 210));
+  return Math.round(base * SIZE_STEPS[sizeIdx]);
+}
+function applySize() {
+  P.forEach(function (p) {
+    var px = cardArtPx(p);
+    [].forEach.call(p.cards.querySelectorAll('.vcard'), function (c) {
+      c.style.setProperty('--vart', px + 'px');
+    });
+  });
+}
+
+/* crossfade the panel background to the chosen landscape */
+function setBg(p, url) {
+  var next = p.bgs[1 - p.bgTop];
+  next.style.backgroundImage = "url('" + url + "')";
+  next.classList.add('on');
+  p.bgs[p.bgTop].classList.remove('on');
+  p.bgTop = 1 - p.bgTop;
+}
+
+function showCategory(p, key) {
+  p.cat = key;
+  var cat = CATS.filter(function (c) { return c.key === key; })[0];
+  setBg(p, cat.bg);
+  var order = CATS.map(function (c) { return c.key; });
+  p.catIdx = order.indexOf(key);
+  [].forEach.call(p.root.querySelectorAll('.hub'), function (h) {
+    var hi = order.indexOf(h.dataset.cat);
+    h.classList.toggle('on', hi === p.catIdx);
+    h.classList.toggle('done', hi < p.catIdx);
+  });
+  var list = VEHICLES.filter(function (v) { return v.cat === key; });
+  p.cards.innerHTML = '';
+  var px = cardArtPx(p);
+  list.forEach(function (v, idx) {
+    var c = document.createElement('div');
+    c.className = 'vcard' + (p.explored[v.key] ? ' done' : '');
+    c.dataset.key = v.key;
+    c.style.animationDelay = (idx * 0.07) + 's';
+    c.style.setProperty('--vart', px + 'px');
+    c.style.height = (list.length > 2 ? '46%' : '58%');
+    c.innerHTML = '<span class="vstar">⭐</span><div class="vart">' + v.emoji + '</div>' +
+      '<div class="vname en">' + v.en + '</div><div class="vname ml">' + v.ml + '</div>';
+    p.cards.appendChild(c);
+  });
+  setPrompt(p, 'Tap a vehicle!', 'ഒരു വാഹനം തൊടൂ!');
+  sfxTap();
+}
+
+/* ── POPUP: model-viewer is created here and destroyed on close, so the
+   heavy .glb files never all live in GPU memory at the same time ── */
+function openPop(p, v) {
+  var stage = p.pop.querySelector('.pop-stage');
+  stage.innerHTML = '<div class="pop-load"><div class="spin"></div><span>…</span></div>';
+  p.pop.querySelector('.pop-name').innerHTML =
+    '<span class="en">' + v.en + '</span><span class="ml">' + v.ml + '</span>';
+  p.pop.querySelector('.pop-fact.en').textContent = v.factEn;
+  p.pop.querySelector('.pop-fact.ml').textContent = v.factMl;
+  p.pop.dataset.key = v.key;
+  p.pop.classList.add('on');
+
+  var mv = document.createElement('model-viewer');
+  mv.setAttribute('src', v.model);
+  mv.setAttribute('camera-controls', '');        // interactive — the child can turn it
+  mv.setAttribute('auto-rotate', '');
+  mv.setAttribute('rotation-per-second', '18deg');
+  mv.setAttribute('interaction-prompt', 'none');
+  mv.setAttribute('shadow-intensity', '0.8');
+  mv.setAttribute('exposure', '1.2');
+  mv.setAttribute('environment-image', 'neutral');
+  mv.setAttribute('tone-mapping', 'commerce');
+  mv.setAttribute('touch-action', 'none');
+  if (v.anim) { mv.setAttribute('animation-name', v.anim); mv.setAttribute('autoplay', ''); }
+  mv.addEventListener('load', function () {
+    var l = stage.querySelector('.pop-load'); if (l) l.remove();
+  });
+  stage.appendChild(mv);
+
+  playVehicle(v, p.i);
+  setTimeout(function () { say(isMl ? v.ml : v.en, isMl ? 'ml' : 'en'); }, 1400);
+}
+function closePop(p) {
+  p.pop.classList.remove('on');
+  var stage = p.pop.querySelector('.pop-stage');
+  if (stage) stage.innerHTML = '';              // free the model
+  stopPanelSound(p.i);
+}
+
+function tapVehicle(p, cardEl) {
+  var v = VEHICLES.filter(function (x) { return x.key === cardEl.dataset.key; })[0];
+  if (!v) return;
+  cardEl.classList.add('playing');
+  setTimeout(function () { cardEl.classList.remove('playing'); }, 900);
+
+  var first = !p.explored[v.key];
+  if (first) {
+    p.explored[v.key] = true; p.n++;
+    cardEl.classList.add('done');
+    refresh(p);
+    var r = cardEl.getBoundingClientRect();
+    setTimeout(function () {
+      sfxStar(); burst(r.left + r.width - 14, r.top + 14, ['#fde68a', '#fbbf24', '#fff'], 10);
+    }, 220);
+  }
+  openPop(p, v);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INPUT — panels are fully independent
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener('pointerdown', function (e) {
+  if (e.target.closest('#toolbar')) return;
+
+  var pb = e.target.closest('.pbtn');
+  if (pb) { e.preventDefault(); ac(); startGame(parseInt(pb.dataset.n, 10)); return; }
+
+  var panelEl = e.target.closest('.panel');
+  if (!panelEl) return;
+  var p = P[parseInt(panelEl.dataset.p, 10)];
+  if (!p) return;
+  ac();
+
+  if (e.target.closest('.done-again')) { e.preventDefault(); resetPanel(p); return; }
+  if (p.done.classList.contains('on')) return;
+
+  if (e.target.closest('.pop-close')) { e.preventDefault(); closePop(p); afterPop(p); return; }
+  if (e.target.closest('.pop-replay')) {
+    e.preventDefault();
+    var vk = p.pop.dataset.key;
+    var vv = VEHICLES.filter(function (x) { return x.key === vk; })[0];
+    if (vv) playVehicle(vv, p.i);
+    return;
+  }
+  /* Popup is modal for THIS panel only. Tapping anywhere outside the card
+     closes it — the model itself sits inside .pop-box, so turning it with a
+     finger never dismisses it by accident. */
+  if (p.pop.classList.contains('on')) {
+    if (!e.target.closest('.pop-box')) { e.preventDefault(); closePop(p); afterPop(p); }
+    return;
+  }
+
+  var card = e.target.closest('.vcard');
+  if (card) { e.preventDefault(); tapVehicle(p, card); return; }
+}, { passive: false });
+
+var STAGE_NEXT = {
+  air:   { en:'Now up to the sky!',  ml:'ഇനി ആകാശത്തേക്ക്!' },
+  water: { en:'Now into the water!', ml:'ഇനി വെള്ളത്തിലേക്ക്!' }
+};
+function catDone(p, key) {
+  return VEHICLES.filter(function (v) { return v.cat === key; })
+                 .every(function (v) { return p.explored[v.key]; });
+}
+function afterPop(p) {
+  if (p.n === TOTAL) {
+    /* tick the last hub too — there is no next stage to trigger it */
+    var hs = p.root.querySelectorAll('.hub');
+    hs[p.catIdx].classList.add('done');
+    setTimeout(function () { celebrate(p); }, 400);
+    return;
+  }
+  if (catDone(p, CATS[p.catIdx].key)) { advanceStage(p); return; }
+  setTimeout(sayPraise, 250);
+}
+/* Finish a group -> tick its hub, hold on a short announcement, then move on.
+   The pause matters: an abrupt swap is disorienting. */
+function advanceStage(p) {
+  var next = CATS[p.catIdx + 1];
+  if (!next) return;
+  var hubs = p.root.querySelectorAll('.hub');
+  hubs[p.catIdx].classList.add('done');
+  sfxStar();
+  var r = hubs[p.catIdx].getBoundingClientRect();
+  burst(r.left + r.width / 2, r.top + r.height / 2, ['#86efac', '#4ade80', '#fff'], 14);
+  setTimeout(sayPraise, 200);
+  p.prompt.classList.add('stage');
+  setPrompt(p, STAGE_NEXT[next.key].en, STAGE_NEXT[next.key].ml);
+  setTimeout(function () {
+    p.prompt.classList.remove('stage');
+    showCategory(p, next.key);
+  }, 1700);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FX
+   ══════════════════════════════════════════════════════════════ */
+function burst(cx, cy, colors, n) {
+  for (var i = 0; i < (n || 12); i++) {
+    var s = document.createElement('div');
+    s.className = 'spark';
+    var size = 5 + Math.random() * 7, ang = Math.random() * Math.PI * 2,
+        dist = 28 + Math.random() * 60;
+    s.style.width = size + 'px'; s.style.height = size + 'px';
+    s.style.left = cx + 'px'; s.style.top = cy + 'px';
+    s.style.background = colors[Math.floor(Math.random() * colors.length)];
+    s.style.setProperty('--sx', Math.cos(ang) * dist + 'px');
+    s.style.setProperty('--sy', (Math.sin(ang) * dist - 22) + 'px');
+    s.style.setProperty('--sd', (0.55 + Math.random() * 0.4) + 's');
+    document.body.appendChild(s);
+    s.addEventListener('animationend', function () { this.remove(); });
+  }
+}
+function celebrate(p) {
+  p.done.classList.add('on');
+  sfxCele();
+  var pr = p.root.getBoundingClientRect();
+  var cols = ['#f87171', '#fbbf24', '#4ade80', '#60a5fa', '#c084fc'];
+  for (var i = 0; i < 12; i++) {
+    (function (i) {
+      setTimeout(function () {
+        var b = document.createElement('div');
+        b.className = 'balloon';
+        b.style.left = (pr.left + Math.random() * (pr.width - 48)) + 'px';
+        b.style.background = cols[i % cols.length];
+        b.style.setProperty('--rd', (3.4 + Math.random() * 2) + 's');
+        b.style.setProperty('--rr', ((Math.random() - .5) * 40) + 'deg');
+        document.body.appendChild(b);
+        b.addEventListener('animationend', function () { this.remove(); });
+      }, i * 130);
+    })(i);
+  }
+  for (var j = 0; j < 8; j++) {
+    (function (j) {
+      setTimeout(function () {
+        var s = document.createElement('div');
+        s.className = 'cstar'; s.textContent = ['⭐','✨','🌟'][j % 3];
+        s.style.left = (pr.left + Math.random() * (pr.width - 30)) + 'px';
+        s.style.setProperty('--rd', (3 + Math.random() * 1.8) + 's');
+        s.style.setProperty('--rr', ((Math.random() - .5) * 60) + 'deg');
+        document.body.appendChild(s);
+        s.addEventListener('animationend', function () { this.remove(); });
+      }, 250 + j * 160);
+    })(j);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOOLBAR
+   ══════════════════════════════════════════════════════════════ */
+function bindTouch(el, fn) {
+  el.addEventListener('click', function (e) {
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+    fn(e);
+  });
+  el.addEventListener('touchend', function (e) { e.preventDefault(); fn(e); });
+}
+var tb = document.getElementById('toolbar');
+bindTouch(document.getElementById('tbToggle'), function () { tb.classList.toggle('open'); });
+bindTouch(document.getElementById('btnMenu'), function () {
+  tb.classList.remove('open');
+  document.getElementById('game').classList.remove('on');
+  document.getElementById('menu').classList.remove('hide');
+});
+bindTouch(document.getElementById('btnHome'), function () { location.href = '../index.html'; });
+bindTouch(document.getElementById('btnLang'), function () {
+  isMl = document.body.classList.toggle('ml-mode');
+  document.getElementById('btnLang').textContent = isMl ? '🌐 ML' : '🌐 EN';
+});
+bindTouch(document.getElementById('btnVoice'), function () {
+  voiceOn = !voiceOn;
+  var b = document.getElementById('btnVoice');
+  b.textContent = voiceOn ? '🔊 Voice' : '🔇 Voice';
+  b.classList.toggle('off', !voiceOn);
+  if (!voiceOn && window.speechSynthesis) window.speechSynthesis.cancel();
+});
+bindTouch(document.getElementById('btnBigger'),  function () { if (sizeIdx < SIZE_STEPS.length - 1) { sizeIdx++; applySize(); } });
+bindTouch(document.getElementById('btnSmaller'), function () { if (sizeIdx > 0) { sizeIdx--; applySize(); } });
+bindTouch(document.getElementById('btnUp'), function () {
+  heightShift = Math.max(-HEIGHT_MAX, heightShift - HEIGHT_STEP);
+  document.getElementById('panels').style.transform = 'translateY(' + heightShift + 'px)';
+});
+bindTouch(document.getElementById('btnDown'), function () {
+  heightShift = Math.min(HEIGHT_MAX, heightShift + HEIGHT_STEP);
+  document.getElementById('panels').style.transform = 'translateY(' + heightShift + 'px)';
+});
+bindTouch(document.getElementById('btnReset'), function () { tb.classList.remove('open'); resetAll(); });
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') location.href = '../index.html';
+});
+document.addEventListener('touchstart', function (e) {
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    var t = e.changedTouches[i];
+    var r = document.createElement('div');
+    r.className = 'touch-ring';
+    r.style.left = t.clientX + 'px'; r.style.top = t.clientY + 'px';
+    document.body.appendChild(r);
+    r.addEventListener('animationend', function () { this.remove(); });
+  }
+}, { passive: true });
+
+var rzT;
+window.addEventListener('resize', function () { clearTimeout(rzT); rzT = setTimeout(applySize, 140); });
+
+document.getElementById('menu').style.backgroundImage = "url('" + IMG + "bg-menu.png')";
+</script>
+</body>
+</html>

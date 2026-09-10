@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  MOBILE PHONE SKILLS — Pangappara Blueroom, Secondary item #8
+  Giant phone frame · 5 feature icons · full-screen detail on tap
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Load: A giant smartphone screen appears showing the 5 extra-large
+     feature icons."
+    "Touch: Child taps an icon -> Icon glows green, does a gentle bounce,
+     and opens a simple full-screen graphic of that feature."
+    "Finish: Exploring all features triggers floating balloons and a
+     3-second applause sound effect!"
+    "Simple visual interactions with zero voice narration."
+
+  ASSETS: NONE. The five icons come from js/icon-sprite.js and the five
+  detail screens are drawn in CSS. Nothing to source.
+
+  VOICE: off, per "zero voice narration". Malayalam still shows on screen.
+
+  DEPENDS ON
+    ../js/wall-common.js  ../js/icon-sprite.js  ../js/flashcard-deck.js
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Mobile Phone Skills</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(150deg,#eef2ff,#e0f2fe 60%,#f0fdfa);
+    display:flex;flex-direction:column;align-items:center;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:12px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#312e81;
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.7;font-weight:700}
+
+  /* the "giant smartphone" the brief asks for */
+  #phone{
+    flex:1;margin:10px 0 18px;padding:22px 16px;
+    width:min(88vw,780px);
+    border-radius:44px;background:#1e293b;
+    border:10px solid #0f172a;box-shadow:0 20px 50px rgba(15,23,42,.35);
+    display:flex;flex-direction:column;overflow:hidden;
+    transition:transform .25s ease;
+  }
+  #notch{
+    width:120px;height:8px;border-radius:8px;background:#0f172a;
+    margin:0 auto 12px;flex:0 0 auto;
+  }
+  #screen{
+    flex:1;border-radius:26px;background:linear-gradient(160deg,#f8fafc,#e2e8f0);
+    display:flex;align-items:center;justify-content:center;overflow:auto;
+  }
+  #screen .deck-card{background:#fff}
+
+  /* full-screen feature detail */
+  #detail{
+    position:fixed;inset:0;z-index:800;display:none;
+    background:rgba(15,23,42,.93);
+    align-items:center;justify-content:center;flex-direction:column;gap:22px;
+    padding:30px;
+  }
+  #detail.on{display:flex}
+  #dTitle{font-size:38px;font-weight:900;color:#fff;text-align:center}
+  #dTitle span{display:block;font-size:24px;opacity:.72;font-weight:700}
+  #dArt{
+    width:min(74vw,620px);min-height:min(46vh,420px);
+    background:#fff;border-radius:28px;padding:26px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    box-shadow:0 18px 50px rgba(0,0,0,.4);
+  }
+  #dClose{
+    padding:14px 34px;border-radius:18px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,#fca5a5,#f87171);color:#fff;
+    font-family:inherit;font-weight:900;font-size:20px;
+  }
+
+  /* detail-screen furniture, all CSS */
+  .keypad{display:grid;grid-template-columns:repeat(3,86px);gap:12px}
+  .key{
+    height:66px;border-radius:16px;background:#e2e8f0;color:#1e293b;
+    display:flex;align-items:center;justify-content:center;
+    font-size:26px;font-weight:900;
+  }
+  .bubbles{display:flex;flex-direction:column;gap:12px;width:100%;max-width:420px}
+  .bub{padding:14px 18px;border-radius:20px;font-size:22px;font-weight:700;max-width:78%}
+  .bub.them{background:#e2e8f0;color:#1e293b;align-self:flex-start;border-bottom-left-radius:6px}
+  .bub.me{background:#22c55e;color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+  .wave{display:flex;align-items:center;gap:6px;height:110px}
+  .wave i{width:11px;border-radius:6px;background:#6366f1;animation:wv 1.1s ease-in-out infinite}
+  @keyframes wv{0%,100%{height:22px}50%{height:96px}}
+  .tiles{display:flex;gap:16px;width:100%;justify-content:center}
+  .tile{
+    width:190px;height:150px;border-radius:20px;
+    background:linear-gradient(150deg,#c7d2fe,#a5b4fc);
+    display:flex;align-items:center;justify-content:center;font-size:64px;
+  }
+  .bigicon{width:130px;height:130px;color:#4f46e5}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+
+<div id="phone">
+  <div id="notch"></div>
+  <div id="screen"></div>
+</div>
+
+<div id="detail">
+  <div id="dTitle"></div>
+  <div id="dArt"></div>
+  <button id="dClose"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/icon-sprite.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+ICONS.inject();
+
+var TITLE = { en: 'Mobile Phone Features', ml: 'മൊബൈൽ ഫോൺ ഉപയോഗം' };
+
+/* ══════════════════════════════════════════════════════════════
+   THE FIVE FEATURES — icon, label, and the simple full-screen
+   graphic the brief asks each one to open.
+   ══════════════════════════════════════════════════════════════ */
+var FEATURES = [
+  {
+    id: 'call', icon: 'phone-call', tint: '#ecfdf5',
+    label: { en: 'Calls', ml: 'ഫോൺ കോൾ' },
+    sub:   { en: 'Making a phone call', ml: 'ഫോൺ വിളിക്കാൻ' },
+    detail: function () {
+      var keys = ['1','2','3','4','5','6','7','8','9','*','0','#'];
+      return '<div style="font-size:64px">' + ICONS.use('phone-call', 'color:#16a34a') + '</div>'
+           + '<div class="keypad">'
+           + keys.map(function (k) { return '<div class="key">' + k + '</div>'; }).join('')
+           + '</div>';
+    }
+  },
+  {
+    id: 'sms', icon: 'phone-sms', tint: '#eff6ff',
+    label: { en: 'Text Message', ml: 'ടെക്സ്റ്റ് മെസ്സേജ്' },
+    sub:   { en: 'Sending text messages', ml: 'സന്ദേശം അയയ്ക്കാൻ' },
+    detail: function () {
+      return '<div class="bubbles">'
+           + '<div class="bub them">നമസ്കാരം 👋</div>'
+           + '<div class="bub me">നമസ്കാരം!</div>'
+           + '<div class="bub them">സുഖമാണോ?</div>'
+           + '<div class="bub me">സുഖമാണ് 😊</div>'
+           + '</div>';
+    }
+  },
+  {
+    id: 'voice', icon: 'phone-mic', tint: '#eef2ff',
+    label: { en: 'Voice Message', ml: 'വോയ്സ് മെസ്സേജ്' },
+    sub:   { en: 'Sending voice clips', ml: 'ശബ്ദസന്ദേശം അയയ്ക്കാൻ' },
+    detail: function () {
+      var bars = '';
+      for (var i = 0; i < 13; i++) {
+        bars += '<i style="animation-delay:' + (i * 0.09).toFixed(2) + 's"></i>';
+      }
+      return '<div class="bigicon">' + ICONS.use('phone-mic') + '</div>'
+           + '<div class="wave">' + bars + '</div>';
+    }
+  },
+  {
+    id: 'video', icon: 'phone-video', tint: '#f5f3ff',
+    label: { en: 'Video Call', ml: 'വീഡിയോ കോൾ' },
+    sub:   { en: 'Making video calls', ml: 'വീഡിയോയിൽ കാണാൻ' },
+    detail: function () {
+      return '<div class="tiles"><div class="tile">🧒</div><div class="tile">👩</div></div>'
+           + '<div class="bigicon" style="width:80px;height:80px">'
+           + ICONS.use('phone-video') + '</div>';
+    }
+  },
+  {
+    id: 'calc', icon: 'phone-calc', tint: '#fff7ed',
+    label: { en: 'Calculator', ml: 'കാൽക്കുലേറ്റർ' },
+    sub:   { en: 'Counting and numbers', ml: 'എണ്ണാനും കണക്കിനും' },
+    detail: function () {
+      var keys = ['7','8','9','4','5','6','1','2','3','0','+','='];
+      return '<div class="key" style="width:280px;height:74px;font-size:34px;'
+           + 'background:#1e293b;color:#4ade80;justify-content:flex-end;padding:0 18px">12 + 3</div>'
+           + '<div class="keypad">'
+           + keys.map(function (k) { return '<div class="key">' + k + '</div>'; }).join('')
+           + '</div>';
+    }
+  }
+];
+
+/* ══════════════════════════════════════════════════════════════
+   DETAIL OVERLAY
+   ══════════════════════════════════════════════════════════════ */
+var detail = document.getElementById('detail');
+
+function openDetail(f) {
+  var b = WALL.tBoth(f.label);
+  document.getElementById('dTitle').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span>' + b.alt + '</span>' : '');
+  document.getElementById('dArt').innerHTML = f.detail();
+  detail.classList.add('on');
+}
+function closeDetail() { detail.classList.remove('on'); }
+
+WALL.bindTouch(document.getElementById('dClose'), function () {
+  WALL.sfx.tap();
+  closeDetail();
+});
+function paintClose() {
+  document.getElementById('dClose').textContent =
+    WALL.isMl() ? '✕ അടയ്ക്കുക' : '✕ Close';
+}
+WALL.onLang(paintClose);
+WALL.bindTouch(detail, function (e) {
+  if (e.target === detail) closeDetail();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+WALL.onLang(paintTitle);
+
+var deck = DECK.mount('#screen', {
+  items: FEATURES.map(function (f) {
+    return {
+      id: f.id, label: f.label, sub: f.sub, tint: f.tint,
+      art: { html: ICONS.use(f.icon, 'color:#4f46e5') }
+    };
+  }),
+  speak: false,            // brief: zero voice narration
+  columns: 3,
+  onTap: function (item) {
+    var f = FEATURES.filter(function (x) { return x.id === item.id; })[0];
+    if (f) setTimeout(function () { openDetail(f); }, 260);
+  }
+});
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#phone',
+  reset: function () { closeDetail(); deck.reset(); },
+  home: true
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

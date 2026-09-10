@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  BODY PARTS & PARTS OF A PLANT — Pangappara Blueroom, Secondary item #6
+  Two boards · usage line under each body part · no voice narration
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "DISPLAY RULE: Extra-large, high-definition real photos/diagrams on
+     clean white backgrounds. Simple visual identification with short,
+     clear text labels. No voice narration."
+    "Touch: Child taps any body part or plant part -> Image glows green,
+     gently bounces, and marks a star."
+    "Finish: Exploring all items triggers floating balloons and a
+     3-second applause sound effect!"
+
+  THE USAGE LINE
+    The brief pairs every body part with what it is FOR (Eyes -> To See).
+    That pairing is the teaching point, so it renders as the green sub
+    line on the card rather than being dropped.
+
+  ASSETS
+    Optional photographs; all fall back to emoji, so this ships today.
+        ../assets/new/images/body/{eyes,ears,nose,hands,legs}.jpg
+        ../assets/new/images/plant/{flower,leaf,stem,fruit,roots}.jpg
+    Worth auditing games/pp-body-parts.html for art before sourcing new
+    photographs — see DEV-DOC-additional-content.md section 6.1.
+
+  VOICE: off, per the brief.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Body Parts &amp; Plant Parts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#ffffff,#f4fbf6 65%,#eaf7ef);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#14532d;
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+  #board .deck-card{background:#fff}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="tabs"></div>
+<div id="board"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+
+var BODY_IMG  = '../assets/new/images/body/';
+var PLANT_IMG = '../assets/new/images/plant/';
+
+var TITLE = { en: 'Body Parts & Parts of a Plant',
+              ml: 'ശരീരഭാഗങ്ങളും സസ്യഭാഗങ്ങളും' };
+
+/* ── Body parts: label + what it is FOR ─────────────────────────── */
+var BODY = [
+  { id: 'eyes',
+    label: { en: 'Eyes',  ml: 'കണ്ണുകൾ' },
+    sub:   { en: 'To See', ml: 'കാണാൻ' },
+    art:   { emoji: '👁️', img: BODY_IMG + 'eyes.jpg' } },
+
+  { id: 'ears',
+    label: { en: 'Ears',  ml: 'ചെവികൾ' },
+    sub:   { en: 'To Hear', ml: 'കേൾക്കാൻ' },
+    art:   { emoji: '👂', img: BODY_IMG + 'ears.jpg' } },
+
+  { id: 'nose',
+    label: { en: 'Nose',  ml: 'മൂക്ക്' },
+    sub:   { en: 'To Smell', ml: 'മണക്കാൻ' },
+    art:   { emoji: '👃', img: BODY_IMG + 'nose.jpg' } },
+
+  { id: 'hands',
+    label: { en: 'Hands', ml: 'കൈകൾ' },
+    sub:   { en: 'To Touch and Hold', ml: 'തൊടാനും പിടിക്കാനും' },
+    art:   { emoji: '🖐️', img: BODY_IMG + 'hands.jpg' } },
+
+  { id: 'legs',
+    label: { en: 'Legs',  ml: 'കാലുകൾ' },
+    sub:   { en: 'To Walk', ml: 'നടക്കാൻ' },
+    art:   { emoji: '🦵', img: BODY_IMG + 'legs.jpg' } }
+];
+
+/* ── Parts of a plant, top bloom down to the roots ──────────────── */
+var PLANT = [
+  { id: 'flower',
+    label: { en: 'Flower', ml: 'പൂവ്' },
+    sub:   { en: 'Top bloom', ml: 'മുകളിലെ പൂവ്' },
+    art:   { emoji: '🌺', img: PLANT_IMG + 'flower.jpg' } },
+
+  { id: 'leaf',
+    label: { en: 'Leaf',  ml: 'ഇല' },
+    sub:   { en: 'Green leaf', ml: 'പച്ച ഇല' },
+    art:   { emoji: '🍃', img: PLANT_IMG + 'leaf.jpg' } },
+
+  { id: 'stem',
+    label: { en: 'Stem',  ml: 'തണ്ട്' },
+    sub:   { en: 'Center stalk', ml: 'നടുവിലെ തണ്ട്' },
+    art:   { emoji: '🌿', img: PLANT_IMG + 'stem.jpg' } },
+
+  { id: 'fruit',
+    label: { en: 'Fruit', ml: 'പഴം' },
+    sub:   { en: 'Growing fruit', ml: 'വളരുന്ന പഴം' },
+    art:   { emoji: '🍏', img: PLANT_IMG + 'fruit.jpg' } },
+
+  { id: 'roots',
+    label: { en: 'Roots', ml: 'വേരുകൾ' },
+    sub:   { en: 'Underground roots', ml: 'മണ്ണിനടിയിലെ വേരുകൾ' },
+    art:   { emoji: '🪴', img: PLANT_IMG + 'roots.jpg' } }
+];
+
+var BOARDS = [
+  { key: 'body',  title: { en: 'Body Parts',       ml: 'ശരീരഭാഗങ്ങൾ' },        items: BODY  },
+  { key: 'plant', title: { en: 'Parts of a Plant', ml: 'സസ്യത്തിന്റെ ഭാഗങ്ങൾ' }, items: PLANT }
+];
+
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+WALL.onLang(paintTitle);
+
+var deck = DECK.mount('#board', { items: BODY, speak: false });
+
+DECK.tabs('#tabs', BOARDS, function (b) { deck.setItems(b.items); }).draw('body');
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#board',
+  reset: function () { deck.reset(); },
+  home: true
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

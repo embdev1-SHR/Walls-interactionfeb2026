@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  FLOWER ARRANGEMENT & BOUQUET BUILDING — Pangappara Blueroom, Secondary #9
+  Drag six flowers into the vase · ribbon effects · zero voice narration
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Left Side (Side A): 3 Extra-large flowers (Rose, Chembarathi, Mulla).
+     Right Side (Side B): 3 Extra-large flowers (Lotus, Pichi, Kanikonna).
+     Center Screen: An empty bouquet vase/wrapping paper basket."
+    "Drag & Drop: Child touches any flower from the left or right side and
+     drags it into the center basket."
+    "Visual Action: The dragged flower snaps neatly into the bouquet,
+     forming a growing arrangement with colorful ribbon effects."
+    "Finish: Placing all flowers builds a complete, vibrant flower bouquet,
+     triggering floating sparkles and a 3-second applause sound effect!"
+    "Simple visual interactions with zero voice narration."
+
+  DRAG *AND* TAP
+    Real pointer dragging is implemented as the brief specifies. Tapping a
+    flower also places it — on a large wall panel a drag can be lost when
+    a child's finger skips or lifts early, and losing progress is exactly
+    the kind of frustration this brief keeps designing away from. The drag
+    is the intended interaction; the tap is the safety net.
+
+  ASSETS
+    Flowers from js/flower-data.js, shared with the two Primary flower
+    activities. Photographs optional; emoji fallback throughout.
+    The vase is drawn in CSS — no asset needed.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Flower Bouquet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 50% 12%, #fff7ed 0%, transparent 50%),
+      linear-gradient(160deg,#ffffff,#fdf4ff 60%,#f5f3ff);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+    touch-action:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#86198f;
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.72;font-weight:700}
+
+  #stage{flex:1;display:flex;align-items:center;justify-content:space-between;
+         padding:10px 3vw;gap:16px;transition:transform .25s ease}
+  .col{display:flex;flex-direction:column;gap:calc(14px * var(--wall-scale,1));flex:0 0 auto}
+
+  .fl{
+    width:calc(150px * var(--wall-scale,1));
+    padding:calc(10px * var(--wall-scale,1));
+    border-radius:22px;background:#fff;border:5px solid rgba(190,160,210,.35);
+    box-shadow:0 8px 20px rgba(80,20,95,.13);cursor:grab;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    transition:transform .18s,opacity .3s,border-color .25s;
+  }
+  .fl .art{font-size:calc(74px * var(--wall-scale,1));line-height:1}
+  .fl .art img{width:calc(80px * var(--wall-scale,1));height:calc(80px * var(--wall-scale,1));
+               object-fit:contain}
+  .fl .nm{font-size:calc(15px * var(--wall-scale,1));font-weight:900;color:#4a044e;text-align:center}
+  .fl.placed{opacity:.25;pointer-events:none;border-style:dashed}
+  .fl.drag{opacity:.35}
+
+  /* the flower that follows the finger */
+  #ghost{
+    position:fixed;z-index:900;pointer-events:none;display:none;
+    font-size:96px;line-height:1;transform:translate(-50%,-50%) scale(1.15);
+    filter:drop-shadow(0 10px 18px rgba(0,0,0,.3));
+  }
+  #ghost img{width:96px;height:96px;object-fit:contain}
+
+  /* ── the vase ─────────────────────────────────────────────────── */
+  #vasewrap{flex:1;display:flex;flex-direction:column;align-items:center;
+            justify-content:flex-end;gap:0;max-width:520px}
+  #arrange{
+    position:relative;width:100%;height:calc(210px * var(--wall-scale,1));
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  #arrange .stem{
+    position:absolute;bottom:0;transform-origin:bottom center;
+    font-size:calc(62px * var(--wall-scale,1));line-height:1;
+    animation:bloom .5s cubic-bezier(.2,1.4,.4,1);
+  }
+  #arrange .stem img{width:calc(66px * var(--wall-scale,1));
+                     height:calc(66px * var(--wall-scale,1));object-fit:contain}
+  @keyframes bloom{0%{transform:scale(.2) rotate(var(--rot));opacity:0}
+                   100%{transform:scale(1) rotate(var(--rot));opacity:1}}
+  #vase{
+    width:calc(190px * var(--wall-scale,1));height:calc(180px * var(--wall-scale,1));
+    background:linear-gradient(150deg,#a78bfa,#7c3aed 60%,#5b21b6);
+    border-radius:22px 22px 96px 96px / 16px 16px 120px 120px;
+    box-shadow:inset 0 8px 22px rgba(255,255,255,.28),0 14px 30px rgba(76,29,149,.35);
+    position:relative;transition:box-shadow .25s,transform .25s;
+  }
+  #vase.over{transform:scale(1.06);
+    box-shadow:inset 0 8px 22px rgba(255,255,255,.3),
+               0 0 0 8px rgba(34,197,94,.3),0 0 34px rgba(34,197,94,.6)}
+  /* the brief's "colorful ribbon" */
+  #vase::after{
+    content:'';position:absolute;left:-6px;right:-6px;top:34%;height:22px;
+    background:repeating-linear-gradient(90deg,#fbbf24 0 16px,#f472b6 16px 32px);
+    border-radius:6px;box-shadow:0 3px 8px rgba(0,0,0,.18);
+  }
+  #count{
+    padding-top:10px;font-size:calc(17px * var(--wall-scale,1));
+    font-weight:900;color:#6b21a8;text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+
+<div id="stage">
+  <div class="col" id="sideA"></div>
+  <div id="vasewrap">
+    <div id="arrange"></div>
+    <div id="vase"></div>
+    <div id="count"></div>
+  </div>
+  <div class="col" id="sideB"></div>
+</div>
+
+<div id="ghost"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flower-data.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Flower Bouquet', ml: 'പൂച്ചെണ്ട് ഉണ്ടാക്കാം' };
+
+/* Sides exactly as the brief splits them. */
+var SIDE_A = ['rose', 'chembarathi', 'mulla'];
+var SIDE_B = ['lotus', 'pichi', 'kanikonna'];
+
+var placed = {};
+var ghost  = document.getElementById('ghost');
+var vase   = document.getElementById('vase');
+
+function artHTML(item, cls) {
+  if (item.art.img) {
+    return '<img src="' + item.art.img + '" alt="" ' +
+           'onerror="this.parentNode.textContent=\'' + item.art.emoji + '\'">';
+  }
+  return item.art.emoji;
+}
+
+function total() { return SIDE_A.length + SIDE_B.length; }
+
+function paintCount() {
+  var n = Object.keys(placed).length;
+  document.getElementById('count').textContent =
+    (WALL.isMl() ? 'പൂക്കൾ: ' : 'Flowers: ') + n + ' / ' + total();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PLACING A FLOWER INTO THE BOUQUET
+   ══════════════════════════════════════════════════════════════ */
+function place(item, cardEl) {
+  if (placed[item.id]) return;
+  placed[item.id] = true;
+  cardEl.classList.add('placed');
+  cardEl.classList.remove('drag');
+
+  var n = Object.keys(placed).length;
+  var stem = document.createElement('div');
+  stem.className = 'stem';
+
+  // fan the stems out across the mouth of the vase
+  var spread = total() - 1;
+  var i = n - 1;
+  var rot = (-34 + (68 / (spread || 1)) * i);
+  var dx  = (-108 + (216 / (spread || 1)) * i);
+  stem.style.setProperty('--rot', rot + 'deg');
+  stem.style.transform = 'rotate(' + rot + 'deg)';
+  stem.style.left = 'calc(50% + ' + dx + 'px)';
+  stem.style.bottom = (6 + (i % 2) * 24) + 'px';
+  stem.innerHTML = artHTML(item);
+
+  document.getElementById('arrange').appendChild(stem);
+
+  WALL.sfx.pop();
+  WALL.burstAt(vase, ['#fbbf24', '#f472b6', '#a78bfa', '#4ade80'], 12);
+  paintCount();
+
+  if (n === total()) {
+    setTimeout(function () {
+      WALL.burstAt(vase, null, 26);
+      WALL.celebrate();
+    }, 380);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DRAG (pointer events) + TAP FALLBACK
+   ══════════════════════════════════════════════════════════════ */
+function overVase(x, y) {
+  var r = vase.getBoundingClientRect();
+  var a = document.getElementById('arrange').getBoundingClientRect();
+  // the whole vase + arrangement column is the drop zone, generously sized
+  return x >= r.left - 40 && x <= r.right + 40 && y >= a.top - 20 && y <= r.bottom + 40;
+}
+
+function wireDrag(el, item) {
+  var dragging = false, moved = false;
+
+  el.addEventListener('pointerdown', function (e) {
+    if (placed[item.id]) return;
+    dragging = true; moved = false;
+    el.setPointerCapture(e.pointerId);
+    ghost.innerHTML = artHTML(item);
+    ghost.style.left = e.clientX + 'px';
+    ghost.style.top  = e.clientY + 'px';
+  });
+
+  el.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    if (!moved) {
+      moved = true;
+      ghost.style.display = 'block';
+      el.classList.add('drag');
+    }
+    ghost.style.left = e.clientX + 'px';
+    ghost.style.top  = e.clientY + 'px';
+    vase.classList.toggle('over', overVase(e.clientX, e.clientY));
+  });
+
+  function end(e) {
+    if (!dragging) return;
+    dragging = false;
+    ghost.style.display = 'none';
+    vase.classList.remove('over');
+    el.classList.remove('drag');
+
+    // A tap (no movement) places it too — see the header note.
+    if (!moved || overVase(e.clientX, e.clientY)) place(item, el);
+  }
+
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', function () {
+    dragging = false;
+    ghost.style.display = 'none';
+    vase.classList.remove('over');
+    el.classList.remove('drag');
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUILD
+   ══════════════════════════════════════════════════════════════ */
+function makeFlower(item) {
+  var el = document.createElement('div');
+  el.className = 'fl';
+  el.setAttribute('data-id', item.id);
+  el.innerHTML = '<div class="art">' + artHTML(item) + '</div>' +
+                 '<div class="nm">' + WALL.t(item.label) + '</div>';
+  if (placed[item.id]) el.classList.add('placed');
+  wireDrag(el, item);
+  return el;
+}
+
+function build() {
+  var A = document.getElementById('sideA'), B = document.getElementById('sideB');
+  A.innerHTML = ''; B.innerHTML = '';
+  FLOWER_DATA.get(SIDE_A).forEach(function (f) { A.appendChild(makeFlower(f)); });
+  FLOWER_DATA.get(SIDE_B).forEach(function (f) { B.appendChild(makeFlower(f)); });
+  paintCount();
+}
+
+function reset() {
+  placed = {};
+  document.getElementById('arrange').innerHTML = '';
+  build();
+}
+
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+
+WALL.onLang(function () { paintTitle(); build(); });
+WALL.onSize(function () { build(); });
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: reset,
+  home: true
+  /* no voice button — brief: zero voice narration */
+});
+
+build();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

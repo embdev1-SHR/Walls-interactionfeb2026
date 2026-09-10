@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  STUDENT NAME IDENTIFICATION — Pangappara Blueroom, Secondary item #1
+  Editable names · TTS · optional teacher voice recording
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "NAMES SHOULD BE EDITABLE. THE PRONUNCIATION IS ENABLED FOR DIFFERENT
+     NAMES."
+    "The student's name MUST load in EXTRA LARGE, HIGH-CONTRAST text by
+     default across the center of the wall screen."
+    "Audio Voice Engine: System TTS ... Teacher Voice Record (Optional
+     Override): A quick 2-second mic record button allowing the teacher to
+     record her own voice saying the child's name."
+    "The touched name card highlights with a bright, glowing green border.
+     Each letter in A-R-U-N does a cheerful up-and-down bounce.
+     Sparkling star particles burst around the name card."
+    "The background music softly dims down for clarity."
+
+  MALAYALAM IS SPLIT BY GRAPHEME, NOT BY CODE UNIT
+    അരുൺ is 4 visible letters but 5 code points — splitting on characters
+    would tear the vowel sign off its consonant and bounce fragments that
+    are not letters. Intl.Segmenter with granularity:'grapheme' is used so
+    each bouncing block is a real letter. Array.from is the fallback.
+
+  THE MIC OVERRIDE
+    Implemented, but it degrades all the way down: if the packaged
+    Electron build denies microphone access, or MediaRecorder is missing,
+    the record button hides itself and TTS carries the activity. Nothing
+    about this page depends on a recording existing. Verify mic permission
+    on the real Blueroom machine before relying on it — DEV-DOC section 8,
+    open question 5.
+
+  SHARED NAME LIST
+    Names live in WALL.names() (localStorage), so the same class list is
+    available to any other activity that needs it.
+
+  ASSETS: none.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>My Name</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#0f172a,#1e293b 60%,#0f172a);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+
+  #stage{display:flex;flex-direction:column;align-items:center;gap:26px;
+         transition:transform .25s ease}
+
+  /* high contrast, per the brief */
+  #nameCard{
+    display:flex;gap:calc(10px * var(--wall-scale,1));
+    padding:calc(26px * var(--wall-scale,1)) calc(40px * var(--wall-scale,1));
+    border-radius:34px;background:#fff;border:8px solid rgba(148,163,184,.45);
+    cursor:pointer;touch-action:manipulation;
+    box-shadow:0 0 60px rgba(148,163,184,.25);
+    animation:glowPulse 2.4s ease-in-out infinite;
+    transition:border-color .3s,box-shadow .3s;
+  }
+  @keyframes glowPulse{
+    0%,100%{box-shadow:0 0 40px rgba(148,163,184,.22)}
+    50%    {box-shadow:0 0 78px rgba(148,163,184,.42)}
+  }
+  #nameCard.lit{
+    border-color:#22c55e;animation:none;
+    box-shadow:0 0 0 8px rgba(34,197,94,.22),0 0 70px rgba(34,197,94,.6);
+  }
+  .ltr{
+    font-weight:900;font-size:calc(108px * var(--wall-scale,1));line-height:1.1;
+    color:#0f172a;display:inline-block;
+  }
+  .ltr.b{animation:ltrBounce .5s cubic-bezier(.28,.84,.42,1)}
+  @keyframes ltrBounce{
+    0%{transform:translateY(0)}35%{transform:translateY(-32px) scale(1.12)}
+    65%{transform:translateY(0) scale(.97)}100%{transform:translateY(0) scale(1)}
+  }
+
+  #hint{color:#94a3b8;font-weight:800;font-size:calc(19px * var(--wall-scale,1))}
+
+  /* ── teacher panel ────────────────────────────────────────────── */
+  #panel{
+    position:fixed;inset:0;z-index:800;display:none;
+    background:rgba(15,23,42,.94);
+    align-items:center;justify-content:center;
+  }
+  #panel.on{display:flex}
+  .sheet{
+    width:min(92vw,620px);max-height:88vh;overflow:auto;
+    background:#fff;border-radius:26px;padding:26px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .sheet h2{font-size:24px;color:#0f172a}
+  .row{display:flex;gap:10px}
+  .sheet input{
+    flex:1;padding:14px 16px;border-radius:14px;border:3px solid #cbd5e1;
+    font-family:inherit;font-size:21px;font-weight:800;min-width:0;
+  }
+  .btn{
+    padding:13px 22px;border-radius:14px;border:none;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:17px;color:#fff;white-space:nowrap;
+    background:linear-gradient(135deg,#60a5fa,#2563eb);
+  }
+  .btn.grey{background:linear-gradient(135deg,#cbd5e1,#94a3b8)}
+  .btn.red{background:linear-gradient(135deg,#fca5a5,#ef4444)}
+  .btn.rec{background:linear-gradient(135deg,#f9a8d4,#db2777)}
+  .btn.rec.on{animation:recPulse .9s ease-in-out infinite}
+  @keyframes recPulse{0%,100%{opacity:1}50%{opacity:.5}}
+  .names{display:flex;flex-direction:column;gap:8px}
+  .nrow{
+    display:flex;align-items:center;gap:10px;padding:10px 14px;
+    border-radius:14px;background:#f1f5f9;border:3px solid transparent;
+  }
+  .nrow.sel{border-color:#22c55e;background:#dcfce7}
+  .nrow .nm{flex:1;font-size:20px;font-weight:900;color:#0f172a;cursor:pointer}
+  .nrow .tag{font-size:13px;font-weight:800;color:#db2777}
+  .muted{font-size:13px;color:#64748b;font-weight:700}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="nameCard"></div>
+  <div id="hint"></div>
+</div>
+
+<div id="panel">
+  <div class="sheet">
+    <h2 id="pTitle"></h2>
+    <div class="row">
+      <input id="nameIn" type="text" autocomplete="off" spellcheck="false">
+      <button class="btn" id="addBtn"></button>
+    </div>
+    <div class="names" id="nameList"></div>
+    <div class="muted" id="recHelp"></div>
+    <div class="row">
+      <button class="btn rec" id="recBtn"></button>
+      <button class="btn red" id="clrRec"></button>
+      <button class="btn grey" id="closeP"></button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script>
+WALL.init();
+
+var REC_KEY = 'auticareNameRecordings';
+
+function recordings() {
+  try { return JSON.parse(localStorage.getItem(REC_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function saveRecording(name, dataUrl) {
+  var r = recordings(); r[name] = dataUrl;
+  try { localStorage.setItem(REC_KEY, JSON.stringify(r)); } catch (e) {}
+}
+function dropRecording(name) {
+  var r = recordings(); delete r[name];
+  try { localStorage.setItem(REC_KEY, JSON.stringify(r)); } catch (e) {}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GRAPHEME SPLIT — അരുൺ is 4 letters, not 5 code points
+   ══════════════════════════════════════════════════════════════ */
+var seg = null;
+try {
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    seg = new Intl.Segmenter('ml', { granularity: 'grapheme' });
+  }
+} catch (e) { seg = null; }
+
+function letters(str) {
+  if (seg) return Array.from(seg.segment(str), function (s) { return s.segment; });
+  return Array.from(str);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+var names = WALL.names();
+if (!names.length) { names = ['ARUN', 'അരുൺ']; WALL.setNames(names); }
+var current = names[0];
+
+var card = document.getElementById('nameCard');
+
+function renderName() {
+  card.innerHTML = '';
+  card.classList.remove('lit');
+  letters(current).forEach(function (ch) {
+    var s = document.createElement('span');
+    s.className = 'ltr';
+    s.textContent = ch;
+    card.appendChild(s);
+  });
+  document.getElementById('hint').textContent =
+    WALL.isMl() ? 'പേരിൽ തൊടുക' : 'Touch the name';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TAP THE NAME
+   ══════════════════════════════════════════════════════════════ */
+function sayName() {
+  var rec = recordings()[current];
+  if (rec) {
+    try {
+      var a = new Audio(rec);
+      a.volume = 1;
+      a.play().catch(function () { WALL.say({ ml: current, en: current }); });
+      return;
+    } catch (e) { /* fall through to TTS */ }
+  }
+  WALL.say({ ml: current, en: current });
+}
+
+function duckMusic(down) {
+  // brief: "The background music softly dims down for clarity."
+  var m = window.audioManager;
+  if (!m || !m.audio) return;
+  try { m.audio.volume = down ? 0.12 : 0.5; } catch (e) {}
+}
+
+WALL.bindTouch(card, function () {
+  card.classList.add('lit');
+
+  var ls = card.querySelectorAll('.ltr');
+  [].forEach.call(ls, function (el, i) {
+    setTimeout(function () {
+      el.classList.remove('b'); void el.offsetWidth; el.classList.add('b');
+    }, i * 110);
+  });
+
+  WALL.burstAt(card, ['#fbbf24', '#4ade80', '#60a5fa', '#f472b6'], 22);
+  WALL.sfx.star();
+
+  duckMusic(true);
+  setTimeout(sayName, ls.length * 110 + 160);
+  setTimeout(function () { duckMusic(false); }, ls.length * 110 + 2600);
+});
+
+/* ══════════════════════════════════════════════════════════════
+   TEACHER PANEL
+   ══════════════════════════════════════════════════════════════ */
+var panel = document.getElementById('panel');
+
+function paintPanel() {
+  var ml = WALL.isMl();
+  document.getElementById('pTitle').textContent = ml ? 'പേരുകൾ' : 'Student Names';
+  document.getElementById('addBtn').textContent = ml ? 'ചേർക്കുക' : 'Add';
+  document.getElementById('closeP').textContent = ml ? 'അടയ്ക്കുക' : 'Close';
+  document.getElementById('clrRec').textContent = ml ? 'റെക്കോർഡ് മായ്ക്കുക' : 'Clear recording';
+  document.getElementById('nameIn').placeholder = ml ? 'പേര് ടൈപ്പ് ചെയ്യുക' : 'Type a name';
+  setRecLabel(false);
+
+  var box = document.getElementById('nameList');
+  box.innerHTML = '';
+  var recs = recordings();
+  names.forEach(function (n) {
+    var row = document.createElement('div');
+    row.className = 'nrow' + (n === current ? ' sel' : '');
+    var nm = document.createElement('div');
+    nm.className = 'nm'; nm.textContent = n;
+    WALL.bindTouch(nm, function () {
+      current = n; renderName(); paintPanel();
+    });
+    row.appendChild(nm);
+    if (recs[n]) {
+      var t = document.createElement('div');
+      t.className = 'tag'; t.textContent = '🎙';
+      row.appendChild(t);
+    }
+    var del = document.createElement('button');
+    del.className = 'btn red'; del.textContent = '✕';
+    WALL.bindTouch(del, function () {
+      names = names.filter(function (x) { return x !== n; });
+      if (!names.length) names = ['ARUN'];
+      WALL.setNames(names);
+      dropRecording(n);
+      if (current === n) current = names[0];
+      renderName(); paintPanel();
+    });
+    row.appendChild(del);
+    box.appendChild(row);
+  });
+}
+
+WALL.bindTouch(document.getElementById('addBtn'), function () {
+  var inp = document.getElementById('nameIn');
+  var v = (inp.value || '').trim();
+  if (!v) return;
+  if (names.indexOf(v) === -1) names.push(v);
+  WALL.setNames(names);
+  current = v; inp.value = '';
+  renderName(); paintPanel();
+});
+
+WALL.bindTouch(document.getElementById('closeP'), function () {
+  panel.classList.remove('on');
+});
+
+WALL.bindTouch(document.getElementById('clrRec'), function () {
+  dropRecording(current); paintPanel();
+});
+
+/* ── 2-second teacher voice record, fully optional ─────────────── */
+var recBtn = document.getElementById('recBtn');
+var recording = false;
+
+function setRecLabel(on) {
+  var ml = WALL.isMl();
+  recBtn.textContent = on
+    ? (ml ? '● റെക്കോർഡിംഗ്…' : '● Recording…')
+    : (ml ? '🎙 ശബ്ദം റെക്കോർഡ് ചെയ്യുക' : '🎙 Record voice');
+  recBtn.classList.toggle('on', on);
+}
+
+var micOk = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
+               typeof MediaRecorder !== 'undefined');
+
+if (!micOk) {
+  // No mic support at all — hide the feature rather than offer a dead button.
+  recBtn.style.display = 'none';
+  document.getElementById('clrRec').style.display = 'none';
+}
+
+WALL.bindTouch(recBtn, function () {
+  if (recording || !micOk) return;
+  recording = true; setRecLabel(true);
+
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+    var mr = new MediaRecorder(stream);
+    var chunks = [];
+    mr.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+    mr.onstop = function () {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      var blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+      var fr = new FileReader();
+      fr.onload = function () {
+        saveRecording(current, fr.result);
+        recording = false; setRecLabel(false); paintPanel();
+      };
+      fr.readAsDataURL(blob);
+    };
+    mr.start();
+    setTimeout(function () { if (mr.state !== 'inactive') mr.stop(); }, 2000);
+  }).catch(function () {
+    // permission denied or no device — degrade quietly, TTS still works
+    recording = false;
+    setRecLabel(false);
+    document.getElementById('recHelp').textContent = WALL.isMl()
+      ? 'മൈക്ക് ലഭ്യമല്ല — സിസ്റ്റം ശബ്ദം ഉപയോഗിക്കുന്നു.'
+      : 'Microphone unavailable — using system voice.';
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+WALL.onLang(function () { renderName(); paintPanel(); });
+
+WALL.toolbar({
+  menu: { label: { en: '👩‍🏫 Names', ml: '👩‍🏫 പേരുകൾ' },
+          onTap: function () { panel.classList.add('on'); paintPanel(); } },
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: function () { renderName(); },
+  home: true
+});
+
+renderName();
+paintPanel();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

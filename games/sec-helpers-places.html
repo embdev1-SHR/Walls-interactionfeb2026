@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  OUR HELPERS & PUBLIC PLACES — Pangappara Blueroom, Secondary item #7
+  Two boards · real ambience on the places · no voice narration
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "DISPLAY RULE: Extra-large, high-definition real photos on simple,
+     clean backgrounds. Simple visual identification with clear text
+     labels. No voice narration."
+    "Touch: Child taps any Helper or Public Place -> Card glows green,
+     gently bounces, and marks a star."
+    "Finish: Exploring all cards triggers floating balloons and a
+     3-second applause sound effect!"
+
+  SOUND — REUSED, NOT SOURCED
+    Three of the five public places already have their real ambience in
+    this repo, so they play it on tap at no asset cost:
+        Bus Stand        assets/new/audio/bus.mp3
+        Railway Station  assets/new/audio/train-whistle.mp3
+        Beach            assets/Audio/Sea.mp3
+    Park and Hospital have no matching recording and fall back to the
+    synthesized tap cue. That is a deliberate gap, not an oversight —
+    adding two files would make it uniform, but nothing breaks without.
+
+    Note these are ambience, not narration: the brief's "no voice
+    narration" rule is about speech, and speak:false honours it.
+
+  ASSETS
+    Optional photographs; all fall back to emoji.
+        ../assets/new/images/helpers/{teacher,doctor,postman,police,farmer,shopkeeper}.jpg
+        ../assets/new/images/places/{park,beach,bus-stand,hospital,railway-station}.jpg
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Helpers &amp; Public Places</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#ffffff,#fff8ed 60%,#fef3e2);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#9a3412;
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+  #board .deck-card{background:#fff}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="tabs"></div>
+<div id="board"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+
+var H_IMG = '../assets/new/images/helpers/';
+var P_IMG = '../assets/new/images/places/';
+
+var TITLE = { en: 'Our Helpers & Public Places',
+              ml: 'നമ്മുടെ സഹായികളും പൊതുസ്ഥലങ്ങളും' };
+
+/* ── Our helpers: who they are and what they do ─────────────────── */
+var HELPERS = [
+  { id: 'teacher',
+    label: { en: 'Teacher',        ml: 'അധ്യാപിക / ടീച്ചർ' },
+    sub:   { en: 'Teaches in school', ml: 'സ്കൂളിൽ പഠിപ്പിക്കുന്നു' },
+    art:   { emoji: '👩‍🏫', img: H_IMG + 'teacher.jpg' } },
+
+  { id: 'doctor',
+    label: { en: 'Doctor',         ml: 'ഡോക്ടർ' },
+    sub:   { en: 'Treats sick people', ml: 'രോഗികളെ ചികിത്സിക്കുന്നു' },
+    art:   { emoji: '🧑‍⚕️', img: H_IMG + 'doctor.jpg' } },
+
+  { id: 'postman',
+    label: { en: 'Postman',        ml: 'പോസ്റ്റ്മാൻ' },
+    sub:   { en: 'Delivers letters', ml: 'കത്തുകൾ എത്തിക്കുന്നു' },
+    art:   { emoji: '📮', img: H_IMG + 'postman.jpg' },
+    sound: WALL.sound('../assets/new/audio/bicycle-bell.mp3', WALL.sfx.tap) },
+
+  { id: 'police',
+    label: { en: 'Police Officer', ml: 'പോലീസ്' },
+    sub:   { en: 'Keeps us safe',  ml: 'നമ്മെ സുരക്ഷിതരാക്കുന്നു' },
+    art:   { emoji: '👮', img: H_IMG + 'police.jpg' } },
+
+  { id: 'farmer',
+    label: { en: 'Farmer',         ml: 'കർഷകൻ' },
+    sub:   { en: 'Grows food and crops', ml: 'ഭക്ഷണം വിളയിക്കുന്നു' },
+    art:   { emoji: '🧑‍🌾', img: H_IMG + 'farmer.jpg' } },
+
+  { id: 'shopkeeper',
+    label: { en: 'Shopkeeper',     ml: 'കച്ചവടക്കാരൻ' },
+    sub:   { en: 'Sells items in a shop', ml: 'കടയിൽ സാധനം വിൽക്കുന്നു' },
+    art:   { emoji: '🛒', img: H_IMG + 'shopkeeper.jpg' } }
+];
+
+/* ── Public places: three carry their real ambience ─────────────── */
+var PLACES = [
+  { id: 'park',
+    label: { en: 'Park',            ml: 'പാർക്ക് / പൂന്തോട്ടം' },
+    sub:   { en: 'Play area with swings and slides', ml: 'ഊഞ്ഞാലും സ്ലൈഡും ഉള്ള കളിസ്ഥലം' },
+    art:   { emoji: '🎠', img: P_IMG + 'park.jpg' } },
+
+  { id: 'beach',
+    label: { en: 'Beach',           ml: 'കടൽത്തീരം / ബീച്ച്' },
+    sub:   { en: 'Sand and sea waves', ml: 'മണലും കടൽത്തിരയും' },
+    art:   { emoji: '🏖️', img: P_IMG + 'beach.jpg' },
+    sound: WALL.sound('../assets/Audio/Sea.mp3', WALL.sfx.tap) },
+
+  { id: 'bus-stand',
+    label: { en: 'Bus Stand',       ml: 'ബസ് സ്റ്റാൻഡ്' },
+    sub:   { en: 'Place where buses stop', ml: 'ബസ് നിർത്തുന്ന സ്ഥലം' },
+    art:   { emoji: '🚌', img: P_IMG + 'bus-stand.jpg' },
+    sound: WALL.sound('../assets/new/audio/bus.mp3', WALL.sfx.tap) },
+
+  { id: 'hospital',
+    label: { en: 'Hospital',        ml: 'ആശുപത്രി' },
+    sub:   { en: 'Place for medical care', ml: 'ചികിത്സ കിട്ടുന്ന സ്ഥലം' },
+    art:   { emoji: '🏥', img: P_IMG + 'hospital.jpg' } },
+
+  { id: 'railway-station',
+    label: { en: 'Railway Station', ml: 'റെയിൽവേ സ്റ്റേഷൻ' },
+    sub:   { en: 'Place to catch trains', ml: 'ട്രെയിൻ കയറുന്ന സ്ഥലം' },
+    art:   { emoji: '🚂', img: P_IMG + 'railway-station.jpg' },
+    sound: WALL.sound('../assets/new/audio/train-whistle.mp3', WALL.sfx.tap) }
+];
+
+var BOARDS = [
+  { key: 'helpers', title: { en: 'Our Helpers',   ml: 'നമ്മുടെ സഹായികൾ' }, items: HELPERS },
+  { key: 'places',  title: { en: 'Public Places', ml: 'പൊതുസ്ഥലങ്ങൾ' },   items: PLACES  }
+];
+
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+WALL.onLang(paintTitle);
+
+var deck = DECK.mount('#board', { items: HELPERS, speak: false });
+
+DECK.tabs('#tabs', BOARDS, function (b) { deck.setItems(b.items); }).draw('helpers');
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#board',
+  reset: function () { deck.reset(); },
+  home: true
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

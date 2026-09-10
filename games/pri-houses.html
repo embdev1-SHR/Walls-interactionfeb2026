@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  TYPES OF HOUSES — Pangappara Blueroom, Primary item #1
+  Five house flashcards · each with its own real-world sound
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "All house flashcards MUST load in EXTRA LARGE size by default using
+     clear, high-definition visual images on clutter-free backgrounds."
+    "Soft instrumental background music plays softly. No voice narration."
+    "The touched card highlights with a bright, glowing green border.
+     The card does a gentle, cheerful bounce in place.
+     Audio Effect: Plays its specific natural sound effect (e.g. Elevator
+     Chime for Apartments, Doorbell for Modern House, or Wind for Tent).
+     A glowing star icon appears on the card to mark it as explored."
+
+  WHY FIVE CARDS AND NOT THREE
+    The brief details three house types in full (Mud House, Apartments,
+    Bungalow) but its interaction script then names sounds for two more —
+    "Doorbell for Modern House, Wind for Tent". Those two are therefore
+    real cards, but their Malayalam names and reference visuals were never
+    specified. The names below are marked NEEDS CONFIRMATION and must be
+    checked with the Pangappara team before deployment.
+    See DEV-DOC-additional-content.md section 8, open question 2.
+
+  SOUND
+    Mud House reuses assets/Audio/forest.mp3 — the brief asks for
+    "rustling leaves and village bird chirping", which is what that
+    track already is. The other three are new files; each falls back to
+    a synthesized cue, so the board is complete and demoable today.
+    The Bungalow has no sound in the brief at all (the page cuts off), so
+    it deliberately carries none beyond the neutral tap.
+
+  3D POPUP
+    Tapping a card gives the brief's glow/bounce/star/sound, then opens an
+    interactive 3D house via js/model-popup.js — drag to spin, pinch to
+    zoom, plus a guided "Take a tour" camera that circles the house and
+    pushes in toward the door.
+
+    That viewer runs on the LOCAL vendored three.js, not the CDN
+    <model-viewer> that games/vehicles.html uses, because this app has to
+    work with no internet and a CDN model-viewer simply never defines its
+    element offline — the popup would open empty with no error.
+
+    No house .glb exists in the repo yet. Until one is dropped in, the
+    popup shows the card's photo/emoji large with "3D model not added
+    yet". Nothing breaks; the models are an upgrade.
+
+  ASSETS
+        ../assets/new/audio/elevator-chime.mp3   NEW
+        ../assets/new/audio/doorbell.mp3         NEW
+        ../assets/new/audio/wind.mp3             NEW
+        ../assets/new/images/houses/{mud-house,apartment,bungalow,
+                                     modern-house,tent}.jpg   NEW
+        ../assets/new/models/houses/{mud-house,apartment,bungalow,
+                                     modern-house,tent}.glb   NEW (3D)
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Types of Houses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 20% 10%, #fff7ed 0%, transparent 55%),
+      linear-gradient(160deg,#ffffff,#f1f7fb 70%,#e8f1f8);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:16px 60px 6px;
+    font-size:calc(30px * var(--wall-scale,1));font-weight:800;color:#7c2d12;
+  }
+  h1 .ml{display:block;font-size:calc(20px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+  #board .deck-card{background:#fff}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="board"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "../node_modules/three/build/three.module.js",
+    "three/addons/": "../node_modules/three/examples/jsm/"
+  }
+}
+</script>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script type="module" src="../js/model-popup.js"></script>
+<script>
+WALL.init();
+
+var IMG = '../assets/new/images/houses/';
+var SND = '../assets/new/audio/';
+var MDL = '../assets/new/models/houses/';
+
+var TITLE = { en: 'Types of Houses', ml: 'വീടുകളുടെ തരങ്ങൾ' };
+
+var HOUSES = [
+  { id: 'mud-house',
+    model: MDL + 'mud-house.glb',
+    fact:  { en: 'Mud walls keep the house cool, and the roof is woven from coconut leaves.',
+             ml: 'മൺഭിത്തി വീട് തണുപ്പാക്കും; മേൽക്കൂര ഓലകൊണ്ടാണ്.' },
+    label: { en: 'Mud House / Hut', ml: 'കുടിൽ / ഓലമേഞ്ഞ വീട്' },
+    sub:   { en: 'Mud walls, thatched coconut leaf roof', ml: 'മൺഭിത്തിയും ഓലച്ചൂടും' },
+    art:   { emoji: '🛖', img: IMG + 'mud-house.jpg' },
+    tint:  '#fef6ec',
+    // brief: "Gentle rustling leaves and village bird chirping sounds"
+    sound: WALL.sound('../assets/Audio/forest.mp3', WALL.sfx.tap) },
+
+  { id: 'apartment',
+    model: MDL + 'apartment.glb',
+    fact:  { en: 'Many families live in one building, each on a different floor.',
+             ml: 'ഒരേ കെട്ടിടത്തിൽ പല കുടുംബങ്ങൾ വേറെവേറെ നിലകളിൽ താമസിക്കുന്നു.' },
+    label: { en: 'Apartment / Flat', ml: 'അപ്പാർട്ട്മെന്റ് / ഫ്ലാറ്റ്' },
+    sub:   { en: 'Multi-storey building in the city', ml: 'നഗരത്തിലെ ബഹുനില കെട്ടിടം' },
+    art:   { emoji: '🏢', img: IMG + 'apartment.jpg' },
+    tint:  '#eef4fb',
+    sound: WALL.sound(SND + 'elevator-chime.mp3', function () {
+      // stand-in until the recording lands: a two-note lift chime
+      WALL.tone(988, 0.30, 'sine', 0.13, 0.00);
+      WALL.tone(1319, 0.42, 'sine', 0.12, 0.22);
+    }) },
+
+  { id: 'bungalow',
+    model: MDL + 'bungalow.glb',
+    fact:  { en: 'A big house with its own garden and plenty of rooms.',
+             ml: 'സ്വന്തം പൂന്തോട്ടവും ധാരാളം മുറികളും ഉള്ള വലിയ വീട്.' },
+    label: { en: 'Bungalow / Villa', ml: 'ബംഗ്ലാവ് / വലിയ വീട്' },
+    sub:   { en: 'A large house with a garden', ml: 'പൂന്തോട്ടമുള്ള വലിയ വീട്' },
+    art:   { emoji: '🏡', img: IMG + 'bungalow.jpg' },
+    tint:  '#f2fbf4' },
+    /* The brief's page break cut off this one's Audio Effect line, so
+       no sound is invented for it — it falls through to the neutral tap. */
+
+  { id: 'modern-house',
+    model: MDL + 'modern-house.glb',
+    fact:  { en: 'A new house with large glass windows that let in the light.',
+             ml: 'വെളിച്ചം കടക്കുന്ന വലിയ ചില്ലുജനലുകളുള്ള പുതിയ വീട്.' },
+    label: { en: 'Modern House', ml: 'ആധുനിക വീട്' },   /* NEEDS CONFIRMATION */
+    sub:   { en: 'A new house with big windows', ml: 'വലിയ ജനലുകളുള്ള പുതിയ വീട്' },
+    art:   { emoji: '🏠', img: IMG + 'modern-house.jpg' },
+    tint:  '#f5f3ff',
+    sound: WALL.sound(SND + 'doorbell.mp3', function () {
+      WALL.tone(659, 0.34, 'sine', 0.14, 0.00);
+      WALL.tone(523, 0.46, 'sine', 0.13, 0.28);
+    }) },
+
+  { id: 'tent',
+    model: MDL + 'tent.glb',
+    fact:  { en: 'A cloth house you can fold up and carry anywhere.',
+             ml: 'മടക്കി എവിടേക്കും കൊണ്ടുപോകാവുന്ന തുണിവീട്.' },
+    label: { en: 'Tent', ml: 'കൂടാരം' },                 /* NEEDS CONFIRMATION */
+    sub:   { en: 'A cloth house for camping', ml: 'തുണികൊണ്ടുള്ള താൽക്കാലിക വീട്' },
+    art:   { emoji: '⛺', img: IMG + 'tent.jpg' },
+    tint:  '#fefce8',
+    sound: WALL.sound(SND + 'wind.mp3', function () {
+      // soft wind: filtered noise rather than a tone
+      WALL.noise(1.1, 0.055, 0.6);
+    }) }
+];
+
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+WALL.onLang(paintTitle);
+
+var deck = DECK.mount('#board', {
+  items: HOUSES,
+  speak: false,        // brief: no voice narration
+  columns: 3,
+  /* Tap = the brief's glow + bounce + star + house sound, then the 3D
+     popup opens on top. The delay lets the card's own feedback land
+     first so the child connects the tap to the card, not to the popup. */
+  onTap: function (item) {
+    var h = HOUSES.filter(function (x) { return x.id === item.id; })[0];
+    if (!h) return;
+    setTimeout(function () {
+      // model-popup.js is an ES module, so it is deferred; on a very
+      // fast first tap it may not have evaluated yet. Skip rather than
+      // throw — the card feedback has already played either way.
+      if (!window.MODEL3D) return;
+      MODEL3D.open({
+        title: h.label,
+        fact:  h.fact,
+        src:   h.model,
+        fallback: { emoji: h.art.emoji, img: h.art.img }
+      });
+    }, 420);
+  }
+});
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#board',
+  reset: function () { deck.reset(); },
+  home: true
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

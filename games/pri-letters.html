@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  AKSHARACHITHRAM — LETTER TRACING — Pangappara Blueroom, Primary item #3
+  Three Malayalam letters, each forming an animal · forgiving tracing
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF  (three sections: letters ത, ര and മ)
+    "Start Point Guidance: A pulsing, bright glowing green dot appears at
+     the natural starting stroke of the letter."
+    "Visual Feedback: A vibrant glowing beam of light fills the letter
+     stroke directly under her finger as she traces it."
+    "Audio Feedback: Soft, encouraging chime sounds play dynamically as
+     long as her finger moves forward."
+    "Forgiving Tracing: If her finger strays slightly off the stroke line,
+     the glowing trail simply holds its position without red warning marks
+     or stressful error sounds."
+    "Soft instrumental background music plays. No voice narration."
+
+  HOW THE TRACING WORKS — AND WHY IT IS NOT PATH DATA
+    The obvious implementation is a hand-authored SVG path per letter.
+    That was rejected: authoring Malayalam letterforms by hand risks
+    getting the stroke shape subtly wrong, and in a letter-FORMATION
+    exercise a wrong stroke shape teaches the wrong thing.
+
+    Instead the real font glyph is rendered to an offscreen canvas and
+    used as a mask:
+      · hit test  — the finger is "on the letter" when the glyph canvas
+                    has ink under it. Thick strokes therefore forgive
+                    naturally, exactly as the brief asks.
+      · the beam  — brush strokes are painted to a second canvas and then
+                    masked with destination-in against the glyph, so the
+                    glow can only ever fill the letter stroke itself.
+      · progress  — the glyph's ink is sampled into a coarse grid; a cell
+                    counts once the finger passes within the brush radius.
+    This is font-independent, needs no geometry data, and stays correct
+    if the Malayalam font ever changes.
+
+  KNOWN LIMIT — READ BEFORE POLISHING
+    The start dot is placed at the topmost ink of the glyph, which is a
+    reasonable "natural starting stroke" but is NOT stroke-order aware,
+    and tracing is not direction-enforced: a child may fill the letter in
+    any order. That is a deliberate trade for the forgiveness the brief
+    demands. True stroke-order teaching needs per-letter ordered path
+    data authored by someone who writes Malayalam — worth doing, out of
+    scope here. Flagged in DEV-DOC-additional-content.md.
+
+  ANIMAL ARTWORK
+    The brief shows hand-drawn figures where the letter forms the animal's
+    body. Those drawings are not in the repo, so the animal shows as a
+    large soft silhouette behind the letter. Dropping the real artwork in
+    at ../assets/new/images/letters/{elephant,fish,rabbit}.png replaces it
+    automatically.
+
+  ASSETS: none required.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Letter Tracing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#ffffff,#f7fbff 60%,#eef6fb);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;
+  }
+  h1{
+    text-align:center;padding:12px 60px 0;
+    font-size:calc(26px * var(--wall-scale,1));font-weight:800;color:#0f3b5c;
+  }
+  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.7;font-weight:700}
+
+  #letterTabs{display:flex;gap:12px;justify-content:center;padding:8px}
+  .ltab{
+    width:calc(66px * var(--wall-scale,1));height:calc(66px * var(--wall-scale,1));
+    border-radius:18px;border:4px solid #7fb4dc;background:#eaf5ff;
+    font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
+    font-size:calc(34px * var(--wall-scale,1));color:#1c4a75;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ltab.on{background:linear-gradient(135deg,#bbf7d0,#4ade80);border-color:#16a34a}
+
+  #stage{flex:1;display:flex;align-items:center;justify-content:center;gap:2vw;padding:0 2vw}
+
+  #canvasWrap{
+    position:relative;flex:0 0 auto;
+    width:min(58vw,660px);height:min(60vh,560px);
+    transition:transform .25s ease;
+  }
+  #canvasWrap canvas{position:absolute;inset:0;width:100%;height:100%}
+  /* the mask must never be seen; its backing store still works as a
+     drawImage source and for getImageData while hidden. */
+  #glyph{display:none}
+  #animal{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:min(46vh,400px);opacity:.13;pointer-events:none;
+  }
+  #animal img{max-width:92%;max-height:92%;object-fit:contain;opacity:.5}
+  #startDot{
+    position:absolute;width:46px;height:46px;border-radius:50%;
+    background:radial-gradient(circle,#4ade80,#16a34a);
+    box-shadow:0 0 0 8px rgba(34,197,94,.28),0 0 26px rgba(34,197,94,.8);
+    transform:translate(-50%,-50%);pointer-events:none;
+    animation:pulseDot 1.2s ease-in-out infinite;
+  }
+  @keyframes pulseDot{0%,100%{transform:translate(-50%,-50%) scale(1)}
+                      50%{transform:translate(-50%,-50%) scale(1.32)}}
+  #startDot.gone{display:none}
+
+  #words{display:flex;flex-direction:column;gap:calc(12px * var(--wall-scale,1))}
+  .word{
+    padding:calc(12px * var(--wall-scale,1)) calc(20px * var(--wall-scale,1));
+    border-radius:20px;background:#fff;border:5px solid rgba(150,180,210,.35);
+    box-shadow:0 8px 18px rgba(20,60,95,.13);cursor:pointer;
+    display:flex;align-items:center;gap:12px;min-width:calc(210px * var(--wall-scale,1));
+    transition:border-color .25s,box-shadow .25s;
+  }
+  .word.lit{border-color:#22c55e;box-shadow:0 0 0 5px rgba(34,197,94,.2)}
+  .word .we{font-size:calc(42px * var(--wall-scale,1));line-height:1}
+  .word .wt{font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
+            font-size:calc(24px * var(--wall-scale,1));color:#123b5e}
+  .word .wr{display:block;font-family:'Baloo 2',sans-serif;font-weight:700;
+            font-size:calc(13px * var(--wall-scale,1));opacity:.6;color:#123b5e}
+  .word.hero{background:linear-gradient(135deg,#fef9c3,#fde68a);border-color:#f59e0b}
+
+  #bar{
+    position:fixed;left:0;right:0;bottom:0;height:12px;background:rgba(0,0,0,.06);
+  }
+  #barFill{height:100%;width:0;background:linear-gradient(90deg,#4ade80,#22c55e);
+           transition:width .18s ease}
+
+  #won{
+    position:fixed;inset:0;display:none;z-index:700;
+    background:rgba(255,255,255,.9);
+    align-items:center;justify-content:center;flex-direction:column;gap:18px;
+  }
+  #won.on{display:flex}
+  #won .big{font-size:150px;animation:wig 1s ease-in-out infinite}
+  @keyframes wig{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+  #won .msg{font-size:34px;font-weight:900;color:#15803d;text-align:center}
+  #won button{
+    padding:15px 36px;border-radius:20px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,#93c5fd,#3b82f6);color:#fff;
+    font-family:inherit;font-weight:900;font-size:21px;
+  }
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="letterTabs"></div>
+
+<div id="stage">
+  <div id="canvasWrap">
+    <div id="animal"></div>
+    <!-- order matters: the static letter sits UNDER the traced beam, and
+         the glyph mask is never displayed at all — it exists only as a
+         drawImage source for clipping and as the alpha hit-test source. -->
+    <canvas id="ink"></canvas>
+    <canvas id="glow"></canvas>
+    <canvas id="glyph"></canvas>
+    <div id="startDot"></div>
+  </div>
+  <div id="words"></div>
+</div>
+
+<div id="bar"><div id="barFill"></div></div>
+
+<div id="won">
+  <div class="big" id="wonArt"></div>
+  <div class="msg" id="wonMsg"></div>
+  <button id="wonNext"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Letter Tracing', ml: 'അക്ഷരചിത്രം' };
+var IMG = '../assets/new/images/letters/';
+
+/* ══════════════════════════════════════════════════════════════
+   THE THREE LETTERS, exactly as the brief specifies them
+   ══════════════════════════════════════════════════════════════ */
+var LETTERS = [
+  {
+    ch: 'ത', animal: '🐘', img: IMG + 'elephant.png',
+    name:  { en: 'Elephant', ml: 'ആന' },
+    glow:  '#fbbf24',                       // brief: golden glow
+    done:  { en: 'The elephant is complete!', ml: 'ആന പൂർത്തിയായി!' },
+    words: [
+      { t: 'ആന',     r: 'Aana - Elephant', e: '🐘', hero: true },
+      { t: 'താമര',   r: 'Thamara - Lotus', e: '🪷' },
+      { t: 'താറാവ്', r: 'Tharaavu - Duck', e: '🦆' }
+    ]
+  },
+  {
+    ch: 'ര', animal: '🐟', img: IMG + 'fish.png',
+    name:  { en: 'Fish', ml: 'മത്സ്യം' },
+    glow:  '#38bdf8',                       // brief: underwater blue
+    done:  { en: 'The fish is complete!', ml: 'മീൻ പൂർത്തിയായി!' },
+    splash: true,                           // brief: splash + bubble pop
+    words: [
+      { t: 'രഥം',      r: 'Ratham - Chariot', e: '🛕' },
+      { t: 'രാജാവ്',   r: 'Rajaavu - King',   e: '👑' },
+      { t: 'റോക്കറ്റ്', r: 'Rocket',           e: '🚀' }
+    ]
+  },
+  {
+    ch: 'മ', animal: '🐇', img: IMG + 'rabbit.png',
+    name:  { en: 'Rabbit', ml: 'മുയൽ' },
+    glow:  '#fbbf24',                       // brief: golden glow
+    done:  { en: 'The rabbit is complete!', ml: 'മുയൽ പൂർത്തിയായി!' },
+    words: [
+      { t: 'മുയൽ',  r: 'Muyal - Rabbit', e: '🐇', hero: true },
+      { t: 'മാങ്ങ', r: 'Maanga - Mango', e: '🥭' },
+      { t: 'മയിൽ',  r: 'Mayil - Peacock', e: '🦚' }
+    ]
+  }
+];
+
+/* ══════════════════════════════════════════════════════════════
+   CANVAS SETUP
+   glyph  — the letter, black. Never shown; it is the mask.
+   ink    — what the child sees: the letter drawn once, static.
+   glow   — the traced beam, masked by the glyph.
+   ══════════════════════════════════════════════════════════════ */
+var wrap   = document.getElementById('canvasWrap');
+var cGlyph = document.getElementById('glyph');
+var cGlow  = document.getElementById('glow');
+var cInk   = document.getElementById('ink');
+var dot    = document.getElementById('startDot');
+
+var xGlyph = cGlyph.getContext('2d', { willReadFrequently: true });
+var xGlow  = cGlow.getContext('2d');
+var xInk   = cInk.getContext('2d');
+
+var cur = 0;          // index into LETTERS
+var W = 0, H = 0;
+var mask = null;      // Uint8 alpha grid of the glyph
+var cells = null;     // Set of ink cell keys
+var hit = null;       // Set of traced cell keys
+var CELL = 14;        // px per progress cell
+var BRUSH = 30;
+var tracing = false, won = false, lastChime = 0;
+
+function sizeCanvases() {
+  var r = wrap.getBoundingClientRect();
+  W = Math.max(120, Math.round(r.width));
+  H = Math.max(120, Math.round(r.height));
+  [cGlyph, cGlow, cInk].forEach(function (c) { c.width = W; c.height = H; });
+}
+
+/** Draw the letter centred and as large as will fit. */
+function drawGlyph(ctx, colour) {
+  var L = LETTERS[cur];
+  var size = Math.min(H * 0.92, W * 0.86);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = colour;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '900 ' + size + 'px "Noto Sans Malayalam", sans-serif';
+  ctx.fillText(L.ch, W / 2, H / 2);
+}
+
+/** Sample the glyph into a coarse grid so progress can be measured. */
+function buildMask() {
+  var img = xGlyph.getImageData(0, 0, W, H).data;
+  mask = img;
+  cells = {};
+  hit = {};
+  var n = 0;
+  for (var y = 0; y < H; y += CELL) {
+    for (var x = 0; x < W; x += CELL) {
+      if (img[(y * W + x) * 4 + 3] > 90) { cells[x + ',' + y] = 1; n++; }
+    }
+  }
+  return n;
+}
+
+function inkAt(x, y) {
+  x = Math.round(x); y = Math.round(y);
+  if (x < 0 || y < 0 || x >= W || y >= H || !mask) return false;
+  return mask[(y * W + x) * 4 + 3] > 90;
+}
+
+/** Topmost ink point — the brief's "natural starting stroke". */
+function findStart() {
+  for (var y = 0; y < H; y += 3) {
+    for (var x = 0; x < W; x += 3) {
+      if (inkAt(x, y)) return { x: x, y: y };
+    }
+  }
+  return { x: W / 2, y: H / 2 };
+}
+
+function totalCells() { return Object.keys(cells).length; }
+function hitCells()   { return Object.keys(hit).length; }
+
+function progress() {
+  var t = totalCells();
+  return t ? hitCells() / t : 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TRACING
+   ══════════════════════════════════════════════════════════════ */
+function paintAt(x, y) {
+  var L = LETTERS[cur];
+
+  // the beam itself
+  xGlow.globalCompositeOperation = 'source-over';
+  var g = xGlow.createRadialGradient(x, y, 0, x, y, BRUSH);
+  g.addColorStop(0, L.glow);
+  g.addColorStop(0.6, L.glow);
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  xGlow.fillStyle = g;
+  xGlow.beginPath();
+  xGlow.arc(x, y, BRUSH, 0, Math.PI * 2);
+  xGlow.fill();
+
+  // clip it to the letter — the glow can never leave the stroke
+  xGlow.globalCompositeOperation = 'destination-in';
+  xGlow.drawImage(cGlyph, 0, 0);
+  xGlow.globalCompositeOperation = 'source-over';
+
+  // mark progress cells under the brush
+  var r = BRUSH;
+  for (var yy = y - r; yy <= y + r; yy += CELL) {
+    for (var xx = x - r; xx <= x + r; xx += CELL) {
+      var cx = Math.floor(xx / CELL) * CELL, cy = Math.floor(yy / CELL) * CELL;
+      var k = cx + ',' + cy;
+      if (cells[k] && !hit[k]) {
+        var dx = cx - x, dy = cy - y;
+        if (dx * dx + dy * dy <= r * r) hit[k] = 1;
+      }
+    }
+  }
+}
+
+function move(e) {
+  if (!tracing || won) return;
+  var r = wrap.getBoundingClientRect();
+  var x = (e.clientX - r.left) * (W / r.width);
+  var y = (e.clientY - r.top)  * (H / r.height);
+
+  // FORGIVING: off the stroke simply does nothing. No mark, no sound,
+  // no penalty — the trail just holds where it was.
+  if (!inkAt(x, y)) return;
+
+  paintAt(x, y);
+
+  var p = progress();
+  document.getElementById('barFill').style.width = (p * 100).toFixed(1) + '%';
+
+  var now = Date.now();
+  if (now - lastChime > 110) {         // chimes "as long as her finger moves"
+    lastChime = now;
+    WALL.sfx.trace(p);
+  }
+
+  if (p >= 0.82) finish();
+}
+
+function down(e) {
+  if (won) return;
+  tracing = true;
+  dot.classList.add('gone');
+  wrap.setPointerCapture && wrap.setPointerCapture(e.pointerId);
+  move(e);
+}
+function up() { tracing = false; }
+
+wrap.addEventListener('pointerdown', down);
+wrap.addEventListener('pointermove', move);
+wrap.addEventListener('pointerup', up);
+wrap.addEventListener('pointercancel', up);
+
+/* ══════════════════════════════════════════════════════════════
+   COMPLETION
+   ══════════════════════════════════════════════════════════════ */
+function finish() {
+  if (won) return;
+  won = true; tracing = false;
+
+  var L = LETTERS[cur];
+
+  // fill the whole letter in its completion colour
+  xGlow.globalCompositeOperation = 'source-over';
+  xGlow.fillStyle = L.glow;
+  xGlow.fillRect(0, 0, W, H);
+  xGlow.globalCompositeOperation = 'destination-in';
+  xGlow.drawImage(cGlyph, 0, 0);
+  xGlow.globalCompositeOperation = 'source-over';
+
+  if (L.splash) WALL.sfx.splash();       // brief: fish gets a water splash
+  WALL.burstAt(wrap, null, 26);
+  WALL.celebrate();
+
+  document.getElementById('wonArt').textContent = L.animal;
+  document.getElementById('wonMsg').textContent = WALL.t(L.done);
+  var isLast = cur >= LETTERS.length - 1;
+  document.getElementById('wonNext').textContent = WALL.isMl()
+    ? (isLast ? 'വീണ്ടും' : 'അടുത്ത അക്ഷരം')
+    : (isLast ? 'Again' : 'Next letter');
+  setTimeout(function () { document.getElementById('won').classList.add('on'); }, 1100);
+}
+
+WALL.bindTouch(document.getElementById('wonNext'), function () {
+  document.getElementById('won').classList.remove('on');
+  cur = (cur + 1) % LETTERS.length;
+  load();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   BUILD
+   ══════════════════════════════════════════════════════════════ */
+function buildTabs() {
+  var box = document.getElementById('letterTabs');
+  box.innerHTML = '';
+  LETTERS.forEach(function (L, i) {
+    var b = document.createElement('button');
+    b.className = 'ltab' + (i === cur ? ' on' : '');
+    b.textContent = L.ch;
+    WALL.bindTouch(b, function () { cur = i; load(); });
+    box.appendChild(b);
+  });
+}
+
+function buildWords() {
+  var box = document.getElementById('words');
+  box.innerHTML = '';
+  LETTERS[cur].words.forEach(function (w) {
+    var el = document.createElement('div');
+    el.className = 'word' + (w.hero ? ' hero' : '');
+    el.innerHTML = '<div class="we">' + w.e + '</div>' +
+                   '<div><span class="wt">' + w.t + '</span>' +
+                   '<span class="wr">' + w.r + '</span></div>';
+    WALL.bindTouch(el, function () {
+      el.classList.add('lit');
+      WALL.sfx.tap();
+      WALL.say({ ml: w.t, en: w.t });     // the word itself, in Malayalam
+    });
+    box.appendChild(el);
+  });
+}
+
+function load() {
+  won = false;
+  document.getElementById('won').classList.remove('on');
+  document.getElementById('barFill').style.width = '0%';
+
+  var L = LETTERS[cur];
+  var an = document.getElementById('animal');
+  an.innerHTML = '<img src="' + L.img + '" alt="" ' +
+                 'onerror="this.parentNode.textContent=\'' + L.animal + '\'">';
+
+  sizeCanvases();
+  drawGlyph(xGlyph, '#000');                 // the mask
+  drawGlyph(xInk, 'rgba(15,23,42,.88)');     // what the child sees
+  xGlow.clearRect(0, 0, W, H);
+  buildMask();
+
+  var s = findStart();
+  var r = wrap.getBoundingClientRect();
+  dot.style.left = (s.x * r.width / W) + 'px';
+  dot.style.top  = (s.y * r.height / H) + 'px';
+  dot.classList.remove('gone');
+
+  buildTabs();
+  buildWords();
+}
+
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+
+WALL.onLang(function () { paintTitle(); if (mask) { buildTabs(); buildWords(); } });
+WALL.onSize(function () { if (mask) load(); });
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: load,
+  home: true
+});
+
+/* Wait for the Malayalam webfont before rasterising the glyph — a
+   fallback face would give a different shape and a different mask. */
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(load);
+  setTimeout(function () { if (!mask) load(); }, 2500);   // offline safety net
+} else {
+  load();
+}
+window.addEventListener('resize', function () { if (mask) load(); });
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

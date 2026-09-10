@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  EXPLORING ROOMS IN A HOUSE — Pangappara Blueroom, Primary item #2
+  House view -> tap a room -> zoom inside -> tap the things in it
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "The screen shows a Main House with 3 doors/windows labeled with simple
+     pictures. The child touches a room door/window to go inside."
+    "Visual Action: The house doors open, and the screen smoothly zooms
+     inside the Bedroom."
+    "Tapping items inside the room triggers small interactive responses
+     (e.g., tapping the tap plays water sound)."
+    "A simple, extra-large 'Back to House' button appears at the corner to
+     let the child explore the next room."
+    Room sounds: Dining Hall = spoon and plate clinking · Bedroom =
+    soothing lullaby chime · Bathroom = gentle running water.
+
+  A JUDGMENT CALL WORTH KNOWING ABOUT
+    Unlike most boards in this brief, the Rooms section never says whether
+    speech is allowed — it neither asks for narration nor forbids it. The
+    Voice toggle is therefore present and ON, speaking each item's name,
+    because naming objects is the point of the activity. If the Pangappara
+    team wants this silent like the flashcard boards, set speak:false on
+    the DECK.mount below and drop voice from the toolbar. One-line change.
+
+  ASSETS
+    All optional, all emoji-backed:
+        ../assets/new/images/rooms/house.jpg
+        ../assets/new/images/rooms/{dining,bedroom,bathroom}.jpg
+    Worth auditing games/room-sorter.html for reusable room art before
+    commissioning any of these — see DEV-DOC section 6.1.
+    Room ambience (dining clink, lullaby, shower) is synthesized until the
+    real recordings arrive; each falls back automatically.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Rooms in a House</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#fff9f0,#f2f8fd 60%,#e9f2fa);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#7c2d12;
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.72;font-weight:700}
+
+  #view{flex:1;position:relative;overflow:hidden;transition:transform .25s ease}
+
+  /* ── house view ───────────────────────────────────────────────── */
+  #house{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .4s;
+  }
+  #house.gone{transform:scale(1.9);opacity:0;pointer-events:none}
+  .roof{
+    width:min(84vw,980px);height:0;
+    border-left:min(42vw,490px) solid transparent;
+    border-right:min(42vw,490px) solid transparent;
+    border-bottom:calc(120px * var(--wall-scale,1)) solid #b45309;
+    filter:drop-shadow(0 -4px 8px rgba(0,0,0,.15));
+  }
+  #houseBody{
+    width:min(76vw,880px);
+    background:linear-gradient(170deg,#fde68a,#fcd34d);
+    border-radius:0 0 24px 24px;
+    padding:calc(26px * var(--wall-scale,1));
+    display:flex;gap:calc(22px * var(--wall-scale,1));justify-content:center;
+    box-shadow:0 18px 40px rgba(120,53,15,.22);
+  }
+  .door{
+    flex:1;background:#fffbeb;border:6px solid #92400e;border-radius:18px 18px 8px 8px;
+    padding:calc(16px * var(--wall-scale,1)) calc(10px * var(--wall-scale,1));
+    display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;
+    transition:transform .2s,box-shadow .25s,border-color .25s;
+    touch-action:manipulation;
+  }
+  .door:active{transform:scale(.96)}
+  .door:hover{border-color:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.18)}
+  .door .de{font-size:calc(84px * var(--wall-scale,1));line-height:1}
+  .door .de img{width:calc(96px * var(--wall-scale,1));
+                height:calc(96px * var(--wall-scale,1));object-fit:contain}
+  .door .dn{font-weight:900;font-size:calc(20px * var(--wall-scale,1));
+            color:#7c2d12;text-align:center;line-height:1.2}
+  .door .dn small{display:block;font-weight:700;
+                  font-size:calc(13px * var(--wall-scale,1));opacity:.62}
+  .knob{width:12px;height:12px;border-radius:50%;background:#92400e}
+
+  /* ── room view ────────────────────────────────────────────────── */
+  #room{
+    position:absolute;inset:0;display:none;flex-direction:column;
+    background-size:cover;background-position:center;
+  }
+  #room.on{display:flex;animation:zoomIn .55s cubic-bezier(.3,0,.2,1)}
+  @keyframes zoomIn{from{transform:scale(.55);opacity:0}to{transform:scale(1);opacity:1}}
+  #roomHead{
+    text-align:center;padding:10px;font-weight:900;
+    font-size:calc(26px * var(--wall-scale,1));color:#0f3b5c;
+  }
+  #roomHead small{display:block;font-size:calc(16px * var(--wall-scale,1));
+                  opacity:.62;font-weight:700}
+  #roomWhat{
+    text-align:center;font-size:calc(16px * var(--wall-scale,1));
+    color:#475569;font-weight:700;padding-bottom:4px;
+  }
+  #roomBoard{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+  #roomBoard .deck-card{background:rgba(255,255,255,.96)}
+  #back{
+    position:fixed;left:18px;bottom:18px;z-index:600;
+    padding:calc(16px * var(--wall-scale,1)) calc(34px * var(--wall-scale,1));
+    border-radius:22px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,#fde68a,#f59e0b);color:#7c2d12;
+    font-family:inherit;font-weight:900;font-size:calc(21px * var(--wall-scale,1));
+    box-shadow:0 10px 26px rgba(180,83,9,.35);display:none;
+  }
+  #back.on{display:block}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+
+<div id="view">
+  <div id="house">
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div class="roof"></div>
+      <div id="houseBody"></div>
+    </div>
+  </div>
+
+  <div id="room">
+    <div id="roomHead"></div>
+    <div id="roomWhat"></div>
+    <div id="roomBoard"></div>
+  </div>
+</div>
+
+<button id="back"></button>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+
+var IMG = '../assets/new/images/rooms/';
+
+var TITLE = { en: 'Rooms in a House', ml: 'വീട്ടിലെ മുറികൾ' };
+
+/* Synthesized stand-ins for the three room ambiences the brief names.
+   Each is replaced automatically once a real recording is dropped in. */
+function clink() {
+  WALL.tone(2100, 0.07, 'triangle', 0.10, 0.00);
+  WALL.tone(1700, 0.09, 'triangle', 0.08, 0.12);
+  WALL.tone(2400, 0.06, 'triangle', 0.07, 0.26);
+}
+function lullaby() {
+  [784, 659, 587, 523].forEach(function (f, i) {
+    WALL.tone(f, 0.55, 'sine', 0.09, i * 0.28);
+  });
+}
+function water() { WALL.noise(1.3, 0.07, 0.9); }
+
+var ROOMS = [
+  {
+    id: 'dining',
+    label: { en: 'Dining Hall', ml: 'ഊണുമുറി / ഡൈനിങ് ഹാൾ' },
+    what:  { en: 'A place where the family sits together to eat food.',
+             ml: 'കുടുംബം ഒരുമിച്ചിരുന്ന് ഭക്ഷണം കഴിക്കുന്ന ഇടം.' },
+    door:  { emoji: '🍽️' },
+    bg: IMG + 'dining.jpg',
+    enter: WALL.sound('../assets/new/audio/plate-spoon-clink.mp3', clink),
+    items: [
+      { id: 'table',  label: { en: 'Dining Table', ml: 'ഊണുമേശ' },  art: { emoji: '🪑' }, sound: clink },
+      { id: 'chairs', label: { en: 'Chairs',       ml: 'കസേരകൾ' },  art: { emoji: '💺' }, sound: clink },
+      { id: 'plate',  label: { en: 'Plates',       ml: 'പാത്രങ്ങൾ' }, art: { emoji: '🍽️' }, sound: clink },
+      { id: 'spoon',  label: { en: 'Spoon',        ml: 'സ്പൂൺ' },   art: { emoji: '🥄' }, sound: clink },
+      { id: 'jug',    label: { en: 'Water Jug',    ml: 'വെള്ളക്കൂജ' }, art: { emoji: '🏺' }, sound: water }
+    ]
+  },
+  {
+    id: 'bedroom',
+    label: { en: 'Bedroom', ml: 'കിടപ്പുമുറി' },
+    what:  { en: 'A place to rest and sleep at night.',
+             ml: 'രാത്രി വിശ്രമിക്കാനും ഉറങ്ങാനുമുള്ള ഇടം.' },
+    door:  { emoji: '🛏️' },
+    bg: IMG + 'bedroom.jpg',
+    enter: WALL.sound('../assets/new/audio/lullaby-chime.mp3', lullaby),
+    items: [
+      { id: 'bed',      label: { en: 'Bed',      ml: 'കട്ടിൽ' },   art: { emoji: '🛏️' }, sound: lullaby },
+      { id: 'pillow',   label: { en: 'Pillows',  ml: 'തലയിണകൾ' }, art: { emoji: '🛌' }, sound: lullaby },
+      { id: 'blanket',  label: { en: 'Blanket',  ml: 'പുതപ്പ്' },  art: { emoji: '🧶' }, sound: lullaby },
+      { id: 'lamp',     label: { en: 'Night Lamp', ml: 'രാത്രിവിളക്ക്' }, art: { emoji: '💡' },
+        sound: function () { WALL.tone(1320, 0.14, 'sine', 0.09); } },
+      { id: 'wardrobe', label: { en: 'Wardrobe', ml: 'അലമാര' },   art: { emoji: '🚪' },
+        sound: function () { WALL.tone(240, 0.28, 'sine', 0.09); } }
+    ]
+  },
+  {
+    id: 'bathroom',
+    label: { en: 'Bathroom', ml: 'കുളിമുറി / ബാത്ത്റൂം' },
+    what:  { en: 'A place to wash hands, brush teeth, and take a bath.',
+             ml: 'കൈ കഴുകാനും പല്ലു തേക്കാനും കുളിക്കാനുമുള്ള ഇടം.' },
+    door:  { emoji: '🛁' },
+    bg: IMG + 'bathroom.jpg',
+    enter: WALL.sound('../assets/new/audio/shower-water.mp3', water),
+    items: [
+      { id: 'shower', label: { en: 'Shower',   ml: 'ഷവർ' },     art: { emoji: '🚿' }, sound: water },
+      { id: 'tap',    label: { en: 'Water Tap', ml: 'പൈപ്പ്' },  art: { emoji: '🚰' }, sound: water },
+      { id: 'bucket', label: { en: 'Bucket',   ml: 'ബക്കറ്റ്' },  art: { emoji: '🪣' }, sound: water },
+      { id: 'mug',    label: { en: 'Mug',      ml: 'കോരി' },     art: { emoji: '🥤' }, sound: water },
+      { id: 'sink',   label: { en: 'Sink',     ml: 'വാഷ്ബേസിൻ' }, art: { emoji: '🧼' }, sound: water },
+      { id: 'mirror', label: { en: 'Mirror',   ml: 'കണ്ണാടി' },   art: { emoji: '🪞' },
+        sound: function () { WALL.tone(1760, 0.12, 'triangle', 0.08); } }
+    ]
+  }
+];
+
+var houseEl = document.getElementById('house');
+var roomEl  = document.getElementById('room');
+var backEl  = document.getElementById('back');
+var deck = null;
+var active = null;
+
+function buildHouse() {
+  var body = document.getElementById('houseBody');
+  body.innerHTML = '';
+  ROOMS.forEach(function (r) {
+    var d = document.createElement('div');
+    d.className = 'door';
+    var b = WALL.tBoth(r.label);
+    d.innerHTML = '<div class="de">' + r.door.emoji + '</div>' +
+                  '<div class="dn">' + b.main +
+                  (b.alt && b.alt !== b.main ? '<small>' + b.alt + '</small>' : '') + '</div>' +
+                  '<div class="knob"></div>';
+    WALL.bindTouch(d, function () { enter(r); });
+    body.appendChild(d);
+  });
+}
+
+function enter(r) {
+  active = r;
+  WALL.sfx.pop();
+  houseEl.classList.add('gone');          // brief: "the house doors open"
+
+  setTimeout(function () {
+    var b = WALL.tBoth(r.label);
+    document.getElementById('roomHead').innerHTML =
+      b.main + (b.alt && b.alt !== b.main ? '<small>' + b.alt + '</small>' : '');
+    document.getElementById('roomWhat').textContent = WALL.t(r.what);
+
+    // a room photo if one exists; the tint stays readable without it
+    roomEl.style.backgroundImage = 'url("' + r.bg + '")';
+
+    roomEl.classList.add('on');
+    backEl.classList.add('on');
+
+    deck = DECK.mount('#roomBoard', {
+      items: r.items,
+      speak: true,        // see the header note on this judgment call
+      celebrate: true
+    });
+
+    if (r.enter) r.enter();
+  }, 380);
+}
+
+function toHouse() {
+  WALL.sfx.tap();
+  roomEl.classList.remove('on');
+  backEl.classList.remove('on');
+  houseEl.classList.remove('gone');
+  active = null;
+  document.getElementById('roomBoard').innerHTML = '';
+  deck = null;
+}
+
+WALL.bindTouch(backEl, toHouse);
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  backEl.textContent = WALL.isMl() ? '🏠 വീട്ടിലേക്ക്' : '🏠 Back to House';
+  buildHouse();
+  if (active) {
+    var ab = WALL.tBoth(active.label);
+    document.getElementById('roomHead').innerHTML =
+      ab.main + (ab.alt && ab.alt !== ab.main ? '<small>' + ab.alt + '</small>' : '');
+    document.getElementById('roomWhat').textContent = WALL.t(active.what);
+  }
+}
+
+WALL.onLang(paint);
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#view',
+  reset: toHouse,
+  home: true
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

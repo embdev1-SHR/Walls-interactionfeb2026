@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  FIRST AID BOX ITEMS — Pangappara Blueroom, Secondary item #4
+  Closed box opens to reveal its contents · no voice narration
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "DISPLAY RULE: Extra-large, clear photos on a white background.
+     No speech or voice narration."
+    "Load: Tap the closed First Aid Box to open it and reveal the items."
+    "Touch: Child taps any item -> Item glows green, gently bounces, and
+     marks a star."
+
+  WHY THE BOX IS THE COVER AND NOT A CARD
+    The brief lists the First Aid Box among the six items, but its own
+    activity flow makes the box the thing you tap to reveal the rest.
+    Using it as both would mean tapping the box twice for two different
+    reasons. It is the cover here; the five contents are the deck.
+
+  ASSETS
+    Optional photographs, listed in the ASSET-LIST. Every one of them
+    falls back to an emoji, so this activity is complete and demoable
+    today with zero files delivered.
+        ../assets/new/images/first-aid/box-closed.jpg
+        ../assets/new/images/first-aid/bandage.jpg
+        ../assets/new/images/first-aid/scissors.jpg
+        ../assets/new/images/first-aid/antiseptic.jpg
+        ../assets/new/images/first-aid/cotton.jpg
+        ../assets/new/images/first-aid/gauze.jpg
+
+  VOICE: off, per the brief.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>First Aid Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    /* the brief asks for a white background — the cards sit on plain white */
+    background:linear-gradient(160deg,#ffffff,#f6fbff 70%,#eef7ff);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:16px 60px 0;
+    font-size:calc(29px * var(--wall-scale,1));font-weight:800;color:#b91c1c;
+  }
+  h1 .ml{display:block;font-size:calc(20px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #hint{
+    text-align:center;font-size:calc(17px * var(--wall-scale,1));
+    color:#64748b;font-weight:700;padding-top:4px;min-height:26px;
+  }
+  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+  #board .deck-card{background:#fff}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="hint"></div>
+<div id="board"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+
+var IMG = '../assets/new/images/first-aid/';
+
+var TITLE = { en: 'First Aid Box', ml: 'ഫസ്റ്റ് എയ്ഡ് ബോക്സ്' };
+var HINT  = { en: 'Tap the box to open it', ml: 'പെട്ടി തുറക്കാൻ തൊടുക' };
+
+var COVER = {
+  label: TITLE,
+  art: { emoji: '🧰', img: IMG + 'box-closed.jpg' }
+};
+
+var ITEMS = [
+  { id: 'bandage',
+    label: { en: 'Bandage',          ml: 'ബാൻഡേജ്' },
+    art:   { emoji: '🩹', img: IMG + 'bandage.jpg' } },
+
+  { id: 'scissors',
+    label: { en: 'Scissors',         ml: 'കത്രിക' },
+    art:   { emoji: '✂️', img: IMG + 'scissors.jpg' } },
+
+  { id: 'antiseptic',
+    label: { en: 'Antiseptic Liquid', ml: 'ആന്റിസെപ്റ്റിക് ദ്രാവകം' },
+    art:   { emoji: '🧴', img: IMG + 'antiseptic.jpg' } },
+
+  { id: 'cotton',
+    label: { en: 'Cotton',           ml: 'പഞ്ഞി' },
+    art:   { emoji: '☁️', img: IMG + 'cotton.jpg' } },
+
+  { id: 'gauze',
+    label: { en: 'Gauze Roll',       ml: 'ബാൻഡേജ് റോൾ' },
+    art:   { emoji: '🧻', img: IMG + 'gauze.jpg' } }
+];
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  document.getElementById('hint').textContent =
+    deck && deck.exploredCount() ? '' : WALL.t(HINT);
+}
+
+var deck = DECK.mount('#board', {
+  items: ITEMS,
+  cover: COVER,
+  speak: false,                       // brief: no voice narration
+  onTap: function () { document.getElementById('hint').textContent = ''; }
+});
+
+WALL.onLang(paint);
+paint();
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#board',
+  reset: function () { deck.reset(); paint(); },
+  home: true
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

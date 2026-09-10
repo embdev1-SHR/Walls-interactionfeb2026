@@ -60,6 +60,32 @@ const CATEGORIES = {
         title: 'Money Shop',
         game: 'money-counter'
     },
+    'primary': {
+        title: 'Primary',
+        titleMl: 'പ്രൈമറി',
+        options: [
+            { name: 'Types of Houses', ml: '🏠 വീടുകളുടെ തരങ്ങൾ', game: 'pri-houses' },
+            { name: 'Rooms in a House', ml: '🚪 വീട്ടിലെ മുറികൾ', game: 'pri-rooms' },
+            { name: 'Letter Tracing', ml: '✍️ അക്ഷരചിത്രം', game: 'pri-letters' },
+            { name: 'Kerala Flowers', ml: '🌺 കേരളത്തിലെ പൂക്കൾ', game: 'pri-flowers' },
+            { name: 'Flower Matching', ml: '🔗 പൂക്കൾ ജോഡിക്കുക', game: 'pri-flower-match' }
+        ]
+    },
+    'secondary': {
+        title: 'Secondary',
+        titleMl: 'സെക്കൻഡറി',
+        options: [
+            { name: 'My Name', ml: '🔤 എന്റെ പേര്', game: 'sec-name-id' },
+            { name: 'Build My Name', ml: '🎈 പേര് ഉണ്ടാക്കാം', game: 'sec-name-build' },
+            { name: 'First Aid Box', ml: '🩹 ഫസ്റ്റ് എയ്ഡ് ബോക്സ്', game: 'sec-first-aid' },
+            { name: 'Coins & Notes', ml: '💰 നാണയങ്ങളും നോട്ടുകളും', game: 'sec-currency' },
+            { name: 'Body & Plant', ml: '🧍 ശരീരവും സസ്യവും', game: 'sec-body-plant' },
+            { name: 'Helpers & Places', ml: '👮 സഹായികളും സ്ഥലങ്ങളും', game: 'sec-helpers-places' },
+            { name: 'Mobile Phone', ml: '📱 മൊബൈൽ ഫോൺ', game: 'sec-mobile' },
+            { name: 'Flower Bouquet', ml: '💐 പൂച്ചെണ്ട്', game: 'sec-bouquet' },
+            { name: 'Daily Living', ml: '🚦 ദൈനംദിന ജീവിതം', game: 'sec-daily-living' }
+        ]
+    },
     'pre-primary': {
         title: 'Pre-Primary',
         options: [
@@ -71,7 +97,9 @@ const CATEGORIES = {
             { name: '🦟 Mosquito Clap',      game: 'mosquito-clap'   },
             { name: '😊 Feelings',           game: 'feelings'        },
             { name: '🔢 Pattern Finder',     game: 'pattern-finder'  },
-            { name: '🎨 Colour Match',       game: 'colour-match'    }
+            { name: '🎨 Colour Match',       game: 'colour-match'    },
+            { name: '🍎 Fruits vs Vegetables', game: 'fruits-vegetables' },
+            { name: '🚗 Vehicles',           game: 'vehicles'        }
         ]
     },
 
@@ -177,10 +205,16 @@ function showSubmenu(categoryName) {
     const box       = document.getElementById('submenu-box');
     const titleEl   = document.getElementById('submenu-title');
     const optsCont  = document.getElementById('submenu-options');
-    titleEl.textContent = category.title;
+    titleEl.innerHTML = category.titleMl
+      ? '<span class="opt-ml">' + category.titleMl + '</span>' +
+        '<span class="opt-en">' + category.title + '</span>'
+      : category.title;
     optsCont.innerHTML  = '';
     box.classList.remove('pp-grid');
-    if (categoryName === 'pre-primary') box.classList.add('pp-grid');
+    // All level modules use the compact 3-up grid; Secondary has 9
+    // entries and would otherwise render as one very tall column.
+    if (categoryName === 'pre-primary' || categoryName === 'primary' ||
+        categoryName === 'secondary') box.classList.add('pp-grid');
 
     // \u2500\u2500 Back button \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.parent) {
@@ -226,7 +260,14 @@ function showSubmenu(categoryName) {
             option._parentKey = categoryName; // tag for routing
             const optEl = document.createElement('div');
             optEl.className   = 'submenu-option';
-            optEl.textContent = option.name;
+            // Malayalam-first, English underneath. Entries without an
+            // ml (the older categories) render exactly as before.
+            if (option.ml) {
+                optEl.innerHTML = '<span class="opt-ml">' + option.ml + '</span>' +
+                                  '<span class="opt-en">' + option.name + '</span>';
+            } else {
+                optEl.textContent = option.name;
+            }
             const goOpt = (e) => {
                 if (e.type === 'click' && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
                 if (e.type === 'touchend') e.preventDefault();
@@ -438,6 +479,54 @@ function loadGame(gameName) {
                 break;
             case 'colour-match':
                 window.location.href = 'games/colour-match.html';
+                break;
+            case 'fruits-vegetables':
+                window.location.href = 'games/fruits-vegetables.html';
+                break;
+            case 'vehicles':
+                window.location.href = 'games/vehicles.html';
+                break;
+            case 'pri-houses':
+                window.location.href = 'games/pri-houses.html';
+                break;
+            case 'pri-rooms':
+                window.location.href = 'games/pri-rooms.html';
+                break;
+            case 'pri-letters':
+                window.location.href = 'games/pri-letters.html';
+                break;
+            case 'pri-flowers':
+                window.location.href = 'games/pri-flowers.html';
+                break;
+            case 'pri-flower-match':
+                window.location.href = 'games/pri-flower-match.html';
+                break;
+            case 'sec-name-id':
+                window.location.href = 'games/sec-name-id.html';
+                break;
+            case 'sec-name-build':
+                window.location.href = 'games/sec-name-build.html';
+                break;
+            case 'sec-first-aid':
+                window.location.href = 'games/sec-first-aid.html';
+                break;
+            case 'sec-currency':
+                window.location.href = 'games/sec-currency.html';
+                break;
+            case 'sec-body-plant':
+                window.location.href = 'games/sec-body-plant.html';
+                break;
+            case 'sec-helpers-places':
+                window.location.href = 'games/sec-helpers-places.html';
+                break;
+            case 'sec-mobile':
+                window.location.href = 'games/sec-mobile.html';
+                break;
+            case 'sec-bouquet':
+                window.location.href = 'games/sec-bouquet.html';
+                break;
+            case 'sec-daily-living':
+                window.location.href = 'games/sec-daily-living.html';
                 break;
             default:
                 console.log('Game not found:', gameName);

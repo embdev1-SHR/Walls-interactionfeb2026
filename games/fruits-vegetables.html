@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  FRUITS vs VEGETABLES  —  Pangappara Blueroom, Additional Content item #11
+  3-player simultaneous edition · Malayalam-first
+════════════════════════════════════════════════════════════════════════════
+
+  STATUS: complete and safe to demo AS-IS. It has ZERO required assets of
+  its own — all ten items are emoji and every sound effect is synthesized
+  in the Web Audio API at runtime.
+
+  ── WHAT IT DEPENDS ON ────────────────────────────────────────────────────
+  From this repo (so it must stay inside the repo folder — it is NOT a
+  single detachable .html file):
+      ../js/tts-engine.js       spoken item names + praise (EN + ML)
+      ../js/audio-manager.js    background music
+      ../assets/Audio/jyproject-endless-shore-part2-399386.mp3
+                                registered under the key 'fruits-vegetables'
+                                in the audioMap inside audio-manager.js
+
+  From the internet (Google CDNs):
+      fonts.googleapis.com / fonts.gstatic.com   Nunito + Noto Sans Malayalam
+      ajax.googleapis.com                        <model-viewer> (idle until a
+                                                 .glb is wired up below)
+
+  ── EXPECTED 404 — DO NOT "FIX" ───────────────────────────────────────────
+  ../assets/new/audio/correct.mp3 is probed on load and will 404 until a
+  real recording is dropped there. That is deliberate: it is an optional
+  hook. When absent the correct-answer cue falls back to a synthesized
+  rising triad. When present it is used automatically, cloned per playback
+  so three children answering at the same instant each hear it.
+
+  ── KNOWN RISKS ON THE WALL ───────────────────────────────────────────────
+  1. MALAYALAM SPEECH needs an `ml-IN` voice installed on the machine.
+     Windows and Linux frequently ship without one, in which case the
+     spoken names/praise go silent or get mangled by an English voice.
+     The on-screen Malayalam is unaffected. The teacher's 🔊 Voice button
+     turns speech off. Test this on the real Blueroom machine.
+  2. OFFLINE: verified working with no internet — all 30 items render and
+     Malayalam still displays, because the OS Malayalam font takes over
+     from the webfont. It simply looks slightly different from the
+     intended typeface. If the wall is permanently offline, self-host
+     Noto Sans Malayalam into ../assets/new/ and drop the CDN <link>.
+
+  ── OPTIONAL ASSETS, IN ORDER OF VALUE ────────────────────────────────────
+  1. THE TEN PRODUCE .glb MODELS — the one that matters, since the client
+     asked for 3D. Put them in ../assets/new/models/ and set `model:` on
+     the matching entry in the ITEMS array further down. Nothing else
+     changes: the item keeps bobbing, stays tappable, and the layout,
+     scoring and celebration are untouched.
+         apple · banana · mango · grapes · orange
+         carrot · tomato · brinjal · potato · onion
+  2. correct.mp3, plus recorded Malayalam praise clips
+     (ശരിയാണ് / നന്നായി / കൊള്ളാം / മിടുക്ക്). These four words are reused
+     across all 13 games in the brief, so they are worth recording early.
+  3. Self-hosted Noto Sans Malayalam — only if the wall runs offline.
+
+  ── ALSO OUTSTANDING ──────────────────────────────────────────────────────
+  The Malayalam item names in the ITEMS array below were written without a
+  native speaker's review. Get them checked before this goes in front of
+  students.
+════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fruits vs Vegetables — 3 Players</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   PANGAPPARA BLUEROOM — Additional Content #11
+   Fruits vs Vegetables  ·  3-player simultaneous edition
+   ─────────────────────────────────────────────────────────────
+   Three equal panels, three children at once, fully independent.
+   Interaction is TAP-TO-SELECT then TAP-A-BASKET — no dragging.
+   All touchable content sits in the lower ~69% of the wall so
+   small children can reach it from a projector relay.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── the one number that controls the reach constraint ───────── */
+:root{
+  --playTop: 31%;     /* nothing interactive above this line */
+  --basketH: 26%;
+  --basketBottom: 3%;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:'Nunito','Segoe UI',sans-serif;
+  background:
+    radial-gradient(ellipse at 50% -10%,#fff3d9 0%,transparent 45%),
+    linear-gradient(180deg,#fffdf6 0%,#f5faf1 55%,#e7f2e2 100%);
+  color:#3d2c1e;-webkit-user-select:none;user-select:none;
+  touch-action:none;                 /* required for N simultaneous fingers */
+}
+
+#bgDots{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-dot{position:absolute;border-radius:50%;background:rgba(140,190,120,.14);
+  animation:drift var(--dur) ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(var(--dx),var(--dy))}}
+
+#stage{position:fixed;inset:0;z-index:1;
+  transition:transform .35s cubic-bezier(.34,1.3,.64,1)}
+
+/* ─── TITLE (decorative only — sits in the unreachable top band) ─── */
+#titlebar{position:absolute;top:0;left:0;right:0;height:11%;z-index:6;
+  display:flex;align-items:center;justify-content:center;pointer-events:none}
+#titlebar h1{font-size:clamp(17px,2.1vw,30px);font-weight:900;color:#4a7c30;
+  text-shadow:0 2px 0 rgba(255,255,255,.75)}
+#titlebar .ml{font-family:'Noto Sans Malayalam','Nunito',sans-serif}
+
+/* ─── THREE EQUAL PANELS ─── */
+#panels{position:absolute;inset:0;z-index:2;display:flex}
+.panel{position:relative;flex:1 1 33.3333%;height:100%;overflow:hidden}
+.divider{flex:0 0 3px;background:linear-gradient(180deg,
+  transparent,rgba(120,160,90,.30) 22%,rgba(120,160,90,.30) 78%,transparent);
+  align-self:stretch}
+
+/* panel tint so each child's area reads as their own */
+.panel[data-p="0"]{background:linear-gradient(180deg,transparent 40%,rgba(255,214,170,.16))}
+.panel[data-p="1"]{background:linear-gradient(180deg,transparent 40%,rgba(180,225,255,.16))}
+.panel[data-p="2"]{background:linear-gradient(180deg,transparent 40%,rgba(205,240,190,.20))}
+
+/* ─── PANEL HEAD (badge + progress) ─── */
+.p-head{position:absolute;top:12.5%;left:0;right:0;z-index:5;
+  display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
+.p-badge{width:clamp(30px,3vw,44px);height:clamp(30px,3vw,44px);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(15px,1.6vw,23px);font-weight:900;color:#fff;
+  box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.panel[data-p="0"] .p-badge{background:linear-gradient(135deg,#fb923c,#ea580c)}
+.panel[data-p="1"] .p-badge{background:linear-gradient(135deg,#60a5fa,#2563eb)}
+.panel[data-p="2"] .p-badge{background:linear-gradient(135deg,#4ade80,#16a34a)}
+.p-bar{width:62%;height:11px;background:rgba(120,160,90,.17);border-radius:20px;
+  overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.08)}
+.p-bar i{display:block;height:100%;width:0%;border-radius:20px;
+  background:linear-gradient(90deg,#f59e0b,#84cc16,#22c55e);
+  transition:width .45s cubic-bezier(.34,1.4,.64,1)}
+.p-count{font-size:clamp(11px,1.15vw,15px);font-weight:800;color:#7d9b6a}
+
+/* ─── PROMPT ─── */
+.p-prompt{position:absolute;top:25.5%;left:0;right:0;z-index:5;text-align:center;
+  font-size:clamp(12px,1.3vw,18px);font-weight:900;color:#8a9a7c;
+  pointer-events:none;transition:color .2s,transform .2s}
+.p-prompt.asking{color:#e0632f;transform:scale(1.06)}
+.p-prompt .ml{font-family:'Noto Sans Malayalam','Nunito',sans-serif}
+/* ── BILINGUAL DISPLAY ─────────────────────────────────────────
+   This game runs MALAYALAM-FIRST. Wherever there is room, both
+   languages show at once: the primary one full size, the secondary
+   smaller and dimmed beneath it. Item tags and the replay button
+   show the primary language only — there is no room under 30 items,
+   and no learning value in doubling an action label. */
+#titlebar h1,.p-prompt,.pb-label{
+  display:flex;flex-direction:column;align-items:center;line-height:1.16}
+#titlebar .en,#titlebar .ml,.p-prompt .en,.p-prompt .ml,
+.pb-label .en,.pb-label .ml{display:block}
+
+/* Malayalam primary — the default for this game */
+body.ml-mode #titlebar .ml,body.ml-mode .p-prompt .ml,body.ml-mode .pb-label .ml{order:1}
+body.ml-mode #titlebar .en,body.ml-mode .p-prompt .en,body.ml-mode .pb-label .en{
+  order:2;font-size:.58em;opacity:.6;font-weight:800}
+body.ml-mode .tag.en,body.ml-mode .done-txt.en,body.ml-mode .done-again .en{display:none}
+
+/* English primary — after the teacher toggles */
+body:not(.ml-mode) #titlebar .en,body:not(.ml-mode) .p-prompt .en,
+body:not(.ml-mode) .pb-label .en{order:1}
+body:not(.ml-mode) #titlebar .ml,body:not(.ml-mode) .p-prompt .ml,
+body:not(.ml-mode) .pb-label .ml{order:2;font-size:.62em;opacity:.6;font-weight:800}
+body:not(.ml-mode) .tag.ml,body:not(.ml-mode) .done-txt.ml,
+body:not(.ml-mode) .done-again .ml{display:none}
+
+/* ─── PLAY FIELD — strictly inside the reachable band ─── */
+.p-field{position:absolute;top:var(--playTop);
+  bottom:calc(var(--basketH) + var(--basketBottom) + 2.5%);
+  left:2%;right:2%;z-index:3}
+
+/* ─── ITEM ─── */
+.item{
+  position:absolute;left:0;top:0;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.97),rgba(255,255,255,.5));
+  box-shadow:0 6px 16px rgba(90,70,40,.16),inset 0 0 0 3px rgba(255,255,255,.7);
+  cursor:pointer;touch-action:none;will-change:transform;
+  transition:box-shadow .2s,background .25s;
+}
+.item.sel{
+  z-index:40;
+  background:radial-gradient(circle at 32% 26%,#fffdf0,#fef3c7);
+  box-shadow:0 0 0 7px rgba(250,204,21,.45),0 14px 30px rgba(90,70,40,.3),
+             inset 0 0 0 3px rgba(255,255,255,.95);
+}
+.item.hint{animation:hintPulse 1.5s ease-in-out 2}
+@keyframes hintPulse{
+  0%,100%{box-shadow:0 6px 16px rgba(90,70,40,.16),inset 0 0 0 3px rgba(255,255,255,.7)}
+  50%{box-shadow:0 0 0 11px rgba(250,204,21,.3),0 9px 22px rgba(90,70,40,.22),
+      inset 0 0 0 3px rgba(255,255,255,.95)}
+}
+.item.gone{opacity:0;transform:scale(.3)!important;
+  transition:opacity .34s ease,transform .34s cubic-bezier(.5,-0.3,.7,.6);
+  pointer-events:none}
+
+.visual{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;will-change:transform}
+.visual .glyph{font-size:var(--glyph);line-height:1;filter:drop-shadow(0 3px 5px rgba(0,0,0,.15))}
+.visual img{width:78%;height:78%;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,.15))}
+.visual model-viewer{width:90%;height:90%;--poster-color:transparent;background:transparent}
+
+.item .tag{position:absolute;bottom:-21px;left:50%;transform:translateX(-50%);
+  font-size:clamp(9px,.95vw,13px);font-weight:800;color:#5a4a36;
+  background:rgba(255,255,255,.88);padding:1px 8px;border-radius:20px;
+  white-space:nowrap;pointer-events:none;box-shadow:0 2px 5px rgba(0,0,0,.08)}
+.item .tag.ml{font-family:'Noto Sans Malayalam','Nunito',sans-serif}
+
+/* ─── PANEL BASKETS (the answer buttons) ─── */
+.p-baskets{position:absolute;bottom:var(--basketBottom);height:var(--basketH);
+  left:3%;right:3%;z-index:6;display:flex;gap:4%}
+.pb{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-end;gap:5px;cursor:pointer;touch-action:none;
+  transition:transform .18s cubic-bezier(.34,1.5,.64,1)}
+.pb .mouth{width:100%;flex:1;min-height:0;border-radius:12px 12px 34px 34px;
+  border:5px solid var(--bc);background:var(--bbg);
+  box-shadow:0 8px 20px rgba(90,70,40,.2),inset 0 -12px 26px rgba(0,0,0,.07);
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;
+  transition:box-shadow .2s}
+.pb .mouth::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 14px,rgba(0,0,0,.05) 14px 17px),
+    repeating-linear-gradient(0deg,transparent 0 18px,rgba(0,0,0,.045) 18px 21px)}
+.pb .count{font-size:clamp(22px,2.9vw,44px);font-weight:900;color:var(--bc);
+  text-shadow:0 2px 0 rgba(255,255,255,.85);position:relative;z-index:2;
+  transition:transform .2s cubic-bezier(.34,1.6,.64,1)}
+.pb .count.bump{transform:scale(1.45)}
+.pb-label{font-size:clamp(11px,1.2vw,17px);font-weight:900;color:var(--bc);
+  text-align:center;line-height:1.2;pointer-events:none}
+.pb-label .ml{display:block;font-family:'Noto Sans Malayalam','Nunito',sans-serif;font-size:.92em}
+.pb[data-cat="fruit"]    {--bc:#e0632f;--bbg:linear-gradient(180deg,#ffe9d6,#ffd0ad)}
+.pb[data-cat="vegetable"]{--bc:#3f8f3a;--bbg:linear-gradient(180deg,#e2f5dd,#c2e8ba)}
+/* pulse only while that panel is waiting for an answer */
+.panel.asking .pb .mouth{animation:askPulse 1.25s ease-in-out infinite}
+@keyframes askPulse{
+  0%,100%{box-shadow:0 8px 20px rgba(90,70,40,.2),inset 0 -12px 26px rgba(0,0,0,.07)}
+  50%{box-shadow:0 0 0 7px rgba(255,255,255,.62),0 12px 28px rgba(90,70,40,.28),
+      inset 0 -12px 26px rgba(0,0,0,.07)}
+}
+.pb.right{animation:gulp .42s cubic-bezier(.34,1.5,.64,1)}
+@keyframes gulp{
+  0%{transform:scale(1)}35%{transform:translateY(9px) scale(.93,1.1)}
+  70%{transform:translateY(-5px) scale(1.05,.96)}100%{transform:none}
+}
+.pb.nope{animation:nopeShake .42s ease}
+@keyframes nopeShake{
+  0%,100%{transform:none}25%{transform:translateX(-8px)}
+  50%{transform:translateX(8px)}75%{transform:translateX(-4px)}
+}
+
+/* ─── PER-PANEL DONE OVERLAY ─── */
+.p-done{position:absolute;inset:0;z-index:120;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+  background:rgba(255,253,244,.9);backdrop-filter:blur(4px)}
+.p-done.on{display:flex}
+.done-txt{font-size:clamp(20px,2.6vw,40px);font-weight:900;color:#4a7c30;text-align:center;
+  animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+.done-txt.ml{font-family:'Noto Sans Malayalam','Nunito',sans-serif;color:#e0632f}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.done-again{padding:11px 26px;border-radius:34px;border:3px solid #4a7c30;
+  background:linear-gradient(135deg,#eaf7de,#cbe9b6);color:#33591f;font-family:inherit;
+  font-weight:900;font-size:clamp(13px,1.5vw,20px);cursor:pointer;touch-action:none;
+  box-shadow:0 5px 14px rgba(90,140,60,.3)}
+.done-again:active{transform:scale(.94)}
+
+/* ─── TOOLBAR ───
+   Lives in the top band, which is deliberately above every child's reach,
+   so teacher controls cannot be hit by accident and all three panels keep
+   their full width for content. */
+#toolbar{position:fixed;top:9px;right:14px;z-index:400;
+  display:flex;align-items:center;gap:7px;touch-action:auto}
+.tb{padding:7px 12px;border-radius:16px;border:2px solid #8fbf6f;
+  background:linear-gradient(135deg,#f0fae8,#d6efc4);color:#33591f;font-weight:900;
+  font-size:clamp(10px,1.05vw,13px);font-family:inherit;cursor:pointer;white-space:nowrap;
+  box-shadow:0 3px 9px rgba(120,160,90,.28);transition:transform .14s;touch-action:auto}
+.tb:active{transform:scale(.93)}
+.tb.off{opacity:.45}
+.tb.sm{padding:6px 9px;font-size:clamp(10px,1vw,12px);min-width:30px;text-align:center}
+.tb-group{display:flex;align-items:center;gap:4px;padding:3px 8px 3px 6px;
+  border-radius:18px;background:rgba(255,255,255,.5);border:1.5px solid rgba(143,191,111,.4)}
+.tb-cap{font-size:9px;font-weight:800;color:#6f8c5f;letter-spacing:.5px}
+
+/* ─── FX ─── */
+.spark{position:fixed;pointer-events:none;z-index:900;border-radius:50%;
+  animation:sparkFly var(--sd) ease-out forwards}
+@keyframes sparkFly{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:1}
+  60%{opacity:1}
+  100%{transform:translate(calc(-50% + var(--sx)),calc(-50% + var(--sy))) scale(1);opacity:0}
+}
+.ring{position:fixed;width:66px;height:66px;border:4px solid rgba(120,190,90,.55);
+  border-radius:50%;pointer-events:none;z-index:880;
+  transform:translate(-50%,-50%) scale(0);animation:ringPop .5s ease forwards}
+@keyframes ringPop{to{transform:translate(-50%,-50%) scale(2.3);opacity:0}}
+.namePop{position:fixed;pointer-events:none;z-index:920;font-weight:900;
+  font-size:clamp(15px,1.8vw,26px);color:#4a7c30;
+  text-shadow:0 2px 0 rgba(255,255,255,.9),0 4px 12px rgba(0,0,0,.14);
+  transform:translate(-50%,-50%);animation:nameRise 1.15s ease-out forwards}
+.namePop.ml{font-family:'Noto Sans Malayalam','Nunito',sans-serif}
+@keyframes nameRise{
+  0%{transform:translate(-50%,-50%) scale(.4);opacity:0}
+  25%{transform:translate(-50%,-105%) scale(1.1);opacity:1}
+  70%{opacity:1}
+  100%{transform:translate(-50%,-185%) scale(1);opacity:0}
+}
+.cstar{position:fixed;z-index:991;pointer-events:none;font-size:24px;
+  animation:rise var(--rd) ease-in forwards}
+.balloon{position:fixed;bottom:-140px;width:50px;height:64px;
+  border-radius:50% 50% 48% 48%;z-index:990;pointer-events:none;
+  animation:rise var(--rd) ease-in forwards}
+.balloon::after{content:'';position:absolute;top:100%;left:50%;width:1.5px;height:40px;
+  background:rgba(0,0,0,.16);transform:translateX(-50%)}
+@keyframes rise{
+  0%{transform:translateY(0) rotate(0);opacity:0}
+  12%{opacity:.95}
+  100%{transform:translateY(-118vh) rotate(var(--rr));opacity:0}
+}
+.touch-ring{position:fixed;width:60px;height:60px;border:3px solid rgba(120,190,90,.5);
+  border-radius:50%;pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%) scale(0);animation:ringPop .45s ease forwards}
+</style>
+</head>
+<body class="ml-mode">
+
+<div id="bgDots"></div>
+
+<div id="stage">
+  <div id="titlebar">
+    <h1><span class="en">Fruits &amp; Vegetables</span><span class="ml">പഴങ്ങളും പച്ചക്കറികളും</span></h1>
+  </div>
+
+  <div id="panels">
+    <div class="panel" data-p="0"></div>
+    <div class="divider"></div>
+    <div class="panel" data-p="1"></div>
+    <div class="divider"></div>
+    <div class="panel" data-p="2"></div>
+  </div>
+</div>
+
+<div id="toolbar">
+  <button class="tb" id="btnHome">🏠 Menu</button>
+  <button class="tb" id="btnLang">🌐 ML</button>
+  <button class="tb" id="btnVoice">🔊 Voice</button>
+  <div class="tb-group">
+    <span class="tb-cap">SIZE</span>
+    <button class="tb sm" id="btnSmaller">➖</button>
+    <button class="tb sm" id="btnBigger">➕</button>
+  </div>
+  <div class="tb-group">
+    <span class="tb-cap">HEIGHT</span>
+    <button class="tb sm" id="btnUp">⬆</button>
+    <button class="tb sm" id="btnDown">⬇</button>
+  </div>
+  <button class="tb" id="btnReset">↺ Restart All</button>
+</div>
+
+<!-- loaded before the game so voices warm up immediately -->
+<script src="../js/tts-engine.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DATA — three-tier asset seam:  model → img → emoji
+   Set `model` to a .glb in assets/new/models/ and that item renders
+   in 3D in all three panels with no other change.
+   NOTE: Malayalam names need a native speaker's check before use.
+   ══════════════════════════════════════════════════════════════ */
+var ITEMS = [
+  { key:'apple',   en:'Apple',   ml:'ആപ്പിൾ',       cat:'fruit',     emoji:'🍎', model:null, img:null },
+  { key:'banana',  en:'Banana',  ml:'വാഴപ്പഴം',      cat:'fruit',     emoji:'🍌', model:null, img:null },
+  { key:'mango',   en:'Mango',   ml:'മാങ്ങ',         cat:'fruit',     emoji:'🥭', model:null, img:null },
+  { key:'grapes',  en:'Grapes',  ml:'മുന്തിരി',       cat:'fruit',     emoji:'🍇', model:null, img:null },
+  { key:'orange',  en:'Orange',  ml:'ഓറഞ്ച്',        cat:'fruit',     emoji:'🍊', model:null, img:null },
+  { key:'carrot',  en:'Carrot',  ml:'കാരറ്റ്',        cat:'vegetable', emoji:'🥕', model:null, img:null },
+  { key:'tomato',  en:'Tomato',  ml:'തക്കാളി',       cat:'vegetable', emoji:'🍅', model:null, img:null },
+  { key:'brinjal', en:'Brinjal', ml:'വഴുതനങ്ങ',      cat:'vegetable', emoji:'🍆', model:null, img:null },
+  { key:'potato',  en:'Potato',  ml:'ഉരുളക്കിഴങ്ങ്',  cat:'vegetable', emoji:'🥔', model:null, img:null },
+  { key:'onion',   en:'Onion',   ml:'സവാള',         cat:'vegetable', emoji:'🧅', model:null, img:null }
+];
+
+var SIZE_STEPS = [0.75, 0.88, 1.0, 1.15, 1.35, 1.6];
+var sizeIdx = 2, heightShift = 0, HEIGHT_STEP = 40, HEIGHT_MAX = 150;
+var isMl = true, voiceOn = true;   // this game is Malayalam-first
+var total = ITEMS.length;
+var lastTouchAt = Date.now();
+
+function itemPx(field) {
+  /* Base size is derived from the panel width so 10 items always fit,
+     then multiplied by the teacher's size step. */
+  var base = Math.max(46, Math.min(104, field.clientWidth * 0.155));
+  return Math.round(base * SIZE_STEPS[sizeIdx]);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AUDIO — synthesized, no file dependencies
+   ══════════════════════════════════════════════════════════════ */
+var actx = null;
+function ac() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (actx && actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(freq, dur, type, vol, delay) {
+  var a = ac(); if (!a) return;
+  var t0 = a.currentTime + (delay || 0);
+  var o = a.createOscillator(), g = a.createGain();
+  o.connect(g); g.connect(a.destination);
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol || 0.13, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function sfxSelect() { tone(680, 0.08, 'sine', 0.09); }
+function sfxPop() {
+  var a = ac(); if (!a) return;
+  var t0 = a.currentTime;
+  var o = a.createOscillator(), g = a.createGain();
+  o.connect(g); g.connect(a.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(430, t0);
+  o.frequency.exponentialRampToValueAtTime(900, t0 + 0.09);
+  g.gain.setValueAtTime(0.2, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+  o.start(t0); o.stop(t0 + 0.18);
+  tone(1320, 0.16, 'triangle', 0.06, 0.05);
+}
+/* gentle, NON-punitive — the brief forbids buzzers and error tones */
+function sfxNudge() { tone(330, 0.13, 'sine', 0.06); tone(294, 0.16, 'sine', 0.05, 0.09); }
+
+/* ── CORRECT-ANSWER CUE ──────────────────────────────────────────
+   A bright rising triad, clearly distinct from the neutral landing
+   "pop" and from the wrong-answer nudge. If a real recording is
+   dropped at assets/new/audio/correct.mp3 it takes over automatically
+   — cloned per play so three children answering at once each hear it. */
+var correctFile = null, correctFileOk = false;
+(function () {
+  try {
+    correctFile = new Audio('../assets/new/audio/correct.mp3');
+    correctFile.preload = 'auto';
+    correctFile.addEventListener('canplaythrough', function () { correctFileOk = true; });
+    correctFile.addEventListener('error', function () { correctFileOk = false; });
+  } catch (e) {}
+})();
+function sfxCorrect() {
+  if (correctFileOk) {
+    try {
+      var a = correctFile.cloneNode();
+      a.volume = 0.55;
+      a.play().catch(function () {});
+      return;
+    } catch (e) { /* fall through to the synthesized cue */ }
+  }
+  tone(659,  0.13, 'triangle', 0.15, 0.00);
+  tone(880,  0.13, 'triangle', 0.15, 0.09);
+  tone(1175, 0.24, 'triangle', 0.14, 0.18);
+}
+
+/* Spoken praise, rotating so it does not become one repeated word.
+   Malayalam while the game is in its default ML mode. */
+var PRAISE_ML = ['ശരിയാണ്!', 'നന്നായി!', 'കൊള്ളാം!', 'മിടുക്ക്!'];
+var PRAISE_EN = ['Correct!', 'Well done!', 'Nice!', 'Good job!'];
+var praiseIdx = 0, praiseUntil = 0;
+function sayPraise() {
+  if (!voiceOn) return;
+  var now = Date.now();
+  if (now < praiseUntil) return;      // another child's praise is still playing
+  try {
+    if (typeof TTSEngine === 'undefined') return;
+    /* A half-spoken item name may be cut short here: at the moment of a
+       correct answer the praise is the more important thing to hear. */
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    praiseUntil = now + 1100;
+    var list = isMl ? PRAISE_ML : PRAISE_EN;
+    TTSEngine.speak(list[praiseIdx++ % list.length], isMl ? 'ml' : 'en', null);
+  } catch (e) {}
+}
+function sfxCelebrate() {
+  [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone(f, 0.45, 'triangle', 0.11, i * 0.09); });
+  var a = ac(); if (!a) return;
+  for (var k = 0; k < 3; k++) {
+    var buf = a.createBuffer(1, a.sampleRate * 0.25, a.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var s = 0; s < d.length; s++) d[s] = (Math.random() * 2 - 1) * Math.exp(-s / (a.sampleRate * 0.035));
+    var src = a.createBufferSource(), g = a.createGain();
+    src.buffer = buf; src.connect(g); g.connect(a.destination);
+    g.gain.value = 0.09;
+    src.start(a.currentTime + 0.5 + k * 0.16);
+  }
+}
+/* With three children playing, speech requests collide. Speak only when
+   the channel is free rather than letting each tap cancel the last. */
+function say(item) {
+  if (!voiceOn) return;
+  if (Date.now() < praiseUntil) return;   // never talk over praise
+  try {
+    if (typeof TTSEngine === 'undefined') return;
+    if (window.speechSynthesis && window.speechSynthesis.speaking) return;
+    TTSEngine.speak(isMl ? item.ml : item.en, isMl ? 'ml' : 'en', null);
+  } catch (e) {}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANEL CONSTRUCTION
+   ══════════════════════════════════════════════════════════════ */
+var PANEL_HTML =
+  '<div class="p-head">' +
+    '<div class="p-badge"></div>' +
+    '<div class="p-bar"><i></i></div>' +
+    '<div class="p-count">0 / ' + total + '</div>' +
+  '</div>' +
+  '<div class="p-prompt">' +
+    '<span class="en">Tap one!</span><span class="ml">ഒന്ന് തൊടൂ!</span>' +
+  '</div>' +
+  '<div class="p-field"></div>' +
+  '<div class="p-baskets">' +
+    '<div class="pb" data-cat="fruit">' +
+      '<div class="mouth"><span class="count">0</span></div>' +
+      '<div class="pb-label"><span class="en">Fruits</span><span class="ml">പഴങ്ങൾ</span></div>' +
+    '</div>' +
+    '<div class="pb" data-cat="vegetable">' +
+      '<div class="mouth"><span class="count">0</span></div>' +
+      '<div class="pb-label"><span class="en">Vegetables</span><span class="ml">പച്ചക്കറികൾ</span></div>' +
+    '</div>' +
+  '</div>' +
+  '<div class="p-done">' +
+    '<div class="done-txt en">Well done! 🎉</div>' +
+    '<div class="done-txt ml">നന്നായി! 🎉</div>' +
+    '<button class="done-again"><span class="en">Play Again</span><span class="ml">വീണ്ടും</span></button>' +
+  '</div>';
+
+var P = [];
+
+function shuffled(a) {
+  var r = a.slice();
+  for (var i = r.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = r[i]; r[i] = r[j]; r[j] = t;
+  }
+  return r;
+}
+function visualFor(item) {
+  if (item.model) {
+    return '<model-viewer src="' + item.model + '" auto-rotate rotation-per-second="24deg" ' +
+           'interaction-prompt="none" disable-zoom disable-tap shadow-intensity="0.7" ' +
+           'exposure="1.35" environment-image="neutral" tone-mapping="commerce" ' +
+           'camera-orbit="0deg 78deg 2.4m" loading="eager"></model-viewer>';
+  }
+  if (item.img) return '<img src="' + item.img + '" alt="">';
+  return '<span class="glyph">' + item.emoji + '</span>';
+}
+
+function initPanels() {
+  P = [];
+  [].forEach.call(document.querySelectorAll('.panel'), function (root, i) {
+    root.innerHTML = PANEL_HTML;
+    root.querySelector('.p-badge').textContent = String(i + 1);
+    var p = {
+      i: i, root: root,
+      field: root.querySelector('.p-field'),
+      bar: root.querySelector('.p-bar i'),
+      count: root.querySelector('.p-count'),
+      prompt: root.querySelector('.p-prompt'),
+      done: root.querySelector('.p-done'),
+      ents: [], sel: null, placed: 0
+    };
+    P.push(p);
+    root.querySelector('.done-again').addEventListener('pointerdown', function (e) {
+      e.preventDefault(); e.stopPropagation(); resetPanel(p);
+    });
+  });
+}
+
+/* Lay the items out on a jittered grid inside the reachable band. */
+function layout(p) {
+  var px = itemPx(p.field), r = px / 2;
+  var w = p.field.clientWidth, h = p.field.clientHeight;
+  var n = p.ents.length;
+  var padX = 4, padY = 10;
+  var cols = Math.max(1, Math.min(n, Math.floor((w - padX * 2) / (px + 6))));
+  var rows = Math.ceil(n / cols);
+  var cellW = (w - padX * 2) / cols;
+  var cellH = (h - padY * 2) / rows;
+
+  p.ents.forEach(function (e, i) {
+    var c = i % cols, rr = Math.floor(i / cols);
+    var jx = (Math.random() - 0.5) * Math.max(0, cellW - px - 4);
+    var jy = (Math.random() - 0.5) * Math.max(0, cellH - px - 22);
+    e.r = r;
+    e.bx = Math.max(padX, Math.min(w - px - padX, padX + c * cellW + (cellW - px) / 2 + jx));
+    e.by = Math.max(padY, Math.min(h - px - padY, padY + rr * cellH + (cellH - px) / 2 + jy));
+    e.el.style.width = px + 'px';
+    e.el.style.height = px + 'px';
+    e.el.style.setProperty('--glyph', Math.round(px * 0.55) + 'px');
+  });
+}
+
+function buildPanel(p) {
+  p.field.innerHTML = '';
+  p.ents = [];
+  p.sel = null;
+  p.placed = 0;
+  p.root.classList.remove('asking');
+  p.done.classList.remove('on');
+  [].forEach.call(p.root.querySelectorAll('.pb .count'), function (c) { c.textContent = '0'; });
+
+  shuffled(ITEMS).forEach(function (item) {
+    var el = document.createElement('div');
+    el.className = 'item';
+    el.dataset.key = item.key;
+    el.dataset.cat = item.cat;
+    el.innerHTML = '<div class="visual">' + visualFor(item) + '</div>' +
+      '<span class="tag en">' + item.en + '</span>' +
+      '<span class="tag ml">' + item.ml + '</span>';
+    p.field.appendChild(el);
+    var ent = {
+      el: el, visual: el.querySelector('.visual'), item: item, panel: p,
+      bx: 0, by: 0, r: 0,
+      ph: Math.random() * Math.PI * 2,          // bob phase
+      amp: 3 + Math.random() * 4,               // bob amplitude (px)
+      spd: 0.7 + Math.random() * 0.5,           // bob speed
+      rot: (Math.random() - 0.5) * 10,
+      rotSpd: 0.25 + Math.random() * 0.35,
+      sorted: false
+    };
+    p.ents.push(ent);
+    el._ent = ent;
+  });
+
+  layout(p);
+  refresh(p);
+}
+
+function resetPanel(p) { buildPanel(p); }
+function buildAll() { P.forEach(buildPanel); }
+
+function refresh(p) {
+  p.count.textContent = p.placed + ' / ' + total;
+  p.bar.style.width = (p.placed / total * 100) + '%';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ANIMATION — a gentle in-place bob.
+   ─────────────────────────────────────────────────────────────
+   Deliberately NOT free-flight physics: the brief requires touch
+   targets a child with visual-tracking or fine-motor delays can
+   hit without frustration, and a tap-to-select game must not make
+   them chase a moving target.
+   ══════════════════════════════════════════════════════════════ */
+function tick(ts) {
+  var t = ts / 1000;
+  for (var i = 0; i < P.length; i++) {
+    var ents = P[i].ents;
+    for (var j = 0; j < ents.length; j++) {
+      var e = ents[j];
+      if (e.sorted) continue;
+      var dy = Math.sin(t * e.spd + e.ph) * e.amp;
+      var dx = Math.cos(t * e.spd * 0.6 + e.ph) * (e.amp * 0.4);
+      e.el.style.transform = 'translate3d(' + (e.bx + dx) + 'px,' + (e.by + dy) + 'px,0)';
+      e.visual.style.transform =
+        'rotate(' + (e.rot + Math.sin(t * e.rotSpd + e.ph) * 7) + 'deg)';
+    }
+  }
+
+  /* idle invitation — nudge a random unsorted item in each open panel */
+  if (Date.now() - lastTouchAt > 10000) {
+    P.forEach(function (p) {
+      if (p.placed >= total) return;
+      var free = p.ents.filter(function (e) { return !e.sorted; });
+      if (!free.length) return;
+      var pick = free[Math.floor(Math.random() * free.length)];
+      pick.el.classList.add('hint');
+      setTimeout(function () { pick.el.classList.remove('hint'); }, 3000);
+    });
+    lastTouchAt = Date.now();
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INTERACTION — tap an item to select, then tap a basket to answer.
+   Every panel keeps its own selection, so three children playing at
+   the same moment never interfere with one another.
+   ══════════════════════════════════════════════════════════════ */
+function select(p, ent) {
+  if (ent.sorted) return;
+  if (p.sel === ent) { deselect(p); return; }      // tap again to cancel
+  if (p.sel) p.sel.el.classList.remove('sel');
+  p.sel = ent;
+  ent.el.classList.add('sel');
+  ent.el.classList.remove('hint');
+  p.root.classList.add('asking');
+  p.prompt.classList.add('asking');
+  p.prompt.innerHTML = '<span class="en">Which basket?</span>' +
+                       '<span class="ml">ഏത് കൊട്ടയിൽ?</span>';
+  sfxSelect();
+  say(ent.item);
+  namePop(ent);
+}
+
+function deselect(p) {
+  if (p.sel) p.sel.el.classList.remove('sel');
+  p.sel = null;
+  p.root.classList.remove('asking');
+  p.prompt.classList.remove('asking');
+  p.prompt.innerHTML = '<span class="en">Tap one!</span><span class="ml">ഒന്ന് തൊടൂ!</span>';
+}
+
+function answer(p, pbEl) {
+  var ent = p.sel;
+  if (!ent) return;
+  var cat = pbEl.dataset.cat;
+
+  if (cat === ent.item.cat) {
+    /* correct — fly it into the basket */
+    var fr = ent.el.getBoundingClientRect();
+    var br = pbEl.querySelector('.mouth').getBoundingClientRect();
+    ent.sorted = true;
+    ent.el.classList.remove('sel');
+    ent.el.style.transition =
+      'transform .34s cubic-bezier(.5,-0.2,.7,.6),opacity .34s ease';
+    ent.el.style.transform =
+      'translate3d(' + (ent.bx + (br.left + br.width / 2 - (fr.left + fr.width / 2))) + 'px,' +
+                       (ent.by + (br.top + br.height / 2 - (fr.top + fr.height / 2))) + 'px,0) scale(.3)';
+    ent.el.style.opacity = '0';
+    ent.el.style.pointerEvents = 'none';
+
+    sfxPop();                 // the item landing in the basket
+    sfxCorrect();             // the "that was right" cue
+    sayPraise();              // spoken affirmation (Malayalam by default)
+    burst(br.left + br.width / 2, br.top + br.height / 2,
+      cat === 'fruit' ? ['#f97316', '#fb923c', '#fdba74', '#fff']
+                      : ['#4ade80', '#86efac', '#bbf7d0', '#fff'], 16);
+
+    pbEl.classList.add('right');
+    setTimeout(function () { pbEl.classList.remove('right'); }, 440);
+    var c = pbEl.querySelector('.count');
+    c.textContent = String(parseInt(c.textContent, 10) + 1);
+    c.classList.add('bump');
+    setTimeout(function () { c.classList.remove('bump'); }, 220);
+
+    p.placed++;
+    refresh(p);
+    deselect(p);
+    if (p.placed === total) setTimeout(function () { celebrate(p); }, 480);
+  } else {
+    /* wrong — soft shake, item stays selected so they can try the other */
+    pbEl.classList.add('nope');
+    setTimeout(function () { pbEl.classList.remove('nope'); }, 440);
+    sfxNudge();
+  }
+}
+
+document.addEventListener('pointerdown', function (e) {
+  var panelEl = e.target.closest('.panel');
+  if (!panelEl) return;
+  var p = P[parseInt(panelEl.dataset.p, 10)];
+  if (!p || p.done.classList.contains('on')) return;
+  lastTouchAt = Date.now();
+  ac();
+
+  var pb = e.target.closest('.pb');
+  if (pb) { e.preventDefault(); answer(p, pb); return; }
+
+  var itemEl = e.target.closest('.item');
+  if (itemEl && itemEl._ent) { e.preventDefault(); select(p, itemEl._ent); return; }
+
+  deselect(p);            // tapping empty space clears the selection
+}, { passive: false });
+
+/* ══════════════════════════════════════════════════════════════
+   FX
+   ══════════════════════════════════════════════════════════════ */
+function namePop(ent) {
+  var r = ent.el.getBoundingClientRect();
+  var n = document.createElement('div');
+  n.className = 'namePop' + (isMl ? ' ml' : '');
+  n.textContent = isMl ? ent.item.ml : ent.item.en;
+  n.style.left = (r.left + r.width / 2) + 'px';
+  n.style.top = r.top + 'px';
+  document.body.appendChild(n);
+  n.addEventListener('animationend', function () { this.remove(); });
+}
+function burst(cx, cy, colors, n) {
+  var ring = document.createElement('div');
+  ring.className = 'ring';
+  ring.style.left = cx + 'px'; ring.style.top = cy + 'px';
+  document.body.appendChild(ring);
+  ring.addEventListener('animationend', function () { this.remove(); });
+  for (var i = 0; i < (n || 16); i++) {
+    var s = document.createElement('div');
+    s.className = 'spark';
+    var size = 5 + Math.random() * 8;
+    var ang = Math.random() * Math.PI * 2;
+    var dist = 35 + Math.random() * 80;
+    s.style.width = size + 'px'; s.style.height = size + 'px';
+    s.style.left = cx + 'px'; s.style.top = cy + 'px';
+    s.style.background = colors[Math.floor(Math.random() * colors.length)];
+    s.style.setProperty('--sx', Math.cos(ang) * dist + 'px');
+    s.style.setProperty('--sy', (Math.sin(ang) * dist - 26) + 'px');
+    s.style.setProperty('--sd', (0.55 + Math.random() * 0.45) + 's');
+    document.body.appendChild(s);
+    s.addEventListener('animationend', function () { this.remove(); });
+  }
+}
+/* Celebration is scoped to the finishing panel; balloons rise over that
+   third of the wall only, so the other two children are not interrupted. */
+function celebrate(p) {
+  p.done.classList.add('on');
+  sfxCelebrate();
+  var pr = p.root.getBoundingClientRect();
+  var cols = ['#f87171', '#fbbf24', '#4ade80', '#60a5fa', '#c084fc', '#fb923c'];
+  for (var i = 0; i < 14; i++) {
+    (function (i) {
+      setTimeout(function () {
+        var b = document.createElement('div');
+        b.className = 'balloon';
+        b.style.left = (pr.left + Math.random() * (pr.width - 50)) + 'px';
+        b.style.background = cols[i % cols.length];
+        b.style.setProperty('--rd', (3.2 + Math.random() * 2.2) + 's');
+        b.style.setProperty('--rr', ((Math.random() - 0.5) * 40) + 'deg');
+        document.body.appendChild(b);
+        b.addEventListener('animationend', function () { this.remove(); });
+      }, i * 120);
+    })(i);
+  }
+  for (var j = 0; j < 10; j++) {
+    (function (j) {
+      setTimeout(function () {
+        var s = document.createElement('div');
+        s.className = 'cstar';
+        s.textContent = ['⭐', '✨', '🌟'][j % 3];
+        s.style.left = (pr.left + Math.random() * (pr.width - 30)) + 'px';
+        s.style.setProperty('--rd', (2.8 + Math.random() * 1.8) + 's');
+        s.style.setProperty('--rr', ((Math.random() - 0.5) * 60) + 'deg');
+        document.body.appendChild(s);
+        s.addEventListener('animationend', function () { this.remove(); });
+      }, 250 + j * 150);
+    })(j);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONTROLS — apply to all three panels at once
+   ══════════════════════════════════════════════════════════════ */
+function bindTouch(el, fn) {
+  el.addEventListener('click', function (e) {
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+    fn(e);
+  });
+  el.addEventListener('touchend', function (e) { e.preventDefault(); fn(e); });
+}
+bindTouch(document.getElementById('btnHome'), function () { location.href = '../index.html'; });
+bindTouch(document.getElementById('btnLang'), function () {
+  isMl = document.body.classList.toggle('ml-mode');
+  document.getElementById('btnLang').textContent = isMl ? '🌐 ML' : '🌐 EN';
+});
+bindTouch(document.getElementById('btnVoice'), function () {
+  voiceOn = !voiceOn;
+  var b = document.getElementById('btnVoice');
+  b.textContent = voiceOn ? '🔊 Voice' : '🔇 Voice';
+  b.classList.toggle('off', !voiceOn);
+  if (!voiceOn && window.speechSynthesis) window.speechSynthesis.cancel();
+});
+bindTouch(document.getElementById('btnBigger'),  function () {
+  if (sizeIdx < SIZE_STEPS.length - 1) { sizeIdx++; P.forEach(layout); }
+});
+bindTouch(document.getElementById('btnSmaller'), function () {
+  if (sizeIdx > 0) { sizeIdx--; P.forEach(layout); }
+});
+bindTouch(document.getElementById('btnUp'), function () {
+  heightShift = Math.max(-HEIGHT_MAX, heightShift - HEIGHT_STEP);
+  document.getElementById('stage').style.transform = 'translateY(' + heightShift + 'px)';
+});
+bindTouch(document.getElementById('btnDown'), function () {
+  heightShift = Math.min(HEIGHT_MAX, heightShift + HEIGHT_STEP);
+  document.getElementById('stage').style.transform = 'translateY(' + heightShift + 'px)';
+});
+bindTouch(document.getElementById('btnReset'), buildAll);
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') location.href = '../index.html';
+});
+
+/* ripple under every finger, anywhere */
+document.addEventListener('touchstart', function (e) {
+  lastTouchAt = Date.now();
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    var t = e.changedTouches[i];
+    var r = document.createElement('div');
+    r.className = 'touch-ring';
+    r.style.left = t.clientX + 'px';
+    r.style.top = t.clientY + 'px';
+    document.body.appendChild(r);
+    r.addEventListener('animationend', function () { this.remove(); });
+  }
+}, { passive: true });
+
+(function () {
+  var wrap = document.getElementById('bgDots');
+  for (var i = 0; i < 22; i++) {
+    var d = document.createElement('div');
+    d.className = 'bg-dot';
+    var s = 6 + Math.random() * 9;
+    d.style.width = s + 'px'; d.style.height = s + 'px';
+    d.style.left = (Math.random() * 100) + '%';
+    d.style.top = (Math.random() * 100) + '%';
+    d.style.setProperty('--dur', (5 + Math.random() * 7) + 's');
+    d.style.setProperty('--dx', ((Math.random() - 0.5) * 60) + 'px');
+    d.style.setProperty('--dy', ((Math.random() - 0.5) * 60) + 'px');
+    d.style.animationDelay = (Math.random() * 5) + 's';
+    wrap.appendChild(d);
+  }
+})();
+
+var rzT;
+window.addEventListener('resize', function () {
+  clearTimeout(rzT);
+  rzT = setTimeout(function () { P.forEach(layout); }, 140);
+});
+
+initPanels();
+buildAll();
+requestAnimationFrame(tick);
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

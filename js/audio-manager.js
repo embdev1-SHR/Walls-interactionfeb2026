@@ -57,7 +57,24 @@ class AudioManager {
             'pp-fill-outline':  'colouring',
             'pp-path-tracer':   'trace-it',
             'pp-egg-count':     'jyproject-endless-shore-part2-399386',
-            'pp-block-stack':   'jyproject-endless-shore-part2-399386'
+            'pp-block-stack':   'jyproject-endless-shore-part2-399386',
+            'fruits-vegetables':'jyproject-endless-shore-part2-399386',
+
+            /* -- Primary + Secondary modules ---------------------- */
+            'pri-houses':         'Daily life scenarios',
+            'pri-rooms':          'Daily life scenarios',
+            'pri-letters':        'trace-it',
+            'pri-flowers':        'forest',
+            'pri-flower-match':   'forest',
+            'sec-name-id':        'jyproject-endless-shore-part2-399386',
+            'sec-name-build':     'jyproject-endless-shore-part2-399386',
+            'sec-first-aid':      'Daily life scenarios',
+            'sec-currency':       'jyproject-endless-shore-part2-399386',
+            'sec-body-plant':     'forest',
+            'sec-helpers-places': 'Daily life scenarios',
+            'sec-mobile':         'jyproject-endless-shore-part2-399386',
+            'sec-bouquet':        'forest',
+            'sec-daily-living':   'Daily life scenarios'
         };
     }
 

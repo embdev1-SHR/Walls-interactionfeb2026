@@ -157,6 +157,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 .card-memory{background:linear-gradient(135deg,#DDA0DD,#BA55D3)}
 .card-shape{background:linear-gradient(135deg,#FFD700,#FFA500)}
 .card-preprimary{background:linear-gradient(135deg,#d1fae5,#6ee7b7)}
+.card-primary{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
+.card-secondary{background:linear-gradient(135deg,#ede9fe,#c4b5fd)}
 /* BOTTOM */
 
 
@@ -222,6 +224,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 .pp-grid{ max-width:700px !important; }
 .pp-grid .submenu-options{ display:grid !important; grid-template-columns:1fr 1fr 1fr; }
 .pp-grid .submenu-option{ text-align:center; padding:18px 10px; font-size:14px; }
+/* Malayalam-first submenu labels, English underneath */
+.opt-ml{ display:block; font-family:'Noto Sans Malayalam','Baloo 2',sans-serif;
+         font-weight:800; line-height:1.25; }
+.opt-en{ display:block; font-size:.72em; opacity:.62; font-weight:700; margin-top:2px; }
+.card-name small{ display:block; font-size:.68em; opacity:.6; font-weight:700; }
 .submenu-close{
   margin-top:16px;padding:12px 24px;
   background:linear-gradient(135deg,#FEB2B2,#FC8181);
@@ -383,6 +390,14 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
         <div class="game-card card-preprimary card-stagger" data-category="pre-primary">
           <div class="card-icon">🦁</div>
           <div class="card-name">Pre-Primary</div>
+        </div>
+        <div class="game-card card-primary card-stagger" data-category="primary">
+          <div class="card-icon">🏫</div>
+          <div class="card-name">പ്രൈമറി<small>Primary</small></div>
+        </div>
+        <div class="game-card card-secondary card-stagger" data-category="secondary">
+          <div class="card-icon">🎓</div>
+          <div class="card-name">സെക്കൻഡറി<small>Secondary</small></div>
         </div>
         <div class="game-card card-memory card-stagger" data-game="money-counter">
           <div class="card-icon">🛒</div>

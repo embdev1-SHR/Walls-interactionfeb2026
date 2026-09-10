@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  FLOWER MATCHING — Pangappara Blueroom, Primary item #5
+  Two columns · connect the pair · two round sets · spoken praise
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "3 flower items load on the Left Column (Side A) and 3 shuffled
+     matching flowers load on the Right Column (Side B) in extra-large size."
+    "Item Touch: The card highlights with a glowing blue border, and the
+     voice prompt announces the Malayalam flower name."
+    "Correct Match: A bright green glowing line connects the two matching
+     flower cards. Both cards bounce cheerfully with glowing sparkles.
+     Voice announces: 'ശരിയാണ്! റോസപ്പൂവും റോസപ്പൂവും!'"
+    "Incorrect Match: The line wiggles softly and fades away with a gentle
+     yellow glow. No harsh error buzzers or red 'X' marks appear."
+
+  TAP-TAP, NOT DRAG-ONLY
+    The brief says the child "drags her finger or taps the matching
+    flower", so tap-then-tap is the primary interaction here — it is far
+    more reliable than a drag on a large wall panel with an imprecise
+    touch surface, and it is what the brief lists first.
+
+  THE MALAYALAM PRAISE IS BUILT GRAMMATICALLY, NOT BY CONCATENATION
+    The brief's praise line joins the flower name with the "-ഉം" (and)
+    suffix: റോസപ്പൂവ് -> റോസപ്പൂവും. That is not a plain append — a name
+    ending in chandrakkala (്) drops it, while a name ending in a vowel
+    takes -യും (ചെമ്പരത്തി -> ചെമ്പരത്തിയും). withUm() below implements
+    that. It is a simplified rule covering exactly the seven names in
+    this activity and MUST be checked by a Malayalam-speaking teacher.
+    See DEV-DOC-additional-content.md section 8, open question 1.
+
+  ASSETS
+    Flowers from js/flower-data.js, shared with Kerala Flowers and the
+    Bouquet activity. Photographs optional; emoji fallback throughout.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Flower Matching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 12% 18%, #fff1f2 0%, transparent 55%),
+      radial-gradient(circle at 88% 82%, #fefce8 0%, transparent 55%),
+      linear-gradient(160deg,#ffffff,#f6fbf7);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#9d174d;
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #round{
+    text-align:center;font-size:calc(16px * var(--wall-scale,1));
+    font-weight:800;color:#64748b;padding-top:2px;
+  }
+
+  #stage{flex:1;position:relative;display:flex;align-items:center;
+         justify-content:space-around;padding:14px 4vw;gap:20px;
+         transition:transform .25s ease}
+  /* width/height are required: <svg> is a replaced element, so inset:0
+     alone leaves it at its 300x150 intrinsic size and clips the lines. */
+  #lines{position:absolute;inset:0;width:100%;height:100%;
+         pointer-events:none;z-index:5}
+  .col{display:flex;flex-direction:column;gap:calc(16px * var(--wall-scale,1));z-index:10}
+
+  .fcard{
+    display:flex;align-items:center;gap:14px;
+    padding:calc(12px * var(--wall-scale,1)) calc(18px * var(--wall-scale,1));
+    border-radius:22px;background:#fff;border:5px solid rgba(150,180,210,.35);
+    box-shadow:0 8px 20px rgba(20,60,95,.14);cursor:pointer;
+    touch-action:manipulation;transition:border-color .25s,box-shadow .25s,transform .18s;
+    min-width:calc(240px * var(--wall-scale,1));
+  }
+  .fcard:active{transform:scale(.97)}
+  .fart{
+    width:var(--art);height:var(--art);flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(var(--art) * .82);line-height:1;
+  }
+  .fart img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
+  .flabel{font-weight:900;font-size:calc(20px * var(--wall-scale,1));color:#123b5e;line-height:1.15}
+  .flabel small{display:block;font-weight:700;font-size:calc(13px * var(--wall-scale,1));opacity:.6}
+
+  /* brief: "highlights with a glowing blue border" while selected */
+  .fcard.sel{border-color:#3b82f6;
+    box-shadow:0 0 0 6px rgba(59,130,246,.2),0 0 26px rgba(59,130,246,.55)}
+  /* brief: matched pair glows green */
+  .fcard.ok{border-color:#22c55e;
+    box-shadow:0 0 0 6px rgba(34,197,94,.22),0 0 26px rgba(34,197,94,.5)}
+  .fcard.done{opacity:.95;cursor:default}
+  .fcard.bounce{animation:fbounce .55s cubic-bezier(.28,.84,.42,1)}
+  @keyframes fbounce{0%{transform:translateY(0) scale(1)}
+    30%{transform:translateY(-14px) scale(1.05)}
+    55%{transform:translateY(0) scale(.98)}
+    75%{transform:translateY(-5px) scale(1.02)}
+    100%{transform:translateY(0) scale(1)}}
+  /* brief: a wrong try wiggles — no buzzer, no red X */
+  .fcard.wiggle{animation:fwig .5s ease}
+  @keyframes fwig{0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-9px)}40%{transform:translateX(9px)}
+    60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+  #done{
+    position:fixed;inset:0;display:none;z-index:700;
+    background:rgba(255,255,255,.93);
+    align-items:center;justify-content:center;flex-direction:column;gap:22px;
+  }
+  #done.on{display:flex}
+  #done .big{font-size:96px}
+  #done .msg{font-size:36px;font-weight:900;color:#15803d;text-align:center}
+  #again{
+    padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,#86efac,#22c55e);color:#fff;
+    font-family:inherit;font-weight:900;font-size:22px;
+  }
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="round"></div>
+
+<div id="stage">
+  <svg id="lines"></svg>
+  <div class="col" id="colA"></div>
+  <div class="col" id="colB"></div>
+</div>
+
+<div id="done">
+  <div class="big">🌸</div>
+  <div class="msg" id="doneMsg"></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flower-data.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Flower Matching', ml: 'പൂക്കൾ ജോഡിക്കുക' };
+
+/* ══════════════════════════════════════════════════════════════
+   MALAYALAM "-ഉം" (and) SUFFIX
+   റോസപ്പൂവ്  -> റോസപ്പൂവും     (chandrakkala is replaced)
+   ചെമ്പരത്തി -> ചെമ്പരത്തിയും  (vowel ending takes -യും)
+   Covers the seven names in this activity. Needs teacher review.
+   ══════════════════════════════════════════════════════════════ */
+function withUm(name) {
+  if (!name) return '';
+  if (name.charAt(name.length - 1) === '്') {   // ends in chandrakkala
+    // drop it and attach ു + ം :  റോസപ്പൂവ്  ->  റോസപ്പൂവും
+    return name.slice(0, -1) + 'ും';
+  }
+  // vowel ending takes the യ glide:  ചെമ്പരത്തി  ->  ചെമ്പരത്തിയും
+  return name + 'യും';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+var roundIdx = 0;
+var selected = null;          // { item, el }
+var matched  = {};
+var lines    = document.getElementById('lines');
+
+function shuffled(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function artPx() {
+  return Math.round(96 * WALL.scale());
+}
+
+function makeCard(item, side) {
+  var el = document.createElement('div');
+  el.className = 'fcard';
+  el.setAttribute('data-id', item.id);
+  el.setAttribute('data-side', side);
+  el.style.setProperty('--art', artPx() + 'px');
+
+  var art = document.createElement('div');
+  art.className = 'fart';
+  if (item.art.img) {
+    var img = document.createElement('img');
+    img.src = item.art.img;
+    img.addEventListener('error', function () { art.textContent = item.art.emoji; });
+    art.appendChild(img);
+  } else {
+    art.textContent = item.art.emoji;
+  }
+
+  var lab = document.createElement('div');
+  lab.className = 'flabel';
+  var b = WALL.tBoth(item.label);
+  lab.innerHTML = b.main + (b.alt && b.alt !== b.main ? '<small>' + b.alt + '</small>' : '');
+
+  el.appendChild(art);
+  el.appendChild(lab);
+  WALL.bindTouch(el, function () { onTap(item, el, side); });
+  return el;
+}
+
+function centerOf(el) {
+  var r = el.getBoundingClientRect(), s = document.getElementById('stage').getBoundingClientRect();
+  return { x: r.left + r.width / 2 - s.left, y: r.top + r.height / 2 - s.top };
+}
+
+function drawLine(a, b, colour, temporary) {
+  var p1 = centerOf(a), p2 = centerOf(b);
+  var ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  ln.setAttribute('x1', p1.x); ln.setAttribute('y1', p1.y);
+  ln.setAttribute('x2', p2.x); ln.setAttribute('y2', p2.y);
+  ln.setAttribute('stroke', colour);
+  ln.setAttribute('stroke-width', 9);
+  ln.setAttribute('stroke-linecap', 'round');
+  ln.setAttribute('opacity', 0.9);
+  if (colour === '#22c55e') {
+    ln.setAttribute('filter', 'drop-shadow(0 0 8px rgba(34,197,94,.85))');
+  }
+  lines.appendChild(ln);
+  if (temporary) {
+    // brief: the wrong line "wiggles softly and fades away"
+    setTimeout(function () {
+      ln.style.transition = 'opacity .5s';
+      ln.setAttribute('opacity', 0);
+      setTimeout(function () { ln.remove(); }, 520);
+    }, 380);
+  }
+  return ln;
+}
+
+function onTap(item, el, side) {
+  if (matched[item.id]) return;
+
+  if (side === 'A') {
+    if (selected) selected.el.classList.remove('sel');
+    selected = { item: item, el: el };
+    el.classList.add('sel');
+    WALL.sfx.tap();
+    WALL.say(item.label);            // brief: announce the Malayalam name
+    return;
+  }
+
+  // Side B without a selection: just name it, do not scold.
+  if (!selected) {
+    WALL.sfx.tap();
+    WALL.say(item.label);
+    return;
+  }
+
+  if (selected.item.id === item.id) {
+    /* ── correct ─────────────────────────────────────────────── */
+    matched[item.id] = true;
+    selected.el.classList.remove('sel');
+    selected.el.classList.add('ok', 'done', 'bounce');
+    el.classList.add('ok', 'done', 'bounce');
+    drawLine(selected.el, el, '#22c55e', false);
+    WALL.burstAt(selected.el, null, 14);
+    WALL.burstAt(el, null, 14);
+    WALL.sfx.correct();
+
+    var nm = withUm(item.label.ml);
+    WALL.say(WALL.isMl()
+      ? { ml: 'ശരിയാണ്! ' + nm + ' ' + nm + '!' }
+      : { en: 'Correct! ' + item.label.en + ' and ' + item.label.en + '!' });
+
+    selected = null;
+    if (Object.keys(matched).length === FLOWER_DATA.matchRounds[roundIdx].length) {
+      setTimeout(finishRound, 900);
+    }
+  } else {
+    /* ── incorrect: gentle, never punitive ───────────────────── */
+    drawLine(selected.el, el, '#fbbf24', true);
+    el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle');
+    WALL.sfx.nudge();
+    selected.el.classList.remove('sel');
+    selected = null;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ROUNDS
+   ══════════════════════════════════════════════════════════════ */
+function buildRound() {
+  matched = {}; selected = null;
+  lines.innerHTML = '';
+  document.getElementById('done').classList.remove('on');
+
+  var items = FLOWER_DATA.round(roundIdx);
+  var A = document.getElementById('colA'), B = document.getElementById('colB');
+  A.innerHTML = ''; B.innerHTML = '';
+
+  items.forEach(function (it) { A.appendChild(makeCard(it, 'A')); });
+  shuffled(items).forEach(function (it) { B.appendChild(makeCard(it, 'B')); });
+
+  document.getElementById('round').textContent =
+    (WALL.isMl() ? 'റൗണ്ട് ' : 'Round ') +
+    (roundIdx + 1) + ' / ' + FLOWER_DATA.matchRounds.length;
+}
+
+function finishRound() {
+  var last = roundIdx >= FLOWER_DATA.matchRounds.length - 1;
+  if (!last) {
+    roundIdx++;
+    WALL.celebrate();
+    setTimeout(buildRound, 1200);
+    return;
+  }
+  WALL.celebrate();
+  var d = document.getElementById('done');
+  document.getElementById('doneMsg').textContent =
+    WALL.isMl() ? 'എല്ലാ പൂക്കളും ജോഡിയായി!'
+              : 'All flowers matched!';
+  document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Play again';
+  setTimeout(function () { d.classList.add('on'); }, 1400);
+}
+
+WALL.bindTouch(document.getElementById('again'), function () {
+  roundIdx = 0; buildRound();
+});
+
+function paintTitle() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+}
+
+WALL.onLang(function () { paintTitle(); buildRound(); });
+WALL.onSize(function () { buildRound(); });
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: function () { roundIdx = 0; buildRound(); },
+  home: true
+});
+
+buildRound();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>
