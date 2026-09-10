@@ -683,8 +683,59 @@
   function drawGiraffe(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(cx,cy+100,140,120,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillRect(cx-30,cy-300,60,400);ctx.strokeRect(cx-30,cy-300,60,400);ctx.beginPath();ctx.ellipse(cx,cy-330,60,50,0,0,Math.PI*2);ctx.fill();ctx.stroke();for(var i=0;i<4;i++){var lx=cx-90+i*60;ctx.fillRect(lx-15,cy+180,30,150);ctx.strokeRect(lx-15,cy+180,30,150);}[[cx-80,cy+80],[cx-40,cy+60],[cx,cy+100],[cx+40,cy+70],[cx+80,cy+90],[cx-20,cy-100],[cx+10,cy-150]].forEach(function(s){ctx.beginPath();ctx.ellipse(s[0],s[1],25,30,0,0,Math.PI*2);ctx.fill();ctx.stroke();});ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx+20,cy-340,12,0,Math.PI*2);ctx.fill();}
   function drawFrog(ctx,w,h){let cx=w/2,cy=h/2;ctx.strokeStyle='#333';ctx.lineWidth=5;ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(cx,cy+30,130,110,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx,cy-50,120,80,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx-60,cy-90,45,50,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+60,cy-90,45,50,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx-60,cy-85,20,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+60,cy-85,20,0,Math.PI*2);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(cx,cy-20,60,0.1,Math.PI-0.1);ctx.stroke();ctx.beginPath();ctx.ellipse(cx-110,cy+80,30,60,-0.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+110,cy+80,30,60,0.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx-130,cy+20,50,80,-0.8,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(cx+130,cy+20,50,80,0.8,0,Math.PI*2);ctx.fill();ctx.stroke();}
 
-  buildJungle();
-  setupModal();
+  /* ══════════════════════════════════════════════════════════════
+     FARM ANIMALS — Pangappara change request
+     "CAT, DOG, COW, GOAT, HEN (size of the animal should be adjustable
+      according to the student's height)"
+
+     These are image templates rather than hand-coded draw() functions,
+     because three of the five line drawings are ALREADY in this repo at
+     assets/Draw/ and were only being used by animal-drawing.html. The
+     existing flood-fill works on them unchanged: it derives its outline
+     mask from luminance, and these are black line art on white.
+
+     A template is only registered if its PNG actually loads, so cat, cow
+     and hen appear today and dog + goat appear the moment their outlines
+     are dropped in. Nothing 404s visibly.
+     The existing Size and Position sliders already satisfy the brief's
+     "adjustable according to the student's height".
+     ══════════════════════════════════════════════════════════════ */
+  const FARM = [
+    { key:'cat',  emoji:'🐱', file:'cat draw.png'  },
+    { key:'cow',  emoji:'🐮', file:'cow draw.png'  },
+    { key:'hen',  emoji:'🐔', file:'hen draw.png'  },
+    { key:'dog',  emoji:'🐶', file:'dog draw.png'  },
+    { key:'goat', emoji:'🐐', file:'goat draw.png' }
+  ];
+
+  function imageDrawer(img){
+    return function(ctx,w,h){
+      ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+      const m=0.86, s=Math.min((w*m)/img.width,(h*m)/img.height);
+      const dw=img.width*s, dh=img.height*s;
+      ctx.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+    };
+  }
+
+  function preloadFarm(done){
+    let left=FARM.length, finished=false;
+    const finish=function(){ if(!finished){ finished=true; done(); } };
+    var guard=setTimeout(finish,2500);   // never let a stuck load block us
+    FARM.forEach(function(f){
+      var img=new Image();
+      img.onload=function(){
+        TEMPLATES[f.key]={emoji:f.emoji,draw:imageDrawer(img)};
+        if(--left===0){ clearTimeout(guard); finish(); }
+      };
+      img.onerror=function(){ if(--left===0){ clearTimeout(guard); finish(); } };
+      img.src='../assets/Draw/'+encodeURIComponent(f.file);
+    });
+  }
+
+  preloadFarm(function(){
+    buildJungle();
+    setupModal();
+  });
 })();
 </script>
 <script src="../js/audio-manager.js"></script>

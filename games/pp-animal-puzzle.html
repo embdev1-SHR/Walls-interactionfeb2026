@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  ANIMAL BODY PUZZLE — Pangappara Blueroom, Pre-Primary Module 2 #3 + #5
+  Silhouette in the centre · 3 parts scattered · drag them home
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF (items 3 and 5 describe the same activity, so it is built once)
+    "The center of the screen shows a faint, transparent outline
+     (silhouette) of the animal."
+    "The scattered body parts appear around the outer edges of the screen
+     in calm, uncluttered positions."
+    "To avoid visual overload, animals are split into 3 simple body parts
+     for beginner rounds (Head, Body, Tail/Legs)."
+    "When the part gets within 5 to 10 centimetres of its correct position
+     it smoothly snaps into place with a gentle pop sound."
+    "When the Tail snaps in: the full cow image lights up in full colour!"
+    "Once all parts are joined ... the cat plays a natural Meow sound, and
+     the voice speaks: ശരിയുത്തരം! ഇത് പൂച്ചയാണ്!"
+    "All voice prompts and encouragement are in Malayalam."
+    Round order: Cow, Cat, "SAME FOR HEN".
+
+  HOW THE PIECES WORK WITH NO ART DELIVERED
+    Proper cut-up puzzle pieces are on the asset list. Until they arrive
+    this does something better than a placeholder box: it takes the ONE
+    animal image (or emoji) and clips three copies to a top / middle /
+    bottom band with CSS clip-path. Those really are the head, body and
+    legs, they really do reassemble into the animal, and it costs nothing.
+    When real `cow-head.png` etc. are delivered they simply replace the
+    clipped copies — same slots, same snap logic.
+
+  ASSETS (optional upgrade)
+    ../assets/new/images/puzzle/{cow,cat,hen}-{head,body,tail}.png
+    ../assets/new/images/puzzle/{cow,cat,hen}-silhouette.png
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Animal Puzzle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#fffdf6,#f4f9fd 60%,#eaf2f9);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;
+  }
+  h1{
+    text-align:center;padding:12px 60px 0;
+    font-size:calc(26px * var(--wall-scale,1));font-weight:800;color:#7c2d12;
+  }
+  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #tabs{display:flex;gap:12px;justify-content:center;padding:6px}
+  .atab{
+    padding:calc(10px * var(--wall-scale,1)) calc(22px * var(--wall-scale,1));
+    border-radius:16px;border:4px solid #e0b48a;background:#fff7ed;color:#7c2d12;
+    font-family:inherit;font-weight:900;font-size:calc(17px * var(--wall-scale,1));
+    cursor:pointer;touch-action:manipulation;
+  }
+  .atab.on{background:linear-gradient(135deg,#fde68a,#f59e0b);border-color:#d97706}
+
+  #stage{flex:1;position:relative;overflow:hidden;transition:transform .25s ease}
+
+  /* the faint silhouette target */
+  #target{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:calc(var(--pw) * 1px);height:calc(var(--ph) * 1px);
+    display:flex;flex-direction:column;
+  }
+  .slot{
+    position:relative;width:100%;height:33.3333%;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ghost{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    opacity:.16;filter:grayscale(1);pointer-events:none;
+  }
+  .slot.filled .ghost{opacity:0}
+  #target.complete{animation:pop 1s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{0%{transform:translate(-50%,-50%) scale(1)}
+                 40%{transform:translate(-50%,-50%) scale(1.13)}
+                 100%{transform:translate(-50%,-50%) scale(1)}}
+
+  /* a piece: the whole animal, clipped to one horizontal band */
+  .piece{
+    position:absolute;width:calc(var(--pw) * 1px);height:calc(var(--ph) * 1px);
+    cursor:grab;touch-action:none;z-index:10;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.25));
+    transition:left .35s cubic-bezier(.2,1.2,.4,1), top .35s cubic-bezier(.2,1.2,.4,1);
+  }
+  .piece .inner{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:calc(var(--ph) * .92px);line-height:1;
+  }
+  .piece .inner img{width:100%;height:100%;object-fit:contain}
+  .piece.dragging{transition:none;z-index:40;filter:drop-shadow(0 14px 18px rgba(0,0,0,.35))}
+  .piece.home{pointer-events:none;z-index:5}
+
+  #hint{
+    position:absolute;left:0;right:0;bottom:10px;text-align:center;
+    font-weight:800;color:#7c2d12;opacity:.72;
+    font-size:calc(16px * var(--wall-scale,1));
+  }
+
+  #won{position:fixed;inset:0;display:none;z-index:700;
+       background:rgba(255,255,255,.93);align-items:center;justify-content:center;
+       flex-direction:column;gap:18px}
+  #won.on{display:flex}
+  #won .big{font-size:140px}
+  #won .msg{font-size:32px;font-weight:900;color:#15803d;text-align:center}
+  #won button{padding:15px 36px;border-radius:20px;border:none;cursor:pointer;
+              background:linear-gradient(135deg,#fde68a,#f59e0b);color:#4a2c00;
+              font-family:inherit;font-weight:900;font-size:21px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="tabs"></div>
+<div id="stage">
+  <div id="target"></div>
+  <div id="hint"></div>
+</div>
+
+<div id="won">
+  <div class="big" id="wonArt"></div>
+  <div class="msg" id="wonMsg"></div>
+  <button id="wonNext"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/animal-data.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Animal Puzzle', ml: 'മൃഗത്തെ ഉണ്ടാക്കാം' };
+var PUZ  = '../assets/new/images/puzzle/';
+
+/* the brief's rounds: cow, cat, "SAME FOR HEN" */
+var ROUNDS = ['cow', 'cat', 'hen'];
+/* 3 parts only — the brief is explicit about avoiding visual overload */
+var PARTS = [
+  { key: 'head', ml: 'തല',      en: 'Head' },
+  { key: 'body', ml: 'ഉടൽ',     en: 'Body' },
+  { key: 'tail', ml: 'കാലുകൾ',  en: 'Legs' }
+];
+
+var cur = 0, placed = {}, PW = 260, PH = 260;
+
+function sizes() {
+  PH = Math.round(Math.min(330, window.innerHeight * 0.42) * WALL.scale());
+  PW = PH;
+}
+
+/**
+ * One band of the animal. Uses a delivered part image when it exists and
+ * otherwise clips the whole animal to that third — see the header.
+ */
+function bandArt(id, partIdx) {
+  var a = ANIMALS.get(id);
+  var wrap = document.createElement('div');
+  wrap.className = 'inner';
+  wrap.style.clipPath = 'inset(' + (partIdx * 33.3333) + '% 0 ' +
+                        ((2 - partIdx) * 33.3333) + '% 0)';
+
+  var img = document.createElement('img');
+  img.src = PUZ + id + '-' + PARTS[partIdx].key + '.png';
+  img.alt = '';
+  img.addEventListener('error', function () {
+    // no cut piece delivered: fall back to the whole animal, still clipped
+    var img2 = document.createElement('img');
+    img2.src = a.img;
+    img2.alt = '';
+    img2.addEventListener('error', function () { wrap.textContent = a.emoji; });
+    wrap.innerHTML = '';
+    wrap.appendChild(img2);
+  });
+  // a delivered piece is already cut, so it must NOT be clipped again
+  img.addEventListener('load', function () { wrap.style.clipPath = 'none'; });
+  wrap.appendChild(img);
+  return wrap;
+}
+
+function ghostArt(id, partIdx) {
+  var a = ANIMALS.get(id);
+  var g = document.createElement('div');
+  g.className = 'ghost';
+  var inner = document.createElement('div');
+  inner.className = 'inner';
+  inner.style.clipPath = 'inset(' + (partIdx * 33.3333) + '% 0 ' +
+                         ((2 - partIdx) * 33.3333) + '% 0)';
+  var img = document.createElement('img');
+  img.src = a.img; img.alt = '';
+  img.addEventListener('error', function () { inner.textContent = a.emoji; });
+  inner.appendChild(img);
+  g.appendChild(inner);
+  return g;
+}
+
+function build() {
+  sizes();
+  placed = {};
+  var stage = document.getElementById('stage');
+  var target = document.getElementById('target');
+  target.className = '';
+  target.style.setProperty('--pw', PW);
+  target.style.setProperty('--ph', PH);
+  target.innerHTML = '';
+
+  // remove any old pieces
+  [].forEach.call(stage.querySelectorAll('.piece'), function (p) { p.remove(); });
+
+  var id = ROUNDS[cur];
+
+  PARTS.forEach(function (_, i) {
+    var slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.setAttribute('data-part', i);
+    slot.appendChild(ghostArt(id, i));
+    target.appendChild(slot);
+  });
+
+  // scatter the three pieces around the outer edge, calm and uncluttered
+  var spots = [
+    { l: 0.06, t: 0.10 },
+    { l: 0.06, t: 0.62 },
+    { l: 0.80, t: 0.34 }
+  ];
+  var order = [0, 1, 2].sort(function () { return Math.random() - 0.5; });
+  order.forEach(function (partIdx, k) {
+    var p = document.createElement('div');
+    p.className = 'piece';
+    p.style.setProperty('--pw', PW);
+    p.style.setProperty('--ph', PH);
+    p.setAttribute('data-part', partIdx);
+    p.style.left = (spots[k].l * stage.clientWidth) + 'px';
+    p.style.top  = (spots[k].t * stage.clientHeight) + 'px';
+    p.appendChild(bandArt(id, partIdx));
+    wireDrag(p, partIdx);
+    stage.appendChild(p);
+  });
+
+  buildTabs();
+  var a = ANIMALS.get(id);
+  /* The brief writes "നമുക്ക് [Animal Name] രൂപപ്പെടുത്താം!" with no case
+     ending, which is also the only form that is correct for every name. */
+  document.getElementById('hint').textContent = WALL.isMl()
+    ? 'നമുക്ക് ' + a.ml + ' രൂപപ്പെടുത്താം! ഭാഗങ്ങൾ ശരിയായ സ്ഥാനത്ത് വെക്കൂ'
+    : "Let's build the " + a.en + '! Place the parts in the correct position';
+
+  // the brief's Phase A spoken prompt
+  setTimeout(function () {
+    WALL.say(WALL.isMl()
+      ? { ml: 'നമുക്ക് ' + a.ml + ' രൂപപ്പെടുത്താം!' }
+      : { en: "Let's build the " + a.en + '!' });
+  }, 600);
+}
+
+function slotRect(partIdx) {
+  var slot = document.querySelector('#target .slot[data-part="' + partIdx + '"]');
+  return slot ? slot.getBoundingClientRect() : null;
+}
+
+function wireDrag(p, partIdx) {
+  var dragging = false, ox = 0, oy = 0;
+
+  p.addEventListener('pointerdown', function (e) {
+    if (placed[partIdx]) return;
+    dragging = true;
+    p.classList.add('dragging');
+    // offset first — see the note in voc-party-decorate.html
+    var r = p.getBoundingClientRect();
+    ox = e.clientX - r.left;
+    oy = e.clientY - r.top;
+    try { p.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  p.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    var s = document.getElementById('stage').getBoundingClientRect();
+    p.style.left = (e.clientX - s.left - ox) + 'px';
+    p.style.top  = (e.clientY - s.top  - oy) + 'px';
+  });
+
+  function end() {
+    if (!dragging) return;
+    dragging = false;
+    p.classList.remove('dragging');
+    trySnap(p, partIdx);
+  }
+  p.addEventListener('pointerup', end);
+  p.addEventListener('pointercancel', end);
+}
+
+function trySnap(p, partIdx) {
+  var want = slotRect(partIdx);
+  if (!want) return;
+  /* Same batching hazard as voc-party-decorate: the piece carries a
+     left/top transition, so a fast drop would be measured mid-flight.
+     Read the piece from its authored style instead. */
+  var stage = document.getElementById('stage').getBoundingClientRect();
+  var px = stage.left + parseFloat(p.style.left) + p.offsetWidth / 2;
+  var py = stage.top + parseFloat(p.style.top) + p.offsetHeight / 2;
+  var dx = px - (want.left + want.width / 2);
+  var dy = py - (want.top + want.height / 2);
+  // generous catch radius — the brief says "within 5 to 10 centimetres"
+  var reach = Math.max(90, PH * 0.55);
+
+  if (Math.hypot(dx, dy) > reach) return;
+
+  placed[partIdx] = true;
+  var stage = document.getElementById('stage').getBoundingClientRect();
+  // the piece is a full-size band; align its band with the target band
+  var tgt = document.getElementById('target').getBoundingClientRect();
+  p.style.left = (tgt.left - stage.left) + 'px';
+  p.style.top  = (tgt.top - stage.top) + 'px';
+  p.classList.add('home');
+
+  var slot = document.querySelector('#target .slot[data-part="' + partIdx + '"]');
+  if (slot) slot.classList.add('filled');
+
+  WALL.sfx.pop();
+  WALL.burstAt(p, null, 10);
+
+  if (PARTS.every(function (_, i) { return placed[i]; })) setTimeout(finish, 450);
+}
+
+function finish() {
+  var id = ROUNDS[cur];
+  var a = ANIMALS.get(id);
+  document.getElementById('target').classList.add('complete');
+  ANIMALS.playSound(id);
+  WALL.burstAt(document.getElementById('target'), null, 26);
+  WALL.celebrate();
+
+  // the brief's completion line: "ശരിയുത്തരം! ഇത് പൂച്ചയാണ്!"
+  setTimeout(function () {
+    WALL.say(WALL.isMl()
+      ? { ml: 'ശരിയുത്തരം! ഇത് ' + a.ml + ' ആണ്!' }
+      : { en: 'Correct! This is a ' + a.en + '!' });
+  }, 1100);
+
+  document.getElementById('wonArt').textContent = a.emoji;
+  document.getElementById('wonMsg').textContent = WALL.isMl()
+    ? 'ശരിയുത്തരം! ഇത് ' + a.ml + ' ആണ്!'
+    : 'Correct! This is a ' + a.en + '!';
+  var last = cur >= ROUNDS.length - 1;
+  document.getElementById('wonNext').textContent = WALL.isMl()
+    ? (last ? 'വീണ്ടും' : 'അടുത്തത്') : (last ? 'Again' : 'Next animal');
+  setTimeout(function () { document.getElementById('won').classList.add('on'); }, 1900);
+}
+
+WALL.bindTouch(document.getElementById('wonNext'), function () {
+  document.getElementById('won').classList.remove('on');
+  cur = (cur + 1) % ROUNDS.length;
+  build();
+});
+
+function buildTabs() {
+  var box = document.getElementById('tabs');
+  box.innerHTML = '';
+  ROUNDS.forEach(function (id, i) {
+    var a = ANIMALS.get(id);
+    var b = document.createElement('button');
+    b.className = 'atab' + (i === cur ? ' on' : '');
+    b.textContent = a.emoji + ' ' + WALL.t({ en: a.en, ml: a.ml });
+    WALL.bindTouch(b, function () { cur = i; build(); });
+    box.appendChild(b);
+  });
+}
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+window.addEventListener('resize', build);
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: build,
+  home: true
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

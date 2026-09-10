@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  CAKE CUTTING & FRIEND SHARING — Pangappara Blueroom, Vocational item #6
+  Tap the cake to cut it, then drag each slice to a waiting friend
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Center Stage: A decorated birthday table holding a multi-tiered cake
+     with glowing candles. Birthday Kid Avatar stands at the centre holding
+     a party cake knife. Friend Avatars stand right beside with open hands."
+    Phase 1: "The child taps the Birthday Cake. The Birthday Kid lowers the
+     knife and cuts a clean slice ... a gentle slicing chime plays ... the
+     slice rests on a small serving plate."
+    Phase 2: "A soft glowing target halo appears around the sliced cake
+     plate and the hands of the friend ... drag the plate across to the
+     Friend Avatar's hands ... the friend reaches out with a cheerful
+     bounce ... holds up the slice happily with a soft chime."
+    "Social Learning Value: after cutting the birthday cake, slices are
+     meant to be shared directly with friends!"
+    "Zero voice narration."
+
+  THREE FRIENDS, NOT ONE
+    The brief says "Friend Avatars (Classmates)" plural and the social
+    lesson is about sharing round a group, so there are three. Each needs
+    its own cut-then-share cycle, which repeats the script the child is
+    learning instead of showing it once.
+
+  ASSETS: none.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Cake Cutting &amp; Sharing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(#fdf4ff 0%, #fae8ff 56%, #e0c3a0 56%, #cfae8b 100%);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;
+  }
+  h1{
+    text-align:center;padding:12px 200px 0 12px;
+    font-size:calc(25px * var(--wall-scale,1));font-weight:800;color:#701a75;
+    text-shadow:0 2px 8px rgba(255,255,255,.7);
+  }
+  h1 .ml{display:block;font-size:calc(17px * var(--wall-scale,1));opacity:.75;font-weight:700}
+  #hint{text-align:center;font-weight:800;color:#86198f;
+        font-size:calc(17px * var(--wall-scale,1));min-height:26px}
+
+  #stage{flex:1;position:relative;transition:transform .25s ease}
+
+  #kid{
+    position:absolute;left:22%;bottom:26%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;
+  }
+  #kid .body{font-size:calc(150px * var(--wall-scale,1));line-height:1}
+  #kid.cut .body{animation:cut .8s ease}
+  @keyframes cut{0%,100%{transform:rotate(0)}40%{transform:rotate(-10deg)}70%{transform:rotate(4deg)}}
+
+  #cake{
+    position:absolute;left:36%;bottom:22%;
+    font-size:calc(130px * var(--wall-scale,1));line-height:1;
+    cursor:pointer;touch-action:manipulation;
+    filter:drop-shadow(0 0 18px rgba(251,191,36,.65));
+    transition:transform .3s;
+  }
+  #cake.tap{transform:scale(.92)}
+  #cake.empty{filter:none;opacity:.5;cursor:default}
+
+  #plate{
+    position:absolute;left:40%;bottom:12%;
+    font-size:calc(76px * var(--wall-scale,1));line-height:1;
+    display:none;cursor:grab;touch-action:none;z-index:30;
+    filter:drop-shadow(0 0 14px rgba(34,197,94,.8));
+  }
+  #plate.on{display:block;animation:halo 1.6s ease-in-out infinite}
+  @keyframes halo{0%,100%{filter:drop-shadow(0 0 10px rgba(34,197,94,.55))}
+                  50%{filter:drop-shadow(0 0 22px rgba(34,197,94,.95))}}
+  #plate.drag{animation:none;transition:none;z-index:60}
+
+  .friend{
+    position:absolute;bottom:24%;display:flex;flex-direction:column;align-items:center;
+    transition:transform .4s;
+  }
+  .friend .body{font-size:calc(126px * var(--wall-scale,1));line-height:1}
+  .friend .got{font-size:calc(46px * var(--wall-scale,1));line-height:1;height:0;
+               opacity:0;transition:opacity .4s}
+  .friend.fed .got{opacity:1;height:auto}
+  .friend.fed .body{animation:hop .8s cubic-bezier(.28,.84,.42,1)}
+  @keyframes hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-34px)}
+                 65%{transform:translateY(0)}85%{transform:translateY(-12px)}}
+  .friend.target{animation:pulseF 1.5s ease-in-out infinite}
+  @keyframes pulseF{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .friend .lbl{font-weight:900;color:#701a75;font-size:calc(14px * var(--wall-scale,1));
+               background:rgba(255,255,255,.8);border-radius:10px;padding:2px 10px}
+
+  #done{position:fixed;inset:0;display:none;z-index:700;
+        background:rgba(255,255,255,.93);align-items:center;justify-content:center;
+        flex-direction:column;gap:18px}
+  #done.on{display:flex}
+  #done .big{font-size:130px}
+  #done .msg{font-size:30px;font-weight:900;color:#86198f;text-align:center;max-width:70vw}
+  #again{padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+         background:linear-gradient(135deg,#f0abfc,#c026d3);color:#fff;
+         font-family:inherit;font-weight:900;font-size:21px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="hint"></div>
+
+<div id="stage">
+  <div id="kid"><div class="body">🧒</div></div>
+  <div id="cake">🎂</div>
+  <div id="plate">🍰</div>
+</div>
+
+<div id="done">
+  <div class="big">🎉</div>
+  <div class="msg" id="doneMsg"></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/birthday-common.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Cake Cutting & Sharing', ml: 'കേക്ക് മുറിച്ച് പങ്കിടാം' };
+var FRIENDS = [
+  { id:'f1', emoji:'👧', left:'58%' },
+  { id:'f2', emoji:'👦', left:'73%' },
+  { id:'f3', emoji:'🧑', left:'88%' }
+];
+
+var fed = {}, sliceReady = false, busy = false;
+
+function build() {
+  fed = {}; sliceReady = false; busy = false;
+  var stage = document.getElementById('stage');
+  [].forEach.call(stage.querySelectorAll('.friend'), function (f) { f.remove(); });
+
+  FRIENDS.forEach(function (f) {
+    var el = document.createElement('div');
+    el.className = 'friend';
+    el.id = f.id;
+    el.style.left = f.left;
+    el.innerHTML = '<div class="got">🍰</div><div class="body">' + f.emoji + '</div>' +
+                   '<div class="lbl">' + (WALL.isMl() ? 'കൂട്ടുകാർ' : 'Friend') + '</div>';
+    stage.appendChild(el);
+  });
+
+  document.getElementById('cake').className = '';
+  document.getElementById('plate').className = '';
+  document.getElementById('done').classList.remove('on');
+  paintHint();
+}
+
+/* ── Phase 1: tap the cake, the kid cuts a slice ─────────────────── */
+function cutCake() {
+  if (busy || sliceReady) return;
+  if (Object.keys(fed).length >= FRIENDS.length) return;
+  busy = true;
+
+  var cake = document.getElementById('cake');
+  cake.classList.add('tap');
+  setTimeout(function () { cake.classList.remove('tap'); }, 300);
+
+  var kid = document.getElementById('kid');
+  kid.classList.add('cut');
+  BDAY.sfx.slice();
+
+  setTimeout(function () {
+    kid.classList.remove('cut');
+    var plate = document.getElementById('plate');
+    plate.classList.add('on');
+    sliceReady = true;
+    busy = false;
+    // the next un-fed friend glows as the drop target
+    var next = FRIENDS.filter(function (f) { return !fed[f.id]; })[0];
+    if (next) document.getElementById(next.id).classList.add('target');
+    paintHint();
+  }, 800);
+}
+
+/* ── Phase 2: drag the plate to a friend's hands ─────────────────── */
+(function wirePlate() {
+  var plate = document.getElementById('plate');
+  var dragging = false, ox = 0, oy = 0;
+
+  plate.addEventListener('pointerdown', function (e) {
+    if (!sliceReady) return;
+    dragging = true;
+    var r = plate.getBoundingClientRect();
+    ox = e.clientX - r.left; oy = e.clientY - r.top;
+    plate.classList.add('drag');
+    plate.style.position = 'fixed';
+    try { plate.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  plate.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    plate.style.left = (e.clientX - ox) + 'px';
+    plate.style.top  = (e.clientY - oy) + 'px';
+    plate.style.bottom = 'auto';
+  });
+
+  function end(e) {
+    if (!dragging) return;
+    dragging = false;
+    plate.classList.remove('drag');
+
+    // measure from the POINTER, which no transition can lag behind
+    var hit = null;
+    FRIENDS.forEach(function (f) {
+      if (fed[f.id]) return;
+      var r = document.getElementById(f.id).getBoundingClientRect();
+      if (e.clientX > r.left - 40 && e.clientX < r.right + 40 &&
+          e.clientY > r.top - 40 && e.clientY < r.bottom + 40) hit = f;
+    });
+
+    resetPlatePos();
+    if (hit) give(hit);
+  }
+  plate.addEventListener('pointerup', end);
+  plate.addEventListener('pointercancel', function () {
+    dragging = false; plate.classList.remove('drag'); resetPlatePos();
+  });
+})();
+
+function resetPlatePos() {
+  var plate = document.getElementById('plate');
+  plate.style.position = ''; plate.style.left = '';
+  plate.style.top = ''; plate.style.bottom = '';
+}
+
+function give(f) {
+  fed[f.id] = true;
+  sliceReady = false;
+  document.getElementById('plate').classList.remove('on');
+  var el = document.getElementById(f.id);
+  el.classList.remove('target');
+  el.classList.add('fed');
+  BDAY.sfx.sweetChime();
+  WALL.burstAt(el, ['#f0abfc','#fde68a','#a7f3d0','#fff'], 16);
+
+  FRIENDS.forEach(function (x) {
+    document.getElementById(x.id).classList.remove('target');
+  });
+
+  if (Object.keys(fed).length >= FRIENDS.length) {
+    document.getElementById('cake').classList.add('empty');
+    setTimeout(finish, 700);
+  }
+  paintHint();
+}
+
+function finish() {
+  BDAY.finale(3);
+  document.getElementById('doneMsg').textContent = WALL.isMl()
+    ? 'എല്ലാവർക്കും കേക്ക് കിട്ടി! പങ്കിടുന്നത് നല്ലതാണ്.'
+    : 'Everyone got cake! Sharing is kind.';
+  document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Again';
+  setTimeout(function () { document.getElementById('done').classList.add('on'); }, 1500);
+}
+
+function paintHint() {
+  var n = Object.keys(fed).length;
+  var h = document.getElementById('hint');
+  if (n >= FRIENDS.length) { h.textContent = ''; return; }
+  h.textContent = sliceReady
+    ? (WALL.isMl() ? 'കഷണം കൂട്ടുകാരന് നൽകൂ' : 'Drag the slice to a friend')
+    : (WALL.isMl() ? 'കേക്ക് തൊട്ട് മുറിക്കൂ' : 'Tap the cake to cut a slice');
+}
+
+WALL.bindTouch(document.getElementById('cake'), cutCake);
+WALL.bindTouch(document.getElementById('again'), build);
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: build,
+  home: true
+});
+
+paint();
+BDAY.controls();
+</script>
+</body>
+</html>

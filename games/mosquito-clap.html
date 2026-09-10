@@ -204,7 +204,7 @@
 (function(){
 
 const TOTAL_TIME   = 60;
-const MOSQ_COUNT   = 3;
+const MOSQ_COUNT   = 8;   // was 3 — Pangappara asked for more mosquitoes
 const RESPAWN_MS   = 1600;
 const MAX_SPD      = 5.8;
 const MIN_SPD      = 2.8;
@@ -304,7 +304,7 @@ function tickMosq(m, dt){
       m.y=MARGIN+Math.random()*(H-MARGIN*2);
       const a=Math.random()*Math.PI*2, s=MIN_SPD+Math.random()*2;
       m.vx=Math.cos(a)*s; m.vy=Math.sin(a)*s;
-      setBuzz(m.buzz, 0.022);
+      setBuzz(m.buzz, 0.055);  // was 0.022 — barely audible in a real room
     }
     return;
   }

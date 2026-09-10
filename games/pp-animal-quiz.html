@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  ANIMAL IDENTIFICATION & MATCHING — Pangappara Blueroom, Pre-Primary #2
+  Two boards: "identify the right animal" and "match the pairs"
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    Identify: "On one side of the screen, the Malayalam word is displayed
+    clearly (along with an audio button). On the other side, 3 image
+    options are shown. The child taps the correct image."
+      പൂച്ച  -> Cat / Frog / Duck          (answer: Cat)
+      നായ    -> Monkey / Dog / Spider      (answer: Dog)
+      പശു    -> Turtle / Cow / Hen         (answer: Cow)
+      കോഴി   -> Hen / Pig / Cat            (answer: Hen)
+      ആട്    -> Goat / Elephant / Rabbit   (answer: Goat)
+
+    Match: "Tapping Cat plays Meow + voice says പൂച്ച. Connecting Cat to
+    Cat creates a green glowing line! Voice says: ശരിയാണ്! പൂച്ചയും
+    പൂച്ചയും!"
+
+  WHY BOTH LIVE IN ONE FILE
+    The brief numbers them as a single item ("2. Animal identification.
+    And matching"), so they are one menu entry with a tab strip, matching
+    how the Secondary boards were grouped.
+
+  THE MALAYALAM "-ഉം" SUFFIX IS BUILT GRAMMATICALLY
+    പൂച്ച -> പൂച്ചയും (vowel ending takes -യും), പാമ്പ് -> പാമ്പും
+    (chandrakkala is dropped). Same helper as the flower matching game.
+    Simplified rule; needs a teacher's check.
+
+  ASSETS: all animal photos emoji-backed. Distractors frog/spider/turtle/
+  pig/duck are in ASSET-LIST-PREPRIMARY.md §1c.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Animal Quiz &amp; Matching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#fffdf6,#f2f9fd 60%,#e9f3fb);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:12px 60px 0;
+    font-size:calc(27px * var(--wall-scale,1));font-weight:800;color:#1e3a8a;
+  }
+  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #round{text-align:center;font-weight:800;color:#64748b;
+         font-size:calc(15px * var(--wall-scale,1))}
+  #stage{flex:1;position:relative;display:flex;align-items:center;
+         justify-content:center;gap:3vw;padding:10px 3vw;transition:transform .25s ease}
+
+  /* ── identify board ───────────────────────────────────────────── */
+  #word{
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+    padding:calc(26px * var(--wall-scale,1)) calc(34px * var(--wall-scale,1));
+    border-radius:30px;background:linear-gradient(160deg,#fef9c3,#fde68a);
+    border:6px solid #f59e0b;box-shadow:0 12px 28px rgba(180,83,9,.2);
+    flex:0 0 auto;
+  }
+  #word .w{font-weight:900;font-size:calc(52px * var(--wall-scale,1));color:#7c2d12;
+           line-height:1.15;text-align:center}
+  #word .w small{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.6}
+  #speak{
+    padding:12px 26px;border-radius:18px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#4a2c00;
+    font-family:inherit;font-weight:900;font-size:calc(18px * var(--wall-scale,1));
+  }
+  #opts{display:flex;gap:calc(20px * var(--wall-scale,1));flex-wrap:wrap;
+        justify-content:center}
+
+  .ac{
+    width:calc(212px * var(--wall-scale,1));
+    padding:calc(16px * var(--wall-scale,1));
+    border-radius:26px;background:#fff;border:6px solid rgba(150,180,210,.35);
+    box-shadow:0 10px 24px rgba(20,60,95,.14);cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    touch-action:manipulation;transition:border-color .25s,box-shadow .25s,transform .18s;
+  }
+  .ac:active{transform:scale(.97)}
+  .ac .art{
+    width:calc(140px * var(--wall-scale,1));height:calc(140px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(112px * var(--wall-scale,1));line-height:1;
+  }
+  .ac .art img{max-width:100%;max-height:100%;object-fit:contain;border-radius:14px}
+  .ac .nm{font-weight:900;font-size:calc(18px * var(--wall-scale,1));color:#123b5e}
+  .ac.right{border-color:#22c55e;
+    box-shadow:0 0 0 6px rgba(34,197,94,.22),0 0 30px rgba(34,197,94,.6)}
+  .ac.soft{border-color:#fbbf24;box-shadow:0 0 0 5px rgba(251,191,36,.22);
+           animation:wig .5s ease}
+  @keyframes wig{0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-9px)}40%{transform:translateX(9px)}
+    60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .ac.sel{border-color:#3b82f6;box-shadow:0 0 0 6px rgba(59,130,246,.2)}
+  .ac.done{opacity:.96;cursor:default}
+
+  /* ── match board ──────────────────────────────────────────────── */
+  #lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+  .mcol{display:flex;flex-direction:column;gap:calc(14px * var(--wall-scale,1));z-index:10}
+  .mrow{
+    display:flex;align-items:center;gap:12px;
+    padding:calc(10px * var(--wall-scale,1)) calc(18px * var(--wall-scale,1));
+    border-radius:22px;background:#fff;border:5px solid rgba(150,180,210,.35);
+    box-shadow:0 8px 18px rgba(20,60,95,.12);cursor:pointer;
+    min-width:calc(230px * var(--wall-scale,1));touch-action:manipulation;
+    transition:border-color .25s,box-shadow .25s,transform .18s;
+  }
+  .mrow .art{width:calc(78px * var(--wall-scale,1));height:calc(78px * var(--wall-scale,1));
+             display:flex;align-items:center;justify-content:center;
+             font-size:calc(62px * var(--wall-scale,1));line-height:1;flex:0 0 auto}
+  .mrow .art img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px}
+  .mrow .nm{font-weight:900;font-size:calc(20px * var(--wall-scale,1));color:#123b5e}
+  .mrow.sel{border-color:#3b82f6;box-shadow:0 0 0 6px rgba(59,130,246,.2)}
+  .mrow.ok{border-color:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.2)}
+  .mrow.bounce{animation:bnc .55s cubic-bezier(.28,.84,.42,1)}
+  @keyframes bnc{0%{transform:translateY(0)}30%{transform:translateY(-14px)}
+    60%{transform:translateY(0)}80%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+  .mrow.wig{animation:wig .5s ease}
+
+  #done{position:fixed;inset:0;display:none;z-index:700;
+        background:rgba(255,255,255,.93);align-items:center;justify-content:center;
+        flex-direction:column;gap:20px}
+  #done.on{display:flex}
+  #done .big{font-size:120px}
+  #done .msg{font-size:32px;font-weight:900;color:#15803d;text-align:center}
+  #again{padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+         background:linear-gradient(135deg,#93c5fd,#3b82f6);color:#fff;
+         font-family:inherit;font-weight:900;font-size:22px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="tabs"></div>
+<div id="round"></div>
+<div id="stage"></div>
+
+<div id="done">
+  <div class="big">🎉</div>
+  <div class="msg" id="doneMsg"></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/animal-data.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Animal Quiz & Matching', ml: 'മൃഗങ്ങളെ തിരിച്ചറിയാം' };
+
+/* the brief's five identify rounds, verbatim */
+var QUIZ = [
+  { answer: 'cat',  opts: ['cat', 'frog', 'duck'] },
+  { answer: 'dog',  opts: ['monkey', 'dog', 'spider'] },
+  { answer: 'cow',  opts: ['turtle', 'cow', 'hen'] },
+  { answer: 'hen',  opts: ['hen', 'pig', 'cat'] },
+  { answer: 'goat', opts: ['goat', 'elephant', 'rabbit'] }
+];
+
+/* the brief's matching round */
+var MATCH_SETS = [
+  ['cat', 'cow', 'dog'],
+  ['hen', 'goat', 'duck']
+];
+
+/* ── Malayalam "-ഉം" suffix, same rule as the flower matching game ── */
+function withUm(name) {
+  if (!name) return '';
+  if (name.charAt(name.length - 1) === '്') return name.slice(0, -1) + 'ും';
+  return name + 'യും';
+}
+
+function shuffled(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function artInto(box, a) {
+  var img = document.createElement('img');
+  img.src = a.img; img.alt = '';
+  img.addEventListener('error', function () { box.textContent = a.emoji; });
+  box.appendChild(img);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BOARD 1 — IDENTIFY
+   ═══════════════════════════════════════════════════════════════ */
+var qIdx = 0, qLock = false;
+
+function buildQuiz() {
+  qLock = false;
+  var stage = document.getElementById('stage');
+  stage.innerHTML = '';
+
+  var q = QUIZ[qIdx];
+  var target = ANIMALS.get(q.answer);
+
+  var w = document.createElement('div');
+  w.id = 'word';
+  var b = WALL.tBoth({ en: target.en, ml: target.ml });
+  w.innerHTML = '<div class="w">' + b.main +
+                (b.alt && b.alt !== b.main ? '<small>' + b.alt + '</small>' : '') + '</div>';
+  var sp = document.createElement('button');
+  sp.id = 'speak';
+  sp.textContent = WALL.isMl() ? '🔊 കേൾക്കൂ' : '🔊 Listen';
+  WALL.bindTouch(sp, function () { WALL.say({ ml: target.ml, en: target.en }); });
+  w.appendChild(sp);
+  stage.appendChild(w);
+
+  var opts = document.createElement('div');
+  opts.id = 'opts';
+  shuffled(q.opts).forEach(function (id) {
+    var a = ANIMALS.get(id);
+    var el = document.createElement('div');
+    el.className = 'ac';
+    var art = document.createElement('div');
+    art.className = 'art';
+    artInto(art, a);
+    var nm = document.createElement('div');
+    nm.className = 'nm';
+    nm.textContent = WALL.t({ en: a.en, ml: a.ml });
+    el.appendChild(art); el.appendChild(nm);
+    WALL.bindTouch(el, function () { answerQuiz(el, id, q.answer); });
+    opts.appendChild(el);
+  });
+  stage.appendChild(opts);
+
+  document.getElementById('round').textContent =
+    (WALL.isMl() ? 'റൗണ്ട് ' : 'Round ') + (qIdx + 1) + ' / ' + QUIZ.length;
+
+  // say the target word once so the child hears what to look for
+  setTimeout(function () { WALL.say({ ml: target.ml, en: target.en }); }, 500);
+}
+
+function answerQuiz(el, id, answer) {
+  if (qLock) return;
+  if (id !== answer) {
+    el.classList.remove('soft'); void el.offsetWidth; el.classList.add('soft');
+    WALL.sfx.nudge();
+    setTimeout(function () { el.classList.remove('soft'); }, 900);
+    return;
+  }
+  qLock = true;
+  el.classList.add('right');
+  WALL.burstAt(el, null, 18);
+  ANIMALS.playSound(id);
+  ANIMALS.speakAfterSound(id, 1000);
+
+  setTimeout(function () {
+    qIdx++;
+    if (qIdx >= QUIZ.length) finish('quiz'); else buildQuiz();
+  }, 2000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BOARD 2 — MATCH
+   ═══════════════════════════════════════════════════════════════ */
+var mIdx = 0, mSel = null, mDone = {};
+
+function buildMatch() {
+  mSel = null; mDone = {};
+  var stage = document.getElementById('stage');
+  stage.innerHTML = '';
+
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.id = 'lines';
+  stage.appendChild(svg);
+
+  var ids = MATCH_SETS[mIdx];
+  var A = document.createElement('div'); A.className = 'mcol';
+  var B = document.createElement('div'); B.className = 'mcol';
+
+  ids.forEach(function (id) { A.appendChild(mRow(id, 'A')); });
+  shuffled(ids).forEach(function (id) { B.appendChild(mRow(id, 'B')); });
+
+  stage.appendChild(A); stage.appendChild(B);
+
+  document.getElementById('round').textContent =
+    (WALL.isMl() ? 'റൗണ്ട് ' : 'Round ') + (mIdx + 1) + ' / ' + MATCH_SETS.length;
+}
+
+function mRow(id, side) {
+  var a = ANIMALS.get(id);
+  var el = document.createElement('div');
+  el.className = 'mrow';
+  el.setAttribute('data-id', id);
+  var art = document.createElement('div');
+  art.className = 'art';
+  artInto(art, a);
+  var nm = document.createElement('div');
+  nm.className = 'nm';
+  nm.textContent = WALL.t({ en: a.en, ml: a.ml });
+  el.appendChild(art); el.appendChild(nm);
+  WALL.bindTouch(el, function () { mTap(el, id, side); });
+  return el;
+}
+
+function centerOf(el) {
+  var r = el.getBoundingClientRect();
+  var s = document.getElementById('stage').getBoundingClientRect();
+  return { x: r.left + r.width / 2 - s.left, y: r.top + r.height / 2 - s.top };
+}
+
+function drawLine(a, b, colour, temp) {
+  var p1 = centerOf(a), p2 = centerOf(b);
+  var ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  ln.setAttribute('x1', p1.x); ln.setAttribute('y1', p1.y);
+  ln.setAttribute('x2', p2.x); ln.setAttribute('y2', p2.y);
+  ln.setAttribute('stroke', colour);
+  ln.setAttribute('stroke-width', 9);
+  ln.setAttribute('stroke-linecap', 'round');
+  if (colour === '#22c55e') ln.setAttribute('filter', 'drop-shadow(0 0 8px rgba(34,197,94,.85))');
+  document.getElementById('lines').appendChild(ln);
+  if (temp) setTimeout(function () {
+    ln.style.transition = 'opacity .5s'; ln.setAttribute('opacity', 0);
+    setTimeout(function () { ln.remove(); }, 520);
+  }, 380);
+}
+
+function mTap(el, id, side) {
+  if (mDone[id]) return;
+
+  if (side === 'A') {
+    if (mSel) mSel.el.classList.remove('sel');
+    mSel = { el: el, id: id };
+    el.classList.add('sel');
+    ANIMALS.playSound(id);              // brief: tapping Cat plays Meow
+    ANIMALS.speakAfterSound(id);        // ... then says പൂച്ച
+    return;
+  }
+
+  if (!mSel) { ANIMALS.playSound(id); ANIMALS.speakAfterSound(id); return; }
+
+  if (mSel.id === id) {
+    mDone[id] = true;
+    mSel.el.classList.remove('sel');
+    mSel.el.classList.add('ok', 'bounce');
+    el.classList.add('ok', 'bounce');
+    drawLine(mSel.el, el, '#22c55e', false);
+    WALL.burstAt(el, null, 14);
+    WALL.sfx.correct();
+
+    var nm = withUm(ANIMALS.get(id).ml);
+    WALL.say(WALL.isMl()
+      ? { ml: 'ശരിയാണ്! ' + nm + ' ' + nm + '!' }
+      : { en: 'Correct! ' + ANIMALS.get(id).en + ' and ' + ANIMALS.get(id).en + '!' });
+
+    mSel = null;
+    if (Object.keys(mDone).length === MATCH_SETS[mIdx].length) {
+      setTimeout(function () {
+        mIdx++;
+        if (mIdx >= MATCH_SETS.length) finish('match');
+        else { WALL.celebrate(); setTimeout(buildMatch, 1200); }
+      }, 900);
+    }
+  } else {
+    drawLine(mSel.el, el, '#fbbf24', true);
+    el.classList.remove('wig'); void el.offsetWidth; el.classList.add('wig');
+    WALL.sfx.nudge();
+    mSel.el.classList.remove('sel');
+    mSel = null;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BOARDS / BOOT
+   ═══════════════════════════════════════════════════════════════ */
+var BOARDS = [
+  { key: 'identify', title: { en: 'Identify', ml: 'തിരിച്ചറിയുക' } },
+  { key: 'match',    title: { en: 'Match',    ml: 'ജോഡിക്കുക' } }
+];
+var active = 'identify';
+
+function show(b) {
+  active = b.key;
+  document.getElementById('done').classList.remove('on');
+  if (active === 'identify') { qIdx = 0; buildQuiz(); }
+  else { mIdx = 0; buildMatch(); }
+}
+
+function finish(which) {
+  WALL.celebrate();
+  var d = document.getElementById('done');
+  document.getElementById('doneMsg').textContent =
+    WALL.isMl() ? 'മിടുക്കൻ! എല്ലാം ശരിയായി!' : 'Well done! All correct!';
+  document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Play again';
+  setTimeout(function () { d.classList.add('on'); }, 1200);
+}
+
+WALL.bindTouch(document.getElementById('again'), function () {
+  show({ key: active });
+});
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  if (active === 'identify') buildQuiz(); else buildMatch();
+}
+WALL.onLang(paint);
+WALL.onSize(function () { if (active === 'identify') buildQuiz(); else buildMatch(); });
+
+DECK.tabs('#tabs', BOARDS, show).draw('identify');
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: function () { show({ key: active }); },
+  home: true
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

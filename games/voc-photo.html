@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  BIRTHDAY PARTY PHOTO CAPTURE — Pangappara Blueroom, Vocational item #7
+  Tap the camera · white flash · shutter click · a Polaroid drops to the tray
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Center Stage: Fully decorated birthday room complete with floating
+     balloons, party table, lit cake, and happy student avatars standing
+     together in a group pose."
+    "Camera Interface: An extra-large, bright, realistic Camera Icon ...
+     glowing softly to invite a touch. (preferably a button inside the
+     camera where the students can touch)"
+    "The screen instantly flashes bright white for half a second."
+    "A frozen photo frame snapshot overlay appears briefly."
+    "An authentic, crisp Camera Shutter Sound Effect (Click-Snap!) ...
+     The background instrumental Happy Birthday music ducks momentarily."
+    "The snapshot shrinks down into a colorful Polaroid photo card that
+     bounces down to the corner photo album tray."
+    "Colorful confetti bursts ... 3-second cheerful crowd applause!"
+    "Zero voice narration."
+
+  THE SHUTTER IS A BUTTON INSIDE THE CAMERA
+    The brief's parenthetical asks for exactly that rather than a bare
+    icon, so the camera is drawn as a body with a real red shutter button
+    on top — that is the touch target, and it is large.
+
+  ASSETS: none. Everything is CSS and emoji.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Birthday Photo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(#f7e8fa 0%, #f1ddf6 56%, #d9bfa3 56%, #c9a888 100%);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:12px 200px 0 12px;
+    font-size:calc(25px * var(--wall-scale,1));font-weight:800;color:#831843;
+    text-shadow:0 2px 8px rgba(255,255,255,.7);
+  }
+  h1 .ml{display:block;font-size:calc(17px * var(--wall-scale,1));opacity:.75;font-weight:700}
+
+  #room{flex:1;position:relative;overflow:hidden;transition:transform .25s ease}
+
+  /* the decorated room, drawn from emoji */
+  .deco{position:absolute;line-height:1;pointer-events:none}
+  .bal{animation:float 4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+  #group{
+    position:absolute;left:50%;bottom:12%;transform:translateX(-50%);
+    display:flex;align-items:flex-end;gap:calc(6px * var(--wall-scale,1));
+    font-size:calc(120px * var(--wall-scale,1));line-height:1;
+  }
+  #group span{animation:sway 3s ease-in-out infinite}
+  #group span:nth-child(2){animation-delay:.4s}
+  #group span:nth-child(3){animation-delay:.8s}
+  #group span:nth-child(4){animation-delay:1.2s}
+  @keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+  #tablewrap{
+    position:absolute;left:50%;bottom:4%;transform:translateX(-50%);
+    font-size:calc(96px * var(--wall-scale,1));line-height:1;
+  }
+
+  /* ── the camera ───────────────────────────────────────────────── */
+  #camera{
+    position:absolute;right:4%;bottom:8%;
+    width:calc(210px * var(--wall-scale,1));
+    padding:calc(16px * var(--wall-scale,1));
+    border-radius:24px;background:linear-gradient(160deg,#475569,#1e293b);
+    box-shadow:0 14px 30px rgba(0,0,0,.4);
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    animation:invite 2.2s ease-in-out infinite;
+  }
+  @keyframes invite{0%,100%{box-shadow:0 14px 30px rgba(0,0,0,.4)}
+    50%{box-shadow:0 14px 30px rgba(0,0,0,.4),0 0 34px rgba(251,191,36,.75)}}
+  #lens{
+    width:calc(96px * var(--wall-scale,1));height:calc(96px * var(--wall-scale,1));
+    border-radius:50%;background:radial-gradient(circle at 35% 30%,#93c5fd,#1e3a8a 60%,#0f172a);
+    border:6px solid #334155;
+  }
+  #shutter{
+    width:calc(120px * var(--wall-scale,1));height:calc(62px * var(--wall-scale,1));
+    border-radius:18px;border:none;cursor:pointer;touch-action:manipulation;
+    background:linear-gradient(160deg,#f87171,#dc2626);color:#fff;
+    font-family:inherit;font-weight:900;font-size:calc(17px * var(--wall-scale,1));
+    box-shadow:0 6px 0 #991b1b;
+  }
+  #shutter:active{transform:translateY(4px);box-shadow:0 2px 0 #991b1b}
+
+  /* ── flash + snapshot ─────────────────────────────────────────── */
+  #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:800}
+  #flash.go{animation:fl .5s ease-out}
+  @keyframes fl{0%{opacity:1}100%{opacity:0}}
+
+  #snap{
+    position:fixed;left:50%;top:46%;transform:translate(-50%,-50%) scale(1);
+    width:min(62vw,640px);height:min(44vh,420px);
+    background:#fff;border:14px solid #fff;border-radius:6px;
+    box-shadow:0 20px 50px rgba(0,0,0,.45);
+    display:none;align-items:center;justify-content:center;flex-direction:column;
+    z-index:790;overflow:hidden;
+  }
+  #snap.on{display:flex}
+  #snap.fly{animation:fly 1.5s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes fly{
+    0%{transform:translate(-50%,-50%) scale(1) rotate(0)}
+    100%{transform:translate(calc(-50vw + 130px), calc(38vh)) scale(.26) rotate(-9deg)}
+  }
+  #snapArt{font-size:150px;line-height:1}
+  #snapCap{font-family:'Baloo 2',cursive;font-weight:800;color:#334155;font-size:20px;
+           padding-top:8px}
+
+  #tray{
+    position:absolute;left:2%;bottom:4%;
+    display:flex;gap:8px;flex-wrap:wrap;max-width:26%;
+  }
+  .polaroid{
+    width:calc(78px * var(--wall-scale,1));
+    background:#fff;border:5px solid #fff;border-radius:4px;
+    box-shadow:0 6px 14px rgba(0,0,0,.3);
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(40px * var(--wall-scale,1));
+    padding:calc(6px * var(--wall-scale,1));
+    animation:drop .5s cubic-bezier(.2,1.4,.4,1);
+    transform:rotate(var(--r));
+  }
+  @keyframes drop{0%{transform:scale(1.6) rotate(var(--r));opacity:0}
+                  100%{transform:scale(1) rotate(var(--r));opacity:1}}
+  #trayLbl{
+    position:absolute;left:2%;bottom:calc(4% + 96px);
+    font-weight:900;color:#831843;font-size:calc(15px * var(--wall-scale,1));
+  }
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+
+<div id="room">
+  <div id="group"><span>🧒</span><span>👧</span><span>🧑</span><span>👦</span></div>
+  <div id="tablewrap">🎂</div>
+  <div id="camera">
+    <div id="lens"></div>
+    <button id="shutter"></button>
+  </div>
+  <div id="trayLbl"></div>
+  <div id="tray"></div>
+</div>
+
+<div id="flash"></div>
+<div id="snap"><div id="snapArt">📸</div><div id="snapCap"></div></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/birthday-common.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Birthday Photo', ml: 'ജന്മദിന ഫോട്ടോ' };
+var POSES = ['🧒👧🧑👦', '🥳🎉🧒👧', '👨‍👩‍👧‍👦', '🧒🎈👧🎈'];
+var shots = 0, busy = false;
+
+function decorate() {
+  var r = document.getElementById('room');
+  [].forEach.call(r.querySelectorAll('.deco'), function (d) { d.remove(); });
+  var s = WALL.scale();
+  var cols = ['🎈', '🎀', '🎊', '🎉'];
+  for (var i = 0; i < 9; i++) {
+    var d = document.createElement('div');
+    d.className = 'deco bal';
+    d.textContent = cols[i % cols.length];
+    d.style.fontSize = (52 * s) + 'px';
+    d.style.left = (4 + (i * 10.5)) + '%';
+    d.style.top  = (4 + (i % 3) * 9) + '%';
+    d.style.animationDelay = (i * 0.35) + 's';
+    r.appendChild(d);
+  }
+}
+
+function snapPhoto() {
+  if (busy) return;
+  busy = true;
+
+  BDAY.sfx.shutter();                       // brief: shutter fires immediately
+
+  var f = document.getElementById('flash');
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+
+  var snap = document.getElementById('snap');
+  var art = document.getElementById('snapArt');
+  art.textContent = POSES[shots % POSES.length];
+  document.getElementById('snapCap').textContent =
+    WALL.isMl() ? 'ജന്മദിനാശംസകൾ!' : 'Happy Birthday!';
+  snap.classList.remove('fly');
+  snap.classList.add('on');
+
+  // the frozen frame holds, then flies down to the album tray
+  setTimeout(function () { snap.classList.add('fly'); }, 900);
+
+  setTimeout(function () {
+    snap.classList.remove('on', 'fly');
+    addPolaroid(art.textContent);
+    shots++;
+    WALL.burstAt(document.getElementById('tray'), null, 22);
+    BDAY.sfx.cheer(3);
+    BDAY.swell(2500);
+    paintTray();
+    busy = false;
+  }, 2400);
+}
+
+function addPolaroid(face) {
+  var p = document.createElement('div');
+  p.className = 'polaroid';
+  p.style.setProperty('--r', ((Math.random() - .5) * 16).toFixed(1) + 'deg');
+  p.textContent = face;
+  document.getElementById('tray').appendChild(p);
+}
+
+function paintTray() {
+  document.getElementById('trayLbl').textContent = shots
+    ? (WALL.isMl() ? 'ആൽബം: ' : 'Album: ') + shots
+    : '';
+}
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  document.getElementById('shutter').textContent =
+    WALL.isMl() ? '📷 ഫോട്ടോ' : '📷 Snap!';
+  decorate();
+  paintTray();
+}
+
+WALL.bindTouch(document.getElementById('shutter'), snapPhoto);
+WALL.onLang(paint);
+WALL.onSize(decorate);
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#room',
+  reset: function () {
+    shots = 0;
+    document.getElementById('tray').innerHTML = '';
+    paintTray();
+  },
+  home: true
+});
+
+paint();
+BDAY.controls();
+</script>
+</body>
+</html>

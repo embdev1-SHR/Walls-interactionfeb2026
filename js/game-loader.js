@@ -86,6 +86,19 @@ const CATEGORIES = {
             { name: 'Daily Living', ml: '🚦 ദൈനംദിന ജീവിതം', game: 'sec-daily-living' }
         ]
     },
+    'vocational': {
+        title: 'Vocational',
+        titleMl: 'തൊഴിൽപരിചയം',
+        options: [
+            { name: 'Kerala Instruments', ml: '🥁 വാദ്യോപകരണങ്ങൾ', game: 'voc-instruments' },
+            { name: 'Party Decoration',   ml: '🎈 ജന്മദിന അലങ്കാരം', game: 'voc-party-decorate' },
+            { name: 'Card Handover',      ml: '💌 കാർഡ് നൽകാം', game: 'voc-card-handover' },
+            { name: 'Cap Matching',       ml: '🥳 തൊപ്പി കണ്ടെത്താം', game: 'voc-cap-match' },
+            { name: 'Cake Sharing',       ml: '🍰 കേക്ക് പങ്കിടാം', game: 'voc-cake-share' },
+            { name: 'Birthday Photo',     ml: '📷 ജന്മദിന ഫോട്ടോ', game: 'voc-photo' },
+            { name: 'DIY Card',           ml: '✂️ കാർഡ് ഉണ്ടാക്കാം', game: 'voc-card-craft' }
+        ]
+    },
     'pre-primary': {
         title: 'Pre-Primary',
         options: [
@@ -99,7 +112,16 @@ const CATEGORIES = {
             { name: '🔢 Pattern Finder',     game: 'pattern-finder'  },
             { name: '🎨 Colour Match',       game: 'colour-match'    },
             { name: '🍎 Fruits vs Vegetables', game: 'fruits-vegetables' },
-            { name: '🚗 Vehicles',           game: 'vehicles'        }
+            { name: '🚗 Vehicles',           game: 'vehicles'        },
+            { name: 'Domestic & Wild Animals', ml: '🐄 നാട്ടു & കാട്ടു മൃഗങ്ങൾ', game: 'pp-animals' },
+            { name: 'Animal Quiz & Match', ml: '🎯 മൃഗങ്ങളെ തിരിച്ചറിയാം', game: 'pp-animal-quiz' },
+            { name: 'Odd One Out', ml: '🔍 വ്യത്യസ്തമായത്', game: 'pp-odd-one-out' },
+            { name: 'Types of Hen', ml: '🐓 കോഴിയുടെ തരങ്ങൾ', game: 'pp-hen-types' },
+            { name: 'Animals & Homes', ml: '🏠 മൃഗങ്ങളുടെ വീടുകൾ', game: 'pp-animal-homes' },
+            { name: 'Young Ones', ml: '🐤 മൃഗക്കുഞ്ഞുങ്ങൾ', game: 'pp-animal-young' },
+            { name: 'Animal Puzzle', ml: '🧩 മൃഗത്തെ ഉണ്ടാക്കാം', game: 'pp-animal-puzzle' },
+            { name: 'Animal Sorting', ml: '📦 തരംതിരിക്കാം', game: 'pp-animal-sort' },
+            { name: 'Animal Movement Path', ml: '✨ സഞ്ചാരപഥം', game: 'pp-animal-path' }
         ]
     },
 
@@ -214,7 +236,8 @@ function showSubmenu(categoryName) {
     // All level modules use the compact 3-up grid; Secondary has 9
     // entries and would otherwise render as one very tall column.
     if (categoryName === 'pre-primary' || categoryName === 'primary' ||
-        categoryName === 'secondary') box.classList.add('pp-grid');
+        categoryName === 'secondary' ||
+        categoryName === 'vocational') box.classList.add('pp-grid');
 
     // \u2500\u2500 Back button \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.parent) {
@@ -527,6 +550,54 @@ function loadGame(gameName) {
                 break;
             case 'sec-daily-living':
                 window.location.href = 'games/sec-daily-living.html';
+                break;
+            case 'pp-animals':
+                window.location.href = 'games/pp-animals.html';
+                break;
+            case 'pp-animal-quiz':
+                window.location.href = 'games/pp-animal-quiz.html';
+                break;
+            case 'pp-odd-one-out':
+                window.location.href = 'games/pp-odd-one-out.html';
+                break;
+            case 'pp-hen-types':
+                window.location.href = 'games/pp-hen-types.html';
+                break;
+            case 'pp-animal-homes':
+                window.location.href = 'games/pp-animal-homes.html';
+                break;
+            case 'pp-animal-young':
+                window.location.href = 'games/pp-animal-young.html';
+                break;
+            case 'pp-animal-puzzle':
+                window.location.href = 'games/pp-animal-puzzle.html';
+                break;
+            case 'pp-animal-sort':
+                window.location.href = 'games/pp-animal-sort.html';
+                break;
+            case 'pp-animal-path':
+                window.location.href = 'games/pp-animal-path.html';
+                break;
+            case 'voc-instruments':
+                window.location.href = 'games/voc-instruments.html';
+                break;
+            case 'voc-party-decorate':
+                window.location.href = 'games/voc-party-decorate.html';
+                break;
+            case 'voc-card-handover':
+                window.location.href = 'games/voc-card-handover.html';
+                break;
+            case 'voc-cap-match':
+                window.location.href = 'games/voc-cap-match.html';
+                break;
+            case 'voc-cake-share':
+                window.location.href = 'games/voc-cake-share.html';
+                break;
+            case 'voc-photo':
+                window.location.href = 'games/voc-photo.html';
+                break;
+            case 'voc-card-craft':
+                window.location.href = 'games/voc-card-craft.html';
                 break;
             default:
                 console.log('Game not found:', gameName);

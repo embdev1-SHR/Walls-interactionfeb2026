@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  ANIMAL SELECTION & SORTING — Pangappara Blueroom, Pre-Primary #13
+  Pull one kind of animal out of a mixed group, one phase at a time
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Objective: Select all items belonging to a specific category out of a
+     mixed group and move them to one side (contains more than 3 items per
+     category)."
+    "Items Displayed: 4 Cats, 4 Dogs, 4 Birds, 4 Rabbits (Mixed randomly)."
+    "Phase 1: Student touches a Cat. The cat plays a Meow sound and
+     walks/slides over to the right side box. Repeats until all 4 moved."
+    "Phase 2: Dogs. Phase 3: Birds."
+    "Completion: colorful balloons float across the screen, and a cheerful
+     applause sound effect plays for 3 seconds!"
+
+  TAPPING THE WRONG ANIMAL
+    The brief does not say. Consistent with every other activity in this
+    project, it gets the soft nudge and nothing else — no buzzer, no mark,
+    and the child can try again immediately.
+
+  ASSETS: cat, bird photos needed; dog and rabbit are already in the repo.
+  All emoji-backed.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Animal Sorting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#fffef7,#f1f9f3 60%,#e6f4ea);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:12px 60px 0;
+    font-size:calc(26px * var(--wall-scale,1));font-weight:800;color:#14532d;
+  }
+  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #task{
+    text-align:center;font-weight:900;color:#166534;padding:4px;
+    font-size:calc(21px * var(--wall-scale,1));
+  }
+  #stage{flex:1;display:flex;gap:2vw;padding:8px 2vw 16px;transition:transform .25s ease}
+
+  #pool{
+    flex:1;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;
+    gap:calc(10px * var(--wall-scale,1));padding:12px;
+    border-radius:26px;background:rgba(255,255,255,.5);
+    border:5px dashed rgba(22,101,52,.2);overflow:auto;
+  }
+  #zone{
+    flex:0 0 calc(300px * var(--wall-scale,1));
+    display:flex;flex-wrap:wrap;align-content:flex-start;justify-content:center;
+    gap:calc(8px * var(--wall-scale,1));padding:14px;
+    border-radius:26px;background:linear-gradient(160deg,#dcfce7,#bbf7d0);
+    border:6px solid #22c55e;overflow:auto;position:relative;
+  }
+  #zone .zlbl{
+    width:100%;text-align:center;font-weight:900;color:#14532d;
+    font-size:calc(17px * var(--wall-scale,1));padding-bottom:6px;
+  }
+
+  .an{
+    width:calc(104px * var(--wall-scale,1));height:calc(104px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(80px * var(--wall-scale,1));line-height:1;
+    cursor:pointer;touch-action:manipulation;border-radius:20px;
+    border:5px solid transparent;background:rgba(255,255,255,.7);
+    transition:transform .5s cubic-bezier(.3,0,.25,1),opacity .4s,
+               border-color .25s,box-shadow .25s;
+  }
+  .an img{max-width:86%;max-height:86%;object-fit:contain}
+  .an.moved{width:calc(74px * var(--wall-scale,1));height:calc(74px * var(--wall-scale,1));
+            font-size:calc(56px * var(--wall-scale,1));border-color:#22c55e}
+  .an.soft{border-color:#fbbf24;animation:wig .5s ease}
+  @keyframes wig{0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}40%{transform:translateX(8px)}
+    60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+  #done{position:fixed;inset:0;display:none;z-index:700;
+        background:rgba(255,255,255,.93);align-items:center;justify-content:center;
+        flex-direction:column;gap:20px}
+  #done.on{display:flex}
+  #done .big{font-size:120px}
+  #done .msg{font-size:32px;font-weight:900;color:#15803d;text-align:center}
+  #again{padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+         background:linear-gradient(135deg,#86efac,#22c55e);color:#fff;
+         font-family:inherit;font-weight:900;font-size:22px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="task"></div>
+
+<div id="stage">
+  <div id="pool"></div>
+  <div id="zone"></div>
+</div>
+
+<div id="done">
+  <div class="big">🎉</div>
+  <div class="msg" id="doneMsg"></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/animal-data.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Animal Sorting', ml: 'മൃഗങ്ങളെ തരംതിരിക്കാം' };
+
+/* the brief: 4 each of cats, dogs, birds, rabbits */
+var KINDS = ['cat', 'dog', 'bird', 'rabbit'];
+var PER   = 4;
+var PHASES = ['cat', 'dog', 'bird'];    // brief sorts three of the four
+
+var phase = 0, moved = {}, pool = [];
+
+function shuffled(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function makeAnimal(id, uid) {
+  var a = ANIMALS.get(id);
+  var el = document.createElement('div');
+  el.className = 'an';
+  el.setAttribute('data-id', id);
+  el.setAttribute('data-uid', uid);
+  var img = document.createElement('img');
+  img.src = a.img; img.alt = '';
+  img.addEventListener('error', function () { el.textContent = a.emoji; });
+  el.appendChild(img);
+  WALL.bindTouch(el, function () { tap(el, id, uid); });
+  return el;
+}
+
+function build() {
+  moved = {}; pool = [];
+  var p = document.getElementById('pool');
+  var z = document.getElementById('zone');
+  p.innerHTML = ''; z.innerHTML = '';
+  zoneLabel();
+
+  var all = [];
+  KINDS.forEach(function (k) {
+    for (var i = 0; i < PER; i++) all.push(k);
+  });
+  shuffled(all).forEach(function (id, i) { p.appendChild(makeAnimal(id, i)); });
+  paintTask();
+}
+
+function zoneLabel() {
+  var z = document.getElementById('zone');
+  var old = z.querySelector('.zlbl');
+  if (old) old.remove();
+  var l = document.createElement('div');
+  l.className = 'zlbl';
+  l.textContent = WALL.isMl() ? 'ഇവിടെ വയ്ക്കൂ' : 'Put them here';
+  z.insertBefore(l, z.firstChild);
+}
+
+function paintTask() {
+  var id = PHASES[phase];
+  if (!id) return;
+  var a = ANIMALS.get(id);
+  var n = document.querySelectorAll('#pool .an[data-id="' + id + '"]').length;
+  /* Malayalam case endings vary by the noun's final sound (പൂച്ചയെ but
+     മുയലിനെ), so no ending is generated at all — the bare name plus a
+     count reads correctly for every animal and needs no rule. */
+  document.getElementById('task').textContent = WALL.isMl()
+    ? a.ml + ' — എല്ലാം കണ്ടെത്തൂ  (' + (PER - n) + '/' + PER + ')'
+    : 'Find all the ' + a.en + 's  (' + (PER - n) + '/' + PER + ')';
+}
+
+function tap(el, id, uid) {
+  var want = PHASES[phase];
+  if (!want || el.parentNode.id === 'zone') return;
+
+  if (id !== want) {
+    el.classList.remove('soft'); void el.offsetWidth; el.classList.add('soft');
+    WALL.sfx.nudge();
+    setTimeout(function () { el.classList.remove('soft'); }, 900);
+    return;
+  }
+
+  ANIMALS.playSound(id);
+  el.classList.add('moved');
+  document.getElementById('zone').appendChild(el);   // "slides over to the box"
+  WALL.sfx.pop();
+  paintTask();
+
+  var left = document.querySelectorAll('#pool .an[data-id="' + want + '"]').length;
+  if (left === 0) {
+    WALL.burstAt(document.getElementById('zone'), null, 18);
+    phase++;
+    if (phase >= PHASES.length) setTimeout(finish, 700);
+    else setTimeout(paintTask, 500);
+  }
+}
+
+function finish() {
+  WALL.celebrate();
+  var d = document.getElementById('done');
+  document.getElementById('doneMsg').textContent =
+    WALL.isMl() ? 'എല്ലാം തരംതിരിച്ചു!' : 'All sorted!';
+  document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Play again';
+  document.getElementById('task').textContent = '';
+  setTimeout(function () { d.classList.add('on'); }, 1200);
+}
+
+WALL.bindTouch(document.getElementById('again'), function () {
+  document.getElementById('done').classList.remove('on');
+  phase = 0; build();
+});
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: function () { phase = 0; document.getElementById('done').classList.remove('on'); build(); },
+  home: true
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

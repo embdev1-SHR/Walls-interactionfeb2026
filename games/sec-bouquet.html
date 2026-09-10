@@ -221,7 +221,7 @@ function wireDrag(el, item) {
   el.addEventListener('pointerdown', function (e) {
     if (placed[item.id]) return;
     dragging = true; moved = false;
-    el.setPointerCapture(e.pointerId);
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
     ghost.innerHTML = artHTML(item);
     ghost.style.left = e.clientX + 'px';
     ghost.style.top  = e.clientY + 'px';

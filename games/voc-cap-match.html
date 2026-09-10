@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  BIRTHDAY PARTY CAP MATCHING — Pangappara Blueroom, Vocational item #5
+  One avatar, four caps, only one of them is a party cap
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Center Stage: A friendly student avatar standing in the middle, marked
+     with a soft glowing target halo over their head."
+    Side tray: Birthday Party Cone Cap (correct) · Graduation Cap ·
+               Chef Hat · Sports Baseball Cap
+    Incorrect: "The avatar does a gentle head shake animation. The hat
+     gently slides back to the side tray with a soft boing/silly spring
+     sound."
+    Correct: "The cap snaps perfectly onto the student's head with a bright
+     starburst sparkle effect. The student avatar smiles, does a happy jump,
+     and wears the birthday hat."
+    "Confetti and colorful streamers burst ... 3-second applause and party
+     horn sound effect!"
+    "Zero voice narration."
+
+  ASSETS: none. Music synthesized by js/birthday-common.js.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Birthday Cap Matching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#fdf2f8,#fce7f3 60%,#f5e3f7);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;
+  }
+  h1{
+    text-align:center;padding:12px 200px 0 12px;
+    font-size:calc(25px * var(--wall-scale,1));font-weight:800;color:#831843;
+  }
+  h1 .ml{display:block;font-size:calc(17px * var(--wall-scale,1));opacity:.75;font-weight:700}
+
+  #stage{flex:1;position:relative;display:flex;align-items:center;
+         justify-content:center;gap:5vw;transition:transform .25s ease}
+
+  /* ── the avatar ───────────────────────────────────────────────── */
+  #kid{position:relative;display:flex;flex-direction:column;align-items:center}
+  #halo{
+    position:absolute;left:50%;transform:translateX(-50%);
+    width:calc(150px * var(--wall-scale,1));height:calc(90px * var(--wall-scale,1));
+    border-radius:50%;border:5px dashed rgba(219,39,119,.5);
+    top:calc(-56px * var(--wall-scale,1));
+    animation:halo 2s ease-in-out infinite;pointer-events:none;
+  }
+  @keyframes halo{0%,100%{opacity:.5}50%{opacity:1}}
+  #halo.gone{display:none}
+  #worn{
+    position:absolute;left:50%;transform:translateX(-50%) scale(0);
+    top:calc(-70px * var(--wall-scale,1));
+    font-size:calc(92px * var(--wall-scale,1));line-height:1;
+    transition:transform .5s cubic-bezier(.2,1.5,.4,1);
+  }
+  #worn.on{transform:translateX(-50%) scale(1)}
+  #face{font-size:calc(190px * var(--wall-scale,1));line-height:1}
+  #face.shake{animation:shake .6s ease}
+  @keyframes shake{0%,100%{transform:rotate(0)}
+    20%{transform:rotate(-9deg)}40%{transform:rotate(9deg)}
+    60%{transform:rotate(-6deg)}80%{transform:rotate(6deg)}}
+  #face.jump{animation:jump .8s cubic-bezier(.28,.84,.42,1)}
+  @keyframes jump{0%,100%{transform:translateY(0)}
+    30%{transform:translateY(-46px)}55%{transform:translateY(0)}
+    75%{transform:translateY(-16px)}}
+
+  /* ── the cap tray ─────────────────────────────────────────────── */
+  #tray{
+    display:flex;flex-direction:column;gap:calc(14px * var(--wall-scale,1));
+    padding:calc(16px * var(--wall-scale,1));border-radius:26px;
+    background:rgba(255,255,255,.72);border:5px solid rgba(219,39,119,.25);
+  }
+  .cap{
+    width:calc(118px * var(--wall-scale,1));height:calc(118px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(84px * var(--wall-scale,1));line-height:1;
+    border-radius:22px;background:#fff;border:5px solid rgba(190,160,210,.35);
+    cursor:grab;touch-action:none;
+    box-shadow:0 6px 16px rgba(131,24,67,.14);
+    transition:transform .35s cubic-bezier(.2,1.2,.4,1),opacity .3s;
+  }
+  .cap.drag{transition:none;position:fixed;z-index:60;transform:scale(1.15);
+            pointer-events:none;filter:drop-shadow(0 12px 16px rgba(0,0,0,.35))}
+  .cap.used{opacity:.25;pointer-events:none}
+
+  #done{position:fixed;inset:0;display:none;z-index:700;
+        background:rgba(255,255,255,.92);align-items:center;justify-content:center;
+        flex-direction:column;gap:18px}
+  #done.on{display:flex}
+  #done .big{font-size:130px;animation:jump 1.2s ease-in-out infinite}
+  #done .msg{font-size:32px;font-weight:900;color:#be185d;text-align:center}
+  #again{padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+         background:linear-gradient(135deg,#f9a8d4,#db2777);color:#fff;
+         font-family:inherit;font-weight:900;font-size:21px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+
+<div id="stage">
+  <div id="kid">
+    <div id="halo"></div>
+    <div id="worn"></div>
+    <div id="face">🧒</div>
+  </div>
+  <div id="tray"></div>
+</div>
+
+<div id="done">
+  <div class="big">🥳</div>
+  <div class="msg" id="doneMsg"></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/birthday-common.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Birthday Cap Matching', ml: 'ജന്മദിന തൊപ്പി കണ്ടെത്താം' };
+
+var CAPS = [
+  { id:'party',      emoji:'🥳', right:true,
+    label:{ en:'Party Cap',     ml:'പാർട്ടി തൊപ്പി' } },
+  { id:'graduation', emoji:'🎓', right:false,
+    label:{ en:'Graduation Cap', ml:'ബിരുദത്തൊപ്പി' } },
+  { id:'chef',       emoji:'👨‍🍳', right:false,
+    label:{ en:'Chef Hat',       ml:'പാചകത്തൊപ്പി' } },
+  { id:'baseball',   emoji:'🧢', right:false,
+    label:{ en:'Baseball Cap',   ml:'സ്പോർട്സ് തൊപ്പി' } }
+];
+
+var solved = false;
+
+function shuffled(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function build() {
+  solved = false;
+  document.getElementById('done').classList.remove('on');
+  document.getElementById('halo').classList.remove('gone');
+  document.getElementById('worn').classList.remove('on');
+  document.getElementById('worn').textContent = '';
+  document.getElementById('face').textContent = '🧒';
+
+  var tray = document.getElementById('tray');
+  tray.innerHTML = '';
+  shuffled(CAPS).forEach(function (c) {
+    var el = document.createElement('div');
+    el.className = 'cap';
+    el.textContent = c.emoji;
+    el.title = WALL.t(c.label);
+    wireDrag(el, c);
+    tray.appendChild(el);
+  });
+}
+
+function headRect() {
+  var f = document.getElementById('face').getBoundingClientRect();
+  // the target is the top of the head, where the halo sits
+  return { x: f.left + f.width / 2, y: f.top + f.height * 0.18 };
+}
+
+function wireDrag(el, c) {
+  var dragging = false, home = null;
+
+  el.addEventListener('pointerdown', function (e) {
+    if (solved) return;
+    dragging = true;
+    var r = el.getBoundingClientRect();
+    home = { w: r.width, h: r.height };
+    el.classList.add('drag');
+    el.style.width = r.width + 'px';
+    el.style.height = r.height + 'px';
+    el.style.left = (e.clientX - r.width / 2) + 'px';
+    el.style.top  = (e.clientY - r.height / 2) + 'px';
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  el.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    el.style.left = (e.clientX - home.w / 2) + 'px';
+    el.style.top  = (e.clientY - home.h / 2) + 'px';
+  });
+
+  function end(e) {
+    if (!dragging) return;
+    dragging = false;
+    // measure from the pointer, not the element — no transition hazard
+    var h = headRect();
+    var near = Math.hypot(e.clientX - h.x, e.clientY - h.y) <
+               Math.max(120, 150 * WALL.scale());
+
+    el.classList.remove('drag');
+    el.style.left = ''; el.style.top = '';
+    el.style.width = ''; el.style.height = '';
+
+    if (!near) return;
+    if (c.right) succeed(el, c); else reject(el);
+  }
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', function () {
+    dragging = false;
+    el.classList.remove('drag');
+    el.style.left = ''; el.style.top = ''; el.style.width = ''; el.style.height = '';
+  });
+}
+
+function reject(el) {
+  // brief: head shake, the hat slides back, soft boing. Nothing harsher.
+  var f = document.getElementById('face');
+  f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake');
+  BDAY.sfx.boing();
+  setTimeout(function () { f.classList.remove('shake'); }, 800);
+}
+
+function succeed(el, c) {
+  solved = true;
+  el.classList.add('used');
+  document.getElementById('halo').classList.add('gone');
+
+  var worn = document.getElementById('worn');
+  worn.textContent = c.emoji;
+  worn.classList.add('on');
+
+  var f = document.getElementById('face');
+  f.textContent = '😄';
+  f.classList.remove('jump'); void f.offsetWidth; f.classList.add('jump');
+
+  WALL.burstAt(document.getElementById('kid'), ['#f9a8d4','#fde68a','#a7f3d0','#fff'], 30);
+  BDAY.finale(3);
+
+  document.getElementById('doneMsg').textContent =
+    WALL.isMl() ? 'ശരിയായ തൊപ്പി!' : 'The right cap!';
+  document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Play again';
+  setTimeout(function () { document.getElementById('done').classList.add('on'); }, 1900);
+}
+
+WALL.bindTouch(document.getElementById('again'), build);
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: build,
+  home: true
+});
+
+paint();
+BDAY.controls();
+</script>
+</body>
+</html>

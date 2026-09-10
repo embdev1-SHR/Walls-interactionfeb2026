@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  ANIMALS AND THEIR HOMES — Pangappara Blueroom, Pre-Primary Module 2 #7
+  Tap an animal · its home fades in · the animal walks inside
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "When a student touches an animal (e.g. Cow), its house (e.g. Cow
+     Shed) appears beside it. The animal smoothly walks into its house
+     and plays its natural sound effect."
+    "When all animals have walked into their homes, an applause sound
+     effect plays as a celebration!"
+    "Phase 1: Domestic animals stand peacefully on screen. Soft
+     instrumental background music. No voice narration is present."
+    Pairs: Hen→Coop · Cow→Cow Shed · Dog→Kennel · Goat→Goat Shed ·
+           Cat→Basket · Horse→Stable · Duck→Pond · Sheep→Sheep Pen
+
+  NO VOICE — DELIBERATE
+    Phase 1 of this brief explicitly says "No voice narration is
+    present", unlike the flashcard activity which asks for spoken names.
+    So the animal's own sound plays and nothing speaks. The Voice button
+    is therefore absent from the toolbar rather than present-but-useless.
+
+  THE WALK-IN
+    CSS transform, not an animated asset. The animal slides toward the
+    home, shrinks slightly as it "enters", and fades to sit inside the
+    doorway. That reads as walking-in at wall scale and needs no sprite
+    sheets, which the brief's other animation asks would have required.
+
+  ASSETS — 8 homes + 6 animals still needed, all emoji-backed.
+    ../assets/new/images/homes/{coop,cow-shed,kennel,goat-shed,
+                                cat-basket,stable,pond,sheep-pen}.jpg
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Animals and their Homes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(#cfeaff 0%, #e8f6ff 42%, #b7e08f 42%, #8fcc6a 100%);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:12px 60px 0;
+    font-size:calc(27px * var(--wall-scale,1));font-weight:800;color:#3f2d0b;
+    text-shadow:0 2px 8px rgba(255,255,255,.8);
+  }
+  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.78;font-weight:700}
+  #count{text-align:center;font-weight:800;color:#4a5c2a;
+         font-size:calc(15px * var(--wall-scale,1))}
+
+  #field{flex:1;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;
+         gap:calc(12px * var(--wall-scale,1));padding:10px 2vw;overflow:auto;
+         transition:transform .25s ease}
+
+  .pair{
+    position:relative;display:flex;align-items:flex-end;justify-content:center;
+    width:calc(210px * var(--wall-scale,1));height:calc(168px * var(--wall-scale,1));
+    cursor:pointer;touch-action:manipulation;
+  }
+  .pair .home{
+    position:absolute;right:4px;bottom:22px;
+    width:calc(112px * var(--wall-scale,1));height:calc(112px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(92px * var(--wall-scale,1));line-height:1;
+    opacity:0;transform:scale(.6);transition:opacity .45s ease,transform .45s ease;
+    filter:drop-shadow(0 8px 8px rgba(0,0,0,.22));
+  }
+  .pair .home img{max-width:100%;max-height:100%;object-fit:contain}
+  .pair.on .home{opacity:1;transform:scale(1)}
+
+  .pair .animal{
+    position:absolute;left:6px;bottom:24px;
+    width:calc(104px * var(--wall-scale,1));height:calc(104px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(86px * var(--wall-scale,1));line-height:1;
+    filter:drop-shadow(0 8px 8px rgba(0,0,0,.22));
+    transition:transform 1.5s cubic-bezier(.35,0,.3,1), opacity .5s 1.1s;
+    z-index:2;
+  }
+  .pair .animal img{max-width:100%;max-height:100%;object-fit:contain}
+  /* the walk: slide right, shrink as it enters the doorway, settle */
+  .pair.in .animal{
+    transform:translateX(calc(78px * var(--wall-scale,1))) scale(.52);
+    opacity:.92;
+  }
+  .pair .lbl{
+    position:absolute;left:0;right:0;bottom:0;text-align:center;
+    font-weight:900;font-size:calc(15px * var(--wall-scale,1));color:#3f2d0b;
+    background:rgba(255,255,255,.8);border-radius:12px;padding:3px 6px;
+    line-height:1.2;
+  }
+  .pair .lbl small{display:block;font-size:calc(11px * var(--wall-scale,1));opacity:.6}
+  .pair.done{filter:saturate(1.05)}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="count"></div>
+<div id="field"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/animal-data.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Animals and their Homes', ml: 'മൃഗങ്ങളും അവയുടെ വീടുകളും' };
+var IDS = ANIMALS.HOME_SET;
+var done = {};
+
+function artInto(box, src, emoji) {
+  var img = document.createElement('img');
+  img.src = src; img.alt = '';
+  img.addEventListener('error', function () { box.textContent = emoji; });
+  box.appendChild(img);
+}
+
+function build() {
+  var field = document.getElementById('field');
+  field.innerHTML = '';
+  IDS.forEach(function (id) {
+    var a = ANIMALS.get(id);
+    var h = ANIMALS.homes[id];
+
+    var p = document.createElement('div');
+    p.className = 'pair' + (done[id] ? ' on in done' : '');
+
+    var home = document.createElement('div');
+    home.className = 'home';
+    artInto(home, h.img, h.emoji);
+
+    var an = document.createElement('div');
+    an.className = 'animal';
+    artInto(an, a.img, a.emoji);
+
+    var lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    var b = WALL.tBoth({ en: a.en, ml: a.ml });
+    var hb = WALL.t({ en: h.en, ml: h.ml });
+    lbl.innerHTML = b.main + '<small>' + hb + '</small>';
+
+    p.appendChild(home); p.appendChild(an); p.appendChild(lbl);
+    WALL.bindTouch(p, function () { tap(p, id); });
+    field.appendChild(p);
+  });
+  paintCount();
+}
+
+function tap(p, id) {
+  if (done[id]) return;
+  done[id] = true;
+
+  p.classList.add('on');                       // home fades in beside it
+  WALL.sfx.pop();
+
+  setTimeout(function () {
+    p.classList.add('in');                     // then the animal walks in
+    ANIMALS.playSound(id);                     // brief: sound as it enters
+  }, 480);
+
+  setTimeout(function () {
+    p.classList.add('done');
+    paintCount();
+    if (IDS.every(function (x) { return done[x]; })) WALL.celebrate();
+  }, 2000);
+}
+
+function paintCount() {
+  var n = Object.keys(done).length;
+  document.getElementById('count').textContent =
+    (WALL.isMl() ? 'വീട്ടിലെത്തിയവ: ' : 'Home: ') + n + ' / ' + IDS.length;
+}
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#field',
+  reset: function () { done = {}; build(); },
+  home: true
+  /* no voice button — brief Phase 1: "No voice narration is present." */
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  SIMPLE CARD HANDOVER — Pangappara Blueroom, Vocational item #4
+  Tap the giver · the card travels · the birthday child opens it
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Left Side: Giver Student Avatar (standing).
+     Right Side: Birthday Student Avatar (wearing a party hat)."
+    "Child taps the Giver Student Avatar on the left."
+    "The touched avatar moves forward and extends a glowing birthday card.
+     The opposite birthday student avatar reaches out, takes the card, and
+     opens it with a cheerful bounce."
+    "A soft paper-swish sound plays during the handover motion, followed by
+     a brief 3-second applause sound effect as the card opens!"
+    "Happy Birthday instrumental plays continuously throughout."
+    "Zero voice narration."
+
+  THE SOCIAL POINT
+    This is the simplest module in the set and deliberately so — one tap,
+    one clear cause and effect, one social script (you give, they receive,
+    they are pleased). The card is a single travelling element so the eye
+    can follow it the whole way.
+
+  ASSETS: none.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Card Handover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(#fdf2f8 0%, #fce7f3 58%, #e6c9a8 58%, #d4b391 100%);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:12px 200px 0 12px;
+    font-size:calc(25px * var(--wall-scale,1));font-weight:800;color:#831843;
+    text-shadow:0 2px 8px rgba(255,255,255,.7);
+  }
+  h1 .ml{display:block;font-size:calc(17px * var(--wall-scale,1));opacity:.75;font-weight:700}
+  #hint{text-align:center;font-weight:800;color:#9d174d;
+        font-size:calc(17px * var(--wall-scale,1));min-height:26px}
+
+  #stage{flex:1;position:relative;display:flex;align-items:flex-end;
+         justify-content:space-around;padding:0 6vw 8vh;
+         transition:transform .25s ease}
+
+  .avatar{
+    position:relative;display:flex;flex-direction:column;align-items:center;
+    transition:transform .9s cubic-bezier(.3,0,.2,1);
+  }
+  .avatar .body{font-size:calc(180px * var(--wall-scale,1));line-height:1}
+  .avatar .lbl{
+    font-weight:900;color:#831843;font-size:calc(17px * var(--wall-scale,1));
+    background:rgba(255,255,255,.8);border-radius:12px;padding:4px 14px;
+  }
+  #giver{cursor:pointer;touch-action:manipulation}
+  #giver.step{transform:translateX(calc(70px * var(--wall-scale,1)))}
+  #giver .body.wave{animation:wave .7s ease}
+  @keyframes wave{0%,100%{transform:rotate(0)}30%{transform:rotate(-8deg)}70%{transform:rotate(8deg)}}
+  #kid .hat{
+    position:absolute;top:calc(-52px * var(--wall-scale,1));left:50%;
+    transform:translateX(-50%);font-size:calc(76px * var(--wall-scale,1));line-height:1;
+  }
+  #kid.happy .body{animation:bounce .9s cubic-bezier(.28,.84,.42,1)}
+  @keyframes bounce{0%,100%{transform:translateY(0)}
+    30%{transform:translateY(-40px)}60%{transform:translateY(0)}80%{transform:translateY(-14px)}}
+
+  /* the travelling card */
+  #card{
+    position:absolute;bottom:32%;left:24%;
+    font-size:calc(84px * var(--wall-scale,1));line-height:1;
+    opacity:0;pointer-events:none;
+    transition:left 1.5s cubic-bezier(.35,0,.25,1), bottom 1.5s ease,
+               opacity .4s, transform .6s;
+    filter:drop-shadow(0 0 16px rgba(251,191,36,.9));
+  }
+  #card.show{opacity:1}
+  #card.sent{left:66%;bottom:40%}
+  #card.open{transform:scale(1.5) rotate(-6deg)}
+
+  #big{
+    position:fixed;inset:0;display:none;z-index:700;
+    background:rgba(255,255,255,.94);align-items:center;justify-content:center;
+    flex-direction:column;gap:16px;
+  }
+  #big.on{display:flex}
+  #big .card{
+    width:min(60vw,540px);padding:40px;border-radius:22px;
+    background:linear-gradient(160deg,#fff7ed,#fde68a);
+    border:10px solid #f59e0b;text-align:center;
+    box-shadow:0 20px 50px rgba(180,83,9,.35);
+  }
+  #big .card .e{font-size:110px;line-height:1}
+  #big .card .t{font-size:32px;font-weight:900;color:#7c2d12;padding-top:10px}
+  #again{padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+         background:linear-gradient(135deg,#f9a8d4,#db2777);color:#fff;
+         font-family:inherit;font-weight:900;font-size:21px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="hint"></div>
+
+<div id="stage">
+  <div class="avatar" id="giver">
+    <div class="body">🧒</div>
+    <div class="lbl" id="giverLbl"></div>
+  </div>
+
+  <div id="card">💌</div>
+
+  <div class="avatar" id="kid">
+    <div class="hat">🎉</div>
+    <div class="body">👧</div>
+    <div class="lbl" id="kidLbl"></div>
+  </div>
+</div>
+
+<div id="big">
+  <div class="card"><div class="e">🎂</div><div class="t" id="bigTxt"></div></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/birthday-common.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Card Handover', ml: 'ആശംസാ കാർഡ് നൽകാം' };
+var busy = false;
+
+function reset() {
+  busy = false;
+  var c = document.getElementById('card');
+  c.className = '';
+  document.getElementById('giver').classList.remove('step');
+  document.getElementById('kid').classList.remove('happy');
+  document.getElementById('kid').querySelector('.body').textContent = '👧';
+  document.getElementById('big').classList.remove('on');
+  paintText();
+}
+
+function hand() {
+  if (busy) return;
+  busy = true;
+
+  var giver = document.getElementById('giver');
+  var card  = document.getElementById('card');
+  var kid   = document.getElementById('kid');
+
+  // 1. the giver steps forward and offers the card
+  giver.classList.add('step');
+  giver.querySelector('.body').classList.add('wave');
+  card.classList.add('show');
+  BDAY.sfx.paperSwish();
+
+  // 2. the card travels across
+  setTimeout(function () { card.classList.add('sent'); }, 500);
+
+  // 3. the birthday child takes it and bounces
+  setTimeout(function () {
+    kid.classList.add('happy');
+    kid.querySelector('.body').textContent = '🥰';
+    card.classList.add('open');
+    BDAY.sfx.paperSwish();
+  }, 2000);
+
+  // 4. the card opens full screen, applause
+  setTimeout(function () {
+    BDAY.finale(3);
+    document.getElementById('bigTxt').textContent =
+      WALL.isMl() ? 'ജന്മദിനാശംസകൾ!' : 'Happy Birthday!';
+    document.getElementById('again').textContent =
+      WALL.isMl() ? 'വീണ്ടും' : 'Again';
+    document.getElementById('big').classList.add('on');
+  }, 2900);
+}
+
+function paintText() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  document.getElementById('giverLbl').textContent =
+    WALL.isMl() ? 'കൂട്ടുകാരൻ' : 'Friend';
+  document.getElementById('kidLbl').textContent =
+    WALL.isMl() ? 'ജന്മദിനക്കാരി' : 'Birthday child';
+  document.getElementById('hint').textContent = busy ? ''
+    : (WALL.isMl() ? 'കൂട്ടുകാരനെ തൊട്ട് കാർഡ് നൽകൂ' : 'Tap the friend to give the card');
+}
+
+WALL.bindTouch(document.getElementById('giver'), hand);
+WALL.bindTouch(document.getElementById('again'), reset);
+WALL.onLang(paintText);
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: reset,
+  home: true
+});
+
+paintText();
+BDAY.controls();
+</script>
+</body>
+</html>

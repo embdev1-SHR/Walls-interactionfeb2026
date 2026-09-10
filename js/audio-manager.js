@@ -74,7 +74,23 @@ class AudioManager {
             'sec-helpers-places': 'Daily life scenarios',
             'sec-mobile':         'jyproject-endless-shore-part2-399386',
             'sec-bouquet':        'forest',
-            'sec-daily-living':   'Daily life scenarios'
+            'sec-daily-living':   'Daily life scenarios',
+
+            /* -- Pre-Primary Module 2 ---------------------------- */
+            'pp-animals':      'forest',
+            'pp-animal-quiz':  'forest',
+            'pp-odd-one-out':  'forest',
+            'pp-hen-types':    'forest',
+            'pp-animal-homes': 'forest',
+            'pp-animal-young': 'forest',
+            'pp-animal-puzzle': 'forest',
+            'pp-animal-sort':   'forest',
+            'pp-animal-path':   'trace-it',
+
+            /* -- Vocational. The six Birthday modules run their own
+                  synthesized music via js/birthday-common.js and so
+                  deliberately do NOT include audio-manager.js. ----- */
+            'voc-instruments':  'Learning'
         };
     }
 

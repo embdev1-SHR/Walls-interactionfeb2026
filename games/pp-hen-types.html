@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  TYPES OF HEN — Pangappara Blueroom, Pre-Primary Module 2 #9
+  Rooster · Colourful Hen · Normal Hen, standing on a farm background
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Background: A simple, calm farm/grassland background."
+    "3 different hens standing naturally on the grass across the screen."
+    "The touched hen highlights with a soft, glowing border. Plays its
+     specific natural sound (Morning crow for the Rooster, Gentle cluck
+     for the hens)."
+    "Once all 3 standing hens have been touched, stars float up on screen.
+     A cheerful clapping and applause sound effect plays for 3 seconds!"
+
+  ASSETS
+    ../assets/new/images/farm-bg.jpg          NEW (optional — a drawn
+                                              grass/sky gradient stands in)
+    ../assets/new/images/animals/rooster.jpg        NEW
+    ../assets/new/images/animals/colourful-hen.jpg  NEW
+    ../assets/new/images/animals/hen.jpg            NEW
+    ../assets/new/audio/animals/rooster-crow.mp3    NEW
+    ../assets/new/audio/animals/cluck.mp3           NEW
+    All fall back to emoji / synthesized cues.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Types of Hen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+    /* stand-in farm: sky above, grass below. A photo overrides it. */
+    background:linear-gradient(#bfe6ff 0%, #dff1ff 46%, #a7d98a 46%, #7fc35f 100%);
+    background-size:cover;background-position:center;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#5b3a10;
+    text-shadow:0 2px 8px rgba(255,255,255,.8);
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.78;font-weight:700}
+
+  #yard{flex:1;display:flex;align-items:flex-end;justify-content:center;
+        gap:min(6vw,70px);padding:0 4vw calc(9vh);transition:transform .25s ease}
+  .hen{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    cursor:pointer;touch-action:manipulation;padding:10px;border-radius:26px;
+    border:6px solid transparent;transition:border-color .25s,box-shadow .25s,transform .2s;
+  }
+  .hen:active{transform:scale(.96)}
+  .hen .art{
+    width:calc(210px * var(--wall-scale,1));height:calc(210px * var(--wall-scale,1));
+    display:flex;align-items:flex-end;justify-content:center;
+    font-size:calc(170px * var(--wall-scale,1));line-height:1;
+    filter:drop-shadow(0 12px 10px rgba(0,0,0,.22));
+  }
+  .hen .art img{max-width:100%;max-height:100%;object-fit:contain}
+  .hen .nm{
+    font-weight:900;font-size:calc(21px * var(--wall-scale,1));color:#4a2c00;
+    background:rgba(255,255,255,.82);padding:6px 16px;border-radius:14px;
+    text-align:center;line-height:1.2;
+  }
+  .hen .nm small{display:block;font-size:calc(13px * var(--wall-scale,1));opacity:.6}
+  /* the brief: "a soft, glowing border" */
+  .hen.lit{border-color:#22c55e;
+    box-shadow:0 0 0 6px rgba(34,197,94,.22),0 0 30px rgba(34,197,94,.55)}
+  .hen.bob{animation:bob .6s cubic-bezier(.28,.84,.42,1)}
+  @keyframes bob{0%{transform:translateY(0)}35%{transform:translateY(-20px)}
+    60%{transform:translateY(0)}80%{transform:translateY(-7px)}100%{transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="yard"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/animal-data.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Types of Hen', ml: 'കോഴിയുടെ തരങ്ങൾ' };
+var HENS = ['rooster', 'hen-colour', 'hen'];
+var seen = {};
+
+/* If a real farm photo is delivered it replaces the CSS sky/grass. */
+(function tryBg() {
+  var url = '../assets/new/images/farm-bg.jpg';
+  var probe = new Image();
+  probe.onload = function () {
+    document.body.style.backgroundImage = 'url("' + url + '")';
+  };
+  probe.src = url;
+})();
+
+function build() {
+  var yard = document.getElementById('yard');
+  yard.innerHTML = '';
+  HENS.forEach(function (id) {
+    var a = ANIMALS.get(id);
+    var el = document.createElement('div');
+    el.className = 'hen' + (seen[id] ? ' lit' : '');
+
+    var art = document.createElement('div');
+    art.className = 'art';
+    var img = document.createElement('img');
+    img.src = a.img; img.alt = '';
+    img.addEventListener('error', function () { art.textContent = a.emoji; });
+    art.appendChild(img);
+
+    var nm = document.createElement('div');
+    nm.className = 'nm';
+    var b = WALL.tBoth({ en: a.en, ml: a.ml });
+    nm.innerHTML = b.main + (b.alt && b.alt !== b.main ? '<small>' + b.alt + '</small>' : '');
+
+    el.appendChild(art);
+    el.appendChild(nm);
+    WALL.bindTouch(el, function () { tap(el, id); });
+    yard.appendChild(el);
+  });
+}
+
+function tap(el, id) {
+  var first = !seen[id];
+  seen[id] = true;
+  el.classList.add('lit');
+  el.classList.remove('bob'); void el.offsetWidth; el.classList.add('bob');
+
+  ANIMALS.playSound(id);
+  ANIMALS.speakAfterSound(id);
+  if (first) WALL.burstAt(el, null, 14);
+
+  if (HENS.every(function (h) { return seen[h]; }) && first) {
+    setTimeout(function () { WALL.celebrate(); }, 900);
+  }
+}
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#yard',
+  reset: function () { seen = {}; build(); },
+  home: true
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

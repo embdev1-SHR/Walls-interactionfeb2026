@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  CLASSICAL ENSEMBLE INSTRUMENTS — Pangappara Blueroom, Vocational item #1
+  Chenda · Maddalam · Chengila · Kaimani, each with its own sound
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Extra-large, high-definition real photos of traditional Kerala
+     instruments on a clean, clutter-free background."
+    "Touch: the card highlights with a bright glowing green border, the
+     instrument does a gentle bounce, and the system plays the authentic
+     sound of that specific instrument clearly for 2–3 seconds. A glowing
+     star marks the top corner of the explored card."
+    "Finish: Exploring all cards triggers floating balloons and a 3-second
+     applause sound effect!"
+
+  THE SOUNDS ARE THE WHOLE POINT — AND THEY ARE THE ASSET GAP
+    This activity is nothing without the four authentic recordings. Until
+    they arrive each card plays a synthesized stand-in built to the right
+    character: a low double-headed thud for Maddalam, a bright struck-metal
+    ring for Chengila, a sharp high brass ping for Kaimani, a hard rhythmic
+    crack for Chenda. They are honest placeholders, not substitutes — a
+    Chenda is not a synthesized noise burst, and a Kerala teacher will hear
+    the difference instantly. Please record the real four.
+
+  ALSO INCLUDED — the lyrics panel
+    The brief's "Background Music & Live Lyrics" section asks for the folk
+    song Indindam Thaalathil Chenda Kotti with a Show Lyrics tab, and for
+    "tapping any line directly re-triggers the specific rhythm stroke for
+    that instrument". That is implemented: each of the four lines names an
+    instrument and taps through to its sound. The song audio itself is a
+    licensing question — see ASSET-LIST-PREPRIMARY.md.
+
+  ASSETS
+    ../assets/new/audio/instruments/{chenda,maddalam,chengila,kaimani}.mp3
+    ../assets/new/images/instruments/{chenda,maddalam,chengila,kaimani}.jpg
+    ../assets/new/audio/indindam-thaalathil.mp3   (the folk song)
+    All optional; all fall back.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Kerala Instruments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#fffaf3,#fdf0e3 60%,#f6e3cd);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(27px * var(--wall-scale,1));font-weight:800;color:#7c2d12;
+  }
+  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+  #board .deck-card{background:#fff}
+
+  /* ── lyrics panel ─────────────────────────────────────────────── */
+  #lyrTab{
+    position:fixed;left:50%;bottom:0;transform:translateX(-50%);
+    padding:10px 28px;border-radius:16px 16px 0 0;border:none;cursor:pointer;
+    background:linear-gradient(160deg,#fbbf24,#d97706);color:#3f2d0b;
+    font-family:inherit;font-weight:900;font-size:calc(16px * var(--wall-scale,1));
+    z-index:610;touch-action:manipulation;
+  }
+  #lyrics{
+    position:fixed;left:0;right:0;bottom:0;z-index:600;
+    background:rgba(20,12,4,.93);padding:22px 20px 62px;
+    transform:translateY(105%);transition:transform .45s cubic-bezier(.3,0,.2,1);
+  }
+  #lyrics.on{transform:translateY(0)}
+  .lyr{
+    display:block;width:100%;text-align:center;background:none;border:none;
+    color:#fde68a;font-family:'Noto Sans Malayalam','Baloo 2',sans-serif;
+    font-weight:800;font-size:calc(23px * var(--wall-scale,1));
+    padding:9px 6px;cursor:pointer;border-radius:12px;touch-action:manipulation;
+  }
+  .lyr:active,.lyr.hit{background:rgba(251,191,36,.25);color:#fff}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="board"></div>
+
+<button id="lyrTab"></button>
+<div id="lyrics"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Kerala Ensemble Instruments', ml: 'വാദ്യോപകരണ ശബ്ദങ്ങൾ' };
+var SND = '../assets/new/audio/instruments/';
+var IMG = '../assets/new/images/instruments/';
+
+/* ══════════════════════════════════════════════════════════════
+   SYNTHESIZED STAND-INS — placeholders, not substitutes.
+   Each is shaped to the instrument's real character so the board
+   is usable today, and each is replaced the moment a real
+   recording is dropped into ../assets/new/audio/instruments/.
+   ══════════════════════════════════════════════════════════════ */
+function chendaStroke() {
+  // hard, rhythmic, high-tension crack — a fast roll of 6
+  for (var i = 0; i < 6; i++) {
+    WALL.noise(0.10, 0.12, 0.016, i * 0.15);
+    WALL.tone(220 - i * 6, 0.09, 'triangle', 0.07, i * 0.15);
+  }
+}
+function maddalamStroke() {
+  // deep, resonant, double-headed
+  [0, 0.34, 0.68].forEach(function (t) {
+    WALL.tone(86, 0.30, 'sine', 0.20, t);
+    WALL.tone(132, 0.18, 'triangle', 0.09, t);
+    WALL.noise(0.10, 0.06, 0.03, t);
+  });
+}
+function chengilaStroke() {
+  // struck bronze gong: bright metallic, long ring
+  [0, 0.5, 1.0].forEach(function (t) {
+    [1180, 1770, 2360, 3140].forEach(function (f, i) {
+      WALL.tone(f, 1.0 - i * 0.13, 'triangle', 0.055 / (i + 1), t);
+    });
+    WALL.noise(0.05, 0.05, 0.012, t);
+  });
+}
+function kaimaniStroke() {
+  // small brass hand bells, sharp and high: kini-kini
+  for (var i = 0; i < 8; i++) {
+    WALL.tone(2450, 0.16, 'triangle', 0.055, i * 0.22);
+    WALL.tone(3300, 0.12, 'sine', 0.035, i * 0.22 + 0.02);
+  }
+}
+
+var INSTRUMENTS = [
+  { id:'chenda',   file:'chenda.mp3',   synth: chendaStroke,
+    label:{ en:'Chenda',   ml:'ചെണ്ട' },
+    sub:{ en:'Tall drum played with sticks', ml:'വടികൊണ്ട് കൊട്ടുന്ന നീളൻ ചെണ്ട' },
+    emoji:'🥁', tint:'#fff7ed' },
+  { id:'maddalam', file:'maddalam.mp3', synth: maddalamStroke,
+    label:{ en:'Maddalam', ml:'മദ്ദളം' },
+    sub:{ en:'Double-headed barrel drum', ml:'ഇരുവശവും കൊട്ടുന്ന വീപ്പച്ചെണ്ട' },
+    emoji:'🪘', tint:'#fef3c7' },
+  { id:'chengila', file:'chengila.mp3', synth: chengilaStroke,
+    label:{ en:'Chengila', ml:'ചെങ്ങില' },
+    sub:{ en:'Flat bronze gong', ml:'വെങ്കലത്തിന്റെ പരന്ന ചേങ്ങില' },
+    emoji:'🔔', tint:'#fefce8' },
+  { id:'kaimani',  file:'kaimani.mp3',  synth: kaimaniStroke,
+    label:{ en:'Kaimani',  ml:'കൈമണി' },
+    sub:{ en:'Pair of small brass bells', ml:'ചെറിയ ഓട്ടുമണികൾ' },
+    emoji:'🎐', tint:'#f5f3ff' }
+];
+
+/* the brief's four lyric lines, each mapped to its instrument */
+var LYRICS = [
+  { id:'chenda',   text:'ഇണ്ടിണ്ടം താളത്തിൽ ചെണ്ട കൊട്ടി' },
+  { id:'chengila', text:'ണേണേണേം താളത്തിൽ ചേങ്കിലയും' },
+  { id:'maddalam', text:'തദ്ധിമി താളത്തിൽ മദ്ദളം കൊട്ടി' },
+  { id:'kaimani',  text:'കിണി കിണി നാദത്തിൽ കൈമണിയും' }
+];
+
+function playOf(inst) {
+  return WALL.sound(SND + inst.file, inst.synth);
+}
+
+var items = INSTRUMENTS.map(function (i) {
+  return {
+    id: i.id, label: i.label, sub: i.sub, tint: i.tint,
+    art: { emoji: i.emoji, img: IMG + i.id + '.jpg' },
+    sound: playOf(i)
+  };
+});
+
+var deck = DECK.mount('#board', {
+  items: items,
+  speak: false,        // the instrument's own sound is the content here
+  columns: 4
+});
+
+/* ── lyrics panel ───────────────────────────────────────────────── */
+var lyrOpen = false;
+
+function buildLyrics() {
+  var box = document.getElementById('lyrics');
+  box.innerHTML = '';
+  LYRICS.forEach(function (l) {
+    var b = document.createElement('button');
+    b.className = 'lyr';
+    b.textContent = l.text;
+    WALL.bindTouch(b, function () {
+      // brief: tapping a line re-triggers that instrument's stroke
+      var inst = INSTRUMENTS.filter(function (x) { return x.id === l.id; })[0];
+      if (inst) playOf(inst)();
+      b.classList.add('hit');
+      setTimeout(function () { b.classList.remove('hit'); }, 700);
+    });
+    box.appendChild(b);
+  });
+}
+
+function paintTab() {
+  document.getElementById('lyrTab').textContent = lyrOpen
+    ? (WALL.isMl() ? '▼ വരികൾ മറയ്ക്കൂ' : '▼ Hide Lyrics')
+    : (WALL.isMl() ? '📜 വരികൾ കാണുക' : '📜 Show Lyrics');
+}
+
+WALL.bindTouch(document.getElementById('lyrTab'), function () {
+  lyrOpen = !lyrOpen;
+  document.getElementById('lyrics').classList.toggle('on', lyrOpen);
+  WALL.sfx.tap();
+  paintTab();
+});
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  buildLyrics();
+  paintTab();
+}
+WALL.onLang(paint);
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#board',
+  reset: function () { deck.reset(); },
+  home: true
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

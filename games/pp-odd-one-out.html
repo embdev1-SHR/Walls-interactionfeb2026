@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  ODD ONE OUT — Pangappara Blueroom, Pre-Primary Module 2 #10
+  3 large cards · 2 the same, 1 different · never punitive
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "All animal cards MUST be displayed in LARGE size by default ... touch
+     targets must be broad and easily recognizable so that children with
+     visual tracking or fine-motor delays can identify and tap them
+     without frustration."
+    "If Correct: glowing green border, sparkles float, the animal plays
+     its natural sound, screen transitions to the next set after 2s."
+    "If Incorrect: the tapped card wiggles gently with a soft yellow glow
+     briefly. No loud error buzzers, red X marks, or stressful sounds.
+     The student can immediately tap again."
+    "Completion: balloons and glowing stars float up, background music
+     fades down, applause plays for 3 seconds."
+
+  SETS
+    The brief's three sample sets, then three more built from the same
+    domestic animals so a session does not end after 30 seconds. The odd
+    card's position is shuffled every round — otherwise a child learns
+    "it is always the middle one" instead of learning the animals.
+
+  ASSETS: emoji fallback throughout; cow/tiger/bear sounds already exist.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Odd One Out</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#fffdf7,#f3f8fd 60%,#eaf2fa);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#1e3a8a;
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.72;font-weight:700}
+  #round{text-align:center;font-weight:800;color:#64748b;
+         font-size:calc(16px * var(--wall-scale,1))}
+
+  #row{flex:1;display:flex;align-items:center;justify-content:center;
+       gap:min(4vw,44px);padding:14px;transition:transform .25s ease}
+  .oc{
+    width:calc(260px * var(--wall-scale,1));
+    padding:calc(20px * var(--wall-scale,1));
+    border-radius:30px;background:#fff;border:6px solid rgba(150,180,210,.35);
+    box-shadow:0 10px 26px rgba(20,60,95,.15);cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    touch-action:manipulation;
+    transition:border-color .25s,box-shadow .25s,transform .18s;
+  }
+  .oc:active{transform:scale(.97)}
+  .oc .art{
+    width:calc(180px * var(--wall-scale,1));height:calc(180px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(146px * var(--wall-scale,1));line-height:1;
+  }
+  .oc .art img{max-width:100%;max-height:100%;object-fit:contain;border-radius:16px}
+  .oc .nm{font-weight:900;font-size:calc(22px * var(--wall-scale,1));color:#123b5e}
+
+  .oc.right{border-color:#22c55e;
+    box-shadow:0 0 0 7px rgba(34,197,94,.22),0 0 32px rgba(34,197,94,.6)}
+  /* the brief: a wrong tap wiggles with a soft yellow glow. Nothing more. */
+  .oc.soft{border-color:#fbbf24;
+    box-shadow:0 0 0 6px rgba(251,191,36,.22);animation:wig .5s ease}
+  @keyframes wig{0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-10px)}40%{transform:translateX(10px)}
+    60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+  #done{position:fixed;inset:0;display:none;z-index:700;
+        background:rgba(255,255,255,.93);
+        align-items:center;justify-content:center;flex-direction:column;gap:20px}
+  #done.on{display:flex}
+  #done .big{font-size:120px}
+  #done .msg{font-size:34px;font-weight:900;color:#15803d;text-align:center}
+  #again{padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+         background:linear-gradient(135deg,#93c5fd,#3b82f6);color:#fff;
+         font-family:inherit;font-weight:900;font-size:22px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="round"></div>
+<div id="row"></div>
+
+<div id="done">
+  <div class="big">🎉</div>
+  <div class="msg" id="doneMsg"></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/animal-data.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Odd One Out', ml: 'വ്യത്യസ്തമായത് ഏത്?' };
+
+/* [ same, odd ] — the brief's three sets, plus three more of the same shape */
+var SETS = [
+  ['cow', 'cat'],
+  ['dog', 'hen'],
+  ['cat', 'goat'],
+  ['hen', 'dog'],
+  ['goat', 'cow'],
+  ['rabbit', 'duck']
+];
+
+var idx = 0, locked = false;
+
+function shuffled(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function makeCard(id, isOdd) {
+  var a = ANIMALS.get(id);
+  var el = document.createElement('div');
+  el.className = 'oc';
+
+  var art = document.createElement('div');
+  art.className = 'art';
+  var img = document.createElement('img');
+  img.src = a.img;
+  img.alt = '';
+  img.addEventListener('error', function () { art.textContent = a.emoji; });
+  art.appendChild(img);
+
+  var nm = document.createElement('div');
+  nm.className = 'nm';
+  nm.textContent = WALL.t({ en: a.en, ml: a.ml });
+
+  el.appendChild(art);
+  el.appendChild(nm);
+  WALL.bindTouch(el, function () { tap(el, id, isOdd); });
+  return el;
+}
+
+function tap(el, id, isOdd) {
+  if (locked) return;
+
+  if (!isOdd) {
+    // gentle nudge only — the brief forbids buzzers and red marks
+    el.classList.remove('soft'); void el.offsetWidth; el.classList.add('soft');
+    WALL.sfx.nudge();
+    setTimeout(function () { el.classList.remove('soft'); }, 900);
+    return;
+  }
+
+  locked = true;
+  el.classList.add('right');
+  WALL.burstAt(el, null, 20);
+  ANIMALS.playSound(id);
+  ANIMALS.speakAfterSound(id, 1000);
+
+  setTimeout(function () {          // brief: next set after 2 seconds
+    idx++;
+    locked = false;
+    if (idx >= SETS.length) finish(); else build();
+  }, 2000);
+}
+
+function build() {
+  document.getElementById('done').classList.remove('on');
+  var row = document.getElementById('row');
+  row.innerHTML = '';
+
+  var pair = SETS[idx];
+  var same = pair[0], odd = pair[1];
+  // shuffle so the odd card is not always in the same slot
+  var slots = shuffled([{ id: same, odd: false },
+                        { id: same, odd: false },
+                        { id: odd,  odd: true }]);
+  slots.forEach(function (s) { row.appendChild(makeCard(s.id, s.odd)); });
+
+  document.getElementById('round').textContent =
+    (WALL.isMl() ? 'റൗണ്ട് ' : 'Round ') + (idx + 1) + ' / ' + SETS.length;
+}
+
+function finish() {
+  WALL.celebrate();
+  var d = document.getElementById('done');
+  document.getElementById('doneMsg').textContent =
+    WALL.isMl() ? 'എല്ലാം ശരിയായി!' : 'All correct!';
+  document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Play again';
+  setTimeout(function () { d.classList.add('on'); }, 1200);
+}
+
+WALL.bindTouch(document.getElementById('again'), function () {
+  idx = 0; locked = false; build();
+});
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#row',
+  reset: function () { idx = 0; locked = false; build(); },
+  home: true
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

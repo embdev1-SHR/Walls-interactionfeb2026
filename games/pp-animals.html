@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  DOMESTIC & WILD ANIMALS — Pangappara Blueroom, Pre-Primary Module 2 #1
+  Two option cards -> 6 flashcards each · sound then Malayalam name
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "The room opens with two clear option cards displayed on screen:
+     നാട്ടു മൃഗങ്ങൾ (Domestic Animals) / കാട്ടു മൃഗങ്ങൾ (Wild Animals)"
+    "All 6 flashcards are placed neatly on screen with large Malayalam
+     text directly below each image."
+    "On Tap: The tapped flashcard lights up or gets a glowing border.
+      Step 1: Natural animal sound plays.
+      Step 2: A clear, calm voice reads the Malayalam name."
+    "A persistent HOME button is visible so the instructor or child can
+     return to the main menu at any time."
+
+  THE TWO-STEP TAP
+    Sound first, name second — that ordering is explicit in the brief and
+    it matters: the animal noise grabs attention, then the word lands on
+    an already-attending child. ANIMALS.speakAfterSound() holds the voice
+    back ~1.1s so the two never overlap.
+
+  ASSETS — mostly already here
+    Sounds ready: cow, tiger, elephant, bear, snake (rattlesnake.mp3).
+    Photos ready: dog, lion, monkey, elephant.
+    Everything else falls back to emoji until delivered.
+    See ASSET-LIST-PREPRIMARY.md.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Domestic &amp; Wild Animals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#f6fbf4,#eaf6ea 60%,#e2f0e6);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:14px 60px 0;
+    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#14532d;
+  }
+  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.72;font-weight:700}
+
+  /* ── the two opening option cards ─────────────────────────────── */
+  #choose{flex:1;display:flex;align-items:center;justify-content:center;
+          gap:min(6vw,60px);padding:20px;flex-wrap:wrap}
+  #choose.hide{display:none}
+  .opt{
+    width:min(38vw,420px);padding:calc(34px * var(--wall-scale,1));
+    border-radius:34px;cursor:pointer;text-align:center;
+    border:7px solid rgba(20,83,45,.18);
+    box-shadow:0 14px 34px rgba(20,83,45,.16);
+    transition:transform .2s,box-shadow .25s,border-color .25s;
+    touch-action:manipulation;
+  }
+  .opt:active{transform:scale(.97)}
+  .opt.dom{background:linear-gradient(160deg,#fef9c3,#fde68a)}
+  .opt.wild{background:linear-gradient(160deg,#dcfce7,#86efac)}
+  .opt .e{font-size:calc(96px * var(--wall-scale,1));line-height:1.1}
+  .opt .n{font-weight:900;font-size:calc(30px * var(--wall-scale,1));
+          color:#14532d;margin-top:8px;line-height:1.2}
+  .opt .n small{display:block;font-size:calc(17px * var(--wall-scale,1));
+                opacity:.6;font-weight:700}
+
+  #board{flex:1;display:none;align-items:center;justify-content:center;overflow:auto}
+  #board.on{display:flex}
+  #board .deck-card{background:#fff}
+
+  #back{
+    position:fixed;left:18px;bottom:18px;z-index:600;display:none;
+    padding:calc(14px * var(--wall-scale,1)) calc(30px * var(--wall-scale,1));
+    border-radius:20px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,#bbf7d0,#4ade80);color:#14532d;
+    font-family:inherit;font-weight:900;font-size:calc(19px * var(--wall-scale,1));
+    box-shadow:0 8px 22px rgba(22,101,52,.3);
+  }
+  #back.on{display:block}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+
+<div id="choose"></div>
+<div id="board"></div>
+<button id="back"></button>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/animal-data.js"></script>
+<script src="../js/flashcard-deck.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Domestic & Wild Animals', ml: 'നാട്ടു മൃഗങ്ങളും കാട്ടു മൃഗങ്ങളും' };
+
+var GROUPS = [
+  { key: 'domestic', cls: 'dom',  emoji: '🐄',
+    label: { en: 'Domestic Animals', ml: 'നാട്ടു മൃഗങ്ങൾ' },
+    ids: ANIMALS.DOMESTIC },
+  { key: 'wild',     cls: 'wild', emoji: '🦁',
+    label: { en: 'Wild Animals',     ml: 'കാട്ടു മൃഗങ്ങൾ' },
+    ids: ANIMALS.WILD }
+];
+
+var deck = null, active = null;
+
+function buildChoose() {
+  var box = document.getElementById('choose');
+  box.innerHTML = '';
+  GROUPS.forEach(function (g) {
+    var el = document.createElement('div');
+    el.className = 'opt ' + g.cls;
+    var b = WALL.tBoth(g.label);
+    el.innerHTML = '<div class="e">' + g.emoji + '</div>' +
+                   '<div class="n">' + b.main +
+                   (b.alt && b.alt !== b.main ? '<small>' + b.alt + '</small>' : '') + '</div>';
+    WALL.bindTouch(el, function () { openGroup(g); });
+    box.appendChild(el);
+  });
+}
+
+function openGroup(g) {
+  active = g;
+  WALL.sfx.pop();
+  document.getElementById('choose').classList.add('hide');
+  document.getElementById('board').classList.add('on');
+  document.getElementById('back').classList.add('on');
+
+  var items = ANIMALS.cards(g.ids);
+
+  if (!deck || !deck.el || !deck.el.isConnected) {
+    deck = DECK.mount('#board', {
+      items: items,
+      /* The deck must NOT speak on tap — the brief wants the animal
+         sound first and the name afterwards, not both at once. */
+      speak: false,
+      columns: 3,
+      onTap: function (item) { ANIMALS.speakAfterSound(item.id); }
+    });
+  } else {
+    deck.setItems(items);
+  }
+}
+
+function toChoose() {
+  WALL.sfx.tap();
+  active = null;
+  document.getElementById('choose').classList.remove('hide');
+  document.getElementById('board').classList.remove('on');
+  document.getElementById('back').classList.remove('on');
+  document.getElementById('board').innerHTML = '';
+  deck = null;
+}
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  document.getElementById('back').textContent =
+    WALL.isMl() ? '↩ തിരികെ' : '↩ Back';
+  buildChoose();
+  if (active) openGroup(active);
+}
+
+WALL.bindTouch(document.getElementById('back'), toChoose);
+WALL.onLang(paint);
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#board',
+  reset: toChoose,
+  home: true          /* the brief's persistent HOME button */
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

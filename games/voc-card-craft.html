@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  DIY BIRTHDAY CARD CRAFTING — Pangappara Blueroom, Vocational item #8
+  Drag decorations onto a blank card; three items and it transforms
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Center Canvas: A large, pristine Blank Greeting Card ... with a subtle
+     dotted target outline in the middle."
+    Sidebar: Text Banners ("Happy Birthday" / ആശംസകൾ in bold Malayalam and
+     English) · Flowers & Rosettes · Ribbons & Bows · Beads, Gems & Stars ·
+     Mini Balloons & Candles.
+    "As the item hovers over the card, the card glows with a soft golden
+     halo. Releasing snaps it onto the card with a soft pop/sticker-stick
+     sound. Placed items gain a gentle animated sparkle."
+    "Once the child places 3 or more items ... the card pulses gently and
+     closes briefly with a magical chime/swish sound. It reopens fully
+     transformed into a polished, glowing 3D Pop-Up Wishing Card!"
+    "The completed wishing card glides into the hands of a waiting
+     classmate avatar ... confetti ... 3-second applause."
+    "Zero voice narration."
+
+  FREEFORM PLACEMENT, ON PURPOSE
+    The brief says "freeform/target-assisted", and unlike every other drag
+    activity here there is no single right answer — the child decorates
+    however they like. So an item sticks wherever it lands on the card.
+    That freedom is the point of a crafting activity; nothing can be wrong.
+
+  ASSETS: none.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>DIY Birthday Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#fefce8,#fdf2f8 60%,#f5f3ff);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;
+  }
+  h1{
+    text-align:center;padding:12px 200px 0 12px;
+    font-size:calc(25px * var(--wall-scale,1));font-weight:800;color:#9d174d;
+  }
+  h1 .ml{display:block;font-size:calc(17px * var(--wall-scale,1));opacity:.75;font-weight:700}
+  #hint{text-align:center;font-weight:800;color:#a16207;
+        font-size:calc(16px * var(--wall-scale,1));min-height:24px}
+
+  #stage{flex:1;display:flex;align-items:center;justify-content:center;
+         gap:2vw;padding:0 2vw 14px;transition:transform .25s ease}
+
+  /* ── the card ─────────────────────────────────────────────────── */
+  #card{
+    position:relative;flex:0 0 auto;
+    width:min(48vw,520px);height:min(58vh,540px);
+    background:linear-gradient(160deg,#ffffff,#fffdf7);
+    border-radius:14px;border:3px solid #e7d9c6;
+    box-shadow:0 18px 44px rgba(120,53,15,.22);
+    overflow:hidden;transition:box-shadow .3s,transform .5s;
+  }
+  #card::after{
+    content:'';position:absolute;inset:9%;
+    border:4px dotted rgba(161,98,7,.28);border-radius:10px;pointer-events:none;
+  }
+  #card.hot{box-shadow:0 0 0 8px rgba(251,191,36,.28),0 0 40px rgba(251,191,36,.6),
+                       0 18px 44px rgba(120,53,15,.22)}
+  #card.flip{animation:flip 1.2s cubic-bezier(.4,0,.2,1)}
+  @keyframes flip{0%{transform:rotateY(0) scale(1)}
+                  45%{transform:rotateY(90deg) scale(.9)}
+                  55%{transform:rotateY(90deg) scale(.9)}
+                  100%{transform:rotateY(0) scale(1)}}
+  #card.done{background:linear-gradient(160deg,#fff7ed,#fde68a);border-color:#f59e0b;
+             box-shadow:0 0 0 8px rgba(245,158,11,.3),0 0 50px rgba(245,158,11,.6)}
+  #card.fly{animation:flyOff 1.4s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes flyOff{100%{transform:translateX(38vw) translateY(12vh) scale(.34) rotate(8deg)}}
+
+  .stuck{
+    position:absolute;line-height:1;pointer-events:none;
+    animation:pop .45s cubic-bezier(.2,1.5,.4,1), shimmer 2.4s ease-in-out infinite .45s;
+  }
+  @keyframes pop{0%{transform:scale(.3) translate(-50%,-50%);opacity:0}
+                 100%{transform:scale(1) translate(-50%,-50%);opacity:1}}
+  @keyframes shimmer{0%,100%{filter:drop-shadow(0 0 0 rgba(251,191,36,0))}
+                     50%{filter:drop-shadow(0 0 10px rgba(251,191,36,.85))}}
+
+  /* ── the tray ─────────────────────────────────────────────────── */
+  #tray{
+    flex:0 0 auto;width:min(30vw,300px);max-height:74vh;overflow:auto;
+    display:flex;flex-wrap:wrap;gap:calc(8px * var(--wall-scale,1));
+    padding:calc(12px * var(--wall-scale,1));
+    background:rgba(255,255,255,.72);border-radius:22px;
+    border:5px solid rgba(219,39,119,.2);align-content:flex-start;
+  }
+  .deco{
+    width:calc(74px * var(--wall-scale,1));height:calc(74px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(48px * var(--wall-scale,1));line-height:1;
+    background:#fff;border-radius:16px;border:4px solid rgba(190,160,210,.3);
+    cursor:grab;touch-action:none;
+  }
+  .deco.txt{width:100%;font-size:calc(20px * var(--wall-scale,1));font-weight:900;
+            color:#9d174d;height:auto;padding:10px}
+  .deco.drag{position:fixed;z-index:70;transform:scale(1.15);pointer-events:none;
+             filter:drop-shadow(0 12px 16px rgba(0,0,0,.32))}
+
+  #classmate{
+    position:fixed;right:3%;bottom:8%;font-size:calc(120px * var(--wall-scale,1));
+    line-height:1;opacity:0;transition:opacity .5s;z-index:5;
+  }
+  #classmate.on{opacity:1}
+
+  #done{position:fixed;inset:0;display:none;z-index:700;
+        background:rgba(255,255,255,.93);align-items:center;justify-content:center;
+        flex-direction:column;gap:18px}
+  #done.on{display:flex}
+  #done .big{font-size:120px}
+  #done .msg{font-size:30px;font-weight:900;color:#a16207;text-align:center}
+  #again{padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+         background:linear-gradient(135deg,#fde68a,#f59e0b);color:#4a2c00;
+         font-family:inherit;font-weight:900;font-size:21px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="hint"></div>
+
+<div id="stage">
+  <div id="card"></div>
+  <div id="tray"></div>
+</div>
+
+<div id="classmate">🧒</div>
+
+<div id="done">
+  <div class="big">💐</div>
+  <div class="msg" id="doneMsg"></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/birthday-common.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'DIY Birthday Card', ml: 'ആശംസാ കാർഡ് ഉണ്ടാക്കാം' };
+
+/* every family the brief lists */
+var DECOS = [
+  { t: 'text', ml: 'ആശംസകൾ', en: 'Happy Birthday' },
+  { t: 'text', ml: 'ജന്മദിനാശംസകൾ', en: 'Best Wishes' },
+  { e:'🌺' }, { e:'🌼' }, { e:'🌹' }, { e:'🏵️' },
+  { e:'🎀' }, { e:'🎗️' },
+  { e:'✨' }, { e:'💎' }, { e:'⭐' }, { e:'🔶' },
+  { e:'🎈' }, { e:'🕯️' }
+];
+
+var THRESHOLD = 3;
+var placed = 0, transformed = false;
+
+function build() {
+  placed = 0; transformed = false;
+  document.getElementById('card').className = '';
+  document.getElementById('card').innerHTML = '';
+  document.getElementById('classmate').classList.remove('on');
+  document.getElementById('done').classList.remove('on');
+
+  var tray = document.getElementById('tray');
+  tray.innerHTML = '';
+  DECOS.forEach(function (d) {
+    var el = document.createElement('div');
+    if (d.t === 'text') {
+      el.className = 'deco txt';
+      el.textContent = WALL.isMl() ? d.ml : d.en;
+    } else {
+      el.className = 'deco';
+      el.textContent = d.e;
+    }
+    wireDrag(el, d);
+    tray.appendChild(el);
+  });
+  paintHint();
+}
+
+function wireDrag(el, d) {
+  var dragging = false, w = 0, h = 0;
+
+  el.addEventListener('pointerdown', function (e) {
+    if (transformed) return;
+    dragging = true;
+    var r = el.getBoundingClientRect();
+    w = r.width; h = r.height;
+    el.classList.add('drag');
+    el.style.width = w + 'px';
+    el.style.left = (e.clientX - w / 2) + 'px';
+    el.style.top  = (e.clientY - h / 2) + 'px';
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  el.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    el.style.left = (e.clientX - w / 2) + 'px';
+    el.style.top  = (e.clientY - h / 2) + 'px';
+    var c = document.getElementById('card').getBoundingClientRect();
+    var over = e.clientX > c.left && e.clientX < c.right &&
+               e.clientY > c.top && e.clientY < c.bottom;
+    document.getElementById('card').classList.toggle('hot', over);
+  });
+
+  function end(e) {
+    if (!dragging) return;
+    dragging = false;
+    el.classList.remove('drag');
+    el.style.left = ''; el.style.top = ''; el.style.width = '';
+    var card = document.getElementById('card');
+    card.classList.remove('hot');
+
+    // measured from the pointer — freeform, it sticks where it lands
+    var c = card.getBoundingClientRect();
+    if (e.clientX > c.left && e.clientX < c.right &&
+        e.clientY > c.top && e.clientY < c.bottom) {
+      stick(d, e.clientX - c.left, e.clientY - c.top, c);
+    }
+  }
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', function () {
+    dragging = false; el.classList.remove('drag');
+    el.style.left = ''; el.style.top = ''; el.style.width = '';
+    document.getElementById('card').classList.remove('hot');
+  });
+}
+
+function stick(d, x, y, cardRect) {
+  var card = document.getElementById('card');
+  var s = document.createElement('div');
+  s.className = 'stuck';
+  if (d.t === 'text') {
+    s.textContent = WALL.isMl() ? d.ml : d.en;
+    s.style.fontSize = (26 * WALL.scale()) + 'px';
+    s.style.fontWeight = '900';
+    s.style.color = '#9d174d';
+    s.style.whiteSpace = 'nowrap';
+  } else {
+    s.textContent = d.e;
+    s.style.fontSize = (54 * WALL.scale()) + 'px';
+  }
+  // keep it inside the card
+  s.style.left = Math.max(12, Math.min(cardRect.width - 12, x)) + 'px';
+  s.style.top  = Math.max(12, Math.min(cardRect.height - 12, y)) + 'px';
+  card.appendChild(s);
+
+  BDAY.sfx.stick();
+  placed++;
+  paintHint();
+
+  if (placed >= THRESHOLD && !transformed) setTimeout(transform, 600);
+}
+
+function transform() {
+  if (transformed) return;
+  transformed = true;
+  var card = document.getElementById('card');
+
+  BDAY.sfx.magic();
+  card.classList.add('flip');
+
+  setTimeout(function () {
+    card.classList.remove('flip');
+    card.classList.add('done');
+    WALL.burstAt(card, ['#fde68a','#f9a8d4','#a7f3d0','#fff'], 30);
+  }, 1200);
+
+  // the finished card glides to a waiting classmate
+  setTimeout(function () {
+    document.getElementById('classmate').classList.add('on');
+    card.classList.add('fly');
+    BDAY.sfx.paperSwish();
+  }, 2000);
+
+  setTimeout(function () {
+    BDAY.finale(3);
+    document.getElementById('doneMsg').textContent = WALL.isMl()
+      ? 'കാർഡ് തയ്യാർ! കൂട്ടുകാരന് നൽകി.'
+      : 'The card is ready — and given to a friend!';
+    document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Make another';
+    document.getElementById('done').classList.add('on');
+  }, 3500);
+}
+
+function paintHint() {
+  var h = document.getElementById('hint');
+  if (transformed) { h.textContent = ''; return; }
+  var left = Math.max(0, THRESHOLD - placed);
+  h.textContent = WALL.isMl()
+    ? 'കാർഡിലേക്ക് അലങ്കാരങ്ങൾ വലിച്ചിടൂ  (' + placed + '/' + THRESHOLD + ')'
+    : 'Drag decorations onto the card  (' + placed + '/' + THRESHOLD + ')';
+}
+
+WALL.bindTouch(document.getElementById('again'), build);
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#stage',
+  reset: build,
+  home: true
+});
+
+paint();
+BDAY.controls();
+</script>
+</body>
+</html>

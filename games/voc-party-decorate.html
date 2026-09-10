@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  BIRTHDAY PARTY DECORATION — Pangappara Blueroom, Vocational item #3
+  Drag floating balloons, ribbons, table, cake and candles onto their marks
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "Room starts partially decorated with floating balloons, ribbons, cake
+     and table items drifting across screen areas."
+    Balloons  -> wall-hook outlines marked with glowing dotted circles;
+                 "snaps into the hook outline, ties itself in place, and
+                  plays a pop-chime sound with a small star sparkle."
+    Ribbons   -> "curved outline guides along the top wall borders";
+                 sweeping ribbon-swish sound.
+    Table     -> "large center footprint outline on the floor";
+                 "locks down into place with a solid thud-pop sound."
+    Cake      -> centre top surface of the placed table; sweet chime.
+    Candles   -> "dotted candle markers on top of the cake"; each
+                 "lights up with a glowing animated flame" + sparkler fizz.
+    "Every time an item snaps onto its correct target, the background song
+     volume auto-ducks by 50% for 1 second."
+    Finale: "Room lights dim, candles glow brightly, and colorful confetti
+     and floating balloons fill the entire screen ... the background Happy
+     Birthday song swells to full volume, accompanied by a 5-second cheer
+     and applause sound effect!"
+    "Zero voice narration."
+
+  ORDERING IS ENFORCED, GENTLY
+    The cake cannot land before the table and the candles cannot land
+    before the cake — the brief's own targets depend on it ("centre top
+    surface of the PLACED party table"). A too-early drag simply floats
+    back with the soft nudge; nothing scolds.
+
+  ASSETS: none. Everything is CSS and emoji; the music is synthesized.
+  Optional upgrade: ../assets/new/audio/happy-birthday.mp3
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Birthday Party Decoration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(#f5e6f7 0%, #efe0f4 58%, #d9bfa3 58%, #c9a888 100%);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;
+    transition:filter .8s ease, background .8s ease;
+  }
+  body.dim{filter:brightness(.55) saturate(1.15)}
+  h1{
+    text-align:center;padding:12px 200px 0 12px;
+    font-size:calc(25px * var(--wall-scale,1));font-weight:800;color:#831843;
+    text-shadow:0 2px 8px rgba(255,255,255,.7);
+  }
+  h1 .ml{display:block;font-size:calc(17px * var(--wall-scale,1));opacity:.75;font-weight:700}
+  #count{text-align:center;font-weight:800;color:#9d174d;
+         font-size:calc(15px * var(--wall-scale,1))}
+
+  #room{flex:1;position:relative;overflow:hidden;transition:transform .25s ease}
+
+  /* ── targets ──────────────────────────────────────────────────── */
+  .tgt{
+    position:absolute;border-radius:50%;
+    border:4px dashed rgba(131,24,67,.45);
+    display:flex;align-items:center;justify-content:center;
+    color:rgba(131,24,67,.4);pointer-events:none;
+    animation:tglow 2.2s ease-in-out infinite;
+  }
+  @keyframes tglow{0%,100%{opacity:.55}50%{opacity:1}}
+  .tgt.filled{opacity:0 !important;animation:none}
+  .tgt.ribbon{border-radius:18px}
+  .tgt.table{border-radius:24px}
+  .tgt.candle{border-radius:50%;border-width:3px}
+
+  /* ── draggable items ──────────────────────────────────────────── */
+  .item{
+    position:absolute;display:flex;align-items:center;justify-content:center;
+    line-height:1;cursor:grab;touch-action:none;z-index:10;
+    filter:drop-shadow(0 6px 8px rgba(0,0,0,.25));
+    transition:left .4s cubic-bezier(.2,1.2,.4,1), top .4s cubic-bezier(.2,1.2,.4,1),
+               transform .3s ease;
+  }
+  .item.drag{transition:none;z-index:50;transform:scale(1.12)}
+  .item.set{pointer-events:none;z-index:8}
+  .item.wrong{animation:wig .5s ease}
+  @keyframes wig{0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-10px)}50%{transform:translateX(10px)}
+    75%{transform:translateX(-6px)}}
+  .item.lit{filter:drop-shadow(0 0 14px rgba(255,214,120,.95))
+                   drop-shadow(0 6px 8px rgba(0,0,0,.25))}
+
+  #done{position:fixed;inset:0;display:none;z-index:700;
+        background:rgba(30,10,35,.82);align-items:center;justify-content:center;
+        flex-direction:column;gap:18px}
+  #done.on{display:flex}
+  #done .big{font-size:130px;animation:bob 1.2s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+  #done .msg{font-size:32px;font-weight:900;color:#fbcfe8;text-align:center}
+  #again{padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
+         background:linear-gradient(135deg,#f9a8d4,#db2777);color:#fff;
+         font-family:inherit;font-weight:900;font-size:21px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="count"></div>
+<div id="room"></div>
+
+<div id="done">
+  <div class="big">🎂</div>
+  <div class="msg" id="doneMsg"></div>
+  <button id="again"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/birthday-common.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Birthday Party Decoration', ml: 'ജന്മദിന അലങ്കാരം' };
+
+/* Every target the brief names. `needs` enforces the dependency chain:
+   cake needs the table down, candles need the cake on it. */
+var SPEC = [
+  { id:'balloon1', kind:'balloon', emoji:'🎈', size:78, tx:.14, ty:.10, ring:96 },
+  { id:'balloon2', kind:'balloon', emoji:'🎈', size:78, tx:.30, ty:.06, ring:96 },
+  { id:'balloon3', kind:'balloon', emoji:'🎈', size:78, tx:.70, ty:.06, ring:96 },
+  { id:'balloon4', kind:'balloon', emoji:'🎈', size:78, tx:.86, ty:.10, ring:96 },
+  { id:'ribbon1',  kind:'ribbon',  emoji:'🎀', size:70, tx:.44, ty:.05, ring:92 },
+  { id:'ribbon2',  kind:'ribbon',  emoji:'🎗️', size:70, tx:.57, ty:.05, ring:92 },
+  { id:'table',    kind:'table',   emoji:'🪑', size:110, tx:.50, ty:.70, ring:150 },
+  { id:'cake',     kind:'cake',    emoji:'🎂', size:92, tx:.50, ty:.54, ring:118, needs:'table' },
+  { id:'candle1',  kind:'candle',  emoji:'🕯️', size:46, tx:.455, ty:.435, ring:64, needs:'cake' },
+  { id:'candle2',  kind:'candle',  emoji:'🕯️', size:46, tx:.50,  ty:.425, ring:64, needs:'cake' },
+  { id:'candle3',  kind:'candle',  emoji:'🕯️', size:46, tx:.545, ty:.435, ring:64, needs:'cake' }
+];
+
+var SOUND = {
+  balloon: 'balloonPop', ribbon: 'ribbonSwish', table: 'thudPop',
+  cake: 'sweetChime', candle: 'sparklerFizz'
+};
+
+var placed = {}, drift = [], raf = 0;
+
+function room() { return document.getElementById('room'); }
+
+function build() {
+  placed = {}; drift = [];
+  document.body.classList.remove('dim');
+  document.getElementById('done').classList.remove('on');
+  var r = room();
+  r.innerHTML = '';
+  var W_ = r.clientWidth, H_ = r.clientHeight;
+  var s = WALL.scale();
+
+  SPEC.forEach(function (sp) {
+    var size = sp.size * s, ring = sp.ring * s;
+
+    var t = document.createElement('div');
+    t.className = 'tgt ' + sp.kind;
+    t.id = 'tgt-' + sp.id;
+    t.style.width = ring + 'px';
+    t.style.height = (sp.kind === 'ribbon' ? ring * 0.5 : ring) + 'px';
+    t.style.left = (sp.tx * W_ - ring / 2) + 'px';
+    t.style.top  = (sp.ty * H_ - ring / 2) + 'px';
+    t.style.fontSize = (size * 0.55) + 'px';
+    t.textContent = sp.emoji;
+    r.appendChild(t);
+
+    var el = document.createElement('div');
+    el.className = 'item';
+    el.id = 'it-' + sp.id;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.fontSize = size + 'px';
+    el.textContent = sp.emoji;
+    // start scattered around the edges, drifting
+    var startX = (0.05 + Math.random() * 0.16) * W_ + (Math.random() < .5 ? 0 : W_ * 0.72);
+    var startY = (0.10 + Math.random() * 0.72) * H_;
+    el.style.left = Math.min(W_ - size, Math.max(0, startX)) + 'px';
+    el.style.top  = Math.min(H_ - size, Math.max(0, startY)) + 'px';
+    wireDrag(el, sp);
+    r.appendChild(el);
+
+    drift.push({ el: el, sp: sp,
+                 vx: (Math.random() - .5) * 0.35, vy: (Math.random() - .5) * 0.28 });
+  });
+
+  paintCount();
+  if (!raf) raf = requestAnimationFrame(tick);
+}
+
+/* the brief: items "drift across screen areas" until they are placed */
+function tick() {
+  raf = requestAnimationFrame(tick);
+  var r = room(), W_ = r.clientWidth, H_ = r.clientHeight;
+  drift.forEach(function (d) {
+    if (placed[d.sp.id] || d.el.classList.contains('drag')) return;
+    var x = parseFloat(d.el.style.left) || 0, y = parseFloat(d.el.style.top) || 0;
+    var w = d.el.offsetWidth, h = d.el.offsetHeight;
+    x += d.vx; y += d.vy;
+    if (x < 0) { x = 0; d.vx = Math.abs(d.vx); }
+    if (x > W_ - w) { x = W_ - w; d.vx = -Math.abs(d.vx); }
+    if (y < 0) { y = 0; d.vy = Math.abs(d.vy); }
+    if (y > H_ - h) { y = H_ - h; d.vy = -Math.abs(d.vy); }
+    d.el.style.left = x + 'px';
+    d.el.style.top  = y + 'px';
+  });
+}
+
+function wireDrag(el, sp) {
+  var dragging = false, ox = 0, oy = 0;
+
+  el.addEventListener('pointerdown', function (e) {
+    if (placed[sp.id]) return;
+    dragging = true;
+    el.classList.add('drag');
+    // offset FIRST: if setPointerCapture throws (it can, on some devices
+    // and whenever the pointer is already captured elsewhere) we would
+    // otherwise drag with a stale zero offset.
+    var r = el.getBoundingClientRect();
+    ox = e.clientX - r.left; oy = e.clientY - r.top;
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  el.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    var rr = room().getBoundingClientRect();
+    el.style.left = (e.clientX - rr.left - ox) + 'px';
+    el.style.top  = (e.clientY - rr.top - oy) + 'px';
+  });
+
+  function end() {
+    if (!dragging) return;
+    dragging = false;
+    el.classList.remove('drag');
+    trySnap(el, sp);
+  }
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+
+function trySnap(el, sp) {
+  var t = document.getElementById('tgt-' + sp.id);
+  if (!t) return;
+
+  /* Measure from the authored style, NOT getBoundingClientRect.
+     Style recalculation is batched: add('drag') -> set left -> remove('drag')
+     collapses into "left changed while a transition is active", so the item
+     animates and the rect reports a mid-flight position. A quick flick would
+     then fail to snap even though the child dropped it right on target.
+     style.left is what we set and is immune to that. */
+  var ix = parseFloat(el.style.left) + el.offsetWidth / 2;
+  var iy = parseFloat(el.style.top) + el.offsetHeight / 2;
+  var tx = parseFloat(t.style.left) + t.offsetWidth / 2;
+  var ty = parseFloat(t.style.top) + t.offsetHeight / 2;
+  var reach = Math.max(80, t.offsetWidth * 0.85);
+
+  if (Math.hypot(ix - tx, iy - ty) > reach) return;
+
+  // dependency: the cake needs the table, candles need the cake
+  if (sp.needs && !placed[sp.needs]) {
+    el.classList.remove('wrong'); void el.offsetWidth; el.classList.add('wrong');
+    WALL.sfx.nudge();
+    setTimeout(function () { el.classList.remove('wrong'); }, 700);
+    return;
+  }
+
+  placed[sp.id] = true;
+  el.style.left = (parseFloat(t.style.left) + (t.offsetWidth - el.offsetWidth) / 2) + 'px';
+  el.style.top  = (parseFloat(t.style.top) + (t.offsetHeight - el.offsetHeight) / 2) + 'px';
+  el.classList.add('set');
+  if (sp.kind === 'candle') el.classList.add('lit');
+  t.classList.add('filled');
+
+  BDAY.sfx[SOUND[sp.kind]]();
+  WALL.burstAt(el, ['#fbcfe8', '#f9a8d4', '#fde68a', '#fff'], 12);
+  paintCount();
+
+  if (SPEC.every(function (x) { return placed[x.id]; })) setTimeout(finish, 700);
+}
+
+function paintCount() {
+  var n = Object.keys(placed).length;
+  document.getElementById('count').textContent =
+    (WALL.isMl() ? 'അലങ്കരിച്ചത്: ' : 'Placed: ') + n + ' / ' + SPEC.length;
+}
+
+function finish() {
+  // brief: "Room lights dim, candles glow brightly"
+  document.body.classList.add('dim');
+  BDAY.finale(5);
+  var d = document.getElementById('done');
+  document.getElementById('doneMsg').textContent =
+    WALL.isMl() ? 'പാർട്ടി തയ്യാർ!' : 'The party is ready!';
+  document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Decorate again';
+  setTimeout(function () { d.classList.add('on'); }, 2200);
+}
+
+WALL.bindTouch(document.getElementById('again'), build);
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+window.addEventListener('resize', build);
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#room',
+  reset: build,
+  home: true
+  /* no voice button — brief: "Zero voice narration." */
+});
+
+paint();
+BDAY.controls();
+</script>
+</body>
+</html>

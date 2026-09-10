@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  ANIMAL MOVEMENT PATH — Pangappara Blueroom, Pre-Primary Module 2 #14
+  Rabbit hops · Frog jumps · Butterfly flutter — trace with the hand
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    A. Rabbit — "continuous bouncing up-and-down arcs"; glowing
+       orange/yellow trail; rhythmic boing sounds.
+    B. Frog — "wide, steep jumping arcs between distinct resting nodes";
+       neon-green beam; water ripple + ribbit on every completed jump.
+    C. Butterfly — "a clean, flowing zig-zag S-curve wave"; pink and
+       purple light with sparkling stars; whimsical chimes while moving.
+    "A large glowing start node pulses softly at the beginning."
+    "Graceful Motion: If her hand strays off the path slightly, the light
+     beam simply holds its place without any error buzzers or red screens.
+     Resuming hand movement on the line continues the light trail."
+    "Soft instrumental background music plays. No voice narration."
+
+  HOW THE TRACING WORKS
+    Same technique as the Malayalam letter tracing: the path is stroked
+    thick onto an offscreen canvas, and that canvas's alpha is used both
+    as the hit test ("is the hand on the line?") and as a clip mask for
+    the glow. Straying off simply paints nothing — which is exactly the
+    "holds its place, no error" behaviour the brief asks for, and it
+    comes free rather than needing special-casing.
+
+    The paths are generated from the canvas size, not authored as fixed
+    coordinates, so they fill any wall resolution correctly.
+
+  ASSETS: none. Sounds are synthesized (boing, ribbit + ripple, chimes).
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Animal Movement Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(160deg,#0f172a,#1e293b 60%,#111827);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;
+  }
+  h1{
+    text-align:center;padding:12px 60px 0;
+    font-size:calc(26px * var(--wall-scale,1));font-weight:800;color:#e2e8f0;
+  }
+  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.65;font-weight:700}
+
+  #tabs{display:flex;gap:12px;justify-content:center;padding:8px}
+  .ptab{
+    padding:calc(11px * var(--wall-scale,1)) calc(24px * var(--wall-scale,1));
+    border-radius:18px;border:4px solid #475569;background:#1e293b;color:#cbd5e1;
+    font-family:inherit;font-weight:900;font-size:calc(17px * var(--wall-scale,1));
+    cursor:pointer;touch-action:manipulation;
+  }
+  .ptab.on{background:linear-gradient(135deg,#4ade80,#16a34a);
+           border-color:#22c55e;color:#052e16}
+
+  #wrap{flex:1;position:relative;margin:6px 2vw 14px;border-radius:26px;
+        overflow:hidden;background:rgba(255,255,255,.04);
+        transition:transform .25s ease}
+  #wrap canvas{position:absolute;inset:0;width:100%;height:100%}
+  #mask{display:none}                 /* hit-test + clip source, never shown */
+  #startDot{
+    position:absolute;width:58px;height:58px;border-radius:50%;
+    background:radial-gradient(circle,#4ade80,#16a34a);
+    box-shadow:0 0 0 10px rgba(34,197,94,.25),0 0 34px rgba(34,197,94,.9);
+    transform:translate(-50%,-50%);pointer-events:none;
+    animation:pulseDot 1.2s ease-in-out infinite;
+  }
+  @keyframes pulseDot{0%,100%{transform:translate(-50%,-50%) scale(1)}
+                      50%{transform:translate(-50%,-50%) scale(1.3)}}
+  #startDot.gone{display:none}
+
+  #bar{position:fixed;left:0;right:0;bottom:0;height:12px;background:rgba(255,255,255,.08)}
+  #barFill{height:100%;width:0;transition:width .18s ease}
+
+  #won{position:fixed;inset:0;display:none;z-index:700;
+       background:rgba(15,23,42,.9);align-items:center;justify-content:center;
+       flex-direction:column;gap:18px}
+  #won.on{display:flex}
+  #won .big{font-size:150px;animation:hop 1s ease-in-out infinite}
+  @keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-26px)}}
+  #won .msg{font-size:32px;font-weight:900;color:#4ade80;text-align:center}
+  #won button{padding:15px 36px;border-radius:20px;border:none;cursor:pointer;
+              background:linear-gradient(135deg,#93c5fd,#3b82f6);color:#fff;
+              font-family:inherit;font-weight:900;font-size:21px}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="tabs"></div>
+
+<div id="wrap">
+  <canvas id="line"></canvas>
+  <canvas id="glow"></canvas>
+  <canvas id="mask"></canvas>
+  <div id="startDot"></div>
+</div>
+
+<div id="bar"><div id="barFill"></div></div>
+
+<div id="won">
+  <div class="big" id="wonArt"></div>
+  <div class="msg" id="wonMsg"></div>
+  <button id="wonNext"></button>
+</div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Animal Movement Path', ml: 'മൃഗങ്ങളുടെ സഞ്ചാരപഥം' };
+
+/* ══════════════════════════════════════════════════════════════
+   THE THREE PATHS — generated from canvas size, not fixed points
+   ══════════════════════════════════════════════════════════════ */
+var PATHS = [
+  {
+    key: 'rabbit', emoji: '🐰',
+    name: { en: 'Rabbit hops', ml: 'മുയലിന്റെ ചാട്ടം' },
+    glow: '#fbbf24', trail: '#fde68a',
+    done: { en: 'The rabbit hopped all the way!', ml: 'മുയൽ ചാടിയെത്തി!' },
+    /* continuous bouncing up-and-down arcs */
+    build: function (ctx, W, H) {
+      var n = 6, x0 = W * 0.08, x1 = W * 0.92, span = (x1 - x0) / n;
+      var base = H * 0.68, up = H * 0.34;
+      ctx.moveTo(x0, base);
+      for (var i = 0; i < n; i++) {
+        var sx = x0 + span * i;
+        ctx.quadraticCurveTo(sx + span * 0.5, base - up, sx + span, base);
+      }
+      return { x: x0, y: base };
+    },
+    step: function () { WALL.tone(300 + Math.random() * 120, 0.09, 'sine', 0.07); }
+  },
+  {
+    key: 'frog', emoji: '🐸',
+    name: { en: 'Frog jumps', ml: 'തവളയുടെ ചാട്ടം' },
+    glow: '#4ade80', trail: '#bbf7d0',
+    done: { en: 'The frog jumped across!', ml: 'തവള ചാടിക്കടന്നു!' },
+    /* wide, steep arcs between resting nodes */
+    build: function (ctx, W, H) {
+      var n = 4, x0 = W * 0.09, x1 = W * 0.91, span = (x1 - x0) / n;
+      var base = H * 0.74, up = H * 0.52;
+      ctx.moveTo(x0, base);
+      for (var i = 0; i < n; i++) {
+        var sx = x0 + span * i;
+        ctx.bezierCurveTo(sx + span * 0.18, base - up,
+                          sx + span * 0.82, base - up,
+                          sx + span, base);
+      }
+      return { x: x0, y: base };
+    },
+    step: function () {
+      WALL.noise(0.18, 0.05, 0.05);
+      WALL.tone(210, 0.10, 'square', 0.045);
+    }
+  },
+  {
+    key: 'butterfly', emoji: '🦋',
+    name: { en: 'Butterfly flutter', ml: 'ചിത്രശലഭത്തിന്റെ പറക്കൽ' },
+    glow: '#e879f9', trail: '#f5d0fe',
+    done: { en: 'The butterfly fluttered away!', ml: 'ചിത്രശലഭം പറന്നുപോയി!' },
+    sparkle: true,
+    /* flowing zig-zag S-curve wave */
+    build: function (ctx, W, H) {
+      var x0 = W * 0.07, x1 = W * 0.93, mid = H * 0.5, amp = H * 0.28;
+      ctx.moveTo(x0, mid);
+      var steps = 90;
+      for (var i = 1; i <= steps; i++) {
+        var t = i / steps;
+        var x = x0 + (x1 - x0) * t;
+        var y = mid + Math.sin(t * Math.PI * 3) * amp;
+        ctx.lineTo(x, y);
+      }
+      return { x: x0, y: mid };
+    },
+    step: function () {
+      WALL.tone(1200 + Math.random() * 900, 0.07, 'triangle', 0.045);
+    }
+  }
+];
+
+/* ══════════════════════════════════════════════════════════════
+   CANVAS
+   ══════════════════════════════════════════════════════════════ */
+var wrap = document.getElementById('wrap');
+var cLine = document.getElementById('line');
+var cGlow = document.getElementById('glow');
+var cMask = document.getElementById('mask');
+var xLine = cLine.getContext('2d');
+var xGlow = cGlow.getContext('2d');
+var xMask = cMask.getContext('2d', { willReadFrequently: true });
+var dot = document.getElementById('startDot');
+
+var cur = 0, W = 0, H = 0, mask = null, cells = null, hit = null;
+var CELL = 16, BRUSH = 34, STROKE = 54;
+var tracing = false, won = false, lastStep = 0;
+
+function sizeAll() {
+  var r = wrap.getBoundingClientRect();
+  W = Math.max(160, Math.round(r.width));
+  H = Math.max(160, Math.round(r.height));
+  [cLine, cGlow, cMask].forEach(function (c) { c.width = W; c.height = H; });
+}
+
+function strokePath(ctx, colour, width) {
+  var P = PATHS[cur];
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = colour;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  var start = P.build(ctx, W, H);
+  ctx.stroke();
+  return start;
+}
+
+function buildMask() {
+  var img = xMask.getImageData(0, 0, W, H).data;
+  mask = img; cells = {}; hit = {};
+  for (var y = 0; y < H; y += CELL) {
+    for (var x = 0; x < W; x += CELL) {
+      if (img[(y * W + x) * 4 + 3] > 80) cells[x + ',' + y] = 1;
+    }
+  }
+}
+
+function onPath(x, y) {
+  x = Math.round(x); y = Math.round(y);
+  if (x < 0 || y < 0 || x >= W || y >= H || !mask) return false;
+  return mask[(y * W + x) * 4 + 3] > 80;
+}
+
+function progress() {
+  var t = Object.keys(cells).length;
+  return t ? Object.keys(hit).length / t : 0;
+}
+
+function paintAt(x, y) {
+  var P = PATHS[cur];
+  xGlow.globalCompositeOperation = 'source-over';
+  var g = xGlow.createRadialGradient(x, y, 0, x, y, BRUSH);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(0.35, P.glow);
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  xGlow.fillStyle = g;
+  xGlow.beginPath(); xGlow.arc(x, y, BRUSH, 0, Math.PI * 2); xGlow.fill();
+
+  // clip the glow to the path — it can never spill off the line
+  xGlow.globalCompositeOperation = 'destination-in';
+  xGlow.drawImage(cMask, 0, 0);
+  xGlow.globalCompositeOperation = 'source-over';
+
+  for (var yy = y - BRUSH; yy <= y + BRUSH; yy += CELL) {
+    for (var xx = x - BRUSH; xx <= x + BRUSH; xx += CELL) {
+      var cx = Math.floor(xx / CELL) * CELL, cy = Math.floor(yy / CELL) * CELL;
+      var k = cx + ',' + cy;
+      if (cells[k] && !hit[k]) {
+        var dx = cx - x, dy = cy - y;
+        if (dx * dx + dy * dy <= BRUSH * BRUSH) hit[k] = 1;
+      }
+    }
+  }
+}
+
+function move(e) {
+  if (!tracing || won) return;
+  var r = wrap.getBoundingClientRect();
+  var x = (e.clientX - r.left) * (W / r.width);
+  var y = (e.clientY - r.top) * (H / r.height);
+
+  // off the line: hold position, no mark, no sound. The brief's
+  // "graceful motion" falls out of the mask for free.
+  if (!onPath(x, y)) return;
+
+  paintAt(x, y);
+
+  var P = PATHS[cur], p = progress();
+  document.getElementById('barFill').style.width = (p * 100).toFixed(1) + '%';
+  document.getElementById('barFill').style.background = P.glow;
+
+  var now = Date.now();
+  if (now - lastStep > 130) { lastStep = now; P.step(); }
+  if (P.sparkle && Math.random() < 0.35) {
+    WALL.burst(e.clientX, e.clientY, ['#f5d0fe', '#e879f9', '#c084fc', '#fff'], 3);
+  }
+
+  if (p >= 0.8) finish();
+}
+
+function down(e) {
+  if (won) return;
+  tracing = true;
+  dot.classList.add('gone');
+  if (wrap.setPointerCapture) wrap.setPointerCapture(e.pointerId);
+  move(e);
+}
+function up() { tracing = false; }
+
+wrap.addEventListener('pointerdown', down);
+wrap.addEventListener('pointermove', move);
+wrap.addEventListener('pointerup', up);
+wrap.addEventListener('pointercancel', up);
+
+/* ══════════════════════════════════════════════════════════════
+   FINISH
+   ══════════════════════════════════════════════════════════════ */
+function finish() {
+  if (won) return;
+  won = true; tracing = false;
+  var P = PATHS[cur];
+
+  xGlow.globalCompositeOperation = 'source-over';
+  xGlow.fillStyle = P.glow;
+  xGlow.fillRect(0, 0, W, H);
+  xGlow.globalCompositeOperation = 'destination-in';
+  xGlow.drawImage(cMask, 0, 0);
+  xGlow.globalCompositeOperation = 'source-over';
+
+  WALL.burstAt(wrap, null, 26);
+  WALL.celebrate();
+
+  document.getElementById('wonArt').textContent = P.emoji;
+  document.getElementById('wonMsg').textContent = WALL.t(P.done);
+  var last = cur >= PATHS.length - 1;
+  document.getElementById('wonNext').textContent = WALL.isMl()
+    ? (last ? 'വീണ്ടും' : 'അടുത്തത്') : (last ? 'Again' : 'Next path');
+  setTimeout(function () { document.getElementById('won').classList.add('on'); }, 1100);
+}
+
+WALL.bindTouch(document.getElementById('wonNext'), function () {
+  document.getElementById('won').classList.remove('on');
+  cur = (cur + 1) % PATHS.length;
+  load();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   BUILD
+   ══════════════════════════════════════════════════════════════ */
+function buildTabs() {
+  var box = document.getElementById('tabs');
+  box.innerHTML = '';
+  PATHS.forEach(function (P, i) {
+    var b = document.createElement('button');
+    b.className = 'ptab' + (i === cur ? ' on' : '');
+    b.textContent = P.emoji + ' ' + WALL.t(P.name);
+    WALL.bindTouch(b, function () { cur = i; load(); });
+    box.appendChild(b);
+  });
+}
+
+function load() {
+  won = false; tracing = false;
+  document.getElementById('won').classList.remove('on');
+  document.getElementById('barFill').style.width = '0%';
+
+  sizeAll();
+  var P = PATHS[cur];
+  strokePath(xMask, '#000', STROKE);                    // the mask
+  var start = strokePath(xLine, 'rgba(255,255,255,.16)', STROKE);  // the dim line
+  xGlow.clearRect(0, 0, W, H);
+  buildMask();
+
+  var r = wrap.getBoundingClientRect();
+  dot.style.left = (start.x * r.width / W) + 'px';
+  dot.style.top  = (start.y * r.height / H) + 'px';
+  dot.classList.remove('gone');
+
+  buildTabs();
+}
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  load();
+}
+WALL.onLang(paint);
+WALL.onSize(load);
+window.addEventListener('resize', function () { if (mask) load(); });
+
+WALL.toolbar({
+  lang: true, size: true, height: true,
+  heightTarget: '#wrap',
+  reset: load,
+  home: true
+  /* no voice button — brief: "No voice narration." */
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

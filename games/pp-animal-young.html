@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  ANIMALS AND THEIR YOUNG ONES — Pangappara Blueroom, Pre-Primary #8
+  Tap a mother · her young one appears and runs to her side
+════════════════════════════════════════════════════════════════════════════
+
+  BRIEF
+    "When the child touches the Cow, the Calf appears nearby and happily
+     runs over to stand right beside its mother." (and the same shape for
+     hen/chick, dog/puppy, cat/kitten, goat/kid, horse/foal, duck/duckling,
+     sheep/lamb — each with its own natural sound.)
+
+  MALAYALAM NOTE
+    The brief gives the young of BOTH goat and sheep as ആട്ടിൻകുട്ടി. Two
+    different animals cannot share one name in a naming activity, so this
+    uses ആട്ടിൻകുട്ടി for the goat's kid and കുഞ്ഞാട് for the lamb.
+    Needs a teacher's ruling — ASSET-LIST-PREPRIMARY.md §9.
+
+  ASSETS — 8 young-one images, transparent PNG preferred since they
+  animate across the card:
+    ../assets/new/images/animals/{calf,chick,puppy,kitten,
+                                  kid-goat,foal,duckling,lamb}.jpg
+  All emoji-backed until delivered.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Animals and their Young</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(#e9f6ff 0%, #f4fbff 44%, #cdeaa8 44%, #a8d97f 100%);
+    display:flex;flex-direction:column;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  h1{
+    text-align:center;padding:12px 60px 0;
+    font-size:calc(27px * var(--wall-scale,1));font-weight:800;color:#3f2d0b;
+    text-shadow:0 2px 8px rgba(255,255,255,.8);
+  }
+  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.78;font-weight:700}
+  #count{text-align:center;font-weight:800;color:#4a5c2a;
+         font-size:calc(15px * var(--wall-scale,1))}
+
+  #field{flex:1;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;
+         gap:calc(12px * var(--wall-scale,1));padding:10px 2vw;overflow:auto;
+         transition:transform .25s ease}
+
+  .fam{
+    position:relative;width:calc(212px * var(--wall-scale,1));
+    height:calc(176px * var(--wall-scale,1));
+    cursor:pointer;touch-action:manipulation;border-radius:22px;
+    border:5px solid transparent;transition:border-color .25s,box-shadow .25s;
+  }
+  .fam.lit{border-color:#22c55e;box-shadow:0 0 0 5px rgba(34,197,94,.18)}
+  .fam .mum{
+    position:absolute;left:10px;bottom:26px;
+    width:calc(104px * var(--wall-scale,1));height:calc(104px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(86px * var(--wall-scale,1));line-height:1;
+    filter:drop-shadow(0 8px 8px rgba(0,0,0,.2));
+  }
+  .fam .kid{
+    position:absolute;right:6px;bottom:26px;
+    width:calc(66px * var(--wall-scale,1));height:calc(66px * var(--wall-scale,1));
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(54px * var(--wall-scale,1));line-height:1;
+    filter:drop-shadow(0 6px 6px rgba(0,0,0,.2));
+    /* starts off to the right and invisible, then runs in to mother */
+    opacity:0;transform:translateX(calc(70px * var(--wall-scale,1)));
+    transition:opacity .3s ease, transform 1.1s cubic-bezier(.3,1.3,.4,1);
+  }
+  .fam .mum img,.fam .kid img{max-width:100%;max-height:100%;object-fit:contain}
+  .fam.on .kid{opacity:1;transform:translateX(0)}
+  .fam.on .kid{animation:trot 1.1s ease}
+  @keyframes trot{
+    0%,100%{margin-bottom:0}
+    20%{margin-bottom:12px}45%{margin-bottom:0}70%{margin-bottom:8px}
+  }
+  .fam .lbl{
+    position:absolute;left:0;right:0;bottom:0;text-align:center;
+    font-weight:900;font-size:calc(15px * var(--wall-scale,1));color:#3f2d0b;
+    background:rgba(255,255,255,.82);border-radius:12px;padding:3px 6px;line-height:1.25;
+  }
+  .fam .lbl small{display:block;font-size:calc(12px * var(--wall-scale,1));
+                  opacity:.72;color:#7c2d12}
+</style>
+</head>
+<body>
+
+<h1 id="title"></h1>
+<div id="count"></div>
+<div id="field"></div>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/animal-data.js"></script>
+<script>
+WALL.init();
+
+var TITLE = { en: 'Animals and their Young Ones', ml: 'മൃഗങ്ങളും അവയുടെ കുഞ്ഞുങ്ങളും' };
+var IDS = ['cow', 'hen', 'dog', 'cat', 'goat', 'horse', 'duck', 'sheep'];
+var seen = {};
+
+function artInto(box, src, emoji) {
+  var img = document.createElement('img');
+  img.src = src; img.alt = '';
+  img.addEventListener('error', function () { box.textContent = emoji; });
+  box.appendChild(img);
+}
+
+function build() {
+  var field = document.getElementById('field');
+  field.innerHTML = '';
+  IDS.forEach(function (id) {
+    var a = ANIMALS.get(id);
+    var y = ANIMALS.young[id];
+
+    var f = document.createElement('div');
+    f.className = 'fam' + (seen[id] ? ' on lit' : '');
+
+    var mum = document.createElement('div');
+    mum.className = 'mum';
+    artInto(mum, a.img, a.emoji);
+
+    var kid = document.createElement('div');
+    kid.className = 'kid';
+    artInto(kid, y.img, y.emoji);
+
+    var lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.innerHTML = WALL.t({ en: a.en, ml: a.ml }) +
+                    '<small>' + WALL.t({ en: y.en, ml: y.ml }) + '</small>';
+
+    f.appendChild(mum); f.appendChild(kid); f.appendChild(lbl);
+    WALL.bindTouch(f, function () { tap(f, id); });
+    field.appendChild(f);
+  });
+  paintCount();
+}
+
+function tap(f, id) {
+  var first = !seen[id];
+  seen[id] = true;
+  f.classList.add('on', 'lit');
+
+  ANIMALS.playSound(id);
+  // name the young one, which is the thing being taught here
+  var y = ANIMALS.young[id];
+  setTimeout(function () { WALL.say({ ml: y.ml, en: y.en }); }, 1150);
+
+  if (first) {
+    WALL.burstAt(f, null, 12);
+    paintCount();
+    if (IDS.every(function (x) { return seen[x]; })) {
+      setTimeout(function () { WALL.celebrate(); }, 900);
+    }
+  }
+}
+
+function paintCount() {
+  var n = Object.keys(seen).length;
+  document.getElementById('count').textContent =
+    (WALL.isMl() ? 'കണ്ടെത്തിയവ: ' : 'Found: ') + n + ' / ' + IDS.length;
+}
+
+function paint() {
+  var b = WALL.tBoth(TITLE);
+  document.getElementById('title').innerHTML =
+    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
+  build();
+}
+WALL.onLang(paint);
+WALL.onSize(build);
+
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  heightTarget: '#field',
+  reset: function () { seen = {}; build(); },
+  home: true
+});
+
+paint();
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>
