@@ -5,7 +5,11 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "voice:lines": "node scripts/voice-lines.mjs",
+    "voice:bake": ".venv/Scripts/python.exe scripts/voice-bake.py",
+    "photos": "node --env-file=.env.local scripts/fetch-pexels.mjs",
+    "photos:list": "node scripts/fetch-pexels.mjs --list"
   },
   "build": {
     "appId": "com.yourname.interactive-wall-games",

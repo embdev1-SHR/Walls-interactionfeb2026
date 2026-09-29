@@ -1,0 +1,442 @@
+{
+  "animals/cat.jpg": {
+    "photographer": "Krishna Soni",
+    "url": "https://www.pexels.com/photo/close-up-of-a-stray-cat-14971365/",
+    "query": "indian street cat tabby"
+  },
+  "animals/cow.jpg": {
+    "photographer": "SnipeShot",
+    "url": "https://www.pexels.com/photo/white-cow-grazing-in-lush-green-field-29815447/",
+    "query": "indian desi cow"
+  },
+  "animals/hen.jpg": {
+    "photographer": "Erwin Bosman",
+    "url": "https://www.pexels.com/photo/close-up-portrait-of-a-brown-hen-on-one-leg-35889621/",
+    "query": "hen chicken standing"
+  },
+  "animals/rooster.jpg": {
+    "photographer": "Erwin Bosman",
+    "url": "https://www.pexels.com/photo/vibrant-rooster-crowing-at-sunrise-on-farm-36733592/",
+    "query": "rooster crowing"
+  },
+  "animals/colourful-hen.jpg": {
+    "photographer": "Erwin Bosman",
+    "url": "https://www.pexels.com/photo/close-up-of-domestic-hens-on-farm-38278287/",
+    "query": "colourful hen feathers"
+  },
+  "animals/sheep.jpg": {
+    "photographer": "Ruben Reijgwart",
+    "url": "https://www.pexels.com/photo/a-white-sheep-standing-in-the-field-and-looking-at-camera-22742679/",
+    "query": "sheep standing close"
+  },
+  "animals/goat.jpg": {
+    "photographer": "Guillermo Berlin",
+    "url": "https://www.pexels.com/photo/young-goat-in-chascomus-park-setting-29721809/",
+    "query": "goat standing"
+  },
+  "animals/horse.jpg": {
+    "photographer": "Adrian Roberts",
+    "url": "https://www.pexels.com/photo/brown-horse-in-close-up-photography-6339423/",
+    "query": "brown horse portrait"
+  },
+  "animals/duck.jpg": {
+    "photographer": "_ Whittington",
+    "url": "https://www.pexels.com/photo/mallard-duck-swimming-in-teal-pond-38398917/",
+    "query": "duck on water"
+  },
+  "animals/pig.jpg": {
+    "photographer": "Brett Sayles",
+    "url": "https://www.pexels.com/photo/adorable-piglets-on-dry-terrain-on-farm-4985160/",
+    "query": "pig farm"
+  },
+  "animals/tiger.jpg": {
+    "photographer": "Dr. Kamal K Varshney",
+    "url": "https://www.pexels.com/photo/close-up-of-a-bengal-tiger-yawning-in-the-forest-39189838/",
+    "query": "bengal tiger"
+  },
+  "animals/snake.jpg": {
+    "photographer": "Edwin Lopez",
+    "url": "https://www.pexels.com/photo/a-snake-surrounded-by-leaves-5140821/",
+    "query": "snake indian"
+  },
+  "animals/bear.jpg": {
+    "photographer": "Jason Renfrow Photography",
+    "url": "https://www.pexels.com/photo/close-up-shot-of-a-grizzly-bear-9877293/",
+    "query": "bear portrait"
+  },
+  "animals/frog.jpg": {
+    "photographer": "chris clark",
+    "url": "https://www.pexels.com/photo/frog-on-ground-12079027/",
+    "query": "green frog"
+  },
+  "animals/spider.jpg": {
+    "photographer": "Mazzu71 - Marco Mazzucotelli",
+    "url": "https://www.pexels.com/photo/close-up-of-a-spider-on-a-delicate-web-33284520/",
+    "query": "spider web"
+  },
+  "animals/turtle.jpg": {
+    "photographer": "Dustin Konrad",
+    "url": "https://www.pexels.com/photo/mossy-turtle-in-the-water-8741218/",
+    "query": "turtle tortoise"
+  },
+  "animals/bird.jpg": {
+    "photographer": "Odd Rune Falch",
+    "url": "https://www.pexels.com/photo/two-sparrows-perched-on-branch-in-lush-greenery-33888424/",
+    "query": "house sparrow bird"
+  },
+  "animals/calf.jpg": {
+    "photographer": "Erwin Bosman",
+    "url": "https://www.pexels.com/photo/white-calf-nursing-on-farm-in-pasture-37551098/",
+    "query": "calf baby cow"
+  },
+  "animals/chick.jpg": {
+    "photographer": "Erwin Bosman",
+    "url": "https://www.pexels.com/photo/adorable-chick-on-a-person-s-hand-37798703/",
+    "query": "baby chick"
+  },
+  "animals/puppy.jpg": {
+    "photographer": "Son Hoa Nguyen",
+    "url": "https://www.pexels.com/photo/adorable-white-puppy-in-lao-cai-vietnam-34027685/",
+    "query": "puppy indian street dog"
+  },
+  "animals/kitten.jpg": {
+    "photographer": "Gizem Gökce",
+    "url": "https://www.pexels.com/photo/adorable-ginger-and-white-kitten-close-up-portrait-38189500/",
+    "query": "kitten"
+  },
+  "animals/kid-goat.jpg": {
+    "photographer": "Valentin Foursac",
+    "url": "https://www.pexels.com/photo/mother-goat-nursing-kid-on-rocky-slope-in-summer-38975564/",
+    "query": "baby goat kid"
+  },
+  "animals/foal.jpg": {
+    "photographer": "Adrian Roberts",
+    "url": "https://www.pexels.com/photo/cute-horse-foal-on-a-field-6403445/",
+    "query": "foal baby horse"
+  },
+  "animals/duckling.jpg": {
+    "photographer": "Natalia Yurashku",
+    "url": "https://www.pexels.com/photo/duckling-on-the-grass-8698825/",
+    "query": "duckling"
+  },
+  "animals/lamb.jpg": {
+    "photographer": "Lorna Pauli",
+    "url": "https://www.pexels.com/photo/lamb-in-sunlit-meadow-in-sittard-netherlands-31507575/",
+    "query": "lamb baby sheep"
+  },
+  "homes/coop.jpg": {
+    "photographer": "Abdulrhman Alkady",
+    "url": "https://www.pexels.com/photo/flock-of-white-and-black-birds-on-brown-soil-3981364/",
+    "query": "chicken coop"
+  },
+  "homes/cow-shed.jpg": {
+    "photographer": "Giulia Botan",
+    "url": "https://www.pexels.com/photo/black-and-white-photo-of-cows-on-a-pasture-27035492/",
+    "query": "cow shed barn"
+  },
+  "homes/kennel.jpg": {
+    "photographer": "Wladimir Miranda",
+    "url": "https://www.pexels.com/photo/playful-dog-chewing-on-cage-bars-indoors-35447158/",
+    "query": "dog kennel house"
+  },
+  "homes/goat-shed.jpg": {
+    "photographer": "Alina Autumn",
+    "url": "https://www.pexels.com/photo/goats-walking-by-wooden-planks-on-farm-11560471/",
+    "query": "goat shed pen"
+  },
+  "homes/cat-basket.jpg": {
+    "photographer": "Singlár Zsuzsa",
+    "url": "https://www.pexels.com/photo/a-cat-lying-on-woven-chair-with-cushion-15011316/",
+    "query": "cat basket bed"
+  },
+  "homes/stable.jpg": {
+    "photographer": "Hakan Sapci",
+    "url": "https://www.pexels.com/photo/horse-stable-with-people-engaged-in-daily-activities-38390596/",
+    "query": "horse stable"
+  },
+  "homes/pond.jpg": {
+    "photographer": "Andy Bergstrom",
+    "url": "https://www.pexels.com/photo/aerial-view-of-houses-around-the-reservoir-in-the-suburbs-8461880/",
+    "query": "village pond"
+  },
+  "homes/sheep-pen.jpg": {
+    "photographer": "ALENA MARUK",
+    "url": "https://www.pexels.com/photo/sheep-in-front-of-a-log-fence-14681716/",
+    "query": "sheep pen fence"
+  },
+  "flowers/rose.jpg": {
+    "photographer": "Saddam Umar  Husain",
+    "url": "https://www.pexels.com/photo/a-red-flowers-in-full-bloom-9839793/",
+    "query": "red rose flower"
+  },
+  "flowers/mulla.jpg": {
+    "photographer": "Feri Feri",
+    "url": "https://www.pexels.com/photo/white-crepe-jasmine-flower-with-green-leaves-9543903/",
+    "query": "jasmine flower white"
+  },
+  "flowers/jamanti.jpg": {
+    "photographer": "Steven May",
+    "url": "https://www.pexels.com/photo/vivid-red-and-yellow-marigold-with-dewdrops-35149452/",
+    "query": "marigold flower"
+  },
+  "flowers/lotus.jpg": {
+    "photographer": "DI LAI",
+    "url": "https://www.pexels.com/photo/a-pink-lotus-flower-with-a-white-stem-28245650/",
+    "query": "pink lotus flower"
+  },
+  "flowers/kanikonna.jpg": {
+    "photographer": "Sanalbalan K",
+    "url": "https://www.pexels.com/photo/golden-shower-tree-in-full-bloom-kerala-37083610/",
+    "query": "golden shower cassia fistula flower"
+  },
+  "flowers/chembarathi.jpg": {
+    "photographer": "kabita Darlami",
+    "url": "https://www.pexels.com/photo/close-up-of-a-red-flower-16873021/",
+    "query": "red hibiscus flower"
+  },
+  "flowers/pichi.jpg": {
+    "photographer": "Leon Huang",
+    "url": "https://www.pexels.com/photo/close-up-shot-of-a-yellow-flower-in-bloom-7494066/",
+    "query": "small white jasmine flower"
+  },
+  "first-aid/box-closed.jpg": {
+    "photographer": "Clarence Gaspar",
+    "url": "https://www.pexels.com/photo/graffiti-covered-electrical-box-in-manila-36969293/",
+    "query": "first aid kit box"
+  },
+  "first-aid/bandage.jpg": {
+    "photographer": "Наталья Масик",
+    "url": "https://www.pexels.com/photo/pink-dyed-grass-with-sticking-plaster-7533955/",
+    "query": "adhesive bandage"
+  },
+  "first-aid/scissors.jpg": {
+    "photographer": "Ulises León",
+    "url": "https://www.pexels.com/photo/close-up-of-hair-scissors-13809247/",
+    "query": "scissors white background"
+  },
+  "first-aid/antiseptic.jpg": {
+    "photographer": "Valentin Ivantsov",
+    "url": "https://www.pexels.com/photo/vibrant-still-life-of-glass-bottles-with-colorful-background-34686413/",
+    "query": "antiseptic bottle"
+  },
+  "first-aid/cotton.jpg": {
+    "photographer": "Rohan Dalal",
+    "url": "https://www.pexels.com/photo/close-up-shot-of-cotton-swabs-9157170/",
+    "query": "cotton wool"
+  },
+  "first-aid/gauze.jpg": {
+    "photographer": "Alexas Fotos",
+    "url": "https://www.pexels.com/photo/close-up-photo-of-stacked-tissue-rolls-10760874/",
+    "query": "gauze roll bandage"
+  },
+  "body/eyes.jpg": {
+    "photographer": "Ran Lu",
+    "url": "https://www.pexels.com/photo/close-up-of-face-16069403/",
+    "query": "child eyes close up"
+  },
+  "body/ears.jpg": {
+    "photographer": "Dong Le",
+    "url": "https://www.pexels.com/photo/close-up-portrait-of-a-young-girl-outdoors-33782879/",
+    "query": "human ear close up"
+  },
+  "body/nose.jpg": {
+    "photographer": "Jared VanderMeer",
+    "url": "https://www.pexels.com/photo/woman-holding-yellow-flower-8394641/",
+    "query": "nose smelling flower"
+  },
+  "body/hands.jpg": {
+    "photographer": "Pankaj Mishra",
+    "url": "https://www.pexels.com/photo/a-girl-wearing-a-straw-hat-with-flowers-11439050/",
+    "query": "child hands holding"
+  },
+  "body/legs.jpg": {
+    "photographer": "Ivan Xolod",
+    "url": "https://www.pexels.com/photo/woman-in-dress-standing-on-black-brick-floor-8817024/",
+    "query": "child legs walking"
+  },
+  "plant/flower.jpg": {
+    "photographer": "Kristina Evstifeeva",
+    "url": "https://www.pexels.com/photo/close-up-of-a-delicate-white-flower-16660216/",
+    "query": "single flower bloom"
+  },
+  "plant/leaf.jpg": {
+    "photographer": "Petr Ganaj",
+    "url": "https://www.pexels.com/photo/close-up-of-leaf-17914586/",
+    "query": "green leaf close up"
+  },
+  "plant/stem.jpg": {
+    "photographer": "Beat Bieri",
+    "url": "https://www.pexels.com/photo/close-up-of-green-thorny-plant-stem-against-blue-background-36590743/",
+    "query": "plant stem stalk"
+  },
+  "plant/fruit.jpg": {
+    "photographer": "Beyza Şükran DEMİRBAŞ",
+    "url": "https://www.pexels.com/photo/fruits-on-a-tree-23158491/",
+    "query": "fruit on tree"
+  },
+  "plant/roots.jpg": {
+    "photographer": "Alexey Demidov",
+    "url": "https://www.pexels.com/photo/photograph-of-tree-roots-11144010/",
+    "query": "plant roots soil"
+  },
+  "helpers/teacher.jpg": {
+    "photographer": "Yan Krukau",
+    "url": "https://www.pexels.com/photo/students-looking-at-their-teacher-8617961/",
+    "query": "indian teacher classroom"
+  },
+  "helpers/doctor.jpg": {
+    "photographer": "Layth Mushreq",
+    "url": "https://www.pexels.com/photo/portrait-of-confident-female-doctor-with-hijab-37272329/",
+    "query": "indian doctor"
+  },
+  "helpers/postman.jpg": {
+    "photographer": "Eduardo HernandezSoto",
+    "url": "https://www.pexels.com/photo/street-performer-with-organ-grinder-on-busy-street-28560512/",
+    "query": "postman delivering mail"
+  },
+  "helpers/police.jpg": {
+    "photographer": "Rahul Sapra",
+    "url": "https://www.pexels.com/photo/two-soldiers-wearing-protective-face-masks-walking-past-a-group-of-women-12582990/",
+    "query": "indian police officer"
+  },
+  "helpers/farmer.jpg": {
+    "photographer": "mitbg000",
+    "url": "https://www.pexels.com/photo/a-person-walking-in-the-field-17827031/",
+    "query": "indian farmer field"
+  },
+  "helpers/shopkeeper.jpg": {
+    "photographer": "Yiğit  KARAALİOĞLU",
+    "url": "https://www.pexels.com/photo/store-on-bazaar-16005631/",
+    "query": "indian shopkeeper shop"
+  },
+  "places/park.jpg": {
+    "photographer": "Zetong Li",
+    "url": "https://www.pexels.com/photo/playground-on-sand-in-park-in-california-usa-16220150/",
+    "query": "children park playground"
+  },
+  "places/beach.jpg": {
+    "photographer": "Jakob  Vargis",
+    "url": "https://www.pexels.com/photo/man-standing-with-boat-on-beach-23079775/",
+    "query": "kerala beach"
+  },
+  "places/bus-stand.jpg": {
+    "photographer": "Yiğit  KARAALİOĞLU",
+    "url": "https://www.pexels.com/photo/men-sitting-on-bus-stop-in-town-16005637/",
+    "query": "indian bus stand"
+  },
+  "places/hospital.jpg": {
+    "photographer": "mitbg000",
+    "url": "https://www.pexels.com/photo/low-angle-shot-of-a-building-exterior-seen-from-behind-green-trees-20811933/",
+    "query": "hospital building"
+  },
+  "places/railway-station.jpg": {
+    "photographer": "Tarun Baisoya",
+    "url": "https://www.pexels.com/photo/black-and-white-train-at-urban-station-39643779/",
+    "query": "indian railway station"
+  },
+  "habits/brush.jpg": {
+    "photographer": "Bakytzhan  Baurzhanov",
+    "url": "https://www.pexels.com/photo/close-up-of-a-dentist-cleaning-a-denture-9951396/",
+    "query": "child brushing teeth"
+  },
+  "habits/wash-hands.jpg": {
+    "photographer": "Jacek Jan Skorupski",
+    "url": "https://www.pexels.com/photo/a-person-washing-his-hands-4328899/",
+    "query": "washing hands soap"
+  },
+  "habits/bath.jpg": {
+    "photographer": "Yan Krukau",
+    "url": "https://www.pexels.com/photo/woman-blowing-soap-bubbles-7019997/",
+    "query": "shower bathing"
+  },
+  "habits/healthy-food.jpg": {
+    "photographer": "Channabo Yos",
+    "url": "https://www.pexels.com/photo/close-up-photo-of-papayas-13306351/",
+    "query": "fruits vegetables healthy"
+  },
+  "habits/dustbin.jpg": {
+    "photographer": "Fabiano Junior",
+    "url": "https://www.pexels.com/photo/black-and-white-urban-recycling-scene-31587977/",
+    "query": "dustbin trash can"
+  },
+  "appliances/washing-machine.jpg": {
+    "photographer": "Ellie Burgin",
+    "url": "https://www.pexels.com/photo/interior-of-a-laundry-5816934/",
+    "query": "washing machine"
+  },
+  "appliances/iron.jpg": {
+    "photographer": "Market In SAS",
+    "url": "https://www.pexels.com/photo/a-girl-in-red-animation-shirt-smiling-15304383/",
+    "query": "clothes iron"
+  },
+  "appliances/mixer.jpg": {
+    "photographer": "Rovshan Nazirli",
+    "url": "https://www.pexels.com/photo/man-mixing-popcorn-with-electric-food-mixer-machine-in-bowl-18205656/",
+    "query": "mixer grinder blender"
+  },
+  "houses/mud-house.jpg": {
+    "photographer": "Q. Hưng Phạm",
+    "url": "https://www.pexels.com/photo/building-in-forest-25039579/",
+    "query": "kerala traditional hut thatched roof"
+  },
+  "houses/apartment.jpg": {
+    "photographer": "Ayşegül  Aytören",
+    "url": "https://www.pexels.com/photo/urban-apartment-building-against-blue-sky-35579934/",
+    "query": "apartment building india"
+  },
+  "houses/bungalow.jpg": {
+    "photographer": "Ayşegül  Aytören",
+    "url": "https://www.pexels.com/photo/cozy-bungalow-with-palm-trees-under-bright-sun-34099360/",
+    "query": "kerala house bungalow"
+  },
+  "houses/modern-house.jpg": {
+    "photographer": "Daniel  Wells",
+    "url": "https://www.pexels.com/photo/modern-architectural-cabin-on-grassy-hillside-30681542/",
+    "query": "modern house glass windows"
+  },
+  "houses/tent.jpg": {
+    "photographer": "Vadim Malitskii",
+    "url": "https://www.pexels.com/photo/serene-mountain-camping-with-scenic-views-31861359/",
+    "query": "camping tent"
+  },
+  "rooms/dining.jpg": {
+    "photographer": "Curtis Adams",
+    "url": "https://www.pexels.com/photo/a-dining-table-beside-a-window-14715769/",
+    "query": "dining room table"
+  },
+  "rooms/bedroom.jpg": {
+    "photographer": "Max Vakhtbovych",
+    "url": "https://www.pexels.com/photo/modern-bedroom-interior-design-8135505/",
+    "query": "bedroom bed"
+  },
+  "rooms/bathroom.jpg": {
+    "photographer": "Alex Green",
+    "url": "https://www.pexels.com/photo/stressed-black-man-covering-face-with-hand-in-shower-5700194/",
+    "query": "bathroom shower"
+  },
+  "instruments/chenda.jpg": {
+    "photographer": "Krepesh Chandra Sarker",
+    "url": "https://www.pexels.com/photo/young-boy-playing-drum-in-outdoor-setting-38582977/",
+    "query": "chenda kerala drum"
+  },
+  "instruments/maddalam.jpg": {
+    "photographer": "Krepesh Chandra Sarker",
+    "url": "https://www.pexels.com/photo/young-boy-playing-drum-in-outdoor-setting-38582977/",
+    "query": "maddalam kerala drum"
+  },
+  "instruments/chengila.jpg": {
+    "photographer": "Nguyen Ngoc Tien",
+    "url": "https://www.pexels.com/photo/intricate-guardian-lion-statue-at-asian-temple-32150043/",
+    "query": "bronze gong"
+  },
+  "instruments/kaimani.jpg": {
+    "photographer": "Markus Winkler",
+    "url": "https://www.pexels.com/photo/ornate-japanese-temple-roof-with-hanging-bell-31204712/",
+    "query": "brass hand bells"
+  },
+  "farm-bg.jpg": {
+    "photographer": "Sergej  *****",
+    "url": "https://www.pexels.com/photo/serene-countryside-field-with-farmhouse-31425380/",
+    "query": "green grass farm field"
+  }
+}

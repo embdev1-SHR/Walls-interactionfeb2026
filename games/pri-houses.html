@@ -98,6 +98,8 @@
 </script>
 
 <script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
 <script src="../js/flashcard-deck.js"></script>
 <script type="module" src="../js/model-popup.js"></script>
@@ -207,7 +209,7 @@ var deck = DECK.mount('#board', {
 });
 
 WALL.toolbar({
-  lang: true, size: true, height: true,
+  lang: true, voice: true, size: true, height: true,
   heightTarget: '#board',
   reset: function () { deck.reset(); },
   home: true

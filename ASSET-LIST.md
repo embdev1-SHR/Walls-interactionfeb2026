@@ -179,3 +179,36 @@ that would be the better pedagogical choice. Say which you want and it is a cont
 - **Vocational module** (Chenda/Maddalam/Chengila/Kaimani instruments, and the Thrissur Pooram
   / Temple Ulsavam / Onam festival scenes) — dropped on your instruction, along with the
   Postman narrative, which depends on character animation.
+
+---
+
+## Sourcing these automatically
+
+Most of the photos above can be fetched from Pexels in one command:
+
+```bash
+node scripts/fetch-pexels.mjs --list                    # what is still missing
+node --env-file=.env.local scripts/fetch-pexels.mjs     # fetch them
+```
+
+Needs a free `PEXELS_API_KEY` in `.env.local`. The queries are tuned for India
+on purpose ("indian desi cow", not "cow") because the brief asks for animals and
+places a Kerala child actually meets. A file already on disk is never replaced
+unless you name it: `node --env-file=.env.local scripts/fetch-pexels.mjs cow hen`.
+
+**It is a build step, not a runtime one.** The wall has no internet, so the
+photos are downloaded once, committed and shipped inside the installer — the
+same reasoning as the baked voice in `VOICE.md`. Photographer credits land in
+`assets/new/images/credits.json`.
+
+### What is NOT fetched, and should not be
+
+| Stays drawn | Where |
+|---|---|
+| Traffic signals, the 9 daily-life signs, phone icons | `js/icon-sprite.js` |
+| Indian coins and notes | `js/currency-svg.js` |
+| Bouquet vase, house exterior, phone body | CSS |
+| The Aksharachithram letter figures | commissioned line art — a photo cannot be a letter-shaped animal |
+
+A photograph of a NO ENTRY sign is worse than the vector: it arrives with a
+street behind it, a shadow and an angle. The vector *is* the sign.

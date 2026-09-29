@@ -75,6 +75,13 @@ body { overflow: hidden; background: #050d05; font-family: 'Rajdhani', sans-seri
   font-family: 'Rajdhani', sans-serif; transition: color 0.5s;
 }
 </style>
+<style>
+/* Teacher height control, retrofitted. Size is handled by browser zoom in the
+   boot script below - see there for why a CSS scale cannot work here. */
+body > *:not(#wallToolbar):not(script):not(style):not(link) {
+  transform: translateY(var(--wall-lift, 0px));
+}
+</style>
 </head>
 <body>
 
@@ -90,6 +97,10 @@ body { overflow: hidden; background: #050d05; font-family: 'Rajdhani', sans-seri
 <div id="walkMsg">Walking to destination</div>
 <div id="locationTag">Forest Walk</div>
 
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -301,10 +312,17 @@ scene.add(pollen);
 
 // ── Tree loading ─────────────────────────────────────────────────────────────
 const loader = new GLTFLoader();
+/* whnp3v2jflkw-_tree.glb was the third type here and is deliberately out.
+   Its materials use KHR_materials_pbrSpecularGlossiness, which three.js dropped
+   after r155, and the file carries no metallic-roughness fallback. The loader
+   warns on every load and substitutes a default material, so whatever that tree
+   was authored to look like is not what shipped.
+   Two tree types that load as intended beat three where one is a guess; variety
+   still comes from the random scale and rotation in normalizeTree(). To bring
+   it back, convert the file first: gltf-transform metalrough in.glb out.glb. */
 const treeFiles = [
   '../3dmodels/trees/tree_for_games.glb',
   '../3dmodels/trees/mango_tree.glb',
-  '../3dmodels/trees/whnp3v2jflkw-_tree.glb',
 ];
 const templates = new Array(treeFiles.length).fill(null);
 let loadedCount = 0;
@@ -547,6 +565,38 @@ renderer.setAnimationLoop(() => {
   updateLabels();
   renderer.render(scene, camera);
 });
+</script>
+<script>
+/* Retrofitted teacher controls. Last in the body so the activity has already
+   built its DOM before the toolbar mounts. */
+(function () {
+  if (typeof WALL === 'undefined') return;
+  WALL.init();
+
+  /* Size, on a layout that predates --wall-scale.
+     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
+     dimension. These pages instead pin content to the viewport, so any CSS
+     scale on a container is cancelled out by its own percentage children.
+     Browser zoom changes the viewport itself, which is why it works where that
+     does not. It scales the toolbar along with the activity.
+
+     Electron persists zoom per origin, and every activity is file://, so a size
+     chosen here would silently follow the child into the next activity and into
+     the menu. Reset on the way in and on the way out. */
+  var wf = null;
+  try { wf = require('electron').webFrame; } catch (e) {}
+  if (wf) {
+    wf.setZoomFactor(1);
+    window.addEventListener('pagehide', function () {
+      try { wf.setZoomFactor(1); } catch (e) {}
+    });
+    WALL.onSize(function (s) {
+      try { wf.setZoomFactor(s); } catch (e) {}
+    });
+  }
+
+  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
+})();
 </script>
 </body>
 </html>

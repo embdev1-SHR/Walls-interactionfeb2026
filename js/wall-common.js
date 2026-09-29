@@ -312,8 +312,12 @@
     state.voice = !!on;
     var b = document.getElementById('wallVoice');
     if (b) b.classList.toggle('off', !state.voice);
-    if (!state.voice && global.speechSynthesis) {
-      try { global.speechSynthesis.cancel(); } catch (e) {}
+    if (!state.voice) {
+      if (global.speechSynthesis) {
+        try { global.speechSynthesis.cancel(); } catch (e) {}
+      }
+      // a baked clip is a separate audio element and ignores speechSynthesis
+      if (global.VOICE) { try { global.VOICE.stop(); } catch (e) {} }
     }
     fire(voiceCbs, state.voice);
   }
@@ -326,7 +330,6 @@
    */
   function say(text, forceLang, word) {
     if (!state.voice) return;
-    if (!global.TTSEngine) return;
     var str, lang;
     if (text && typeof text === 'object') {
       str  = t(text);
@@ -336,6 +339,16 @@
       lang = forceLang || (state.ml ? 'ml' : 'en');
     }
     if (!str) return;
+
+    /* A clip baked by scripts/voice-bake.py beats the device voice on
+       every axis a child notices, and unlike the device voice it does not
+       depend on an `ml-IN` voice being installed on the wall machine —
+       Windows ships none. js/voice-clips.js is optional: if it is absent,
+       or this particular line has not been baked yet, say() behaves
+       exactly as it did before and falls through to TTSEngine. */
+    if (lang === 'ml' && global.VOICE && global.VOICE.say(str)) return;
+
+    if (!global.TTSEngine) return;
     try { global.TTSEngine.speak(str, lang, word || null); } catch (e) {}
   }
 

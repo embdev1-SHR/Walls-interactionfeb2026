@@ -1,2 +1,16 @@
 node_modules/
 .env
+
+# Secrets — .env alone does NOT match .env.local, and a Pexels key
+# committed to a repo is a key you have to rotate.
+.env.local
+.env.*.local
+
+# Python venv for scripts/voice-bake.py
+.venv/
+__pycache__/
+*.pyc
+
+# Build output
+release/
+release.zip

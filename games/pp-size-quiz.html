@@ -262,6 +262,13 @@ canvas#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:60}
 .end-menu  {background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 6px 22px rgba(59,130,246,.4)}
 @keyframes coPop{from{opacity:0;transform:scale(.5) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
 </style>
+<style>
+/* Teacher height control, retrofitted. Size is handled by browser zoom in the
+   boot script below - see there for why a CSS scale cannot work here. */
+body > *:not(#wallToolbar):not(script):not(style):not(link) {
+  transform: translateY(var(--wall-lift, 0px));
+}
+</style>
 </head>
 <body>
 
@@ -316,6 +323,10 @@ canvas#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:60}
   </div>
 </div>
 
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
 <script>
 /* ─────────────────────────────────────────
    ANIMAL DATA  (sizeRank = real-world size order 1=tiny → 8=huge)
@@ -576,6 +587,12 @@ function updateQuestionText(type){
     if(lEl) lEl.textContent = label;
     if(wEl) wEl.textContent = word;
   }
+
+  /* Ask it aloud. Unlike the other multiplayer boards this one asks all three
+     players the same question, so there is a single thing to say and no risk
+     of voices overlapping. `lang` is this page's own state, so the resolved
+     string is passed rather than an {en,ml} pair. */
+  if (typeof WALL !== 'undefined') WALL.say(label + ' ' + word, lang);
 }
 
 function handleTap(playerIdx, key, btnEl, cx, cy){
@@ -739,6 +756,38 @@ document.getElementById('btn-replay').addEventListener('click', () => {
 document.getElementById('btn-menu2').addEventListener('click', () => location.href='../index.html');
 
 addEventListener('keydown', e => { if(e.key==='Escape') location.href='../index.html'; });
+</script>
+<script>
+/* Retrofitted teacher controls. Last in the body so the activity has already
+   built its DOM before the toolbar mounts. */
+(function () {
+  if (typeof WALL === 'undefined') return;
+  WALL.init();
+
+  /* Size, on a layout that predates --wall-scale.
+     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
+     dimension. These pages instead pin content to the viewport, so any CSS
+     scale on a container is cancelled out by its own percentage children.
+     Browser zoom changes the viewport itself, which is why it works where that
+     does not. It scales the toolbar along with the activity.
+
+     Electron persists zoom per origin, and every activity is file://, so a size
+     chosen here would silently follow the child into the next activity and into
+     the menu. Reset on the way in and on the way out. */
+  var wf = null;
+  try { wf = require('electron').webFrame; } catch (e) {}
+  if (wf) {
+    wf.setZoomFactor(1);
+    window.addEventListener('pagehide', function () {
+      try { wf.setZoomFactor(1); } catch (e) {}
+    });
+    WALL.onSize(function (s) {
+      try { wf.setZoomFactor(s); } catch (e) {}
+    });
+  }
+
+  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
+})();
 </script>
 </body>
 </html>

@@ -242,6 +242,13 @@ model-viewer{
   box-shadow:0 2px 10px rgba(22,163,74,.5);
 }
 </style>
+<style>
+/* Teacher height control, retrofitted. Size is handled by browser zoom in the
+   boot script below - see there for why a CSS scale cannot work here. */
+body > *:not(#wallToolbar):not(script):not(style):not(link) {
+  transform: translateY(var(--wall-lift, 0px));
+}
+</style>
 </head>
 <body>
 
@@ -319,6 +326,10 @@ model-viewer{
   <button class="lang-f"        id="btn-ml">ML</button>
 </div>
 
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════
    DATA
@@ -339,7 +350,7 @@ const ANIMALS = [
         icon:'🦵', label:{en:'Legs',ml:'കാലുകൾ'},
         desc:{
           en:'Powerful muscular legs let bears run at 35 mph (56 km/h). Longer hind legs allow them to stand fully upright.',
-          ml:'ശക്തമായ കാലുകൾ 56 കി.മീ/മണിക്കൂർ വേഗം. നീണ്ട പിൻ കാലുകൾ ഉപയോഗിച്ച് നേരേ നിൽക്കാൻ ശേഷി.'
+          ml:'ശക്തമായ കാലുകൾ. മണിക്കൂറിൽ 56 കിലോമീറ്റർ വേഗം. നീണ്ട പിൻ കാലുകൾ ഉപയോഗിച്ച് നേരേ നിൽക്കാൻ ശേഷി.'
         }
       },
       { slot:'hotspot-7', surface:'0 0 3547 3548 3545 -1.001 -0.864 2.865',
@@ -437,7 +448,7 @@ const ANIMALS = [
         icon:'🦵', label:{en:'Legs',ml:'കാലുകൾ'},
         desc:{
           en:'Slender legs built for speed — deer run at 30 mph (48 km/h) and leap obstacles up to 10 feet (3 m) high.',
-          ml:'വേഗതയ്ക്കുള്ള കാലുകൾ. 48 കി.മീ/മണിക്കൂർ ഓടും, 3 മീ. ഉയരത്തിൽ ചാടും.'
+          ml:'വേഗതയ്ക്കുള്ള കാലുകൾ. മണിക്കൂറിൽ 48 കിലോമീറ്റർ ഓടും, 3 മീറ്റർ ഉയരത്തിൽ ചാടും.'
         }
       },
       { slot:'hotspot-6',
@@ -599,6 +610,23 @@ function populateOverlay(id, a, hs) {
   /* switch border colour */
   document.getElementById(`ovblock-${id}`).style.borderLeftColor = isML ? '#34d399' : '#60a5fa';
   document.getElementById(`ovlbl-${id}`).style.color = isML ? '#34d399' : '#60a5fa';
+
+  /* Read it out. A child who cannot yet read a paragraph of Malayalam gets
+     nothing from this panel otherwise, which is most of what the card is for.
+     The part name first, then the description, so the answer to "what did I
+     just tap" arrives before the detail. WALL.say() is a no-op when the teacher
+     has muted voice, and falls back to the device voice for any line that has
+     not been baked yet.
+
+     This page keeps its own `lang`, separate from WALL's language state, so the
+     resolved string is passed rather than the {en,ml} pair — handing over the
+     pair would let WALL pick the other language and read Malayalam aloud over
+     an English panel. The exact string is also what the baked-clip manifest is
+     keyed on. */
+  if (typeof WALL !== 'undefined') {
+    WALL.say(hs.label[lang], lang);
+    setTimeout(function () { WALL.say(hs.desc[lang], lang); }, 900);
+  }
 }
 
 function closeOverlay(id) {
@@ -646,6 +674,38 @@ pd('btn-ml',     () => setLang('ml'));
 document.addEventListener('keydown', e => { if(e.key==='Escape') location.href='../index.html'; });
 
 buildCards();
+</script>
+<script>
+/* Retrofitted teacher controls. Last in the body so the activity has already
+   built its DOM before the toolbar mounts. */
+(function () {
+  if (typeof WALL === 'undefined') return;
+  WALL.init();
+
+  /* Size, on a layout that predates --wall-scale.
+     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
+     dimension. These pages instead pin content to the viewport, so any CSS
+     scale on a container is cancelled out by its own percentage children.
+     Browser zoom changes the viewport itself, which is why it works where that
+     does not. It scales the toolbar along with the activity.
+
+     Electron persists zoom per origin, and every activity is file://, so a size
+     chosen here would silently follow the child into the next activity and into
+     the menu. Reset on the way in and on the way out. */
+  var wf = null;
+  try { wf = require('electron').webFrame; } catch (e) {}
+  if (wf) {
+    wf.setZoomFactor(1);
+    window.addEventListener('pagehide', function () {
+      try { wf.setZoomFactor(1); } catch (e) {}
+    });
+    WALL.onSize(function (s) {
+      try { wf.setZoomFactor(s); } catch (e) {}
+    });
+  }
+
+  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
+})();
 </script>
 </body>
 </html>

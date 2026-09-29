@@ -107,6 +107,13 @@
   .go-btn:active{ transform:scale(.95); }
   .go-btn.sec{ background:transparent; border-color:rgba(52,211,153,.3); font-size:15px; padding:10px 22px; }
 </style>
+<style>
+/* Teacher height control, retrofitted. Size is handled by browser zoom in the
+   boot script below - see there for why a CSS scale cannot work here. */
+body > *:not(#wallToolbar):not(script):not(style):not(link) {
+  transform: translateY(var(--wall-lift, 0px));
+}
+</style>
 </head>
 <body>
 
@@ -151,6 +158,10 @@
   </div>
 </div>
 
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
 <script>
 (function(){
 
@@ -230,6 +241,13 @@ function renderPanel(i){
 
   document.getElementById('dn'+i).classList.remove('show');
   document.getElementById('p'+i).classList.remove('good','bad');
+
+  /* Read the question. The sequence itself is deliberately not read out — it is
+     a visual pattern, and spelling it aloud would hand over the answer.
+     Single player only: three panels render together in the 3-player layout. */
+  if (playerCount === 1 && typeof WALL !== 'undefined') {
+    WALL.say(lang === 'en' ? p.q.en : p.q.ml, lang);
+  }
 
   const chEl = document.getElementById('ch'+i); chEl.innerHTML='';
   shuffle(p.opts).forEach(opt=>{
@@ -335,5 +353,37 @@ document.getElementById('replay-btn').addEventListener('click',()=>{ document.ge
 })();
 </script>
 <script src="../js/audio-manager.js"></script>
+<script>
+/* Retrofitted teacher controls. Last in the body so the activity has already
+   built its DOM before the toolbar mounts. */
+(function () {
+  if (typeof WALL === 'undefined') return;
+  WALL.init();
+
+  /* Size, on a layout that predates --wall-scale.
+     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
+     dimension. These pages instead pin content to the viewport, so any CSS
+     scale on a container is cancelled out by its own percentage children.
+     Browser zoom changes the viewport itself, which is why it works where that
+     does not. It scales the toolbar along with the activity.
+
+     Electron persists zoom per origin, and every activity is file://, so a size
+     chosen here would silently follow the child into the next activity and into
+     the menu. Reset on the way in and on the way out. */
+  var wf = null;
+  try { wf = require('electron').webFrame; } catch (e) {}
+  if (wf) {
+    wf.setZoomFactor(1);
+    window.addEventListener('pagehide', function () {
+      try { wf.setZoomFactor(1); } catch (e) {}
+    });
+    WALL.onSize(function (s) {
+      try { wf.setZoomFactor(s); } catch (e) {}
+    });
+  }
+
+  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
+})();
+</script>
 </body>
 </html>

@@ -28,7 +28,7 @@ class AudioManager {
             'music-maker': 'Learning',
             'goalkeeper': 'Goalkeeper',
             'particle-playground': 'Free Canvas',
-            'puzzle-balance': 'puzzle',
+            'puzzle-balance': 'Puzzle',
             'room-sorter': 'Daily life scenarios',
             'number-explorer': 'jyproject-endless-shore-part2-399386',
             'arithmetica-multi': 'jyproject-endless-shore-part2-399386',
@@ -44,8 +44,8 @@ class AudioManager {
             'memory-match': 'jyproject-endless-shore-part2-399386',
             'fruit-counter': 'jyproject-endless-shore-part2-399386',
             'word-matcher': 'jyproject-endless-shore-part2-399386',
-            '3d-viewer': 'idoberg-space-chords-loop',
-            'video-360-player': 'jyproject-endless-shore-part2',
+            '3d-viewer': 'idoberg-space-chords-loop-310493',
+            'video-360-player': 'jyproject-endless-shore-part2-399386',
             'fruit-ninja': 'jyproject-endless-shore-part2-399386',
             'rhythm-dance': 'jyproject-endless-shore-part2-399386',
 
@@ -90,7 +90,15 @@ class AudioManager {
             /* -- Vocational. The six Birthday modules run their own
                   synthesized music via js/birthday-common.js and so
                   deliberately do NOT include audio-manager.js. ----- */
-            'voc-instruments':  'Learning'
+            'voc-instruments':  'Learning',
+
+            /* -- Older activities that include audio-manager.js but had
+                  no track, so they played silence and logged a warning. */
+            'animal-drawing': 'trace-it',
+            'colour-match':   'colouring',
+            'feelings':       'jyproject-endless-shore-part2-399386',
+            'mosquito-clap':  'forest',
+            'pattern-finder': 'jyproject-endless-shore-part2-399386'
         };
     }
 

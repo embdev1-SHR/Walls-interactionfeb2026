@@ -216,6 +216,13 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 .floating-particle{position:fixed;pointer-events:none;z-index:4;border-radius:50%;background:rgba(180,220,255,.15);animation:pFloat var(--t,10s) linear infinite}
 @keyframes pFloat{0%{transform:translateY(0) translateX(0) scale(1);opacity:.2}50%{transform:translateY(calc(var(--dy,-300px)*.5)) translateX(var(--sx,15px)) scale(.8);opacity:.15}100%{transform:translateY(var(--dy,-300px)) translateX(0) scale(.6);opacity:0}}
 </style>
+<style>
+/* Teacher height control, retrofitted. Size is handled by browser zoom in the
+   boot script below - see there for why a CSS scale cannot work here. */
+body > *:not(#wallToolbar):not(script):not(style):not(link) {
+  transform: translateY(var(--wall-lift, 0px));
+}
+</style>
 </head>
 <body class="zone-reef">
 
@@ -279,6 +286,10 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
   </div>
 </div>
 
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
 <script>
 /* ════════════════════════════════════════════════════
    HIGHLY REALISTIC SVG LIBRARY
@@ -1964,6 +1975,14 @@ function openInfo(id){
   });
   document.getElementById('info-panel').classList.add('open');
   playPop();
+
+  /* Say the creature's name. The facts are a list rather than a sentence, and
+     reading a whole list aloud over a child who has just tapped something is
+     more noise than help — the name answers what they asked for by tapping.
+     `currentLang` is this page's own language state, so the resolved string is
+     passed rather than the {en,ml} pair; handing over the pair would let WALL
+     speak the language the panel is not showing. */
+  if (typeof WALL !== 'undefined') WALL.say(d.name[currentLang], currentLang);
 }
 function closeInfo(){document.getElementById('info-panel').classList.remove('open');}
 document.getElementById('ip-close').addEventListener('click',closeInfo);
@@ -2019,6 +2038,38 @@ window.addEventListener('resize',function(){W=window.innerWidth;H=window.innerHe
 
 buildRays(); buildKelp(); buildSeagrass(); buildParticles();
 resizeBubbles(); updateLanguage(); spawnCreatures(); loop();
+</script>
+<script>
+/* Retrofitted teacher controls. Last in the body so the activity has already
+   built its DOM before the toolbar mounts. */
+(function () {
+  if (typeof WALL === 'undefined') return;
+  WALL.init();
+
+  /* Size, on a layout that predates --wall-scale.
+     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
+     dimension. These pages instead pin content to the viewport, so any CSS
+     scale on a container is cancelled out by its own percentage children.
+     Browser zoom changes the viewport itself, which is why it works where that
+     does not. It scales the toolbar along with the activity.
+
+     Electron persists zoom per origin, and every activity is file://, so a size
+     chosen here would silently follow the child into the next activity and into
+     the menu. Reset on the way in and on the way out. */
+  var wf = null;
+  try { wf = require('electron').webFrame; } catch (e) {}
+  if (wf) {
+    wf.setZoomFactor(1);
+    window.addEventListener('pagehide', function () {
+      try { wf.setZoomFactor(1); } catch (e) {}
+    });
+    WALL.onSize(function (s) {
+      try { wf.setZoomFactor(s); } catch (e) {}
+    });
+  }
+
+  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
+})();
 </script>
 </body>
 </html>

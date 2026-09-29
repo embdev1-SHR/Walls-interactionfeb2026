@@ -65,6 +65,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 
 /* Language helpers (injected by pre-primary-common) */
 </style>
+<style>
+/* Teacher height control, retrofitted. Size is handled by browser zoom in the
+   boot script below - see there for why a CSS scale cannot work here. */
+body > *:not(#wallToolbar):not(script):not(style):not(link) {
+  transform: translateY(var(--wall-lift, 0px));
+}
+</style>
 </head>
 <body>
 
@@ -88,6 +95,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
   <div class="zones-row"   id="zonesRow"></div>
 </div>
 
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
 <script src="../js/audio-manager.js"></script>
 <script src="../js/pre-primary-common.js"></script>
 <script>
@@ -185,8 +196,16 @@ let isMl     = false;
 let currentPrompt = {en:'Which is BIG?', ml:'ഏതാണ് വലുത്?'};
 
 PP.init();
-document.body.insertAdjacentHTML('beforeend', PP.toolbarHTML());
-PP.initLangToggle(ml => {
+/* PP's own toolbar is not inserted: it pins to the same place as the WALL
+   toolbar and the two overlapped. WALL's is kept because it also carries size,
+   height and voice. PP's language mode is a body class its CSS depends on, and
+   nothing sets it once PP's button is gone, so drive it from WALL's toggle. */
+/* PP's own toolbar is not inserted: it pins to the same place as the WALL
+   toolbar and the two overlapped. WALL's is kept because it also carries size,
+   height and voice. `pp-ml-mode` is the body class PP's CSS depends on, and
+   nothing sets it once PP's button is gone, so it is driven from here. */
+WALL.onLang(ml => {
+  document.body.classList.toggle('pp-ml-mode', ml);
   isMl = ml;
   updatePromptLabel();
 });
@@ -202,6 +221,13 @@ function buildRound() {
 
   currentPrompt = pickPrompt();
   updatePromptLabel();
+
+  /* Ask the question out loud. This activity is for children who are still
+     learning big/small/green — expecting them to read the prompt is the one
+     assumption the whole task should not rest on. */
+  if (typeof WALL !== 'undefined') {
+    WALL.say(isMl ? currentPrompt.ml : currentPrompt.en, isMl ? 'ml' : 'en');
+  }
 
   const objRow  = document.getElementById('objectsRow');
   const zoneRow = document.getElementById('zonesRow');
@@ -276,6 +302,38 @@ function dropOnZone(zcard) {
 }
 
 buildRound();
+</script>
+<script>
+/* Retrofitted teacher controls. Last in the body so the activity has already
+   built its DOM before the toolbar mounts. */
+(function () {
+  if (typeof WALL === 'undefined') return;
+  WALL.init();
+
+  /* Size, on a layout that predates --wall-scale.
+     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
+     dimension. These pages instead pin content to the viewport, so any CSS
+     scale on a container is cancelled out by its own percentage children.
+     Browser zoom changes the viewport itself, which is why it works where that
+     does not. It scales the toolbar along with the activity.
+
+     Electron persists zoom per origin, and every activity is file://, so a size
+     chosen here would silently follow the child into the next activity and into
+     the menu. Reset on the way in and on the way out. */
+  var wf = null;
+  try { wf = require('electron').webFrame; } catch (e) {}
+  if (wf) {
+    wf.setZoomFactor(1);
+    window.addEventListener('pagehide', function () {
+      try { wf.setZoomFactor(1); } catch (e) {}
+    });
+    WALL.onSize(function (s) {
+      try { wf.setZoomFactor(s); } catch (e) {}
+    });
+  }
+
+  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
+})();
 </script>
 </body>
 </html>
