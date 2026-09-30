@@ -195,6 +195,59 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
   50%{box-shadow:0 6px 28px rgba(255,179,71,.6),0 0 16px rgba(255,221,89,.25)}
 }
 
+/* ── Info / credits ───────────────────────────────────────────────────────
+   A quiet button on the left edge. It does not pulse and does not animate:
+   the menu already has one thing competing for a child's attention and this
+   is for the adult in the room. */
+#info-btn{
+  position:fixed;left:clamp(12px,1.6vw,22px);top:50%;transform:translateY(-50%);
+  z-index:100;width:clamp(38px,3.4vw,48px);height:clamp(38px,3.4vw,48px);
+  border-radius:50%;cursor:pointer;
+  background:rgba(255,255,255,.82);border:2px solid rgba(123,52,30,.22);
+  color:#7B341E;font-size:clamp(18px,1.9vw,24px);font-weight:900;line-height:1;
+  box-shadow:0 4px 14px rgba(20,60,95,.16);
+  transition:transform .2s cubic-bezier(.34,1.4,.64,1),box-shadow .2s;
+}
+#info-btn:hover{transform:translateY(-50%) scale(1.1);box-shadow:0 7px 22px rgba(20,60,95,.24)}
+#info-btn:active{transform:translateY(-50%) scale(.93)}
+
+#info-overlay{
+  position:fixed;inset:0;z-index:300;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(20,32,44,.55);backdrop-filter:blur(7px);
+}
+#info-overlay.open{display:flex}
+#info-box{
+  position:relative;width:min(92vw,720px);max-height:86vh;overflow:auto;
+  background:linear-gradient(150deg,#FFFDFB,#FFFFFF);
+  border-radius:24px;padding:clamp(20px,3vw,36px);
+  box-shadow:0 22px 60px rgba(10,30,50,.34);
+}
+#info-close{
+  position:absolute;top:12px;right:14px;width:38px;height:38px;border-radius:50%;
+  border:2px solid rgba(123,52,30,.2);background:#fff;color:#7B341E;
+  font-size:17px;font-weight:900;cursor:pointer;
+}
+#info-close:active{transform:scale(.92)}
+#info-box h2{
+  font-size:clamp(20px,2.4vw,30px);font-weight:900;color:#7B341E;margin:0 0 4px;
+}
+#info-box h2 span,.info-lead span{
+  display:block;font-family:'Noto Sans Malayalam',sans-serif;
+  font-size:.66em;opacity:.62;font-weight:700;
+}
+.info-lead{font-size:clamp(12px,1.2vw,15px);color:#5b4a42;margin:0 0 16px;line-height:1.5}
+#info-credits h3{
+  font-size:clamp(13px,1.3vw,16px);font-weight:900;color:#7B341E;
+  margin:16px 0 6px;padding-top:12px;border-top:2px solid rgba(123,52,30,.12);
+}
+#info-credits .note{font-size:clamp(10px,1vw,12.5px);color:#7a6a62;margin-bottom:8px}
+#info-credits ul{list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:3px 14px}
+#info-credits li{font-size:clamp(10px,1.02vw,12.5px);color:#4a3f39;line-height:1.5}
+#info-credits li b{color:#7B341E;font-weight:800}
+#info-credits li .lic{opacity:.6}
+
 /* Submenus */
 .submenu-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
@@ -428,7 +481,26 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
     <span class="intro-icon">🚀</span>
     <span class="intro-label">Play Intro</span>
   </div>
+
+  <!-- Attribution. Deliberately a small button on the left edge, opposite the
+       Play Intro button, and deliberately closed by default: the CC-BY licences
+       on the 3D models require the credit to be available in the app, not that
+       it interrupt a child who came to play. -->
+  <button id="info-btn" aria-label="About and credits"
+          title="About &amp; credits">ⓘ</button>
 </div><!-- /#main-menu -->
+
+<div id="info-overlay" role="dialog" aria-modal="true" aria-labelledby="info-title">
+  <div id="info-box">
+    <button id="info-close" aria-label="Close">✕</button>
+    <h2 id="info-title">Auticare Blueroom<span>ഓട്ടിക്കെയർ ബ്ലൂറൂം</span></h2>
+    <p class="info-lead">
+      An offline interactive learning wall for the Pangappara Blueroom.
+      <span>പങ്ങപ്പാറ ബ്ലൂറൂമിനായുള്ള ഇന്ററാക്ടീവ് പഠന ഭിത്തി.</span>
+    </p>
+    <div id="info-credits"></div>
+  </div>
+</div>
 
 <div class="submenu-overlay" id="submenu-overlay">
   <div class="submenu-box" id="submenu-box">
@@ -449,9 +521,24 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
 <script src="./js/session-controls.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="./js/credits-data.js"></script>
 <script src="./js/hyperdrive-animation.js"></script>
 <script src="./js/menu-background.js"></script>
 <script src="./js/game-loader.js"></script>
+
+<!-- Voice + കുട്ടു on the menu.
+     The menu has always been silent: none of the voice stack was loaded here,
+     so the wall said nothing until you were already inside an activity.
+     NOTE: WALL.init() is NOT called on this page — it binds Esc to
+     '../index.html', which from the menu navigates out of the app.
+     menu-greeting.js loads the Malayalam font itself instead. -->
+<script src="./js/tts-engine.js"></script>
+<script src="./js/voice-manifest.js"></script>
+<script src="./js/voice-clips.js"></script>
+<script src="./js/wall-common.js"></script>
+<script src="./js/guide.js"></script>
+<script src="./js/menu-greeting.js"></script>
+<script>MENU_GREETING.init();</script>
 
 <script>
 (function bubblePopper() {
@@ -853,6 +940,66 @@ window._startFloatingBalls = (function() {
     el.style.opacity = '0';
     setTimeout(function() { el.remove(); }, 300);
   }
+})();
+</script>
+<script>
+/* ── Info / credits page ────────────────────────────────────────────────────
+   Built from js/credits-data.js, which scripts/build-credits.mjs regenerates
+   whenever models or photos are fetched. Rendered on first open rather than at
+   load: it is a page most sessions never show, and the menu should not pay for
+   88 photographers it is not displaying. */
+(function () {
+  var btn = document.getElementById('info-btn');
+  var overlay = document.getElementById('info-overlay');
+  var closeBtn = document.getElementById('info-close');
+  if (!btn || !overlay) return;
+  var built = false;
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function build() {
+    if (built) return;
+    built = true;
+    var host = document.getElementById('info-credits');
+    var d = window.CREDITS_DATA || { models: [], photos: [] };
+    var html = '';
+
+    if (d.models && d.models.length) {
+      /* This section is the licence obligation, not a courtesy: CC-BY requires
+         the author to be credited wherever the work appears. */
+      html += '<h3>3D models</h3>' +
+              '<div class="note">Creative Commons Attribution — from Sketchfab.</div><ul>' +
+              d.models.map(function (m) {
+                return '<li><b>' + esc(m.name) + '</b> — ' + esc(m.author) +
+                       ' <span class="lic">(' + esc(m.license) + ')</span></li>';
+              }).join('') + '</ul>';
+    }
+    if (d.photos && d.photos.length) {
+      html += '<h3>Photographs</h3>' +
+              '<div class="note">From Pexels. Attribution is not required by the ' +
+              'Pexels licence; it is given because their guidelines ask for it.</div><ul>' +
+              d.photos.map(function (p) {
+                return '<li>' + esc(p.author) +
+                       (p.count > 1 ? ' <span class="lic">×' + p.count + '</span>' : '') + '</li>';
+              }).join('') + '</ul>';
+    }
+    if (!html) html = '<div class="note">No third-party assets are in use.</div>';
+    host.innerHTML = html;
+  }
+
+  function open() { build(); overlay.classList.add('open'); }
+  function close() { overlay.classList.remove('open'); }
+
+  btn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  // tapping the dimmed area closes; tapping the card itself must not
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+  });
 })();
 </script>
 <script src="js/audio-manager.js"></script>

@@ -142,9 +142,28 @@
     applySize();
   }
 
+  /* Every direct child of <body> that is not the toolbar. Used when an
+     activity turned the HEIGHT control on but never named what it should
+     move: the buttons then travelled nothing at all, which reads as a
+     broken control rather than a missing setting. Staff on the wall need
+     this to work everywhere, so the default is "move the content". */
+  function defaultHeightEls() {
+    var out = [];
+    var kids = document.body ? document.body.children : [];
+    for (var i = 0; i < kids.length; i++) {
+      var el = kids[i], tag = el.tagName;
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'LINK') continue;
+      if (el.id === 'wallToolbar') continue;
+      if (el.classList && el.classList.contains('wall-backdrop')) continue;
+      out.push(el);
+    }
+    return out;
+  }
+
   function applyHeight() {
-    for (var i = 0; i < heightEls.length; i++) {
-      heightEls[i].style.transform = 'translateY(' + state.height + 'px)';
+    var els = heightEls.length ? heightEls : defaultHeightEls();
+    for (var i = 0; i < els.length; i++) {
+      els[i].style.transform = 'translateY(' + state.height + 'px)';
     }
     document.documentElement.style.setProperty('--wall-lift', state.height + 'px');
     fire(heightCbs, state.height);

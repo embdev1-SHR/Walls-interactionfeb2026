@@ -66,7 +66,6 @@ const CATEGORIES = {
         options: [
             { name: 'Types of Houses', ml: '🏠 വീടുകളുടെ തരങ്ങൾ', game: 'pri-houses' },
             { name: 'Rooms in a House', ml: '🚪 വീട്ടിലെ മുറികൾ', game: 'pri-rooms' },
-            { name: 'Letter Tracing', ml: '✍️ അക്ഷരചിത്രം', game: 'pri-letters' },
             { name: 'Kerala Flowers', ml: '🌺 കേരളത്തിലെ പൂക്കൾ', game: 'pri-flowers' },
             { name: 'Flower Matching', ml: '🔗 പൂക്കൾ ജോഡിക്കുക', game: 'pri-flower-match' }
         ]
@@ -75,11 +74,9 @@ const CATEGORIES = {
         title: 'Secondary',
         titleMl: 'സെക്കൻഡറി',
         options: [
-            { name: 'My Name', ml: '🔤 എന്റെ പേര്', game: 'sec-name-id' },
             { name: 'Build My Name', ml: '🎈 പേര് ഉണ്ടാക്കാം', game: 'sec-name-build' },
             { name: 'First Aid Box', ml: '🩹 ഫസ്റ്റ് എയ്ഡ് ബോക്സ്', game: 'sec-first-aid' },
             { name: 'Coins & Notes', ml: '💰 നാണയങ്ങളും നോട്ടുകളും', game: 'sec-currency' },
-            { name: 'Body & Plant', ml: '🧍 ശരീരവും സസ്യവും', game: 'sec-body-plant' },
             { name: 'Helpers & Places', ml: '👮 സഹായികളും സ്ഥലങ്ങളും', game: 'sec-helpers-places' },
             { name: 'Mobile Phone', ml: '📱 മൊബൈൽ ഫോൺ', game: 'sec-mobile' },
             { name: 'Flower Bouquet', ml: '💐 പൂച്ചെണ്ട്', game: 'sec-bouquet' },
@@ -90,13 +87,14 @@ const CATEGORIES = {
         title: 'Vocational',
         titleMl: 'തൊഴിൽപരിചയം',
         options: [
+            { name: 'Job Hats',           ml: '🧢 തൊഴിൽ തൊപ്പികൾ', game: 'voc-job-hats' },
+            { name: 'A Day at Work',      ml: '🕑 ഒരു ജോലിദിനം', game: 'voc-job-day' },
+            { name: 'Tools of the Trade', ml: '🔧 പണിയായുധങ്ങൾ', game: 'voc-job-tools' },
+            { name: 'Who Do I Call?', ml: '📞 ആരെ വിളിക്കണം?', game: 'voc-job-call' },
+            { name: 'Where Do They Work?', ml: '🏥 എവിടെ ജോലി?', game: 'voc-job-where' },
             { name: 'Kerala Instruments', ml: '🥁 വാദ്യോപകരണങ്ങൾ', game: 'voc-instruments' },
-            { name: 'Party Decoration',   ml: '🎈 ജന്മദിന അലങ്കാരം', game: 'voc-party-decorate' },
-            { name: 'Card Handover',      ml: '💌 കാർഡ് നൽകാം', game: 'voc-card-handover' },
             { name: 'Cap Matching',       ml: '🥳 തൊപ്പി കണ്ടെത്താം', game: 'voc-cap-match' },
-            { name: 'Cake Sharing',       ml: '🍰 കേക്ക് പങ്കിടാം', game: 'voc-cake-share' },
-            { name: 'Birthday Photo',     ml: '📷 ജന്മദിന ഫോട്ടോ', game: 'voc-photo' },
-            { name: 'DIY Card',           ml: '✂️ കാർഡ് ഉണ്ടാക്കാം', game: 'voc-card-craft' }
+            { name: 'Party Decoration',   ml: '🎈 ജന്മദിന അലങ്കാരം', game: 'voc-party-decorate' }
         ]
     },
     'pre-primary': {
@@ -119,9 +117,7 @@ const CATEGORIES = {
             { name: 'Types of Hen', ml: '🐓 കോഴിയുടെ തരങ്ങൾ', game: 'pp-hen-types' },
             { name: 'Animals & Homes', ml: '🏠 മൃഗങ്ങളുടെ വീടുകൾ', game: 'pp-animal-homes' },
             { name: 'Young Ones', ml: '🐤 മൃഗക്കുഞ്ഞുങ്ങൾ', game: 'pp-animal-young' },
-            { name: 'Animal Puzzle', ml: '🧩 മൃഗത്തെ ഉണ്ടാക്കാം', game: 'pp-animal-puzzle' },
-            { name: 'Animal Sorting', ml: '📦 തരംതിരിക്കാം', game: 'pp-animal-sort' },
-            { name: 'Animal Movement Path', ml: '✨ സഞ്ചാരപഥം', game: 'pp-animal-path' }
+            { name: 'Animal Sorting', ml: '📦 തരംതിരിക്കാം', game: 'pp-animal-sort' }
         ]
     },
 
@@ -515,17 +511,11 @@ function loadGame(gameName) {
             case 'pri-rooms':
                 window.location.href = 'games/pri-rooms.html';
                 break;
-            case 'pri-letters':
-                window.location.href = 'games/pri-letters.html';
-                break;
             case 'pri-flowers':
                 window.location.href = 'games/pri-flowers.html';
                 break;
             case 'pri-flower-match':
                 window.location.href = 'games/pri-flower-match.html';
-                break;
-            case 'sec-name-id':
-                window.location.href = 'games/sec-name-id.html';
                 break;
             case 'sec-name-build':
                 window.location.href = 'games/sec-name-build.html';
@@ -535,9 +525,6 @@ function loadGame(gameName) {
                 break;
             case 'sec-currency':
                 window.location.href = 'games/sec-currency.html';
-                break;
-            case 'sec-body-plant':
-                window.location.href = 'games/sec-body-plant.html';
                 break;
             case 'sec-helpers-places':
                 window.location.href = 'games/sec-helpers-places.html';
@@ -569,14 +556,23 @@ function loadGame(gameName) {
             case 'pp-animal-young':
                 window.location.href = 'games/pp-animal-young.html';
                 break;
-            case 'pp-animal-puzzle':
-                window.location.href = 'games/pp-animal-puzzle.html';
-                break;
             case 'pp-animal-sort':
                 window.location.href = 'games/pp-animal-sort.html';
                 break;
-            case 'pp-animal-path':
-                window.location.href = 'games/pp-animal-path.html';
+            case 'voc-job-hats':
+                window.location.href = 'games/voc-job-hats.html';
+                break;
+            case 'voc-job-day':
+                window.location.href = 'games/voc-job-day.html';
+                break;
+            case 'voc-job-tools':
+                window.location.href = 'games/voc-job-tools.html';
+                break;
+            case 'voc-job-call':
+                window.location.href = 'games/voc-job-call.html';
+                break;
+            case 'voc-job-where':
+                window.location.href = 'games/voc-job-where.html';
                 break;
             case 'voc-instruments':
                 window.location.href = 'games/voc-instruments.html';
@@ -584,20 +580,8 @@ function loadGame(gameName) {
             case 'voc-party-decorate':
                 window.location.href = 'games/voc-party-decorate.html';
                 break;
-            case 'voc-card-handover':
-                window.location.href = 'games/voc-card-handover.html';
-                break;
             case 'voc-cap-match':
                 window.location.href = 'games/voc-cap-match.html';
-                break;
-            case 'voc-cake-share':
-                window.location.href = 'games/voc-cake-share.html';
-                break;
-            case 'voc-photo':
-                window.location.href = 'games/voc-photo.html';
-                break;
-            case 'voc-card-craft':
-                window.location.href = 'games/voc-card-craft.html';
                 break;
             default:
                 console.log('Game not found:', gameName);

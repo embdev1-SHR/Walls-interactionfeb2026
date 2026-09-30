@@ -57,11 +57,11 @@
   /* ── the target name box ──────────────────────────────────────── */
   #slots{
     display:flex;gap:calc(12px * var(--wall-scale,1));justify-content:center;
-    padding:calc(18px * var(--wall-scale,1)) 12px calc(10px * var(--wall-scale,1));
+    padding:calc(10px * var(--wall-scale,1)) 12px calc(8px * var(--wall-scale,1));
     flex-wrap:wrap;z-index:20;position:relative;
   }
   .slot{
-    width:calc(96px * var(--wall-scale,1));height:calc(108px * var(--wall-scale,1));
+    width:calc(92px * var(--wall-scale,1));height:calc(92px * var(--wall-scale,1));
     border-radius:20px;border:5px dashed #94a3b8;background:rgba(255,255,255,.7);
     display:flex;align-items:center;justify-content:center;
     font-weight:900;font-size:calc(56px * var(--wall-scale,1));color:#1e293b;
@@ -113,6 +113,7 @@
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
+<script src="../js/name-entry.js"></script>
 <script>
 WALL.init();
 
@@ -135,7 +136,14 @@ function letters(str) {
    STATE
    ══════════════════════════════════════════════════════════════ */
 var names = WALL.names();
-if (!names.length) { names = ['ARUN', 'അരുൺ']; WALL.setNames(names); }
+/* Five to begin with, not one. A single seeded name meant every child built
+   the same word every time. Staff replace these with the real class list
+   through the Names button in the toolbar, which writes WALL.setNames() and
+   is shared with sec-name-id. */
+if (!names.length) {
+  names = ['ARUN', 'MEERA', 'ANJALI', 'RAHUL', 'DEVIKA'];
+  WALL.setNames(names);
+}
 var nameIdx = 0;
 var target = [];        // the letters we need, in order
 var slots  = [];        // { el, ch, filled, blockId }
@@ -339,7 +347,7 @@ function tick() {
 function load() {
   solved = false;
   names = WALL.names();
-  if (!names.length) names = ['ARUN'];
+  if (!names.length) names = ['ARUN', 'MEERA', 'ANJALI', 'RAHUL', 'DEVIKA'];
   nameIdx = nameIdx % names.length;
   target = letters(names[nameIdx]);
   buildSlots();
@@ -366,6 +374,10 @@ WALL.toolbar({
   reset: load,
   home: true
 });
+
+/* Staff enter the real class list here; it writes WALL.setNames(), which
+   sec-name-id reads too, so a name is typed once for both activities. */
+NAME_ENTRY.addToToolbar('✏️ Names', function () { nameIdx = 0; load(); });
 
 /* The brief asks for a Float Speed control on top of the standard set,
    so it is appended into the same toolbar rather than floating loose. */

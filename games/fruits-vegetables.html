@@ -375,8 +375,11 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
 
 <script>
+/* illustrated backdrop, shared with the rebuilt activities */
+if (window.WALL_BACKDROP) WALL_BACKDROP.set('meadow');
 /* ══════════════════════════════════════════════════════════════
    DATA — three-tier asset seam:  model → img → emoji
    Set `model` to a .glb in assets/new/models/ and that item renders

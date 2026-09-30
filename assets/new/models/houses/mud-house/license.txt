@@ -1,0 +1,11 @@
+Model Information:
+* title:	Thatched Hut
+* source:	https://sketchfab.com/3d-models/thatched-hut-bbd820f6e49041b490eb08ac97abfda8
+* author:	stealth86 (https://sketchfab.com/stealth86)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Thatched Hut" (https://sketchfab.com/3d-models/thatched-hut-bbd820f6e49041b490eb08ac97abfda8) by stealth86 (https://sketchfab.com/stealth86) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

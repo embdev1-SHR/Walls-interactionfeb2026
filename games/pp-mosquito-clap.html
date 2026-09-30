@@ -1,263 +1,267 @@
 <!DOCTYPE html>
-<html lang="en">
+<!--
+================================================================================
+  MOSQUITO CLAP - Pangappara Blueroom, Pre-primary
+================================================================================
+  Rebuilt on the Fruit Ninja mechanic, as asked.
+
+  The old version put mosquitoes on screen and waited to be tapped. Fruit
+  Ninja works because the target is MOVING and the gesture is a SWIPE: the
+  hand has to arrive somewhere the mosquito is going to be, not somewhere it
+  already is. That is a whole-arm movement at a wall, and it is the reason
+  the original is the best thing in this repo for gross motor work.
+
+  Taken from games/fruit-ninja.html:
+    - targets are launched on an arc with gravity, not placed
+    - a swipe leaves a visible trail and kills anything the trail crosses
+    - a wrong target (here the butterfly) costs a life, never points
+    - speed and spawn rate are on the toolbar so staff can set the pace
+
+  BUTTERFLIES ARE THE BOMB. A child must look before swinging, which is what
+  turns flailing into aiming. Hitting one costs a life and says why.
+================================================================================
+-->
+<html lang="ml">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Mosquito Clap</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;
-  background:linear-gradient(180deg,#B3E5FC 0%,#E8F5E9 45%,#A5D6A7 100%)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    user-select:none;touch-action:none}
 
-/* TOP zone: score HUD — no interaction */
-.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:12px;pointer-events:none;z-index:2}
-.scene-title{font-size:clamp(22px,3.8vw,42px);font-weight:900;color:#1B5E20;
-  text-shadow:0 2px 8px rgba(0,0,0,.12)}
-.score-row{display:flex;gap:16px;align-items:center}
-.score-badge{background:rgba(255,255,255,.6);backdrop-filter:blur(6px);
-  border:2px solid rgba(255,255,255,.7);border-radius:16px;
-  padding:8px 22px;font-weight:900;font-size:clamp(18px,3vw,32px);color:#1B5E20}
-.progress-track{width:clamp(160px,35vw,300px);background:rgba(255,255,255,.3);
-  border-radius:20px;height:14px;overflow:hidden;border:2px solid rgba(255,255,255,.5)}
-.progress-fill{height:100%;background:linear-gradient(90deg,#FF7043,#FF5722);
-  border-radius:20px;width:0%;transition:width .4s ease}
+  /* information band only - nothing here is swiped */
+  #hud{position:absolute;top:0;left:0;right:0;height:16%;z-index:6;
+    display:flex;align-items:center;justify-content:center;gap:4vw;
+    pointer-events:none;padding:0 3vw}
+  .stat{text-align:center}
+  .stat .n{font-weight:800;font-size:clamp(17px,3.4vw,38px);color:#27401f;
+    font-variant-numeric:tabular-nums;line-height:1}
+  .stat .k{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(9px,1.5vw,16px);color:#5d7a52}
 
-/* BOTTOM zone: mosquito fly area — interactive */
-.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;
-  background:linear-gradient(180deg,#C8E6C9 0%,#A5D6A7 100%);
-  z-index:5;touch-action:none;overflow:hidden}
+  #field{position:absolute;top:16%;left:0;right:0;bottom:0;overflow:hidden}
+  canvas{position:absolute;inset:0;width:100%;height:100%}
 
-/* status label inside bottom zone */
-.status-label{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
-  font-size:clamp(13px,1.8vw,18px);font-weight:700;color:#2E7D32;
-  background:rgba(255,255,255,.5);border-radius:12px;padding:5px 16px;
-  pointer-events:none;white-space:nowrap}
+  .bug{position:absolute;will-change:transform;font-size:var(--bug,54px);
+    line-height:1;pointer-events:none;filter:drop-shadow(0 3px 5px rgba(0,0,0,.2))}
+  .splat{position:absolute;pointer-events:none;font-size:var(--bug,54px);
+    line-height:1;animation:splat .5s ease-out forwards}
+  @keyframes splat{0%{transform:scale(1);opacity:1}100%{transform:scale(1.9);opacity:0}}
 
-.mosquito{position:absolute;font-size:clamp(44px,7.5vw,80px);
-  cursor:pointer;line-height:1;z-index:20;pointer-events:auto;
-  filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));
-  -webkit-user-select:none;user-select:none}
-.mosquito.caught{animation:mCatch .35s ease forwards;pointer-events:none}
-@keyframes mCatch{
-  0%  {transform:scale(1)   rotate(0deg);  opacity:1}
-  40% {transform:scale(1.6) rotate(30deg); opacity:.8}
-  100%{transform:scale(.1)  rotate(90deg); opacity:0}}
-
-.clap-ring{position:absolute;pointer-events:none;z-index:100;
-  font-size:clamp(28px,5vw,52px);animation:clapPop .5s ease forwards}
-@keyframes clapPop{
-  0%  {transform:translate(-50%,-50%) scale(.3);opacity:1}
-  50% {transform:translate(-50%,-50%) scale(1.4);opacity:1}
-  100%{transform:translate(-50%,-50%) scale(1.8);opacity:0}}
-</style>
-<style>
-/* Teacher height control, retrofitted. Size is handled by browser zoom in the
-   boot script below - see there for why a CSS scale cannot work here. */
-body > *:not(#wallToolbar):not(script):not(style):not(link) {
-  transform: translateY(var(--wall-lift, 0px));
-}
+  #go{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2.2vh;text-align:center;padding:6vw;
+    background:rgba(255,255,255,.93);backdrop-filter:blur(5px)}
+  #go.hide{display:none}
+  #go h1{font-weight:800;font-size:clamp(22px,4.6vw,46px);color:#2f7d4f}
+  #go .ml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(13px,2.6vw,25px);color:#4a6a52}
+  #go button{border:0;border-radius:18px;background:#2f7d4f;color:#fff;font-weight:800;
+    font-family:inherit;font-size:clamp(15px,2.8vw,26px);padding:14px 44px;cursor:pointer}
 </style>
 </head>
 <body>
 
-<!-- TOP: display only -->
-<div class="top-zone">
-  <div class="scene-title">🦟 Mosquito Clap</div>
-  <div class="score-row">
-    <div class="score-badge">🦟 <span id="scoreNum">0</span> / 8</div>
-    <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
-  </div>
+<div id="hud">
+  <div class="stat"><div class="n" id="score">0</div><div class="k">അടിച്ചത്</div></div>
+  <div class="stat"><div class="n" id="time">60</div><div class="k">സമയം</div></div>
+  <div class="stat"><div class="n" id="lives">❤️❤️❤️</div><div class="k">ജീവൻ</div></div>
 </div>
+<div id="field"><canvas id="trail"></canvas></div>
 
-<!-- BOTTOM: interactive fly zone -->
-<div class="bottom-zone" id="flyZone">
-  <div class="status-label" id="statusLabel">Clap the mosquitoes! 👏</div>
+<div id="go">
+  <h1>Clap the mosquitoes!</h1>
+  <div class="ml">കൊതുകുകളെ അടിക്കൂ!<br>ചിത്രശലഭത്തെ അടിക്കരുത്</div>
+  <button id="start">തുടങ്ങാം</button>
 </div>
 
 <script src="../js/tts-engine.js"></script>
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
-<script src="../js/audio-manager.js"></script>
-<script src="../js/pre-primary-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/guide.js"></script>
+
 <script>
-PP.init();
-/* PP's own toolbar is not inserted: it pins to the same place as the WALL
-   toolbar and the two overlapped. WALL's is kept because it also carries size,
-   height and voice. PP's language mode is a body class its CSS depends on, and
-   nothing sets it once PP's button is gone, so drive it from WALL's toggle. */
-if (typeof WALL !== 'undefined') {
-  WALL.onLang(function (ml) { document.body.classList.toggle('pp-ml-mode', ml); });
-}
+WALL_BACKDROP.set('meadow');
+WALL.init();
 
-const GOAL = 8, MAX_LIVE = 5, BASE_SPEED = 1.8;
-let score = 0, gameOver = false, nextId = 0, frame = 0;
-const bugs = new Map();
-const flyZone = document.getElementById('flyZone');
+var field  = document.getElementById('field');
+var canvas = document.getElementById('trail');
+var ctx    = canvas.getContext('2d');
 
-let ZW, ZH; // fly zone dimensions (bottom half)
-function getZoneDims() {
-  const r = flyZone.getBoundingClientRect();
-  ZW = r.width; ZH = r.height;
-}
+var bugs = [], trail = [], running = false;
+var score = 0, lives = 3, timeLeft = 60, speed = 1, spawnEvery = 900, lastSpawn = 0;
 
-// Web Audio
-let audioCtx;
-function _ac() { if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
-function buzzSound() {
-  try { _ac();
-    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-    o.connect(g);g.connect(audioCtx.destination);
-    o.type='sawtooth';
-    o.frequency.setValueAtTime(260,audioCtx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.18);
-    g.gain.setValueAtTime(.3,audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.22);
-    o.start();o.stop(audioCtx.currentTime+.22);
-  } catch(e) {}
-}
-function catchSound() {
-  try { _ac();
-    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-    o.connect(g);g.connect(audioCtx.destination);
-    o.type='sine';
-    o.frequency.setValueAtTime(600,audioCtx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+.12);
-    g.gain.setValueAtTime(.35,audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.2);
-    o.start();o.stop(audioCtx.currentTime+.2);
-  } catch(e) {}
-}
-
-function spawnMosquito() {
-  if (bugs.size >= MAX_LIVE || gameOver) return;
-  const id = nextId++;
-  const speed = BASE_SPEED + score * 0.18;
-  getZoneDims();
-  let x = Math.random() * (ZW - 80) + 20;
-  let y = Math.random() * (ZH - 80) + 20;
-  const angle = Math.random() * Math.PI * 2;
-  const vx = Math.cos(angle) * speed, vy = Math.sin(angle) * speed;
-
-  const el = document.createElement('div');
-  el.className = 'mosquito';
-  el.textContent = '🦟';
-  el.style.left = x+'px'; el.style.top = y+'px';
-  flyZone.appendChild(el);
-  bugs.set(id, { el, x, y, vx, vy, wobbleT:0, turnT:80+Math.random()*80 });
-  buzzSound();
-}
-
-function tick() {
-  if (gameOver) return;
-  frame++;
-  if (frame % 55 === 0) spawnMosquito();
-
-  bugs.forEach((bug, id) => {
-    bug.turnT--;
-    if (bug.turnT <= 0) {
-      const sp = Math.hypot(bug.vx,bug.vy);
-      const na = Math.atan2(bug.vy,bug.vx)+(Math.random()-.5)*2.8;
-      bug.vx = Math.cos(na)*sp; bug.vy = Math.sin(na)*sp;
-      bug.turnT = 70+Math.random()*80;
-    }
-    bug.wobbleT += .08;
-    bug.x += bug.vx + Math.sin(bug.wobbleT)*1.8;
-    bug.y += bug.vy;
-    getZoneDims();
-    if (bug.x < 20)     { bug.x = 20;     bug.vx =  Math.abs(bug.vx); }
-    if (bug.x > ZW-60)  { bug.x = ZW-60;  bug.vx = -Math.abs(bug.vx); }
-    if (bug.y < 10)     { bug.y = 10;     bug.vy =  Math.abs(bug.vy); }
-    if (bug.y > ZH-60)  { bug.y = ZH-60;  bug.vy = -Math.abs(bug.vy); }
-    bug.el.style.transform = bug.vx < 0 ? 'scaleX(-1)' : '';
-    bug.el.style.left = bug.x+'px'; bug.el.style.top = bug.y+'px';
-  });
-  requestAnimationFrame(tick);
-}
-
-function tryClap(ex, ey) {
-  if (gameOver) return;
-  _ac();
-  const zr = flyZone.getBoundingClientRect();
-  const lx = ex - zr.left, ly = ey - zr.top;
-
-  // Clap ring
-  const ring = document.createElement('div');
-  ring.className = 'clap-ring'; ring.textContent = '👏';
-  ring.style.left = lx+'px'; ring.style.top = ly+'px';
-  flyZone.appendChild(ring);
-  ring.addEventListener('animationend', () => ring.remove());
-
-  let closest = null, minDist = 72;
-  bugs.forEach((bug, id) => {
-    const mx = bug.x + 30, my = bug.y + 30;
-    const d = Math.hypot(lx-mx, ly-my);
-    if (d < minDist) { minDist = d; closest = id; }
-  });
-
-  if (closest !== null) {
-    const bug = bugs.get(closest);
-    bug.el.classList.add('caught');
-    bug.el.addEventListener('animationend', () => { bug.el.remove(); bugs.delete(closest); }, {once:true});
-    catchSound();
-    score++;
-    document.getElementById('scoreNum').textContent = score;
-    document.getElementById('progFill').style.width = (score/GOAL*100)+'%';
-    document.getElementById('statusLabel').textContent =
-      score < GOAL ? `${score} / ${GOAL} caught!` : 'All done! 🎉';
-    if (score >= GOAL) {
-      gameOver = true;
-      document.getElementById('statusLabel').textContent = 'Great job! 🎉 Tap ← Menu to go back.';
-    }
-  }
-}
-
-flyZone.addEventListener('touchstart', e => {
-  for (const t of e.changedTouches) tryClap(t.clientX, t.clientY);
-}, {passive:true});
-flyZone.addEventListener('click', e => {
-  if (e.sourceCapabilities?.firesTouchEvents) return;
-  tryClap(e.clientX, e.clientY);
+WALL.toolbar({
+  lang: true, voice: true, size: true, height: true,
+  reset: start, heightTarget: '#field'
 });
 
-getZoneDims();
-setTimeout(() => { spawnMosquito(); spawnMosquito(); }, 400);
-requestAnimationFrame(tick);
-</script>
-<script>
-/* Retrofitted teacher controls. Last in the body so the activity has already
-   built its DOM before the toolbar mounts. */
-(function () {
-  if (typeof WALL === 'undefined') return;
-  WALL.init();
-
-  /* Size, on a layout that predates --wall-scale.
-     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
-     dimension. These pages instead pin content to the viewport, so any CSS
-     scale on a container is cancelled out by its own percentage children.
-     Browser zoom changes the viewport itself, which is why it works where that
-     does not. It scales the toolbar along with the activity.
-
-     Electron persists zoom per origin, and every activity is file://, so a size
-     chosen here would silently follow the child into the next activity and into
-     the menu. Reset on the way in and on the way out. */
-  var wf = null;
-  try { wf = require('electron').webFrame; } catch (e) {}
-  if (wf) {
-    wf.setZoomFactor(1);
-    window.addEventListener('pagehide', function () {
-      try { wf.setZoomFactor(1); } catch (e) {}
+/* Speed and spawn rate on the toolbar, as fruit-ninja has them: the same
+   activity has to suit a child who can barely track a target and one who
+   is bored by it. */
+(function addPace() {
+  var body = document.querySelector('#wallToolbar .wall-tb-body');
+  if (!body) return;
+  var cap = document.createElement('div');
+  cap.className = 'wall-tb-cap';
+  cap.textContent = 'SPEED';
+  var row = document.createElement('div');
+  row.className = 'wall-tb-row';
+  [['➖', -1], ['➕', 1]].forEach(function (o) {
+    var b = document.createElement('button');
+    b.className = 'wall-tb';
+    b.textContent = o[0];
+    WALL.bindTouch(b, function () {
+      speed = Math.max(0.5, Math.min(2.2, speed + o[1] * 0.25));
+      spawnEvery = Math.max(380, 1100 - speed * 350);
     });
-    WALL.onSize(function (s) {
-      try { wf.setZoomFactor(s); } catch (e) {}
-    });
+    row.appendChild(b);
+  });
+  body.appendChild(cap); body.appendChild(row);
+})();
+
+function size() {
+  canvas.width = field.clientWidth;
+  canvas.height = field.clientHeight;
+}
+addEventListener('resize', size); size();
+
+function spawn() {
+  /* Launched from below on an arc, the way fruit-ninja throws fruit: a
+     target that rises, hangs, and falls is trackable by eye in a way a
+     straight line across the screen is not. */
+  var isBug = Math.random() > 0.22;
+  var el = document.createElement('div');
+  el.className = 'bug';
+  el.textContent = isBug ? '🦟' : '🦋';
+  field.appendChild(el);
+  var w = field.clientWidth, h = field.clientHeight;
+  bugs.push({
+    el: el, good: isBug,
+    x: 40 + Math.random() * (w - 80),
+    y: h + 60,
+    vx: (Math.random() - 0.5) * 2.4 * speed,
+    vy: -(7.5 + Math.random() * 2.6) * speed,
+    rot: (Math.random() - 0.5) * 6
+  });
+}
+
+function step() {
+  if (!running) return;
+  var h = field.clientHeight, w = field.clientWidth;
+  var now = performance.now();
+  if (now - lastSpawn > spawnEvery) { spawn(); lastSpawn = now; }
+
+  for (var i = bugs.length - 1; i >= 0; i--) {
+    var b = bugs[i];
+    b.vy += 0.16 * speed;
+    b.x += b.vx; b.y += b.vy;
+    b.el.style.transform = 'translate(' + b.x + 'px,' + b.y + 'px) rotate(' + (b.y * b.rot * 0.02) + 'deg)';
+    if (b.y > h + 120 || b.x < -120 || b.x > w + 120) { b.el.remove(); bugs.splice(i, 1); }
   }
 
-  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
-})();
+  /* the swipe trail, drawn and faded each frame */
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (trail.length > 1) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(255,255,255,.92)';
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.moveTo(trail[0].x, trail[0].y);
+    for (var t = 1; t < trail.length; t++) ctx.lineTo(trail[t].x, trail[t].y);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(120,200,255,.75)';
+    ctx.lineWidth = 6; ctx.stroke();
+  }
+  while (trail.length && now - trail[0].t > 190) trail.shift();
+
+  requestAnimationFrame(step);
+}
+
+function splatAt(x, y, ch) {
+  var s = document.createElement('div');
+  s.className = 'splat';
+  s.textContent = ch;
+  s.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+  field.appendChild(s);
+  setTimeout(function () { s.remove(); }, 520);
+}
+
+/* A swipe kills what its LINE crosses, not what it lands on - so a fast
+   stroke through three mosquitoes takes all three. */
+function cut(x, y) {
+  for (var i = bugs.length - 1; i >= 0; i--) {
+    var b = bugs[i];
+    if (Math.abs(b.x - x) < 46 && Math.abs(b.y - y) < 46) {
+      b.el.remove(); bugs.splice(i, 1);
+      if (b.good) {
+        score++;
+        document.getElementById('score').textContent = score;
+        WALL.tone(520 + (score % 8) * 60, 0.1, 'sine', 0.13);
+        WALL.noise(0.04, 0.05, 30);
+        splatAt(b.x, b.y, '💥');
+      } else {
+        /* the butterfly is the bomb: it costs a life and says why */
+        lives--;
+        document.getElementById('lives').textContent = '❤️'.repeat(Math.max(0, lives)) || '—';
+        WALL.sfx.nudge();
+        splatAt(b.x, b.y, '💔');
+        if (window.GUIDE) GUIDE.say({ en: 'Not the butterfly!', ml: 'ചിത്രശലഭത്തെ അടിക്കരുത്!' });
+        if (lives <= 0) stop();
+      }
+    }
+  }
+}
+
+field.addEventListener('pointerdown', function (e) { trail.length = 0; track(e); });
+field.addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType === 'touch') track(e); });
+function track(e) {
+  var r = field.getBoundingClientRect();
+  var x = e.clientX - r.left, y = e.clientY - r.top;
+  trail.push({ x: x, y: y, t: performance.now() });
+  cut(x, y);
+}
+
+var timer = null;
+function start() {
+  bugs.forEach(function (b) { b.el.remove(); });
+  bugs = []; trail = [];
+  score = 0; lives = 3; timeLeft = 60; running = true; lastSpawn = 0;
+  document.getElementById('score').textContent = '0';
+  document.getElementById('lives').textContent = '❤️❤️❤️';
+  document.getElementById('time').textContent = '60';
+  document.getElementById('go').classList.add('hide');
+  size();
+  clearInterval(timer);
+  timer = setInterval(function () {
+    timeLeft--;
+    document.getElementById('time').textContent = timeLeft;
+    if (timeLeft <= 0) stop();
+  }, 1000);
+  requestAnimationFrame(step);
+}
+
+function stop() {
+  running = false;
+  clearInterval(timer);
+  bugs.forEach(function (b) { b.el.remove(); });
+  bugs = [];
+  var go = document.getElementById('go');
+  go.querySelector('h1').textContent = 'You clapped ' + score + '!';
+  go.querySelector('.ml').innerHTML = score + ' കൊതുകുകളെ അടിച്ചു!';
+  go.querySelector('button').textContent = 'വീണ്ടും';
+  go.classList.remove('hide');
+  WALL.celebrate();
+}
+
+WALL.bindTouch(document.getElementById('start'), start);
+if (window.GUIDE) { GUIDE.mount(); GUIDE.say({ en: 'Clap the mosquitoes!', ml: 'കൊതുകുകളെ അടിക്കൂ!' }); }
 </script>
+<script src="../js/audio-manager.js"></script>
 </body>
 </html>

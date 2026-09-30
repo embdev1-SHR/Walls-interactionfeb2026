@@ -8,8 +8,13 @@
     "build": "electron-builder",
     "voice:lines": "node scripts/voice-lines.mjs",
     "voice:bake": ".venv/Scripts/python.exe scripts/voice-bake.py",
-    "photos": "node --env-file=.env.local scripts/fetch-pexels.mjs",
-    "photos:list": "node scripts/fetch-pexels.mjs --list"
+    "photos": "node --env-file=.env.local scripts/fetch-pexels.mjs && npm run credits",
+    "photos:list": "node scripts/fetch-pexels.mjs --list",
+    "models": "node --env-file=.env.local scripts/fetch-sketchfab.mjs && npm run credits",
+    "models:list": "node scripts/fetch-sketchfab.mjs --list",
+    "credits": "node scripts/build-credits.mjs",
+    "assets:review": "node scripts/build-asset-review.mjs --serve",
+    "scenarios:review": "node scripts/build-scenario-review.mjs --serve"
   },
   "build": {
     "appId": "com.yourname.interactive-wall-games",

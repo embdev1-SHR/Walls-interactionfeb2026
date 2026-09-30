@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  TOOLS OF THE TRADE — Pangappara Blueroom, Vocational
+════════════════════════════════════════════════════════════════════════════
+  A worker needs BOTH of their tools, picked out of a tray that also holds
+  four tools belonging to other jobs.
+
+  Deliberately not another single-choice quiz. Job Hats asks one question and
+  ends; this asks the child to hold a pair in mind and finish a set, and a
+  half-finished worker is visibly unfinished on screen. Completing a set is a
+  different skill from picking an answer, which is the whole reason both
+  activities exist.
+
+  Content: js/jobs-data.js — all 18 jobs carry exactly two tools.
+════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Tools of the Trade</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(165deg,#f6f4ff,#ece8fb 70%,#e0dbf5);
+    user-select:none;touch-action:none}
+
+  .who{display:flex;flex-direction:column;align-items:center;gap:.3vh;flex-shrink:0}
+  .who .em{font-size:clamp(38px,7.4vh,80px);line-height:1;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,.14))}
+  .who .nm{font-weight:800;font-size:clamp(12px,2vh,22px);color:#2c2145;text-align:center}
+  .who .ml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(10.5px,1.6vh,17px);color:#6b5f8c;text-align:center;line-height:1.4}
+
+  /* the two sockets that must be filled */
+  .belt{display:flex;gap:1.1vw;justify-content:center;flex-shrink:0}
+  .socket{width:clamp(44px,8.4vh,82px);height:clamp(44px,8.4vh,82px);
+    border:3px dashed #b3a8d6;border-radius:14px;background:rgba(255,255,255,.55);
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(22px,4.4vh,46px);line-height:1;transition:border-color .16s,background .16s}
+  .socket.full{border-style:solid;border-color:#3fae7c;background:rgba(63,174,124,.12);
+    animation:pop .34s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes pop{from{transform:scale(.55);opacity:0}to{transform:none;opacity:1}}
+
+  .tray{display:flex;gap:1vw;flex-wrap:wrap;justify-content:center;width:100%}
+  .tool{width:clamp(44px,8.4vh,82px);height:clamp(44px,8.4vh,82px);
+    border-radius:14px;background:#fff;border:3px solid #d7cfee;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(22px,4.4vh,46px);line-height:1;
+    box-shadow:0 4px 11px rgba(60,40,110,.13);transition:transform .14s,opacity .22s,border-color .14s}
+  .tool:active{transform:scale(.93)}
+  .tool.gone{opacity:0;transform:scale(.45);pointer-events:none}
+  .tool.wrong{animation:wob .42s ease-in-out;border-color:#e0a83c}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}
+                 60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+</style>
+</head>
+<body>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/jobs-data.js"></script>
+<script src="../js/three-up.js"></script>
+
+<script>
+WALL_BACKDROP.set('sky');
+var POOL   = JOBS_DATA.withTools();
+var ROUNDS = 5;
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+TRIUP.start({
+  title: { en:'Tools of the Trade', ml:'പണിയായുധങ്ങൾ' },
+  hint:  { en:'Find both of their tools', ml:'രണ്ട് ആയുധങ്ങളും കണ്ടെത്തൂ' },
+
+  build: function (p, body, api) {
+    var st = api.state(p);
+    st.queue = shuffle(POOL).slice(0, ROUNDS);
+    st.done = 0;
+    api.pill(p, 'done', '0 / ' + ROUNDS);
+
+    var who = document.createElement('div'); who.className = 'who';
+    var belt = document.createElement('div'); belt.className = 'belt';
+    var tray = document.createElement('div'); tray.className = 'tray';
+    body.appendChild(who); body.appendChild(belt); body.appendChild(tray);
+
+    function round() {
+      if (!st.queue.length) {
+        api.win(p, {
+          title: { en:'Every worker is equipped!', ml:'എല്ലാവർക്കും ആയുധങ്ങളായി!' },
+          onAgain: function () {
+            st.queue = shuffle(POOL).slice(0, ROUNDS); st.done = 0;
+            api.pill(p, 'done', '0 / ' + ROUNDS); round();
+          }
+        });
+        return;
+      }
+      var job = st.queue.shift();
+      st.job = job; st.got = 0;
+
+      who.innerHTML = '<div class="em">' + job.emoji + '</div>' +
+        '<div class="nm">' + WALL.t(job.label) + '</div>' +
+        '<div class="ml">' + job.label.ml + '</div>';
+
+      belt.innerHTML = '';
+      job.tools.forEach(function () {
+        var sk = document.createElement('div');
+        sk.className = 'socket';
+        belt.appendChild(sk);
+      });
+
+      /* Four decoys, each a real tool from a different job. A decoy that is
+         not a tool at all would make the round answerable by elimination. */
+      var decoys = [];
+      shuffle(POOL.filter(function (j) { return j.id !== job.id; })).forEach(function (j) {
+        if (decoys.length < 4) decoys.push(j.tools[Math.floor(Math.random() * j.tools.length)]);
+      });
+
+      tray.innerHTML = '';
+      shuffle(job.tools.map(function (t) { return { t: t, ok: true }; })
+        .concat(decoys.map(function (t) { return { t: t, ok: false }; })))
+        .forEach(function (o) {
+          var b = document.createElement('div');
+          b.className = 'tool';
+          b.textContent = o.t.emoji;
+          WALL.bindTouch(b, function () { pick(o, b); });
+          tray.appendChild(b);
+        });
+
+      if (p === 0 && WALL.voiceOn()) WALL.say(job.label.ml);
+    }
+
+    function pick(o, el) {
+      if (!o.ok) {
+        el.classList.add('wrong');
+        setTimeout(function () { el.classList.remove('wrong'); }, 440);
+        WALL.sfx.nudge();
+        return;
+      }
+      el.classList.add('gone');
+      var sk = belt.children[st.got];
+      if (sk) { sk.textContent = o.t.emoji; sk.classList.add('full'); }
+      st.got++;
+      WALL.tone(440 + st.got * 70, 0.16, 'sine', 0.12);
+
+      if (st.got === st.job.tools.length) {
+        st.done++;
+        api.pill(p, 'done', st.done + ' / ' + ROUNDS);
+        setTimeout(function () {
+          api.popup(p, {
+            title: st.job.label,
+            body:  st.job.does,
+            close: { en:'Next', ml:'അടുത്തത്' },
+            onClose: round
+          });
+        }, 380);
+      }
+    }
+
+    round();
+  }
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

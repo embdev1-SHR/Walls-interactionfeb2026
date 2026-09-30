@@ -69,7 +69,7 @@ Edit one, relaunch, done.
 
 One object, `AuticareConfig`:
 
-- **`BASE_URL`** — `https://auticare-api.vercel.app`
+- **`BASE_URL`** — `https://api.myauticare.com`
 - **`ENDPOINTS`** — the API paths. Only `centerAuth` is a real documented endpoint; the rest are
   marked PLACEHOLDER in the file and need confirming server-side.
 - **`MULTIPLAYER_GAMES`** — a list of activity keys.

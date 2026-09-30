@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  WHO DO I CALL? — Pangappara Blueroom, Vocational
+════════════════════════════════════════════════════════════════════════════
+  A situation appears. Choose the right helper, then DIAL THEIR NUMBER on a
+  real keypad. Two steps, because knowing to call the fire service and being
+  able to actually place that call are different skills, and the second is
+  the one that matters at the moment it is needed.
+
+  The numbers are the Indian national ones — 100 police, 101 fire,
+  102 ambulance. They are checkable facts rather than translations, so they
+  are the one part of this file that does not need a Malayalam proofreader.
+
+  Dialling is unforgiving in one narrow way on purpose: a wrong digit clears
+  the display and you start the number again. That is what a real phone does,
+  and a child who will one day make this call should practise it correctly.
+  It still costs nothing — no score, no failure, immediate retry.
+
+  Content: the `call` entries in js/jobs-data.js.
+════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Who Do I Call</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(165deg,#fff5f5,#ffe9e6 70%,#f9dcd8);
+    user-select:none;touch-action:none}
+
+  .scene{display:flex;flex-direction:column;align-items:center;gap:.3vh;flex-shrink:0;text-align:center}
+  .scene .em{font-size:clamp(38px,7.4vh,80px);line-height:1}
+  .scene .en{font-weight:800;font-size:clamp(12px,2vh,22px);color:#4a1f1c}
+  .scene .ml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(11px,1.7vh,18px);color:#8a5a54;line-height:1.4}
+
+  .helpers{display:flex;gap:1.1vw;justify-content:center;flex-wrap:wrap;width:100%}
+  .helper{border-radius:16px;background:#fff;border:3px solid #e8c4bf;cursor:pointer;
+    padding:6px 10px;display:flex;flex-direction:column;align-items:center;gap:1px;
+    min-width:clamp(62px,12vh,112px);
+    box-shadow:0 4px 11px rgba(120,50,40,.12);transition:transform .14s,border-color .14s}
+  .helper:active{transform:scale(.94)}
+  .helper .e{font-size:clamp(24px,4.6vh,48px);line-height:1}
+  .helper .n{font-weight:700;font-size:clamp(9.5px,1.5vh,15px);color:#4a1f1c;text-align:center}
+  .helper.wrong{animation:wob .42s ease-in-out;border-color:#e0a83c}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}
+                 60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+  /* the phone */
+  .phone{display:none;flex-direction:column;align-items:center;gap:.7vh;width:100%}
+  .phone.on{display:flex}
+  .screen{font-variant-numeric:tabular-nums;letter-spacing:.22em;
+    font-weight:800;font-size:clamp(20px,4.2vh,44px);color:#1d6b2f;
+    background:#eaf6ec;border:3px solid #b9dcc2;border-radius:12px;
+    padding:3px 18px;min-width:clamp(96px,20vh,190px);text-align:center;min-height:1.5em}
+  .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:.5vh .6vw}
+  .key{width:clamp(38px,6.8vh,66px);height:clamp(34px,6.2vh,60px);
+    border-radius:11px;background:#fff;border:2px solid #d9c6c2;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:clamp(15px,2.8vh,28px);color:#3a2320;
+    box-shadow:0 3px 0 #e3d2ce;transition:transform .1s}
+  .key:active{transform:translateY(2px);box-shadow:0 1px 0 #e3d2ce}
+  .askml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(10.5px,1.6vh,17px);color:#8a5a54;text-align:center}
+</style>
+</head>
+<body>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/jobs-data.js"></script>
+<script src="../js/three-up.js"></script>
+
+<script>
+WALL_BACKDROP.set('meadow');
+/* Only jobs with a situation AND a number can be an answer here. The
+   electrician has a situation but no number to dial, so he is excluded
+   rather than given an invented one. */
+var POOL = JOBS_DATA.withCall().filter(function (j) { return j.call && j.call.number; });
+var ALL  = JOBS_DATA.all();
+var ROUNDS = 5;
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+TRIUP.start({
+  title: { en:'Who Do I Call?', ml:'ആരെ വിളിക്കണം?' },
+  hint:  { en:'Choose the helper, then dial', ml:'സഹായിയെ തിരഞ്ഞെടുത്ത് വിളിക്കൂ' },
+
+  build: function (p, body, api) {
+    var st = api.state(p);
+    st.queue = shuffle(POOL).slice(0, Math.min(ROUNDS, POOL.length));
+    st.done = 0;
+    api.pill(p, 'calls', '0');
+
+    var scene   = document.createElement('div'); scene.className = 'scene';
+    var helpers = document.createElement('div'); helpers.className = 'helpers';
+    var phone   = document.createElement('div'); phone.className = 'phone';
+    phone.innerHTML = '<div class="askml" id="ask' + p + '"></div>' +
+                      '<div class="screen"></div><div class="keys"></div>';
+    body.appendChild(scene); body.appendChild(helpers); body.appendChild(phone);
+
+    var screen = phone.querySelector('.screen');
+    var keys   = phone.querySelector('.keys');
+    var ask    = phone.querySelector('.askml');
+
+    ['1','2','3','4','5','6','7','8','9','','0',''].forEach(function (d) {
+      var k = document.createElement('div');
+      if (!d) { k.style.visibility = 'hidden'; k.className = 'key'; keys.appendChild(k); return; }
+      k.className = 'key'; k.textContent = d;
+      WALL.bindTouch(k, function () { press(d); });
+      keys.appendChild(k);
+    });
+
+    function round() {
+      if (!st.queue.length) {
+        api.win(p, {
+          title: { en:'You know who to call!', ml:'ആരെ വിളിക്കണമെന്ന് അറിയാം!' },
+          onAgain: function () {
+            st.queue = shuffle(POOL).slice(0, Math.min(ROUNDS, POOL.length));
+            st.done = 0; api.pill(p, 'calls', '0'); round();
+          }
+        });
+        return;
+      }
+      var job = st.queue.shift();
+      st.job = job; st.typed = '';
+      phone.classList.remove('on');
+      helpers.style.display = '';
+      screen.textContent = '';
+
+      scene.innerHTML = '<div class="em">' + (job.id === 'firefighter' ? '🔥' :
+                          job.id === 'police' ? '🚨' : '🤒') + '</div>' +
+        '<div class="en">' + job.call.when.en + '</div>' +
+        '<div class="ml">' + job.call.when.ml + '</div>';
+
+      /* Never offer a helper who would dial the SAME number as the answer.
+         Doctor and nurse are both 102, so putting one up against the other
+         marks a child wrong for a choice that places the identical call. */
+      var wrong = shuffle(ALL.filter(function (j) {
+        if (j.id === job.id) return false;
+        return !(j.call && j.call.number === job.call.number);
+      })).slice(0, 2);
+      helpers.innerHTML = '';
+      shuffle([job].concat(wrong)).forEach(function (h) {
+        var b = document.createElement('div');
+        b.className = 'helper';
+        b.innerHTML = '<div class="e">' + h.emoji + '</div><div class="n">' + WALL.t(h.label) + '</div>';
+        WALL.bindTouch(b, function () { choose(h, b); });
+        helpers.appendChild(b);
+      });
+
+      if (p === 0 && WALL.voiceOn()) WALL.say(job.call.when.ml);
+    }
+
+    function choose(h, el) {
+      if (h.id !== st.job.id) {
+        el.classList.add('wrong');
+        setTimeout(function () { el.classList.remove('wrong'); }, 440);
+        WALL.sfx.nudge();
+        return;
+      }
+      WALL.sfx.correct();
+      helpers.style.display = 'none';
+      phone.classList.add('on');
+      ask.textContent = WALL.t({ en: 'Dial ' + st.job.call.number,
+                                 ml: st.job.call.number + ' വിളിക്കൂ' });
+    }
+
+    function press(d) {
+      var want = st.job.call.number;
+      if (d === want.charAt(st.typed.length)) {
+        st.typed += d;
+        screen.textContent = st.typed;
+        WALL.tone(520 + st.typed.length * 80, 0.1, 'sine', 0.1);
+        if (st.typed === want) connected();
+      } else {
+        /* a real phone does not forgive a wrong digit, so neither does this —
+           but it costs nothing and can be started again at once */
+        st.typed = '';
+        screen.textContent = '';
+        WALL.sfx.nudge();
+      }
+    }
+
+    function connected() {
+      st.done++;
+      api.pill(p, 'calls', String(st.done));
+      WALL.celebrate();
+      setTimeout(function () {
+        api.popup(p, {
+          title: st.job.label,
+          body:  { en: st.job.does.en + '  ·  ' + st.job.call.number,
+                   ml: st.job.does.ml + '  ·  ' + st.job.call.number },
+          close: { en:'Next', ml:'അടുത്തത്' },
+          onClose: round
+        });
+      }, 500);
+    }
+
+    round();
+  }
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

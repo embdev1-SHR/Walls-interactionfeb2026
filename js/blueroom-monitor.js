@@ -15,7 +15,10 @@
      - button / control taps (instruction + trigger prompts)
    ============================================================ */
 (function () {
-  var BASE = 'https://auticare-api.vercel.app';
+  // NOTE: this file is an Electron preload (see main.js), so it runs before the
+  // page's own scripts and cannot read window.AuticareConfig. Keep this URL in
+  // sync with BASE_URL in js/auticare-config.js by hand.
+  var BASE = 'https://api.myauticare.com';
   var HEARTBEAT_MS = 15000;
   var TOUCH_THROTTLE_MS = 35;
 

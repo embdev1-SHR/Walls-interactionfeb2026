@@ -1,0 +1,11 @@
+Model Information:
+* title:	Set of cartoon characters Low-poly
+* source:	https://sketchfab.com/3d-models/set-of-cartoon-characters-low-poly-2c65f1af604847429f1ca44157ca4bfa
+* author:	Pavlov DR (https://sketchfab.com/pavlovdr)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Set of cartoon characters Low-poly" (https://sketchfab.com/3d-models/set-of-cartoon-characters-low-poly-2c65f1af604847429f1ca44157ca4bfa) by Pavlov DR (https://sketchfab.com/pavlovdr) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

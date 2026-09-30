@@ -1,211 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<!--
+================================================================================
+  Count the Eggs - Pangappara Blueroom
+================================================================================
+  COUNTING TO A TARGET. Kuttu asks for a number of eggs and the child taps
+  that many into the basket. The answer is a QUANTITY, not an object, so
+  there is nothing to recognise and no picture that gives it away.
+
+  Stopping is the part actually being taught. Tapping a seventh egg when six
+  were asked for is the mistake worth making, and it is one a four-choice
+  board can never produce - there are always more eggs on the table than
+  were asked for.
+================================================================================
+-->
+<html lang="ml">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>1-2-3 Egg Tap</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Count the Eggs</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;
-  background:linear-gradient(180deg,#87CEEB 0%,#B0E8B0 45%,#4CAF50 100%)}
-
-/* TOP: decorative sky scene — no interaction */
-.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
-  padding-bottom:12px;pointer-events:none;z-index:2}
-.scene-title{font-size:clamp(22px,3.8vw,42px);font-weight:900;color:#fff;
-  text-shadow:0 3px 10px rgba(0,0,0,.3);text-align:center}
-.scene-birds{font-size:clamp(28px,5vw,52px);opacity:.7;letter-spacing:20px;margin-bottom:6px}
-.progress-bar-wrap{width:clamp(180px,40vw,340px);
-  background:rgba(255,255,255,.3);border-radius:20px;height:14px;
-  overflow:hidden;border:2px solid rgba(255,255,255,.5);margin-top:10px}
-.progress-bar{height:100%;background:linear-gradient(90deg,#FFD700,#FF8C00);
-  border-radius:20px;width:0%;transition:width .5s ease}
-.progress-text{font-size:clamp(13px,1.9vw,20px);font-weight:700;
-  color:rgba(255,255,255,.95);margin-top:6px}
-
-/* BOTTOM: all interactive — eggs + nest + buttons */
-.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;
-  background:linear-gradient(180deg,#5DBB5D 0%,#3A8C3A 100%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:clamp(14px,2.5vh,28px);z-index:5;
-  padding:16px 20px 20px}
-
-/* Nest + eggs */
-.nest-area{position:relative;display:flex;align-items:flex-end;justify-content:center;
-  gap:clamp(14px,3.5vw,50px);padding:0 20px 30px}
-.nest-bg{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-  width:calc(100% + 70px);height:50px;
-  background:radial-gradient(ellipse at 50% 75%,#8B6914 0%,#5C4008 55%,transparent 85%);
-  border-radius:50%;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-
-.egg-wrap{position:relative;z-index:2;display:flex;flex-direction:column;
-  align-items:center;gap:4px;cursor:pointer;
-  -webkit-user-select:none;user-select:none;transition:transform .15s}
-.egg-wrap:active{transform:scale(.88)}
-.egg{font-size:clamp(64px,11vw,110px);line-height:1;
-  transition:filter .3s,transform .25s;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
-.egg-wrap.tapped .egg{
-  animation:eggGlow 1.8s ease-in-out infinite;transform:translateY(-10px) scale(1.08)}
-@keyframes eggGlow{
-  0%,100%{filter:drop-shadow(0 0 14px #FFD700) drop-shadow(0 4px 8px rgba(0,0,0,.25))}
-  50%    {filter:drop-shadow(0 0 36px #FFE066) drop-shadow(0 0 22px #FFD700)}}
-.egg-label{font-size:clamp(18px,3vw,32px);font-weight:900;color:#fff;
-  text-shadow:0 2px 7px rgba(0,0,0,.5);text-align:center;
-  opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s}
-.egg-wrap.tapped .egg-label{opacity:1;transform:translateY(0)}
-
-/* Buttons row */
-.btn-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-.game-btn{padding:12px 28px;border-radius:22px;border:2px solid rgba(255,255,255,.6);
-  background:rgba(255,255,255,.25);backdrop-filter:blur(6px);
-  color:#fff;font-weight:900;font-size:clamp(14px,2vw,18px);
-  cursor:pointer;font-family:inherit;transition:all .25s}
-.game-btn:hover{background:rgba(255,255,255,.38);transform:scale(1.06)}
-.game-btn:active{transform:scale(.94)}
-</style>
-<style>
-/* Teacher height control, retrofitted. Size is handled by browser zoom in the
-   boot script below - see there for why a CSS scale cannot work here. */
-body > *:not(#wallToolbar):not(script):not(style):not(link) {
-  transform: translateY(var(--wall-lift, 0px));
-}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    user-select:none;touch-action:none}
+  .basket{position:absolute;left:50%;top:23%;transform:translateX(-50%);
+    font-size:clamp(38px,7vh,84px);line-height:1;z-index:6}
+  .eggs{position:absolute;top:36%;left:0;right:0;bottom:3vh;display:flex;
+    flex-wrap:wrap;gap:1.6vw;align-content:center;justify-content:center;padding:0 4vw}
+  /* An egg is not a circle. Taller than wide, with the wide end at the
+     bottom - a border-radius with four different corners rather than 50%. */
+  .egg{width:clamp(42px,9.5vh,96px);height:clamp(54px,12vh,122px);
+    border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;
+    background:radial-gradient(circle at 36% 30%,#fffdf6,#f0e2c2 70%,#dcc89a);
+    border:4px solid #fff;box-shadow:0 5px 13px rgba(120,100,60,.2);cursor:pointer;
+    transition:transform .15s,opacity .3s}
+  .egg:active{transform:scale(.92)}
+  .egg.taken{opacity:.25;pointer-events:none;transform:scale(.8)}
 </style>
 </head>
 <body>
-
-<!-- TOP: display only -->
-<div class="top-zone">
-  <div class="scene-birds">🌤️ &nbsp; 🐦 &nbsp; 🌤️</div>
-  <div class="scene-title">🥚 1 · 2 · 3 Egg Tap</div>
-  <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
-  <div class="progress-text" id="progressText">Tap each egg!</div>
-</div>
-
-<!-- BOTTOM: all interactive -->
-<div class="bottom-zone">
-  <div class="nest-area" id="nestArea">
-    <div class="nest-bg"></div>
-    <div class="egg-wrap" id="egg1">
-      <div class="egg">🥚</div>
-      <div class="egg-label">1 · ONE</div>
-    </div>
-    <div class="egg-wrap" id="egg2">
-      <div class="egg">🥚</div>
-      <div class="egg-label">2 · TWO</div>
-    </div>
-    <div class="egg-wrap" id="egg3">
-      <div class="egg">🥚</div>
-      <div class="egg-label">3 · THREE</div>
-    </div>
-  </div>
-
-  <div class="btn-row">
-    <button class="game-btn" id="btnHearAll">🔊 Hear All</button>
-    <button class="game-btn" id="btnReset">↺ Try Again</button>
-  </div>
-</div>
-
 <script src="../js/tts-engine.js"></script>
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
-<script src="../js/audio-manager.js"></script>
-<script src="../js/pre-primary-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/guide.js"></script>
+<script src="../js/play-kit.js"></script>
 <script>
-const ML_WAV = {
-  1:   new Audio('../assets/Audio/ഒന്ന്.wav'),
-  2:   new Audio('../assets/Audio/രണ്ട്.wav'),
-  3:   new Audio('../assets/Audio/മൂന്ന്.wav'),
-  all: new Audio('../assets/Audio/ഒന്ന് രണ്ട് മൂന്ന് ന.wav')
-};
-Object.values(ML_WAV).forEach(a => a.load());
+var ROUNDS = 5, n = 0, want = 0, got = 0, locked = false;
+var pk = PLAYKIT.page({ accent:'#b8862b', backdrop:'meadow', onAgain:function(){ n=0; deal(); } });
+pk.board.style.display = 'none';
 
-const EN_WORDS = ['','ONE','TWO','THREE'];
-let tapped = new Set();
+var basket = document.createElement('div');
+basket.className = 'basket'; basket.textContent = '\ud83e\uddfa';
+var tray = document.createElement('div'); tray.className = 'eggs';
+document.body.appendChild(basket); document.body.appendChild(tray);
 
-PP.init();
-/* PP's own toolbar is not inserted: it pins to the same place as the WALL
-   toolbar and the two overlapped. WALL's is kept because it also carries size,
-   height and voice. PP's language mode is a body class its CSS depends on, and
-   nothing sets it once PP's button is gone, so drive it from WALL's toggle. */
-if (typeof WALL !== 'undefined') {
-  WALL.onLang(function (ml) { document.body.classList.toggle('pp-ml-mode', ml); });
-}
+var ML = ['\u0d2a\u0d42\u0d1c\u0d4d\u0d2f\u0d02','\u0d12\u0d28\u0d4d\u0d28\u0d4d','\u0d30\u0d23\u0d4d\u0d1f\u0d4d','\u0d2e\u0d42\u0d28\u0d4d\u0d28\u0d4d','\u0d28\u0d3e\u0d32\u0d4d','\u0d05\u0d1e\u0d4d\u0d1a\u0d4d','\u0d06\u0d31\u0d4d'];
 
-function playNum(n) {
-  const a = ML_WAV[n];
-  if (a) { a.currentTime = 0; a.play().catch(() => {}); }
-  TTSEngine.speak(String(n), 'en', EN_WORDS[n]);
-}
-
-function playAll() {
-  const a = ML_WAV.all;
-  if (a) { a.currentTime = 0; a.play().catch(() => {}); }
-}
-
-function updateProgress() {
-  const n = tapped.size;
-  document.getElementById('progressBar').style.width = (n/3*100)+'%';
-  document.getElementById('progressText').textContent =
-    n === 0 ? 'Tap each egg! 🐣' :
-    n < 3   ? `${n} / 3 eggs tapped ✓` :
-              'All three eggs! 🌟';
-}
-
-function tapEgg(num) {
-  const wrap = document.getElementById('egg'+num);
-  wrap.style.transform = 'scale(1.22) translateY(-14px)';
-  setTimeout(() => { wrap.style.transform = ''; }, 230);
-  playNum(num);
-  tapped.add(num);
-  wrap.classList.add('tapped');
-  updateProgress();
-}
-
-function resetGame() {
-  tapped.clear();
-  [1,2,3].forEach(n => document.getElementById('egg'+n).classList.remove('tapped'));
-  updateProgress();
-}
-
-PP.bindTouch(document.getElementById('btnHearAll'), playAll);
-PP.bindTouch(document.getElementById('btnReset'),   resetGame);
-[1,2,3].forEach(n => PP.bindTouch(document.getElementById('egg'+n), () => tapEgg(n)));
-updateProgress();
-</script>
-<script>
-/* Retrofitted teacher controls. Last in the body so the activity has already
-   built its DOM before the toolbar mounts. */
-(function () {
-  if (typeof WALL === 'undefined') return;
-  WALL.init();
-
-  /* Size, on a layout that predates --wall-scale.
-     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
-     dimension. These pages instead pin content to the viewport, so any CSS
-     scale on a container is cancelled out by its own percentage children.
-     Browser zoom changes the viewport itself, which is why it works where that
-     does not. It scales the toolbar along with the activity.
-
-     Electron persists zoom per origin, and every activity is file://, so a size
-     chosen here would silently follow the child into the next activity and into
-     the menu. Reset on the way in and on the way out. */
-  var wf = null;
-  try { wf = require('electron').webFrame; } catch (e) {}
-  if (wf) {
-    wf.setZoomFactor(1);
-    window.addEventListener('pagehide', function () {
-      try { wf.setZoomFactor(1); } catch (e) {}
-    });
-    WALL.onSize(function (s) {
-      try { wf.setZoomFactor(s); } catch (e) {}
-    });
+function deal(){
+  locked = false; pk.note(null); pk.hideFinish();
+  if (n >= ROUNDS) return pk.finish({ en:'All counted!', ml:'\u0d0e\u0d32\u0d4d\u0d32\u0d3e\u0d02 \u0d0e\u0d23\u0d4d\u0d23\u0d3f!' });
+  want = 2 + Math.floor(Math.random() * 5);
+  got = 0; tray.innerHTML = ''; basket.textContent = '\ud83e\uddfa';
+  var shown = want + 2 + Math.floor(Math.random() * 3);
+  for (var i = 0; i < shown; i++) {
+    var e = document.createElement('div');
+    e.className = 'egg';
+    WALL.bindTouch(e, (function(el){ return function(){ take(el); }; })(e));
+    tray.appendChild(e);
   }
+  pk.ask({ en:'Put ' + want + ' eggs in the basket', ml:ML[want] + ' \u0d2e\u0d41\u0d1f\u0d4d\u0d1f \u0d15\u0d4a\u0d1f\u0d4d\u0d1f\u0d2f\u0d3f\u0d7d \u0d07\u0d1f\u0d42' });
+  pk.tally('0 / ' + want);
+  pk.fit();
+  pk.say({ en:'Put ' + want + ' eggs in the basket', ml:ML[want] + ' \u0d2e\u0d41\u0d1f\u0d4d\u0d1f \u0d15\u0d4a\u0d1f\u0d4d\u0d1f\u0d2f\u0d3f\u0d7d \u0d07\u0d1f\u0d42' });
+}
 
-  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
-})();
+function take(el){
+  if (locked || el.classList.contains('taken')) return;
+  if (got === want) {
+    el.classList.add('pk-wrong');
+    setTimeout(function(){ el.classList.remove('pk-wrong'); }, 460);
+    WALL.sfx.nudge();
+    pk.note({ en:'That is one too many', ml:'\u0d12\u0d30\u0d46\u0d23\u0d4d\u0d23\u0d02 \u0d15\u0d42\u0d1f\u0d41\u0d24\u0d32\u0d3e\u0d2f\u0d3f' });
+    setTimeout(function(){ pk.note(null); }, 1500);
+    return;
+  }
+  el.classList.add('taken');
+  got++; pk.climb(got); pk.tally(got + ' / ' + want);
+  if (got === want) {
+    locked = true;
+    pk.note({ en:'Exactly ' + want + '!', ml:ML[want] + ' \u0d24\u0d28\u0d4d\u0d28\u0d46!' });
+    pk.cheer(); n++; setTimeout(deal, 1800);
+  }
+}
+deal();
 </script>
+<script src="../js/audio-manager.js"></script>
 </body>
 </html>

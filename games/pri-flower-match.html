@@ -1,359 +1,121 @@
 <!DOCTYPE html>
 <!--
-════════════════════════════════════════════════════════════════════════════
-  FLOWER MATCHING — Pangappara Blueroom, Primary item #5
-  Two columns · connect the pair · two round sets · spoken praise
-════════════════════════════════════════════════════════════════════════════
+================================================================================
+  Flower Matching - Pangappara Blueroom
+================================================================================
+  Memory pairs, one board per panel, with each panel's touches its own.
 
-  BRIEF
-    "3 flower items load on the Left Column (Side A) and 3 shuffled
-     matching flowers load on the Right Column (Side B) in extra-large size."
-    "Item Touch: The card highlights with a glowing blue border, and the
-     voice prompt announces the Malayalam flower name."
-    "Correct Match: A bright green glowing line connects the two matching
-     flower cards. Both cards bounce cheerfully with glowing sparkles.
-     Voice announces: 'ശരിയാണ്! റോസപ്പൂവും റോസപ്പൂവും!'"
-    "Incorrect Match: The line wiggles softly and fades away with a gentle
-     yellow glow. No harsh error buzzers or red 'X' marks appear."
+  Face DOWN here, unlike Animals and Their Young which stays face up: there
+  the lesson is a relationship, here the flowers are already known and what
+  is trained is holding a position in mind.
 
-  TAP-TAP, NOT DRAG-ONLY
-    The brief says the child "drags her finger or taps the matching
-    flower", so tap-then-tap is the primary interaction here — it is far
-    more reliable than a drag on a large wall panel with an imprecise
-    touch surface, and it is what the brief lists first.
+  Laid out on a fixed 4-column grid rather than wrapping, because wrapping is
+  what overflowed the panel before.
 
-  THE MALAYALAM PRAISE IS BUILT GRAMMATICALLY, NOT BY CONCATENATION
-    The brief's praise line joins the flower name with the "-ഉം" (and)
-    suffix: റോസപ്പൂവ് -> റോസപ്പൂവും. That is not a plain append — a name
-    ending in chandrakkala (്) drops it, while a name ending in a vowel
-    takes -യും (ചെമ്പരത്തി -> ചെമ്പരത്തിയും). withUm() below implements
-    that. It is a simplified rule covering exactly the seven names in
-    this activity and MUST be checked by a Malayalam-speaking teacher.
-    See DEV-DOC-additional-content.md section 8, open question 1.
-
-  ASSETS
-    Flowers from js/flower-data.js, shared with Kerala Flowers and the
-    Bouquet activity. Photographs optional; emoji fallback throughout.
+  Three panels. Each child runs their own rounds and nobody waits for anyone
+  else to finish; only panel 1 speaks, so three voices never overlap.
+================================================================================
 -->
-<html lang="en">
+<html lang="ml">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Flower Matching</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;overflow:hidden}
-  body{
-    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
-    background:
-      radial-gradient(circle at 12% 18%, #fff1f2 0%, transparent 55%),
-      radial-gradient(circle at 88% 82%, #fefce8 0%, transparent 55%),
-      linear-gradient(160deg,#ffffff,#f6fbf7);
-    display:flex;flex-direction:column;
-    -webkit-tap-highlight-color:transparent;user-select:none;
-  }
-  h1{
-    text-align:center;padding:14px 60px 0;
-    font-size:calc(28px * var(--wall-scale,1));font-weight:800;color:#9d174d;
-  }
-  h1 .ml{display:block;font-size:calc(19px * var(--wall-scale,1));opacity:.72;font-weight:700}
-  #round{
-    text-align:center;font-size:calc(16px * var(--wall-scale,1));
-    font-weight:800;color:#64748b;padding-top:2px;
-  }
-
-  #stage{flex:1;position:relative;display:flex;align-items:center;
-         justify-content:space-around;padding:14px 4vw;gap:20px;
-         transition:transform .25s ease}
-  /* width/height are required: <svg> is a replaced element, so inset:0
-     alone leaves it at its 300x150 intrinsic size and clips the lines. */
-  #lines{position:absolute;inset:0;width:100%;height:100%;
-         pointer-events:none;z-index:5}
-  .col{display:flex;flex-direction:column;gap:calc(16px * var(--wall-scale,1));z-index:10}
-
-  .fcard{
-    display:flex;align-items:center;gap:14px;
-    padding:calc(12px * var(--wall-scale,1)) calc(18px * var(--wall-scale,1));
-    border-radius:22px;background:#fff;border:5px solid rgba(150,180,210,.35);
-    box-shadow:0 8px 20px rgba(20,60,95,.14);cursor:pointer;
-    touch-action:manipulation;transition:border-color .25s,box-shadow .25s,transform .18s;
-    min-width:calc(240px * var(--wall-scale,1));
-  }
-  .fcard:active{transform:scale(.97)}
-  .fart{
-    width:var(--art);height:var(--art);flex:0 0 auto;
-    display:flex;align-items:center;justify-content:center;
-    font-size:calc(var(--art) * .82);line-height:1;
-  }
-  .fart img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
-  .flabel{font-weight:900;font-size:calc(20px * var(--wall-scale,1));color:#123b5e;line-height:1.15}
-  .flabel small{display:block;font-weight:700;font-size:calc(13px * var(--wall-scale,1));opacity:.6}
-
-  /* brief: "highlights with a glowing blue border" while selected */
-  .fcard.sel{border-color:#3b82f6;
-    box-shadow:0 0 0 6px rgba(59,130,246,.2),0 0 26px rgba(59,130,246,.55)}
-  /* brief: matched pair glows green */
-  .fcard.ok{border-color:#22c55e;
-    box-shadow:0 0 0 6px rgba(34,197,94,.22),0 0 26px rgba(34,197,94,.5)}
-  .fcard.done{opacity:.95;cursor:default}
-  .fcard.bounce{animation:fbounce .55s cubic-bezier(.28,.84,.42,1)}
-  @keyframes fbounce{0%{transform:translateY(0) scale(1)}
-    30%{transform:translateY(-14px) scale(1.05)}
-    55%{transform:translateY(0) scale(.98)}
-    75%{transform:translateY(-5px) scale(1.02)}
-    100%{transform:translateY(0) scale(1)}}
-  /* brief: a wrong try wiggles — no buzzer, no red X */
-  .fcard.wiggle{animation:fwig .5s ease}
-  @keyframes fwig{0%,100%{transform:translateX(0)}
-    20%{transform:translateX(-9px)}40%{transform:translateX(9px)}
-    60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
-
-  #done{
-    position:fixed;inset:0;display:none;z-index:700;
-    background:rgba(255,255,255,.93);
-    align-items:center;justify-content:center;flex-direction:column;gap:22px;
-  }
-  #done.on{display:flex}
-  #done .big{font-size:96px}
-  #done .msg{font-size:36px;font-weight:900;color:#15803d;text-align:center}
-  #again{
-    padding:16px 40px;border-radius:20px;border:none;cursor:pointer;
-    background:linear-gradient(135deg,#86efac,#22c55e);color:#fff;
-    font-family:inherit;font-weight:900;font-size:22px;
-  }
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(165deg,#fdf7fb,#f8ecf3 70%,#f0dfea);user-select:none;touch-action:none}
+  .row{display:flex;gap:.7vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .leadml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
+    font-size:clamp(11px,2vh,22px);color:#8d2f52;text-align:center;flex-shrink:0}
+  /* Cards are square and sized from the PANEL, never the viewport: a panel is
+     a third of the wall at three players, and viewport units overflow it. */
+  .tile{flex:0 0 auto;aspect-ratio:1;width:clamp(40px,8.4vh,88px);
+    border-radius:14px;background:#fff;border:3px solid #e6cddc;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(40,50,70,.13);
+    display:grid;place-items:center;
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .em{font-size:clamp(18px,3.6vh,42px);line-height:1}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;text-align:center;
+    background:linear-gradient(to top,rgba(255,255,255,.97),rgba(255,255,255,.75) 70%,transparent);
+    font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(7px,1.2vh,12px);color:#26313b;line-height:1.25}
+  .tile.ok{border-color:#3fae7c;box-shadow:0 0 0 4px rgba(63,174,124,.3)}
+  .tile.no{animation:wob .44s ease-in-out;border-color:#e0a83c}
+  .tile.gone{opacity:.22;pointer-events:none}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}
+                 60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+  .big{width:clamp(56px,13vh,132px)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5vw;width:100%;
+    flex:1;min-height:0;align-content:center}
+  .tile.card{width:100%;height:auto}
+  .back{position:absolute;inset:0;display:grid;place-items:center;z-index:3;
+    background:linear-gradient(135deg,#f6d9e4,#ead0f0);font-size:clamp(16px,3.4vh,38px)}
+  .tile:not(.down) .back{display:none}
 </style>
 </head>
 <body>
-
-<h1 id="title"></h1>
-<div id="round"></div>
-
-<div id="stage">
-  <svg id="lines"></svg>
-  <div class="col" id="colA"></div>
-  <div class="col" id="colB"></div>
-</div>
-
-<div id="done">
-  <div class="big">🌸</div>
-  <div class="msg" id="doneMsg"></div>
-  <button id="again"></button>
-</div>
-
 <script src="../js/tts-engine.js"></script>
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
 <script src="../js/flower-data.js"></script>
+<script src="../js/three-up.js"></script>
 <script>
-WALL.init();
+WALL_BACKDROP.set('meadow');
+function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+var REJECTED=['jamanti','lotus'];
+var FLOWERS=Object.keys(FLOWER_DATA.all).filter(function(k){return REJECTED.indexOf(k)===-1;})
+  .map(function(k){return FLOWER_DATA.all[k];});
+var PAIRS=4;
 
-var TITLE = { en: 'Flower Matching', ml: 'പൂക്കൾ ജോഡിക്കുക' };
+TRIUP.start({
+  title:{en:'Flower Matching',ml:'\u0d2a\u0d42\u0d15\u0d4d\u0d15\u0d7e \u0d1c\u0d4b\u0d21\u0d3f\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+  hint:{en:'Find the matching flowers',ml:'\u0d12\u0d30\u0d47 \u0d2a\u0d42\u0d15\u0d4d\u0d15\u0d7e \u0d15\u0d23\u0d4d\u0d1f\u0d46\u0d24\u0d4d\u0d24\u0d42'},
+  build:function(p, body, api){
+    var st=api.state(p);
+    var grid=document.createElement('div'); grid.className='grid';
+    body.appendChild(grid);
 
-/* ══════════════════════════════════════════════════════════════
-   MALAYALAM "-ഉം" (and) SUFFIX
-   റോസപ്പൂവ്  -> റോസപ്പൂവും     (chandrakkala is replaced)
-   ചെമ്പരത്തി -> ചെമ്പരത്തിയും  (vowel ending takes -യും)
-   Covers the seven names in this activity. Needs teacher review.
-   ══════════════════════════════════════════════════════════════ */
-function withUm(name) {
-  if (!name) return '';
-  if (name.charAt(name.length - 1) === '്') {   // ends in chandrakkala
-    // drop it and attach ു + ം :  റോസപ്പൂവ്  ->  റോസപ്പൂവും
-    return name.slice(0, -1) + 'ും';
-  }
-  // vowel ending takes the യ glide:  ചെമ്പരത്തി  ->  ചെമ്പരത്തിയും
-  return name + 'യും';
-}
-
-/* ══════════════════════════════════════════════════════════════
-   STATE
-   ══════════════════════════════════════════════════════════════ */
-var roundIdx = 0;
-var selected = null;          // { item, el }
-var matched  = {};
-var lines    = document.getElementById('lines');
-
-function shuffled(a) {
-  a = a.slice();
-  for (var i = a.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var t = a[i]; a[i] = a[j]; a[j] = t;
-  }
-  return a;
-}
-
-function artPx() {
-  return Math.round(96 * WALL.scale());
-}
-
-function makeCard(item, side) {
-  var el = document.createElement('div');
-  el.className = 'fcard';
-  el.setAttribute('data-id', item.id);
-  el.setAttribute('data-side', side);
-  el.style.setProperty('--art', artPx() + 'px');
-
-  var art = document.createElement('div');
-  art.className = 'fart';
-  if (item.art.img) {
-    var img = document.createElement('img');
-    img.src = item.art.img;
-    img.addEventListener('error', function () { art.textContent = item.art.emoji; });
-    art.appendChild(img);
-  } else {
-    art.textContent = item.art.emoji;
-  }
-
-  var lab = document.createElement('div');
-  lab.className = 'flabel';
-  var b = WALL.tBoth(item.label);
-  lab.innerHTML = b.main + (b.alt && b.alt !== b.main ? '<small>' + b.alt + '</small>' : '');
-
-  el.appendChild(art);
-  el.appendChild(lab);
-  WALL.bindTouch(el, function () { onTap(item, el, side); });
-  return el;
-}
-
-function centerOf(el) {
-  var r = el.getBoundingClientRect(), s = document.getElementById('stage').getBoundingClientRect();
-  return { x: r.left + r.width / 2 - s.left, y: r.top + r.height / 2 - s.top };
-}
-
-function drawLine(a, b, colour, temporary) {
-  var p1 = centerOf(a), p2 = centerOf(b);
-  var ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  ln.setAttribute('x1', p1.x); ln.setAttribute('y1', p1.y);
-  ln.setAttribute('x2', p2.x); ln.setAttribute('y2', p2.y);
-  ln.setAttribute('stroke', colour);
-  ln.setAttribute('stroke-width', 9);
-  ln.setAttribute('stroke-linecap', 'round');
-  ln.setAttribute('opacity', 0.9);
-  if (colour === '#22c55e') {
-    ln.setAttribute('filter', 'drop-shadow(0 0 8px rgba(34,197,94,.85))');
-  }
-  lines.appendChild(ln);
-  if (temporary) {
-    // brief: the wrong line "wiggles softly and fades away"
-    setTimeout(function () {
-      ln.style.transition = 'opacity .5s';
-      ln.setAttribute('opacity', 0);
-      setTimeout(function () { ln.remove(); }, 520);
-    }, 380);
-  }
-  return ln;
-}
-
-function onTap(item, el, side) {
-  if (matched[item.id]) return;
-
-  if (side === 'A') {
-    if (selected) selected.el.classList.remove('sel');
-    selected = { item: item, el: el };
-    el.classList.add('sel');
-    WALL.sfx.tap();
-    WALL.say(item.label);            // brief: announce the Malayalam name
-    return;
-  }
-
-  // Side B without a selection: just name it, do not scold.
-  if (!selected) {
-    WALL.sfx.tap();
-    WALL.say(item.label);
-    return;
-  }
-
-  if (selected.item.id === item.id) {
-    /* ── correct ─────────────────────────────────────────────── */
-    matched[item.id] = true;
-    selected.el.classList.remove('sel');
-    selected.el.classList.add('ok', 'done', 'bounce');
-    el.classList.add('ok', 'done', 'bounce');
-    drawLine(selected.el, el, '#22c55e', false);
-    WALL.burstAt(selected.el, null, 14);
-    WALL.burstAt(el, null, 14);
-    WALL.sfx.correct();
-
-    var nm = withUm(item.label.ml);
-    WALL.say(WALL.isMl()
-      ? { ml: 'ശരിയാണ്! ' + nm + ' ' + nm + '!' }
-      : { en: 'Correct! ' + item.label.en + ' and ' + item.label.en + '!' });
-
-    selected = null;
-    if (Object.keys(matched).length === FLOWER_DATA.matchRounds[roundIdx].length) {
-      setTimeout(finishRound, 900);
+    function deal(){
+      st.first=null; st.joined=0; st.busy=false;
+      api.pill(p,'pairs','0 / '+PAIRS);
+      grid.innerHTML='';
+      var chosen=sh(FLOWERS).slice(0,PAIRS);
+      sh(chosen.concat(chosen)).forEach(function(f){
+        var t=document.createElement('div'); t.className='tile card down';
+        t.innerHTML='<img src="'+f.art.img+'" alt=""><div class="cap">'+f.label.ml+'</div>'+
+                    '<div class="back">'+String.fromCodePoint(0x1F33F)+'</div>';
+        WALL.bindTouch(t,function(){ flip(t,f); });
+        grid.appendChild(t);
+      });
     }
-  } else {
-    /* ── incorrect: gentle, never punitive ───────────────────── */
-    drawLine(selected.el, el, '#fbbf24', true);
-    el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle');
-    WALL.sfx.nudge();
-    selected.el.classList.remove('sel');
-    selected = null;
+    function flip(t,f){
+      if(st.busy||!t.classList.contains('down'))return;
+      t.classList.remove('down'); WALL.sfx.tap();
+      if(p===0&&WALL.voiceOn()) WALL.say(f.label.ml);
+      if(!st.first){ st.first={t:t,f:f}; return; }
+      if(st.first.t===t) return;
+      if(st.first.f.id===f.id){
+        t.classList.add('ok'); st.first.t.classList.add('ok');
+        st.first=null; st.joined++;
+        api.pill(p,'pairs',st.joined+' / '+PAIRS);
+        WALL.tone(440+st.joined*60,.16,'sine',.12);
+        if(st.joined===PAIRS) api.win(p,{
+          title:{en:'Every flower found its pair!',ml:'\u0d0e\u0d32\u0d4d\u0d32\u0d3e \u0d2a\u0d42\u0d15\u0d4d\u0d15\u0d33\u0d41\u0d02 \u0d1c\u0d4b\u0d21\u0d3f\u0d2f\u0d3e\u0d2f\u0d3f!'},onAgain:deal});
+      } else {
+        st.busy=true; var a=st.first.t; st.first=null; WALL.sfx.nudge();
+        setTimeout(function(){ a.classList.add('down'); t.classList.add('down'); st.busy=false; },900);
+      }
+    }
+    deal();
   }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   ROUNDS
-   ══════════════════════════════════════════════════════════════ */
-function buildRound() {
-  matched = {}; selected = null;
-  lines.innerHTML = '';
-  document.getElementById('done').classList.remove('on');
-
-  var items = FLOWER_DATA.round(roundIdx);
-  var A = document.getElementById('colA'), B = document.getElementById('colB');
-  A.innerHTML = ''; B.innerHTML = '';
-
-  items.forEach(function (it) { A.appendChild(makeCard(it, 'A')); });
-  shuffled(items).forEach(function (it) { B.appendChild(makeCard(it, 'B')); });
-
-  document.getElementById('round').textContent =
-    (WALL.isMl() ? 'റൗണ്ട് ' : 'Round ') +
-    (roundIdx + 1) + ' / ' + FLOWER_DATA.matchRounds.length;
-}
-
-function finishRound() {
-  var last = roundIdx >= FLOWER_DATA.matchRounds.length - 1;
-  if (!last) {
-    roundIdx++;
-    WALL.celebrate();
-    setTimeout(buildRound, 1200);
-    return;
-  }
-  WALL.celebrate();
-  var d = document.getElementById('done');
-  document.getElementById('doneMsg').textContent =
-    WALL.isMl() ? 'എല്ലാ പൂക്കളും ജോഡിയായി!'
-              : 'All flowers matched!';
-  document.getElementById('again').textContent = WALL.isMl() ? 'വീണ്ടും' : 'Play again';
-  setTimeout(function () { d.classList.add('on'); }, 1400);
-}
-
-WALL.bindTouch(document.getElementById('again'), function () {
-  roundIdx = 0; buildRound();
 });
-
-function paintTitle() {
-  var b = WALL.tBoth(TITLE);
-  document.getElementById('title').innerHTML =
-    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
-}
-
-WALL.onLang(function () { paintTitle(); buildRound(); });
-WALL.onSize(function () { buildRound(); });
-
-WALL.toolbar({
-  lang: true, voice: true, size: true, height: true,
-  heightTarget: '#stage',
-  reset: function () { roundIdx = 0; buildRound(); },
-  home: true
-});
-
-buildRound();
 </script>
 <script src="../js/audio-manager.js"></script>
 </body>

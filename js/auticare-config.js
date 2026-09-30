@@ -8,7 +8,7 @@
    ============================================================ */
 (function (global) {
   const AuticareConfig = {
-    BASE_URL: 'https://auticare-api.vercel.app',
+    BASE_URL: 'https://api.myauticare.com',
 
     ENDPOINTS: {
       // REAL — documented

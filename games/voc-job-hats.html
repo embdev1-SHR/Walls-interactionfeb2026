@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  JOB HATS — Pangappara Blueroom, Vocational
+════════════════════════════════════════════════════════════════════════════
+  Was the birthday cap activity. Generalised: everyone who wears a hat for
+  work, not just at a party. A worker appears without their headgear and the
+  child gives them the right one.
+
+  Content comes from js/jobs-data.js — the 14 jobs that actually have a hat.
+  The other four (tailor, barber, shopkeeper, potter) are excluded rather
+  than given an invented one, so no round has a wrong-but-plausible answer.
+
+  First activity on js/three-up.js. Three children work side by side, each
+  with their own worker and their own score.
+════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Job Hats</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(165deg,#fffaf2,#fdf0e2 70%,#f7e6d4);
+    user-select:none;touch-action:none}
+
+  .worker{display:flex;flex-direction:column;align-items:center;gap:.5vh;flex-shrink:0}
+  .face{font-size:clamp(46px,9vh,96px);line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.14))}
+  .wname{font-weight:800;font-size:clamp(13px,2vh,22px);color:#3b2a1c;text-align:center}
+  .wml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(11px,1.7vh,18px);color:#7a6350;text-align:center;line-height:1.45}
+
+  .hats{display:flex;gap:1.2vw;flex-wrap:wrap;justify-content:center;width:100%;
+    flex-shrink:0}
+  /* Fixed padding, NOT a percentage. Percentage padding resolves against the
+     CONTAINING BLOCK's width, not the element's own: .hats is 600px wide at
+     three players, so padding:9% meant 54px a side on a 116px box and the
+     content width collapsed to zero. The hats were there with nothing drawn
+     inside them, which is exactly how this was reported. */
+  .hat img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+  .hat{width:clamp(56px,11vh,110px);height:clamp(56px,11vh,110px);
+    border-radius:18px;background:#fff;border:4px solid #e2cdb4;
+    display:grid;place-items:center;cursor:pointer;
+    padding:8px;box-shadow:0 5px 13px rgba(90,60,30,.13);
+    transition:transform .14s,border-color .14s,opacity .2s}
+  .hat:active{transform:scale(.94)}
+  .hat.gone{opacity:0;transform:scale(.5);pointer-events:none}
+  .hat.wrong{animation:wob .42s ease-in-out;border-color:#e0a83c}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}
+                 60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+  .worn{position:absolute;top:-34%;left:50%;transform:translateX(-50%);
+    width:clamp(40px,7.2vh,76px);height:clamp(28px,5vh,52px);
+    animation:land .38s cubic-bezier(.3,1.5,.5,1)}
+  .worn img{width:100%;height:100%;object-fit:contain;display:block}
+  @keyframes land{from{transform:translate(-50%,-70px) scale(.6);opacity:0}
+                  to{transform:translateX(-50%);opacity:1}}
+  .head{position:relative}
+</style>
+</head>
+<body>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/jobs-data.js"></script>
+<script src="../js/job-icons.js"></script>
+<script src="../js/three-up.js"></script>
+
+<script>
+WALL_BACKDROP.set('meadow');
+var POOL   = JOBS_DATA.withHat();      // only jobs that really wear one
+var ROUNDS = 6;
+
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+TRIUP.start({
+  title: { en:'Job Hats', ml:'തൊഴിൽ തൊപ്പികൾ' },
+  hint:  { en:'Give them the right hat', ml:'ശരിയായ തൊപ്പി കൊടുക്കൂ' },
+  pickPrompt: { en:'How many players?', ml:'എത്ര കളിക്കാർ?' },
+
+  build: function (p, body, api) {
+    var st = api.state(p);
+    st.queue = shuffle(POOL).slice(0, ROUNDS);
+    st.score = 0;
+    api.pill(p, 'score', '0 / ' + ROUNDS);
+
+    var head = document.createElement('div');
+    head.className = 'worker';
+    var face = document.createElement('div');
+    face.className = 'face head';
+    var nm = document.createElement('div'); nm.className = 'wname';
+    var ml = document.createElement('div'); ml.className = 'wml';
+    head.appendChild(face); head.appendChild(nm); head.appendChild(ml);
+
+    var hats = document.createElement('div');
+    hats.className = 'hats';
+
+    body.appendChild(head); body.appendChild(hats);
+
+    function round() {
+      if (!st.queue.length) {
+        api.win(p, {
+          title: { en:'All dressed for work!', ml:'എല്ലാവരും ജോലിക്ക് തയ്യാർ!' },
+          body:  { en:'You got ' + st.score + ' of ' + ROUNDS, ml:st.score + ' / ' + ROUNDS },
+          onAgain: function () { st.queue = shuffle(POOL).slice(0, ROUNDS); st.score = 0;
+                                 api.pill(p,'score','0 / '+ROUNDS); round(); }
+        });
+        return;
+      }
+      var job = st.queue.shift();
+      var worn = face.querySelector('.worn'); if (worn) worn.remove();
+      face.textContent = job.emoji;
+      face.className = 'face head';
+      nm.textContent = WALL.t(job.label);
+      ml.textContent = job.label.ml;
+
+      /* Three wrong hats drawn from other jobs — the discrimination is the
+         activity, so the distractors have to be real hats, not filler. */
+      var others = shuffle(POOL.filter(function(j){ return j.id !== job.id; })).slice(0,3);
+      var choices = shuffle([job].concat(others));
+
+      hats.innerHTML = '';
+      choices.forEach(function (c) {
+        var b = document.createElement('div');
+        b.className = 'hat';
+        /* Drawn, not emoji: the emoji set reuses one glyph across up to five
+           jobs, so two options could render identically and the round had no
+           visibly correct answer. See js/job-icons.js. */
+        if (JOB_ICONS.has(c.id)) {
+          var im = document.createElement('img');
+          im.src = JOB_ICONS.dataUri(c.id);
+          im.alt = '';
+          b.appendChild(im);
+        } else {
+          b.textContent = c.hat.emoji;
+        }
+        WALL.bindTouch(b, function () { choose(c, job, b); });
+        hats.appendChild(b);
+      });
+
+      if (p === 0 && WALL.voiceOn()) WALL.say(job.label.ml);
+    }
+
+    function choose(c, job, el) {
+      if (c.id === job.id) {
+        st.score++;
+        api.pill(p, 'score', st.score + ' / ' + ROUNDS);
+        el.classList.add('gone');
+        var w = document.createElement('div');
+        w.className = 'worn';
+        if (JOB_ICONS.has(job.id)) {
+          var wi = document.createElement('img');
+          wi.src = JOB_ICONS.dataUri(job.id);
+          wi.alt = '';
+          wi.style.width = '100%';
+          w.appendChild(wi);
+        } else {
+          w.textContent = job.hat.emoji;
+        }
+        face.appendChild(w);
+        WALL.tone(440 + st.score * 60, 0.16, 'sine', 0.12);
+        api.popup(p, {
+          title: job.label,
+          body:  job.does,
+          close: { en:'Next', ml:'അടുത്തത്' },
+          onClose: round
+        });
+      } else {
+        /* never punish: the hat wobbles, nothing is lost, try again */
+        el.classList.add('wrong');
+        setTimeout(function(){ el.classList.remove('wrong'); }, 440);
+        WALL.sfx.nudge();
+      }
+    }
+
+    round();
+  }
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Asset Review — Pre-primary &amp; Primary</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#272c36; --fg:#e8eaf0; --dim:#9aa3b2;
+    --ok:#3ecf8e; --no:#ef5f6b; --warn:#f0b429; --accent:#6c8cff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font:15px/1.5 'Segoe UI',system-ui,sans-serif;padding-bottom:80px}
+  header{position:sticky;top:0;z-index:20;background:rgba(15,17,21,.96);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:14px 20px}
+  h1{font-size:18px;font-weight:700;letter-spacing:.2px}
+  .sub{color:var(--dim);font-size:13px;margin-top:2px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  select,input[type=search],button{background:var(--panel);color:var(--fg);border:1px solid var(--line);
+    border-radius:8px;padding:7px 11px;font:inherit;font-size:13px;cursor:pointer}
+  input[type=search]{cursor:text;min-width:190px}
+  button:hover{border-color:var(--accent)}
+  .tally{margin-left:auto;display:flex;gap:14px;font-size:13px;color:var(--dim);flex-wrap:wrap}
+  .tally b{color:var(--fg)}
+  main{padding:20px}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);
+    margin:26px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    display:flex;flex-direction:column;transition:border-color .15s}
+  .card.ok{border-color:var(--ok)} .card.no{border-color:var(--no);opacity:.62}
+  .shot{height:158px;background:
+      linear-gradient(45deg,#1d212a 25%,transparent 25%,transparent 75%,#1d212a 75%),
+      linear-gradient(45deg,#1d212a 25%,#14171d 25%,#14171d 75%,#1d212a 75%);
+    background-size:18px 18px;background-position:0 0,9px 9px;
+    display:flex;align-items:center;justify-content:center;position:relative}
+  .shot img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+  .shot canvas{width:100%;height:100%;display:block}
+  .load3d{background:var(--accent);color:#0b0d12;border:0;border-radius:8px;padding:8px 14px;font-weight:700}
+  .meta{padding:9px 11px;font-size:12px;border-top:1px solid var(--line)}
+  .fname{font-weight:600;font-size:12.5px;word-break:break-all;margin-bottom:4px}
+  .facts{color:var(--dim);display:flex;gap:9px;flex-wrap:wrap;font-size:11.5px}
+  .chips{margin-top:7px;display:flex;gap:4px;flex-wrap:wrap}
+  .chip{background:#232833;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:10.5px;color:#c3cad8}
+  .chip.orphan{background:#3a2f12;border-color:#6b5316;color:var(--warn)}
+  .acts{display:flex;border-top:1px solid var(--line);margin-top:auto}
+  .acts button{flex:1;border:0;border-radius:0;background:transparent;padding:9px;font-size:12px;font-weight:600}
+  .acts button:first-child{border-right:1px solid var(--line)}
+  .acts .y:hover,.acts .y.on{background:var(--ok);color:#06251a}
+  .acts .n:hover,.acts .n.on{background:var(--no);color:#2a0409}
+  .missing{background:#241317;border:1px solid #5d2730;border-radius:10px;padding:11px 13px;margin-bottom:9px}
+  .missing b{color:var(--no)}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(15,17,21,.97);backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);padding:11px 20px;display:flex;gap:10px;align-items:center;z-index:20}
+  .note{color:var(--dim);font-size:12.5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Asset Review — new Pre-primary &amp; Primary</h1>
+  <div class="sub" id="sub"></div>
+  <div class="bar">
+    <select id="fCat"><option value="">All categories</option></select>
+    <select id="fStatus">
+      <option value="">All statuses</option>
+      <option value="todo">Not yet decided</option>
+      <option value="ok">Approved</option>
+      <option value="no">Rejected</option>
+      <option value="orphan">Not used by new content</option>
+      <option value="used">Used by an activity</option>
+    </select>
+    <input type="search" id="fText" placeholder="filter by name or activity…">
+    <button id="approveVisible">Approve all visible</button>
+    <button id="reset">Clear decisions</button>
+    <div class="tally" id="tally"></div>
+  </div>
+</header>
+
+<main>
+  <div id="missingWrap"></div>
+  <div id="out"></div>
+</main>
+
+<footer>
+  <button id="copy">Copy decisions as JSON</button>
+  <button id="copyRejects">Copy reject list</button>
+  <span class="note" id="footNote">"Unused here" means no pp-/pri- activity references it — an older activity still might.</span>
+</footer>
+
+<script type="importmap">
+{ "imports": { "three": "./node_modules/three/build/three.module.js",
+               "three/addons/": "./node_modules/three/examples/jsm/" } }
+</script>
+
+<script>
+const DATA = {"generated":"2026-09-30T06:06:52.994Z","games":["pp-animal-homes","pp-animal-hunt","pp-animal-path","pp-animal-puzzle","pp-animal-quiz","pp-animal-sort","pp-animal-young","pp-animals","pp-block-stack","pp-body-parts","pp-egg-count","pp-fill-outline","pp-firefly-path","pp-hen-types","pp-mosquito-clap","pp-multiplayer","pp-odd-one-out","pp-path-tracer","pp-size-color","pp-size-quiz","pri-flower-match","pri-flowers","pri-houses","pri-letters","pri-rooms"],"items":[{"path":"assets/new/images/animals/bear.jpg","name":"bear.jpg","cat":"animals","bytes":348660,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/bird.jpg","name":"bird.jpg","cat":"animals","bytes":184186,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/calf.jpg","name":"calf.jpg","cat":"animals","bytes":187860,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/cat.jpg","name":"cat.jpg","cat":"animals","bytes":252573,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/chick.jpg","name":"chick.jpg","cat":"animals","bytes":86129,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/colourful-hen.jpg","name":"colourful-hen.jpg","cat":"animals","bytes":114036,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/cow.jpg","name":"cow.jpg","cat":"animals","bytes":277738,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/duck.jpg","name":"duck.jpg","cat":"animals","bytes":206724,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/duckling.jpg","name":"duckling.jpg","cat":"animals","bytes":527734,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/foal.jpg","name":"foal.jpg","cat":"animals","bytes":344279,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/frog.jpg","name":"frog.jpg","cat":"animals","bytes":478267,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/goat.jpg","name":"goat.jpg","cat":"animals","bytes":136182,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/hen.jpg","name":"hen.jpg","cat":"animals","bytes":152508,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/horse.jpg","name":"horse.jpg","cat":"animals","bytes":118791,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/kid-goat.jpg","name":"kid-goat.jpg","cat":"animals","bytes":417254,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/kitten.jpg","name":"kitten.jpg","cat":"animals","bytes":136480,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/lamb.jpg","name":"lamb.jpg","cat":"animals","bytes":152903,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/pig.jpg","name":"pig.jpg","cat":"animals","bytes":253606,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/puppy.jpg","name":"puppy.jpg","cat":"animals","bytes":134941,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/rooster.jpg","name":"rooster.jpg","cat":"animals","bytes":139821,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/sheep.jpg","name":"sheep.jpg","cat":"animals","bytes":226527,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/snake.jpg","name":"snake.jpg","cat":"animals","bytes":184397,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/spider.jpg","name":"spider.jpg","cat":"animals","bytes":101369,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/tiger.jpg","name":"tiger.jpg","cat":"animals","bytes":273373,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/animals/turtle.jpg","name":"turtle.jpg","cat":"animals","bytes":267911,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/appliances/iron.jpg","name":"iron.jpg","cat":"appliances","bytes":172911,"is3d":false,"used":[]},{"path":"assets/new/images/appliances/mixer.jpg","name":"mixer.jpg","cat":"appliances","bytes":249944,"is3d":false,"used":[]},{"path":"assets/new/images/appliances/washing-machine.jpg","name":"washing-machine.jpg","cat":"appliances","bytes":157900,"is3d":false,"used":[]},{"path":"assets/animals img/dog.webp","name":"dog.webp","cat":"assets/animals img","bytes":35370,"is3d":false,"used":["animal-data.js","pp-animal-hunt","pp-size-quiz"]},{"path":"assets/animals img/Elephant.png","name":"Elephant.png","cat":"assets/animals img","bytes":96348,"is3d":false,"used":["animal-data.js","pp-animal-hunt","pp-size-quiz","pri-letters"]},{"path":"assets/animals img/giraffe.png","name":"giraffe.png","cat":"assets/animals img","bytes":140396,"is3d":false,"used":["pp-animal-hunt","pp-size-quiz"]},{"path":"assets/animals img/lion.png","name":"lion.png","cat":"assets/animals img","bytes":152253,"is3d":false,"used":["animal-data.js","pp-animal-hunt","pp-size-quiz"]},{"path":"assets/animals img/monkey.png","name":"monkey.png","cat":"assets/animals img","bytes":414214,"is3d":false,"used":["animal-data.js","pp-animal-hunt","pp-size-quiz"]},{"path":"assets/animals img/rabbit.png","name":"rabbit.png","cat":"assets/animals img","bytes":224847,"is3d":false,"used":["animal-data.js","pp-animal-hunt","pp-size-quiz","pri-letters"]},{"path":"assets/animals img/rhino.png","name":"rhino.png","cat":"assets/animals img","bytes":195926,"is3d":false,"used":["pp-animal-hunt","pp-size-quiz"]},{"path":"assets/bg forest.jpg","name":"bg forest.jpg","cat":"assets/bg forest.jpg","bytes":1722044,"is3d":false,"used":["pp-animal-hunt","pp-size-quiz"]},{"path":"assets/Draw/cat draw.png","name":"cat draw.png","cat":"assets/Draw","bytes":192444,"is3d":false,"used":[]},{"path":"assets/Draw/cow draw.png","name":"cow draw.png","cat":"assets/Draw","bytes":80289,"is3d":false,"used":[]},{"path":"assets/Draw/hen draw.png","name":"hen draw.png","cat":"assets/Draw","bytes":289569,"is3d":false,"used":[]},{"path":"assets/IMG/Inaug.jpeg","name":"Inaug.jpeg","cat":"assets/IMG","bytes":329188,"is3d":false,"used":[]},{"path":"assets/IMG/intro1.jpeg","name":"intro1.jpeg","cat":"assets/IMG","bytes":90748,"is3d":false,"used":[]},{"path":"assets/IMG/intro2.jpeg","name":"intro2.jpeg","cat":"assets/IMG","bytes":113036,"is3d":false,"used":[]},{"path":"assets/IMG/intro3.jpeg","name":"intro3.jpeg","cat":"assets/IMG","bytes":85283,"is3d":false,"used":[]},{"path":"assets/IMG/intro4.jpeg","name":"intro4.jpeg","cat":"assets/IMG","bytes":109434,"is3d":false,"used":[]},{"path":"assets/IMG/intro5.jpeg","name":"intro5.jpeg","cat":"assets/IMG","bytes":58576,"is3d":false,"used":[]},{"path":"assets/IMG/intro6.jpeg","name":"intro6.jpeg","cat":"assets/IMG","bytes":49815,"is3d":false,"used":[]},{"path":"assets/IMG/intro7.jpeg","name":"intro7.jpeg","cat":"assets/IMG","bytes":66303,"is3d":false,"used":[]},{"path":"assets/IMG/intro8.jpeg","name":"intro8.jpeg","cat":"assets/IMG","bytes":63228,"is3d":false,"used":[]},{"path":"assets/Kerala_updated.png","name":"Kerala_updated.png","cat":"assets/Kerala_updated.png","bytes":3071969,"is3d":false,"used":[]},{"path":"assets/new/images/body/body-tapped.png","name":"body-tapped.png","cat":"body","bytes":702913,"is3d":false,"used":[]},{"path":"assets/new/images/body/body.png","name":"body.png","cat":"body","bytes":622286,"is3d":false,"used":[]},{"path":"assets/new/images/body/ears.jpg","name":"ears.jpg","cat":"body","bytes":454446,"is3d":false,"used":[]},{"path":"assets/new/images/body/eyes.jpg","name":"eyes.jpg","cat":"body","bytes":109524,"is3d":false,"used":[]},{"path":"assets/new/images/body/hands.jpg","name":"hands.jpg","cat":"body","bytes":181044,"is3d":false,"used":[]},{"path":"assets/new/images/body/legs.jpg","name":"legs.jpg","cat":"body","bytes":186131,"is3d":false,"used":[]},{"path":"assets/new/images/body/nose.jpg","name":"nose.jpg","cat":"body","bytes":151530,"is3d":false,"used":[]},{"path":"assets/new/images/first-aid/antiseptic.jpg","name":"antiseptic.jpg","cat":"first-aid","bytes":172501,"is3d":false,"used":[]},{"path":"assets/new/images/first-aid/bandage.jpg","name":"bandage.jpg","cat":"first-aid","bytes":179563,"is3d":false,"used":[]},{"path":"assets/new/images/first-aid/box-closed.jpg","name":"box-closed.jpg","cat":"first-aid","bytes":262830,"is3d":false,"used":[]},{"path":"assets/new/images/first-aid/cotton.jpg","name":"cotton.jpg","cat":"first-aid","bytes":186778,"is3d":false,"used":[]},{"path":"assets/new/images/first-aid/gauze.jpg","name":"gauze.jpg","cat":"first-aid","bytes":145756,"is3d":false,"used":[]},{"path":"assets/new/images/first-aid/scissors.jpg","name":"scissors.jpg","cat":"first-aid","bytes":224870,"is3d":false,"used":[]},{"path":"assets/new/images/flowers/chembarathi.jpg","name":"chembarathi.jpg","cat":"flowers","bytes":110574,"is3d":false,"used":["flower-data.js"]},{"path":"assets/new/images/flowers/jamanti.jpg","name":"jamanti.jpg","cat":"flowers","bytes":147996,"is3d":false,"used":["flower-data.js"]},{"path":"assets/new/images/flowers/kanikonna.jpg","name":"kanikonna.jpg","cat":"flowers","bytes":296030,"is3d":false,"used":["flower-data.js"]},{"path":"assets/new/images/flowers/lotus.jpg","name":"lotus.jpg","cat":"flowers","bytes":182141,"is3d":false,"used":["flower-data.js"]},{"path":"assets/new/images/flowers/mulla.jpg","name":"mulla.jpg","cat":"flowers","bytes":117065,"is3d":false,"used":["flower-data.js"]},{"path":"assets/new/images/flowers/pichi.jpg","name":"pichi.jpg","cat":"flowers","bytes":64660,"is3d":false,"used":["flower-data.js"]},{"path":"assets/new/images/flowers/rose.jpg","name":"rose.jpg","cat":"flowers","bytes":90742,"is3d":false,"used":["flower-data.js"]},{"path":"assets/new/images/habits/bath.jpg","name":"bath.jpg","cat":"habits","bytes":106785,"is3d":false,"used":[]},{"path":"assets/new/images/habits/brush.jpg","name":"brush.jpg","cat":"habits","bytes":112048,"is3d":false,"used":[]},{"path":"assets/new/images/habits/comb.webp","name":"comb.webp","cat":"habits","bytes":24072,"is3d":false,"used":[]},{"path":"assets/new/images/habits/dustbin.jpg","name":"dustbin.jpg","cat":"habits","bytes":315850,"is3d":false,"used":[]},{"path":"assets/new/images/habits/handwash-1.webp","name":"handwash-1.webp","cat":"habits","bytes":41166,"is3d":false,"used":[]},{"path":"assets/new/images/habits/handwash-2.webp","name":"handwash-2.webp","cat":"habits","bytes":35068,"is3d":false,"used":[]},{"path":"assets/new/images/habits/handwash-3.webp","name":"handwash-3.webp","cat":"habits","bytes":49800,"is3d":false,"used":[]},{"path":"assets/new/images/habits/handwash-4.webp","name":"handwash-4.webp","cat":"habits","bytes":49916,"is3d":false,"used":[]},{"path":"assets/new/images/habits/handwash-5.webp","name":"handwash-5.webp","cat":"habits","bytes":77052,"is3d":false,"used":[]},{"path":"assets/new/images/habits/healthy-food.jpg","name":"healthy-food.jpg","cat":"habits","bytes":184679,"is3d":false,"used":[]},{"path":"assets/new/images/habits/mug-of-water.webp","name":"mug-of-water.webp","cat":"habits","bytes":18354,"is3d":false,"used":[]},{"path":"assets/new/images/habits/nail-clippers.webp","name":"nail-clippers.webp","cat":"habits","bytes":6136,"is3d":false,"used":[]},{"path":"assets/new/images/habits/soap.webp","name":"soap.webp","cat":"habits","bytes":41026,"is3d":false,"used":[]},{"path":"assets/new/images/habits/toothbrush.webp","name":"toothbrush.webp","cat":"habits","bytes":19352,"is3d":false,"used":[]},{"path":"assets/new/images/habits/towel.webp","name":"towel.webp","cat":"habits","bytes":24718,"is3d":false,"used":[]},{"path":"assets/new/images/habits/wash-hands.jpg","name":"wash-hands.jpg","cat":"habits","bytes":254851,"is3d":false,"used":[]},{"path":"assets/new/images/helpers/doctor.jpg","name":"doctor.jpg","cat":"helpers","bytes":160536,"is3d":false,"used":[]},{"path":"assets/new/images/helpers/farmer.jpg","name":"farmer.jpg","cat":"helpers","bytes":240395,"is3d":false,"used":[]},{"path":"assets/new/images/helpers/police.jpg","name":"police.jpg","cat":"helpers","bytes":273205,"is3d":false,"used":[]},{"path":"assets/new/images/helpers/postman.jpg","name":"postman.jpg","cat":"helpers","bytes":230862,"is3d":false,"used":[]},{"path":"assets/new/images/helpers/shopkeeper.jpg","name":"shopkeeper.jpg","cat":"helpers","bytes":343778,"is3d":false,"used":[]},{"path":"assets/new/images/helpers/teacher.jpg","name":"teacher.jpg","cat":"helpers","bytes":160256,"is3d":false,"used":[]},{"path":"assets/new/images/homes/cat-basket.jpg","name":"cat-basket.jpg","cat":"homes","bytes":345452,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/homes/coop.jpg","name":"coop.jpg","cat":"homes","bytes":346778,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/homes/cow-shed.jpg","name":"cow-shed.jpg","cat":"homes","bytes":159864,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/homes/goat-shed.jpg","name":"goat-shed.jpg","cat":"homes","bytes":418153,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/homes/kennel.jpg","name":"kennel.jpg","cat":"homes","bytes":254830,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/homes/pond.jpg","name":"pond.jpg","cat":"homes","bytes":289724,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/homes/sheep-pen.jpg","name":"sheep-pen.jpg","cat":"homes","bytes":276900,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/homes/stable.jpg","name":"stable.jpg","cat":"homes","bytes":275236,"is3d":false,"used":["animal-data.js"]},{"path":"assets/new/images/houses/apartment.jpg","name":"apartment.jpg","cat":"houses","bytes":279797,"is3d":false,"used":["pri-houses"]},{"path":"assets/new/images/houses/bungalow.jpg","name":"bungalow.jpg","cat":"houses","bytes":437940,"is3d":false,"used":["pri-houses"]},{"path":"assets/new/images/houses/modern-house.jpg","name":"modern-house.jpg","cat":"houses","bytes":271189,"is3d":false,"used":["pri-houses"]},{"path":"assets/new/images/houses/mud-house.jpg","name":"mud-house.jpg","cat":"houses","bytes":478848,"is3d":false,"used":["pri-houses"]},{"path":"assets/new/images/houses/tent.jpg","name":"tent.jpg","cat":"houses","bytes":161249,"is3d":false,"used":["pri-houses"]},{"path":"assets/images/Auticare_logo_Embright (1).png","name":"Auticare_logo_Embright (1).png","cat":"images","bytes":59047,"is3d":false,"used":[]},{"path":"assets/new/images/bg_water.png","name":"bg_water.png","cat":"images","bytes":1134092,"is3d":false,"used":[]},{"path":"assets/new/images/bg-air.png","name":"bg-air.png","cat":"images","bytes":969652,"is3d":false,"used":[]},{"path":"assets/new/images/bg-land.png","name":"bg-land.png","cat":"images","bytes":1304268,"is3d":false,"used":[]},{"path":"assets/new/images/bg-menu.png","name":"bg-menu.png","cat":"images","bytes":1036817,"is3d":false,"used":[]},{"path":"assets/new/images/farm-bg.jpg","name":"farm-bg.jpg","cat":"images","bytes":500148,"is3d":false,"used":["pp-hen-types"]},{"path":"assets/images/image.png","name":"image.png","cat":"images","bytes":243507,"is3d":false,"used":[]},{"path":"assets/new/images/instruments/chenda.jpg","name":"chenda.jpg","cat":"instruments","bytes":177515,"is3d":false,"used":[]},{"path":"assets/new/images/instruments/chengila.jpg","name":"chengila.jpg","cat":"instruments","bytes":161857,"is3d":false,"used":[]},{"path":"assets/new/images/instruments/kaimani.jpg","name":"kaimani.jpg","cat":"instruments","bytes":312379,"is3d":false,"used":[]},{"path":"assets/new/images/instruments/maddalam.jpg","name":"maddalam.jpg","cat":"instruments","bytes":177515,"is3d":false,"used":[]},{"path":"assets/new/models/750x450_359731-ksrtc.jpg","name":"750x450_359731-ksrtc.jpg","cat":"models/750x450_359731-ksrtc.jpg","bytes":884986,"is3d":false,"used":[]},{"path":"assets/new/models/air_india_plane.glb","name":"air_india_plane.glb","cat":"models/air_india_plane.glb","bytes":716780,"is3d":true,"used":[]},{"path":"assets/new/models/ancient_submarine.glb","name":"ancient_submarine.glb","cat":"models/ancient_submarine.glb","bytes":12889864,"is3d":true,"used":[]},{"path":"assets/new/models/bell_huey_helicopter.glb","name":"bell_huey_helicopter.glb","cat":"models/bell_huey_helicopter.glb","bytes":1025276,"is3d":true,"used":[]},{"path":"assets/new/models/bicycle_game_asset.glb","name":"bicycle_game_asset.glb","cat":"models/bicycle_game_asset.glb","bytes":14102008,"is3d":true,"used":[]},{"path":"assets/new/models/boat.glb","name":"boat.glb","cat":"models/boat.glb","bytes":28367900,"is3d":true,"used":[]},{"path":"assets/new/models/body/human/textures/.001_baseColor.png","name":".001_baseColor.png","cat":"models/body","bytes":180177,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/.002_baseColor.png","name":".002_baseColor.png","cat":"models/body","bytes":889908,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/.003_baseColor.png","name":".003_baseColor.png","cat":"models/body","bytes":522574,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/.004_baseColor.png","name":".004_baseColor.png","cat":"models/body","bytes":155024,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/.005_baseColor.png","name":".005_baseColor.png","cat":"models/body","bytes":81171,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/.006_baseColor.png","name":".006_baseColor.png","cat":"models/body","bytes":512483,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/.007_baseColor.png","name":".007_baseColor.png","cat":"models/body","bytes":195619,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/scene.gltf","name":"human/scene.gltf","cat":"models/body","bytes":33533,"is3d":true,"used":[]},{"path":"assets/new/models/body/human/textures/material_10_baseColor.png","name":"material_10_baseColor.png","cat":"models/body","bytes":605,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/material_11_baseColor.png","name":"material_11_baseColor.png","cat":"models/body","bytes":1640500,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/material_11_normal.png","name":"material_11_normal.png","cat":"models/body","bytes":5029909,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/material_12_baseColor.png","name":"material_12_baseColor.png","cat":"models/body","bytes":3770328,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/material_13_baseColor.png","name":"material_13_baseColor.png","cat":"models/body","bytes":1748330,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/material_15_baseColor.png","name":"material_15_baseColor.png","cat":"models/body","bytes":1433190,"is3d":false,"used":[]},{"path":"assets/new/models/body/human/textures/material_baseColor.png","name":"material_baseColor.png","cat":"models/body","bytes":897021,"is3d":false,"used":[]},{"path":"assets/new/models/car.glb","name":"car.glb","cat":"models/car.glb","bytes":7198144,"is3d":true,"used":[]},{"path":"assets/new/models/hot_air_balloon.glb","name":"hot_air_balloon.glb","cat":"models/hot_air_balloon.glb","bytes":5145168,"is3d":true,"used":[]},{"path":"assets/new/models/houses/bungalow/scene.gltf","name":"bungalow/scene.gltf","cat":"models/houses","bytes":116556,"is3d":true,"used":["pri-houses"]},{"path":"assets/new/models/houses/mud-house/textures/Material.001_baseColor.png","name":"Material.001_baseColor.png","cat":"models/houses","bytes":2771576,"is3d":false,"used":[]},{"path":"assets/new/models/houses/mud-house/textures/Material.002_baseColor.png","name":"Material.002_baseColor.png","cat":"models/houses","bytes":3308526,"is3d":false,"used":[]},{"path":"assets/new/models/houses/mud-house/textures/Material.002_metallicRoughness.png","name":"Material.002_metallicRoughness.png","cat":"models/houses","bytes":1074041,"is3d":false,"used":[]},{"path":"assets/new/models/houses/mud-house/textures/Material.002_normal.png","name":"Material.002_normal.png","cat":"models/houses","bytes":2062617,"is3d":false,"used":[]},{"path":"assets/new/models/houses/modern-house/scene.gltf","name":"modern-house/scene.gltf","cat":"models/houses","bytes":59007,"is3d":true,"used":["pri-houses"]},{"path":"assets/new/models/houses/mud-house.gltf","name":"mud-house.gltf","cat":"models/houses","bytes":31781,"is3d":true,"used":[]},{"path":"assets/new/models/houses/mud-house/scene.gltf","name":"mud-house/scene.gltf","cat":"models/houses","bytes":21888,"is3d":true,"used":["pri-houses"]},{"path":"assets/new/models/houses/tent/scene.gltf","name":"tent/scene.gltf","cat":"models/houses","bytes":40838,"is3d":true,"used":["pri-houses"]},{"path":"assets/new/models/KSRTC_BUS.glb","name":"KSRTC_BUS.glb","cat":"models/KSRTC_BUS.glb","bytes":10020880,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_earth_daymap.jpg","name":"2k_earth_daymap.jpg","cat":"models/legacy-3dmodels","bytes":463087,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_jupiter.jpg","name":"2k_jupiter.jpg","cat":"models/legacy-3dmodels","bytes":498976,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_mars.jpg","name":"2k_mars.jpg","cat":"models/legacy-3dmodels","bytes":750547,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_mercury.jpg","name":"2k_mercury.jpg","cat":"models/legacy-3dmodels","bytes":872555,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_neptune.jpg","name":"2k_neptune.jpg","cat":"models/legacy-3dmodels","bytes":241580,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_saturn.jpg","name":"2k_saturn.jpg","cat":"models/legacy-3dmodels","bytes":199916,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_sun.jpg","name":"2k_sun.jpg","cat":"models/legacy-3dmodels","bytes":822427,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_uranus.jpg","name":"2k_uranus.jpg","cat":"models/legacy-3dmodels","bytes":77751,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_venus_atmosphere.jpg","name":"2k_venus_atmosphere.jpg","cat":"models/legacy-3dmodels","bytes":229696,"is3d":false,"used":[]},{"path":"3dmodels/solarsystem/Textures/2k_venus_surface.jpg","name":"2k_venus_surface.jpg","cat":"models/legacy-3dmodels","bytes":885075,"is3d":false,"used":[]},{"path":"3dmodels/bear.glb","name":"bear.glb","cat":"models/legacy-3dmodels","bytes":3671360,"is3d":true,"used":[]},{"path":"3dmodels/camel.glb","name":"camel.glb","cat":"models/legacy-3dmodels","bytes":1913204,"is3d":true,"used":[]},{"path":"3dmodels/cobra.glb","name":"cobra.glb","cat":"models/legacy-3dmodels","bytes":3214812,"is3d":true,"used":[]},{"path":"3dmodels/cow.glb","name":"cow.glb","cat":"models/legacy-3dmodels","bytes":3666688,"is3d":true,"used":[]},{"path":"3dmodels/crocodile.glb","name":"crocodile.glb","cat":"models/legacy-3dmodels","bytes":8053300,"is3d":true,"used":[]},{"path":"3dmodels/day_23_-_wild_eagle.glb","name":"day_23_-_wild_eagle.glb","cat":"models/legacy-3dmodels","bytes":8894264,"is3d":true,"used":[]},{"path":"3dmodels/Deer.glb","name":"Deer.glb","cat":"models/legacy-3dmodels","bytes":1013892,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/earth.glb","name":"earth.glb","cat":"models/legacy-3dmodels","bytes":760812,"is3d":true,"used":[]},{"path":"3dmodels/elephant__gajah.glb","name":"elephant__gajah.glb","cat":"models/legacy-3dmodels","bytes":1611516,"is3d":true,"used":["pp-body-parts"]},{"path":"3dmodels/gecko_thinker.glb","name":"gecko_thinker.glb","cat":"models/legacy-3dmodels","bytes":4808044,"is3d":true,"used":[]},{"path":"3dmodels/hen.glb","name":"hen.glb","cat":"models/legacy-3dmodels","bytes":1086504,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/jupiter.glb","name":"jupiter.glb","cat":"models/legacy-3dmodels","bytes":492312,"is3d":true,"used":[]},{"path":"3dmodels/lion_lowpoly.glb","name":"lion_lowpoly.glb","cat":"models/legacy-3dmodels","bytes":4808480,"is3d":true,"used":[]},{"path":"3dmodels/trees/mango_tree.glb","name":"mango_tree.glb","cat":"models/legacy-3dmodels","bytes":7048008,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/mars.glb","name":"mars.glb","cat":"models/legacy-3dmodels","bytes":611424,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/mercury.glb","name":"mercury.glb","cat":"models/legacy-3dmodels","bytes":499580,"is3d":true,"used":[]},{"path":"3dmodels/mongoose.glb","name":"mongoose.glb","cat":"models/legacy-3dmodels","bytes":5469016,"is3d":true,"used":[]},{"path":"3dmodels/monkey.glb","name":"monkey.glb","cat":"models/legacy-3dmodels","bytes":446340,"is3d":true,"used":[]},{"path":"3dmodels/owl.glb","name":"owl.glb","cat":"models/legacy-3dmodels","bytes":6397916,"is3d":true,"used":[]},{"path":"3dmodels/peacock.glb","name":"peacock.glb","cat":"models/legacy-3dmodels","bytes":7785552,"is3d":true,"used":[]},{"path":"3dmodels/pine_forest (1).glb","name":"pine_forest (1).glb","cat":"models/legacy-3dmodels","bytes":7686900,"is3d":true,"used":[]},{"path":"3dmodels/rabbit.glb","name":"rabbit.glb","cat":"models/legacy-3dmodels","bytes":324608,"is3d":true,"used":["pp-body-parts"]},{"path":"3dmodels/racoon.glb","name":"racoon.glb","cat":"models/legacy-3dmodels","bytes":2483712,"is3d":true,"used":[]},{"path":"3dmodels/realistic_beaver__castor_3d_model.glb","name":"realistic_beaver__castor_3d_model.glb","cat":"models/legacy-3dmodels","bytes":1641544,"is3d":true,"used":[]},{"path":"3dmodels/realistic_squirrel_3d_model.glb","name":"realistic_squirrel_3d_model.glb","cat":"models/legacy-3dmodels","bytes":1688972,"is3d":true,"used":[]},{"path":"3dmodels/realsitic_monkey.glb","name":"realsitic_monkey.glb","cat":"models/legacy-3dmodels","bytes":3630604,"is3d":true,"used":[]},{"path":"3dmodels/red_fox_standing_pose_realistic.glb","name":"red_fox_standing_pose_realistic.glb","cat":"models/legacy-3dmodels","bytes":42205700,"is3d":true,"used":[]},{"path":"3dmodels/rhino.glb","name":"rhino.glb","cat":"models/legacy-3dmodels","bytes":3323932,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/saturn.glb","name":"saturn.glb","cat":"models/legacy-3dmodels","bytes":491840,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/sun.glb","name":"sun.glb","cat":"models/legacy-3dmodels","bytes":2116612,"is3d":true,"used":[]},{"path":"3dmodels/tiger.glb","name":"tiger.glb","cat":"models/legacy-3dmodels","bytes":4383292,"is3d":true,"used":[]},{"path":"3dmodels/trees/tree_for_games.glb","name":"tree_for_games.glb","cat":"models/legacy-3dmodels","bytes":9109064,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/uranus.glb","name":"uranus.glb","cat":"models/legacy-3dmodels","bytes":228780,"is3d":true,"used":[]},{"path":"3dmodels/solarsystem/venus.glb","name":"venus.glb","cat":"models/legacy-3dmodels","bytes":630796,"is3d":true,"used":[]},{"path":"3dmodels/trees/whnp3v2jflkw-_tree.glb","name":"whnp3v2jflkw-_tree.glb","cat":"models/legacy-3dmodels","bytes":3481820,"is3d":true,"used":[]},{"path":"3dmodels/wolf.glb","name":"wolf.glb","cat":"models/legacy-3dmodels","bytes":1366576,"is3d":true,"used":[]},{"path":"3dmodels/zebra.glb","name":"zebra.glb","cat":"models/legacy-3dmodels","bytes":5112264,"is3d":true,"used":[]},{"path":"assets/new/models/plants/flower/scene.gltf","name":"flower/scene.gltf","cat":"models/plants","bytes":310915,"is3d":true,"used":["pri-flowers"]},{"path":"assets/new/models/plants/tree/textures/grass_baseColor.jpeg","name":"grass_baseColor.jpeg","cat":"models/plants","bytes":481973,"is3d":false,"used":[]},{"path":"assets/new/models/plants/tree/textures/grass_metallicRoughness.png","name":"grass_metallicRoughness.png","cat":"models/plants","bytes":581347,"is3d":false,"used":[]},{"path":"assets/new/models/plants/tree/textures/Groundcover_Wood_Mix_baseColor.jpeg","name":"Groundcover_Wood_Mix_baseColor.jpeg","cat":"models/plants","bytes":49001,"is3d":false,"used":[]},{"path":"assets/new/models/plants/tree/textures/Groundcover_Wood_Mix_metallicRoughness.png","name":"Groundcover_Wood_Mix_metallicRoughness.png","cat":"models/plants","bytes":61808,"is3d":false,"used":[]},{"path":"assets/new/models/plants/flower/textures/hex.001_baseColor.png","name":"hex.001_baseColor.png","cat":"models/plants","bytes":135535,"is3d":false,"used":[]},{"path":"assets/new/models/plants/flower/textures/lpb_gradient_baseColor.png","name":"lpb_gradient_baseColor.png","cat":"models/plants","bytes":275166,"is3d":false,"used":[]},{"path":"assets/new/models/plants/tree/textures/sugar_maple_bark_baseColor.jpeg","name":"sugar_maple_bark_baseColor.jpeg","cat":"models/plants","bytes":99466,"is3d":false,"used":[]},{"path":"assets/new/models/plants/tree/textures/sugar_maple_bark_metallicRoughness.png","name":"sugar_maple_bark_metallicRoughness.png","cat":"models/plants","bytes":126073,"is3d":false,"used":[]},{"path":"assets/new/models/plants/tree/textures/sugar_maple_leaf_baseColor.png","name":"sugar_maple_leaf_baseColor.png","cat":"models/plants","bytes":169735,"is3d":false,"used":[]},{"path":"assets/new/models/plants/tree/textures/sugar_maple_leaf_metallicRoughness.png","name":"sugar_maple_leaf_metallicRoughness.png","cat":"models/plants","bytes":57918,"is3d":false,"used":[]},{"path":"assets/new/models/plants/tree/scene.gltf","name":"tree/scene.gltf","cat":"models/plants","bytes":3949135,"is3d":true,"used":[]},{"path":"assets/new/models/rooms/bathroom/scene.gltf","name":"bathroom/scene.gltf","cat":"models/rooms","bytes":8053,"is3d":true,"used":["pri-rooms"]},{"path":"assets/new/models/rooms/bedroom/scene.gltf","name":"bedroom/scene.gltf","cat":"models/rooms","bytes":53433,"is3d":true,"used":["pri-rooms"]},{"path":"assets/new/models/rooms/bedroom/textures/Doors_baseColor.png","name":"Doors_baseColor.png","cat":"models/rooms","bytes":3834038,"is3d":false,"used":[]},{"path":"assets/new/models/rooms/kitchen/scene.gltf","name":"kitchen/scene.gltf","cat":"models/rooms","bytes":810217,"is3d":true,"used":["pri-rooms"]},{"path":"assets/new/models/rooms/living-room/scene.gltf","name":"living-room/scene.gltf","cat":"models/rooms","bytes":4034,"is3d":true,"used":["pri-rooms"]},{"path":"assets/new/models/rooms/living-room/textures/Material_baseColor.png","name":"Material_baseColor.png","cat":"models/rooms","bytes":268,"is3d":false,"used":[]},{"path":"assets/new/models/ship.glb","name":"ship.glb","cat":"models/ship.glb","bytes":2076484,"is3d":true,"used":[]},{"path":"assets/new/models/train.glb","name":"train.glb","cat":"models/train.glb","bytes":35103964,"is3d":true,"used":[]},{"path":"assets/new/images/places/beach.jpg","name":"beach.jpg","cat":"places","bytes":200858,"is3d":false,"used":[]},{"path":"assets/new/images/places/bus-stand.jpg","name":"bus-stand.jpg","cat":"places","bytes":293441,"is3d":false,"used":[]},{"path":"assets/new/images/places/hospital.jpg","name":"hospital.jpg","cat":"places","bytes":426993,"is3d":false,"used":[]},{"path":"assets/new/images/places/park.jpg","name":"park.jpg","cat":"places","bytes":421692,"is3d":false,"used":[]},{"path":"assets/new/images/places/railway-station.jpg","name":"railway-station.jpg","cat":"places","bytes":386830,"is3d":false,"used":[]},{"path":"assets/new/images/plant/flower.jpg","name":"flower.jpg","cat":"plant","bytes":56655,"is3d":false,"used":[]},{"path":"assets/new/images/plant/fruit.jpg","name":"fruit.jpg","cat":"plant","bytes":122664,"is3d":false,"used":[]},{"path":"assets/new/images/plant/leaf.jpg","name":"leaf.jpg","cat":"plant","bytes":548380,"is3d":false,"used":[]},{"path":"assets/new/images/plant/roots.jpg","name":"roots.jpg","cat":"plant","bytes":419798,"is3d":false,"used":[]},{"path":"assets/new/images/plant/stem.jpg","name":"stem.jpg","cat":"plant","bytes":70540,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/bag.webp","name":"bag.webp","cat":"rooms","bytes":31418,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/bathroom.jpg","name":"bathroom.jpg","cat":"rooms","bytes":185362,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/bed.webp","name":"bed.webp","cat":"rooms","bytes":26046,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/bedroom.jpg","name":"bedroom.jpg","cat":"rooms","bytes":260789,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/bedroom.webp","name":"bedroom.webp","cat":"rooms","bytes":149478,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/blackboard.webp","name":"blackboard.webp","cat":"rooms","bytes":27180,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/books.webp","name":"books.webp","cat":"rooms","bytes":34058,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/bookshelf.webp","name":"bookshelf.webp","cat":"rooms","bytes":48476,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/cart.webp","name":"cart.webp","cat":"rooms","bytes":98102,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/chair.webp","name":"chair.webp","cat":"rooms","bytes":10058,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/classroom.webp","name":"classroom.webp","cat":"rooms","bytes":76006,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/clothes-peg.webp","name":"clothes-peg.webp","cat":"rooms","bytes":34340,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/dining.jpg","name":"dining.jpg","cat":"rooms","bytes":242320,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/door.webp","name":"door.webp","cat":"rooms","bytes":40234,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/duster.webp","name":"duster.webp","cat":"rooms","bytes":58876,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/glasses.webp","name":"glasses.webp","cat":"rooms","bytes":16400,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/helmet.webp","name":"helmet.webp","cat":"rooms","bytes":34808,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/key.webp","name":"key.webp","cat":"rooms","bytes":13448,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/kitchen.webp","name":"kitchen.webp","cat":"rooms","bytes":117766,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/living.webp","name":"living.webp","cat":"rooms","bytes":115060,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/newspaper.webp","name":"newspaper.webp","cat":"rooms","bytes":35344,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/pencil-box.webp","name":"pencil-box.webp","cat":"rooms","bytes":20340,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/pencils.webp","name":"pencils.webp","cat":"rooms","bytes":26610,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/scooter.webp","name":"scooter.webp","cat":"rooms","bytes":63620,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/shoe-rack.webp","name":"shoe-rack.webp","cat":"rooms","bytes":29298,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/shoe.webp","name":"shoe.webp","cat":"rooms","bytes":34570,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/table.webp","name":"table.webp","cat":"rooms","bytes":10608,"is3d":false,"used":[]},{"path":"assets/new/images/rooms/objects/walking-stick.webp","name":"walking-stick.webp","cat":"rooms","bytes":32258,"is3d":false,"used":[]}],"missing":[{"name":"apartment.glb","used":["pri-houses"]},{"name":"fish.png","used":["pri-letters"]}]};
+const KEY  = 'assetReviewDecisions';
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { state = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const kb = (n) => n > 1048576 ? (n/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(n/1024))+' KB';
+
+document.getElementById('sub').textContent =
+  DATA.items.length + ' assets across ' + DATA.games.length + ' activities · generated ' +
+  new Date(DATA.generated).toLocaleString();
+
+/* ---- missing assets: referenced in code, absent on disk ---- */
+if (DATA.missing.length) {
+  document.getElementById('missingWrap').innerHTML =
+    '<h2>Referenced but missing — ' + DATA.missing.length + '</h2>' +
+    DATA.missing.map(function (m) {
+      return '<div class="missing"><b>' + m.name + '</b> — expected by ' +
+        m.used.map(function (u) { return '<span class="chip">' + u + '</span>'; }).join(' ') + '</div>';
+    }).join('');
+}
+
+/* ---- filters ---- */
+const cats = [...new Set(DATA.items.map(i => i.cat))].sort();
+document.getElementById('fCat').innerHTML =
+  '<option value="">All categories</option>' + cats.map(c => '<option>' + c + '</option>').join('');
+
+function visible() {
+  const c = fCat.value, s = fStatus.value, q = fText.value.trim().toLowerCase();
+  return DATA.items.filter(i => {
+    if (c && i.cat !== c) return false;
+    const st = state[i.path];
+    if (s === 'todo'   && st) return false;
+    if (s === 'ok'     && st !== 'ok') return false;
+    if (s === 'no'     && st !== 'no') return false;
+    if (s === 'orphan' && i.used.length) return false;
+    if (s === 'used'   && !i.used.length) return false;
+    if (q && !(i.name.toLowerCase().includes(q) || i.used.join(' ').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function render() {
+  const list = visible();
+  const byCat = {};
+  list.forEach(i => { (byCat[i.cat] = byCat[i.cat] || []).push(i); });
+  out.innerHTML = Object.keys(byCat).sort().map(c =>
+    '<h2>' + c + ' — ' + byCat[c].length + '</h2>' +
+    '<div class="grid">' + byCat[c].map(card).join('') + '</div>').join('')
+    || '<p class="note" style="margin-top:20px">Nothing matches that filter.</p>';
+  tally();
+}
+
+function card(i) {
+  const st = state[i.path] || '';
+  const shot = i.is3d
+    ? '<button class="load3d" data-model="' + i.path + '">Load 3D &#9656;</button>'
+    : '<img loading="lazy" src="' + i.path + '" alt="" ' +
+      'onload="var f=this.closest(\'.card\').querySelector(\'.dims\');if(f)f.textContent=this.naturalWidth+\'&times;\'+this.naturalHeight" ' +
+      'onerror="this.outerHTML=\'<div class=&quot;note&quot;>failed to load</div>\'">';
+  return '<div class="card ' + st + '" data-p="' + i.path + '">' +
+    '<div class="shot">' + shot + '</div>' +
+    '<div class="meta">' +
+      '<div class="fname">' + i.name + '</div>' +
+      '<div class="facts"><span>' + kb(i.bytes) + '</span><span class="dims">' + (i.is3d ? '3D model' : '') + '</span></div>' +
+      '<div class="chips">' + (i.used.length
+        ? i.used.map(u => '<span class="chip">' + u + '</span>').join('')
+        : '<span class="chip orphan">not referenced by any pp-/pri- activity</span>') + '</div>' +
+    '</div>' +
+    '<div class="acts">' +
+      '<button class="y ' + (st === 'ok' ? 'on' : '') + '" data-set="ok">Keep</button>' +
+      '<button class="n ' + (st === 'no' ? 'on' : '') + '" data-set="no">Replace</button>' +
+    '</div></div>';
+}
+
+function tally() {
+  const ok = Object.values(state).filter(v => v === 'ok').length;
+  const no = Object.values(state).filter(v => v === 'no').length;
+  const orph = DATA.items.filter(i => !i.used.length).length;
+  document.getElementById('tally').innerHTML =
+    '<span><b>' + ok + '</b> keep</span><span><b>' + no + '</b> replace</span>' +
+    '<span><b>' + (DATA.items.length - ok - no) + '</b> undecided</span>' +
+    '<span><b>' + orph + '</b> unused here</span><span><b>' + DATA.missing.length + '</b> missing</span>';
+}
+
+/* ---- interactions ---- */
+out.addEventListener('click', function (e) {
+  const setBtn = e.target.closest('[data-set]');
+  if (setBtn) {
+    const p = setBtn.closest('.card').dataset.p;
+    if (state[p] === setBtn.dataset.set) delete state[p]; else state[p] = setBtn.dataset.set;
+    save(); render(); return;
+  }
+  const m = e.target.closest('[data-model]');
+  if (m) { const host = m.parentElement; host.innerHTML = ''; show3D(host, m.dataset.model); }
+});
+
+['fCat','fStatus','fText'].forEach(id =>
+  document.getElementById(id).addEventListener('input', render));
+
+document.getElementById('approveVisible').onclick = function () {
+  visible().forEach(i => { state[i.path] = 'ok'; }); save(); render();
+};
+document.getElementById('reset').onclick = function () {
+  if (confirm('Clear every decision on this page?')) { state = {}; save(); render(); }
+};
+const flash = (msg) => {
+  footNote.textContent = msg;
+  setTimeout(() => { footNote.textContent = '"Unused here" means no pp-/pri- activity references it — an older activity still might.'; }, 2200);
+};
+document.getElementById('copy').onclick = function () {
+  navigator.clipboard.writeText(JSON.stringify(state, null, 2)).then(() => flash('Decisions copied.'));
+};
+document.getElementById('copyRejects').onclick = function () {
+  const r = Object.entries(state).filter(([, v]) => v === 'no').map(([k]) => k);
+  navigator.clipboard.writeText(r.join('\n')).then(() => flash(r.length + ' rejects copied.'));
+};
+
+/* ---- lazy three.js viewer, one model at a time ---- */
+async function show3D(host, src) {
+  host.innerHTML = '<div class="note">loading…</div>';
+  try {
+    const THREE = await import('three');
+    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+    const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+    const w = host.clientWidth, h = host.clientHeight;
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(45, w / h, 0.01, 1000);
+    const rnd = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    rnd.setSize(w, h); rnd.setPixelRatio(Math.min(2, devicePixelRatio));
+    host.innerHTML = ''; host.appendChild(rnd.domElement);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x444455, 2.2));
+    const dl = new THREE.DirectionalLight(0xffffff, 1.4); dl.position.set(3, 6, 4); scene.add(dl);
+    const gltf = await new GLTFLoader().loadAsync(src);
+    const box = new THREE.Box3().setFromObject(gltf.scene);
+    const size = box.getSize(new THREE.Vector3()).length();
+    const ctr = box.getCenter(new THREE.Vector3());
+    gltf.scene.position.sub(ctr);
+    cam.position.set(0, size * 0.12, size * 0.85);
+    cam.near = size / 100; cam.far = size * 12; cam.updateProjectionMatrix();
+    scene.add(gltf.scene);
+    const ctl = new OrbitControls(cam, rnd.domElement);
+    ctl.enableDamping = true; ctl.autoRotate = true; ctl.autoRotateSpeed = 1.6;
+    let tris = 0;
+    gltf.scene.traverse(o => {
+      if (o.isMesh && o.geometry) {
+        tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
+      }
+    });
+    const f = host.closest('.card').querySelector('.dims');
+    if (f) f.textContent = Math.round(tris).toLocaleString() + ' tris';
+    (function loop() { requestAnimationFrame(loop); ctl.update(); rnd.render(scene, cam); })();
+  } catch (err) {
+    host.innerHTML = '<div class="note">3D failed: ' + err.message + '</div>';
+  }
+}
+
+render();
+</script>
+</body>
+</html>

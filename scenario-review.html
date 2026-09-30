@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scenario Review</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#272c36; --fg:#e8eaf0; --dim:#9aa3b2;
+    --ok:#3ecf8e; --no:#ef5f6b; --warn:#f0b429; --accent:#6c8cff; --todo:#5a6273;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font:15px/1.5 'Segoe UI',system-ui,sans-serif;padding-bottom:78px}
+  header{position:sticky;top:0;z-index:30;background:rgba(15,17,21,.97);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:14px 20px}
+  h1{font-size:18px;font-weight:700}
+  .sub{color:var(--dim);font-size:13px;margin-top:2px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  select,input[type=search],button{background:var(--panel);color:var(--fg);border:1px solid var(--line);
+    border-radius:8px;padding:7px 11px;font:inherit;font-size:13px;cursor:pointer}
+  input[type=search]{cursor:text;min-width:200px}
+  button:hover{border-color:var(--accent)}
+  .tally{margin-left:auto;display:flex;gap:14px;font-size:13px;color:var(--dim);flex-wrap:wrap}
+  .tally b{color:var(--fg)}
+  main{padding:20px}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);
+    margin:26px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    display:flex;flex-direction:column}
+  .card.ok{border-color:var(--ok)} .card.redo{border-color:var(--no)}
+  .card.stale{border-color:var(--warn)}
+  /* 16:9, the wall's aspect */
+  .prev{position:relative;width:100%;padding-top:56.25%;background:#0b0d12;overflow:hidden}
+  .prev>*{position:absolute;inset:0}
+  .prev iframe{width:1920px;height:1080px;border:0;transform-origin:0 0;background:#fff}
+  .prevBtn{display:flex;align-items:center;justify-content:center;gap:8px;flex-direction:column;
+    color:var(--dim);font-size:13px;cursor:pointer}
+  .prevBtn span{background:var(--accent);color:#0b0d12;border-radius:8px;padding:7px 16px;font-weight:800}
+  .hd{padding:10px 12px 8px}
+  .t{font-weight:700;font-size:14px}
+  .ml{color:var(--dim);font-size:12.5px;margin-top:1px}
+  .facts{color:var(--dim);font-size:11.5px;margin-top:5px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .pill{border-radius:20px;padding:1px 9px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+  .s-todo{background:#232833;color:#98a1b2} .s-done{background:#14361f;color:var(--ok)}
+  .s-legacy{background:#1d2430;color:#7f93c9} .s-remove{background:#3a1519;color:var(--no)}
+  .warnbar{background:#3a2f12;color:var(--warn);font-size:11.5px;font-weight:700;padding:5px 12px;
+    border-top:1px solid #6b5316}
+  .note{color:var(--dim);font-size:12px;padding:0 12px 8px}
+  textarea{width:calc(100% - 24px);margin:0 12px 10px;background:#11141a;color:var(--fg);
+    border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;font-size:12.5px;
+    resize:vertical;min-height:52px}
+  .acts{display:flex;border-top:1px solid var(--line);margin-top:auto}
+  .acts button{flex:1;border:0;border-radius:0;background:transparent;padding:10px;font-size:12.5px;font-weight:700}
+  .acts button+button{border-left:1px solid var(--line)}
+  .acts .y:hover,.acts .y.on{background:var(--ok);color:#06251a}
+  .acts .n:hover,.acts .n.on{background:var(--no);color:#2a0409}
+  .acts .o:hover{background:var(--accent);color:#0b0d12}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(15,17,21,.97);backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);padding:11px 20px;display:flex;gap:10px;align-items:center;z-index:30}
+  .msg{color:var(--dim);font-size:12.5px}
+  button.primary{background:var(--accent);color:#0b0d12;border-color:var(--accent);font-weight:700}
+  button.primary:hover{filter:brightness(1.08)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Scenario Review</h1>
+  <div class="sub" id="sub"></div>
+  <div class="bar">
+    <select id="fMod"><option value="">All modules</option></select>
+    <select id="fState">
+      <option value="">All</option>
+      <option value="awaiting" selected>Waiting on you</option>
+      <option value="ok">Approved</option>
+      <option value="redo">Redo asked</option>
+      <option value="stale">Changed since review</option>
+      <option value="todo">Not rebuilt yet</option>
+      <option value="remove">To be deleted</option>
+    </select>
+    <input type="search" id="fText" placeholder="filter by name…">
+    <button id="loadAll">Load all previews</button>
+    <div class="tally" id="tally"></div>
+  </div>
+</header>
+
+<main><div id="out"></div></main>
+
+<footer>
+  <button id="copyPrompt" class="primary">Copy changes as a prompt</button>
+  <button id="save">Save to repo</button>
+  <button id="clearResolved">Clear done notes</button>
+  <span class="msg" id="msg">Type what needs changing on any card, then copy it all as one prompt and paste it to Claude.</span>
+</footer>
+
+<script>
+const DATA = {"generated":"2026-09-30T10:06:29.029Z","items":[{"id":"3d-viewer","title":"🚣 Vallam Kali — Boat Battle","ml":"","module":"original","lines":810,"bytes":47140,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"alphabet-explorer","title":"Alphabet Explorer · 57 Malayalam + English","ml":"","module":"original","lines":415,"bytes":25610,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657205,"verdict":null,"stale":false},{"id":"alphabet-explorer-multi","title":"Alphabet Explorer – Multiplayer (menu right)","ml":"","module":"original","lines":288,"bytes":10396,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"animal-drawing","title":"Animal Drawing","ml":"","module":"original","lines":539,"bytes":20205,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790758556,"verdict":null,"stale":false},{"id":"arithmetica","title":"Arithmetica","ml":"","module":"original","lines":366,"bytes":15954,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"arithmetica-multi","title":"Arithmetica - Multiplayer","ml":"","module":"original","lines":172,"bytes":7846,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"balloon-popper","title":"Super Alphabet Sky Pop!","ml":"","module":"original","lines":841,"bytes":31106,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790659948,"verdict":null,"stale":false},{"id":"butterfly-tracker","title":"Butterfly Haven – Global Back","ml":"","module":"original","lines":793,"bytes":31686,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"coloring-book","title":"Jungle Wall · Separate Layers","ml":"","module":"original","lines":786,"bytes":38838,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"colour-match","title":"Colour Match","ml":"ചുവപ്പ്","module":"original","lines":443,"bytes":25780,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790660231,"verdict":null,"stale":false},{"id":"creature-creator","title":"Trace & Learn - Multiplayer","ml":"","module":"original","lines":984,"bytes":38741,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"feelings","title":"Feelings Finder","ml":"സന്തോഷം","module":"original","lines":551,"bytes":22677,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790660243,"verdict":null,"stale":false},{"id":"fish-it","title":"Fish Catcher – Koi Pond","ml":"","module":"original","lines":813,"bytes":31080,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"forest-animals","title":"Forest Animals Showcase","ml":"","module":"original","lines":880,"bytes":50161,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"forest-walkthrough","title":"Forest Walkthrough","ml":"","module":"original","lines":603,"bytes":24226,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790660091,"verdict":null,"stale":false},{"id":"fruit-counter","title":"Fruit Counter!","ml":"","module":"original","lines":855,"bytes":28623,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"fruit-math","title":"Fruit Math","ml":"","module":"original","lines":384,"bytes":19252,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"fruit-math-multi","title":"Fruit Math - Multiplayer","ml":"","module":"original","lines":170,"bytes":7681,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"fruit-ninja","title":"Fruit Ninja","ml":"","module":"original","lines":556,"bytes":21317,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"fruits-vegetables","title":"Fruits vs Vegetables — 3 Players","ml":"ആപ്പിൾ","module":"primary","lines":983,"bytes":48873,"state":"done","note":"Kept its existing mechanic (tracing, stacking, hunting, quizzing) and had the illustrated backdrop applied for consistency with the rebuilt set.","mtime":1790757929,"verdict":null,"stale":false},{"id":"goalkeeper","title":"Stadium Blocker Pro","ml":"","module":"original","lines":1020,"bytes":32165,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"hidden-animals","title":"Hidden Animals - Bamboo Forest","ml":"","module":"original","lines":796,"bytes":28687,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"memory-match","title":"Detective Wall - Interactive Investigation","ml":"","module":"original","lines":2024,"bytes":54370,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"model-cards","title":"3D Animal Explorer","ml":"തവിട്ടുകരടി","module":"original","lines":712,"bytes":34399,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790660165,"verdict":null,"stale":false},{"id":"model-cards-2","title":"Animal Parts","ml":"ഒട്ടകം","module":"original","lines":620,"bytes":34884,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790660194,"verdict":null,"stale":false},{"id":"money-counter","title":"🛒 Money Shop – Learn Indian Money!","ml":"","module":"original","lines":841,"bytes":43159,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"mosquito-clap","title":"Mosquito Clap","ml":"","module":"original","lines":492,"bytes":17507,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"music-maker","title":"🎸 Band Wall — Live Orchestra","ml":"","module":"original","lines":1335,"bytes":47203,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"number-crunch","title":"Number Crunch","ml":"","module":"original","lines":555,"bytes":23426,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"number-crunch-multi","title":"Number Crunch - Multiplayer","ml":"","module":"original","lines":169,"bytes":7654,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"number-explorer","title":"Number Explorer · back middle right","ml":"","module":"original","lines":450,"bytes":15794,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"particle-playground","title":"Particle Playground","ml":"","module":"original","lines":877,"bytes":32604,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"pattern-finder","title":"Pattern Finder","ml":"അടുത്തത് ഏത്?","module":"original","lines":390,"bytes":23898,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790660253,"verdict":null,"stale":false},{"id":"pp-animal-homes","title":"Animals and Their Homes","ml":"","module":"pre-primary","lines":71,"bytes":3342,"state":"done","note":"Association - animal appears, pick where it sleeps. Decoys are real homes of other animals. horse dropped (stable.jpg rejected).","mtime":1790761802,"verdict":null,"stale":false},{"id":"pp-animal-hunt","title":"Animal Hunt – Pre-Primary","ml":"ആന","module":"pre-primary","lines":891,"bytes":38951,"state":"done","note":"Kept its existing mechanic (tracing, stacking, hunting, quizzing) and had the illustrated backdrop applied for consistency with the rebuilt set.","mtime":1790757929,"verdict":null,"stale":false},{"id":"pp-animal-quiz","title":"Which Animal Is That","ml":"","module":"pre-primary","lines":123,"bytes":6834,"state":"done","note":"Three panels. Audio fixed twice over: pool limited to the 6 animals with a verified file, and a speaker pad makes hearing it a TAP (a timer-fired sound is blocked by autoplay policy).","mtime":1790762224,"verdict":null,"stale":false},{"id":"pp-animal-sort","title":"Farm and Wild Animals","ml":"","module":"pre-primary","lines":125,"bytes":7038,"state":"done","note":"Three panels, one queue each. Binary sort with a per-child tally.","mtime":1790762224,"verdict":null,"stale":false},{"id":"pp-animal-young","title":"Animals and Their Young","ml":"അതിമനോഹരം!","module":"pre-primary","lines":206,"bytes":9588,"state":"done","note":"Pairing. Square cards (382x382).","mtime":1790755973,"verdict":null,"stale":false},{"id":"pp-animals","title":"Meet the Animals","ml":"","module":"pre-primary","lines":69,"bytes":3109,"state":"done","note":"Backdrop changed to meadow; cards capped at 240px so nothing clips.","mtime":1790762541,"verdict":null,"stale":false},{"id":"pp-body-parts","title":"Body Parts Explorer","ml":"","module":"pre-primary","lines":251,"bytes":10320,"state":"legacy","note":"Reverted to the original. I had only added 3 lines of backdrop, never rebuilt it - that change is undone.","mtime":1790761176,"verdict":null,"stale":false},{"id":"pp-egg-count","title":"Count the Eggs","ml":"","module":"pre-primary","lines":103,"bytes":5097,"state":"done","note":"Egg shape: taller than wide with the wide end down, not a circle.","mtime":1790762541,"verdict":null,"stale":false},{"id":"pp-hen-types","title":"Kinds of Hen","ml":"\\u0d15\\u0d4b\\u0d34\\u0d3f","module":"pre-primary","lines":67,"bytes":3227,"state":"done","note":"Fine discrimination - every card is poultry, so the differences are within a category not between.","mtime":1790761802,"verdict":null,"stale":false},{"id":"pp-mosquito-clap","title":"Mosquito Clap","ml":"ചിത്രശലഭത്തെ അടിക്കരുത്!","module":"pre-primary","lines":268,"bytes":10576,"state":"done","note":"Rebuilt on the Fruit Ninja mechanic: targets launch on an arc with gravity, a SWIPE leaves a trail and kills what the line crosses. Butterflies are the bomb - cost a life, never points. Speed on the toolbar.","mtime":1790762598,"verdict":null,"stale":false},{"id":"pp-odd-one-out","title":"Odd One Out","ml":"മറ്റുള്ളവ വീട്ടുമൃഗങ്ങളാണ്","module":"pre-primary","lines":209,"bytes":9518,"state":"done","note":"Rebuilt as EXCLUSION - three animals share a group, one does not. Alternates which group supplies the stranger so it cannot be won by always picking the wild one. Kuttu says WHY after a correct tap.","mtime":1790755973,"verdict":null,"stale":false},{"id":"pp-size-color","title":"Big Small Green","ml":"\\u0d06\\u0d28","module":"pre-primary","lines":129,"bytes":7179,"state":"done","note":"Rebuilt as the sorter asked for: big / small / green bins, one object at a time, audio on each. Every object has exactly one true answer by design.","mtime":1790762224,"verdict":null,"stale":false},{"id":"pp-size-quiz","title":"Which Is Bigger","ml":"\\u0d15\\u0d4a\\u0d33\\u0d4d\\u0d33\\u0d3e\\u0d02!","module":"pre-primary","lines":122,"bytes":6679,"state":"done","note":"Three independent games - each panel deals its own pair and moves on immediately. Same object at two sizes, so it tests perception not knowledge.","mtime":1790762224,"verdict":null,"stale":false},{"id":"pri-flower-match","title":"Flower Matching","ml":"","module":"primary","lines":123,"bytes":6396,"state":"done","note":"Three panels, own touches each. Fixed 4-column grid instead of wrapping, which is what overflowed before.","mtime":1790762224,"verdict":null,"stale":false},{"id":"pri-flowers","title":"Flowers of Kerala","ml":"കൊള്ളാം! നന്നായി!","module":"primary","lines":222,"bytes":10012,"state":"done","note":"Rebuilt as visual search - find EVERY rose among 14 mixed blooms. jamanti and lotus excluded (rejected at asset review), not swapped for emoji.","mtime":1790753684,"verdict":null,"stale":false},{"id":"pri-houses","title":"Types of Houses","ml":"\\u0d15\\u0d42\\u0d1f\\u0d3e\\u0d30\\u0d02","module":"primary","lines":117,"bytes":6988,"state":"done","note":"Three panels. No 3D - built on the approved photographs only, since the models were never usable.","mtime":1790762224,"verdict":null,"stale":false},{"id":"pri-rooms","title":"Rooms in a House","ml":"കിടപ്പുമുറി","module":"primary","lines":304,"bytes":15432,"state":"done","note":"Revised on review: rooms moved to the upper half and are TAPPED, not dragged. Fixed the bug that stopped object 2 appearing (burstAt was passed coordinates instead of an element and threw).","mtime":1790753684,"verdict":null,"stale":false},{"id":"puzzle-balance","title":"🧩 Puzzle It! — 3 Player","ml":"","module":"original","lines":949,"bytes":35267,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"rhythm-dance","title":"Rhythm Dance","ml":"","module":"original","lines":143,"bytes":4893,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"room-sorter","title":"Daily Skills","ml":"","module":"original","lines":1772,"bytes":89536,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"sec-bouquet","title":"Flower Bouquet","ml":"\\u0d1f\\u0d32\\u0d3f\\u0d2a\\u0d4d","module":"secondary","lines":128,"bytes":7405,"state":"done","note":"Emoji/vector only, no photos. Order filling - two roses, three jasmine - so kind AND count are held at once.","mtime":1790757136,"verdict":null,"stale":false},{"id":"sec-currency","title":"Coins and Notes","ml":"","module":"secondary","lines":125,"bytes":7038,"state":"done","note":"DRAWN coins and notes via currency-svg.js - all six currency photos were rejected, so nothing waits on a reshoot. Task: pay the exact amount. Overpaying is refused.","mtime":1790757136,"verdict":null,"stale":false},{"id":"sec-daily-living","title":"Daily Living","ml":"","module":"secondary","lines":161,"bytes":9539,"state":"done","note":"Three routines (washing, teeth, getting ready) each opening with a titled photograph, steps using distinct item photos rather than five near-identical frames.","mtime":1790762542,"verdict":null,"stale":false},{"id":"sec-first-aid","title":"First Aid Box","ml":"\\u0d35\\u0d46\\u0d33\\u0d4d\\u0d33\\u0d02","module":"secondary","lines":134,"bytes":8362,"state":"done","note":"Animated and DRAWN (all six photos rejected, no library replacement). Treat the injury IN ORDER - a plaster over a dirty cut is wrong.","mtime":1790757136,"verdict":null,"stale":false},{"id":"sec-helpers-places","title":"Helpers and Public Places","ml":"\\u0d21\\u0d4b\\u0d15\\u0d4d\\u0d1f\\u0d7c","module":"secondary","lines":142,"bytes":8713,"state":"done","note":"Popup then match, as asked. Meet each helper with their own card, then place them where they work.","mtime":1790757136,"verdict":null,"stale":false},{"id":"sec-mobile","title":"Mobile Phone Skills","ml":"\\u0d2a\\u0d4b\\u0d32\\u0d40\\u0d38\\u0d4d","module":"secondary","lines":152,"bytes":8264,"state":"done","note":"A phone that works: dial 100/101/102 and it connects, or read an arriving message and reply. Wrong digit clears the display like a real handset.","mtime":1790757136,"verdict":null,"stale":false},{"id":"sec-name-build","title":"Build My Name","ml":"🔄 അടുത്ത പേര്","module":"secondary","lines":407,"bytes":17302,"state":"done","note":"Square slots, five seeded names, Names button for the real class list (already applied before your note).","mtime":1790752415,"verdict":null,"stale":false},{"id":"shape-sorter","title":"Shape Sorter - Multiplayer","ml":"","module":"original","lines":1044,"bytes":38507,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"underwater-explorer","title":"Underwater Explorer","ml":"കോമാളി മത്സ്യം","module":"original","lines":2075,"bytes":142227,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790660215,"verdict":null,"stale":false},{"id":"vehicles","title":"Vehicles — Land, Air & Water","ml":"കരയിൽ പോകുന്നവ","module":"primary","lines":973,"bytes":52278,"state":"done","note":"Kept its existing mechanic (tracing, stacking, hunting, quizzing) and had the illustrated backdrop applied for consistency with the rebuilt set.","mtime":1790757929,"verdict":null,"stale":false},{"id":"video-360-player","title":"World Tour 360°","ml":"","module":"original","lines":736,"bytes":32479,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"voc-cap-match","title":"Who Wears This Hat","ml":"","module":"vocational","lines":111,"bytes":6422,"state":"done","note":"Rebuilt: generalised beyond birthday to every job that wears a hat, using the drawn hats. Reversed from Job Hats - the HAT is shown and the worker chosen, so the pairing is tested both ways.","mtime":1790757896,"verdict":null,"stale":false},{"id":"voc-instruments","title":"Kerala Instruments","ml":"\\u0d1a\\u0d46\\u0d23\\u0d4d\\u0d1f","module":"vocational","lines":140,"bytes":8037,"state":"done","note":"Drawn icons - the emoji set had one drum glyph for three instruments so three pads looked identical. Six distinct SVGs. Audio: noise cut to an attack transient, pitch carries the sound.","mtime":1790762542,"verdict":null,"stale":false},{"id":"voc-job-call","title":"Who Do I Call","ml":"ആരെ വിളിക്കണം?","module":"vocational","lines":214,"bytes":10244,"state":"done","note":"New. Situation -> pick the helper -> dial 100/101/102 on a real keypad. Two steps; the dial is the skill.","mtime":1790753684,"verdict":null,"stale":false},{"id":"voc-job-day","title":"A Day at Work","ml":"ഒരു ജോലിദിനം","module":"vocational","lines":186,"bytes":8585,"state":"done","note":"Click to place - tap a step, tap its slot. No drag at all. 2x2 grid.","mtime":1790756309,"verdict":null,"stale":false},{"id":"voc-job-hats","title":"Job Hats","ml":"തൊഴിൽ തൊപ്പികൾ","module":"vocational","lines":189,"bytes":8751,"state":"done","note":"FIXED FOR REAL: padding:9% resolved against the container width, collapsing the hat content box to zero so the images had nowhere to draw. Now 86x86 icons in 110x110 boxes.","mtime":1790756249,"verdict":null,"stale":false},{"id":"voc-job-tools","title":"Tools of the Trade","ml":"പണിയായുധങ്ങൾ","module":"vocational","lines":172,"bytes":7843,"state":"done","note":"New. Collect BOTH of a worker's tools from a tray of six - set completion, not single choice. All 18 jobs.","mtime":1790753684,"verdict":null,"stale":false},{"id":"voc-job-where","title":"Where Do They Work","ml":"എവിടെ ജോലി ചെയ്യുന്നു?","module":"vocational","lines":195,"bytes":9314,"state":"done","note":"Square place cards (459x459). Tap to place.","mtime":1790761724,"verdict":null,"stale":false},{"id":"voc-party-decorate","title":"Decorate for the Party","ml":"\\u0d2c\\u0d32\\u0d42\\u0d7a","module":"vocational","lines":172,"bytes":9857,"state":"done","note":"Banner name is a per-panel variable - tap to cycle the class list, one past the end opens the keyboard for a name not on it.","mtime":1790762542,"verdict":null,"stale":false},{"id":"word-creator","title":"Word Creator","ml":"","module":"original","lines":734,"bytes":21985,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"word-explorer","title":"Word Explorer","ml":"","module":"original","lines":527,"bytes":21988,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790657013,"verdict":null,"stale":false},{"id":"word-matcher","title":"Word Bubbles – Multiplayer","ml":"","module":"original","lines":703,"bytes":29784,"state":"legacy","note":"original Feb-Mar activity, already signed off","mtime":1790659948,"verdict":null,"stale":false}]};
+const KEY = 'scenarioReview';
+let review = {};
+DATA.items.forEach(i => { if (i.verdict) review[i.id] = i.verdict; });
+try {
+  const local = JSON.parse(localStorage.getItem(KEY) || '{}');
+  Object.keys(local).forEach(k => { if (!review[k]) review[k] = local[k]; });
+} catch (e) {}
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(review)); } catch (e) {} };
+
+document.getElementById('sub').textContent =
+  DATA.items.length + ' activities · generated ' + new Date(DATA.generated).toLocaleString();
+
+const mods = [...new Set(DATA.items.map(i => i.module))].sort();
+fMod.innerHTML = '<option value="">All modules</option>' + mods.map(m => '<option>' + m + '</option>').join('');
+
+function isStale(i) {
+  const v = review[i.id];
+  if (!v || !v.at) return false;
+  return i.mtime > Math.floor(new Date(v.at).getTime() / 1000) + 2;
+}
+
+function visible() {
+  const m = fMod.value, s = fState.value, q = fText.value.trim().toLowerCase();
+  return DATA.items.filter(i => {
+    if (m && i.module !== m) return false;
+    const v = review[i.id];
+    if (s === 'awaiting') { if (i.state !== 'done' || (v && !isStale(i))) return false; }
+    if (s === 'ok'     && !(v && v.v === 'ok')) return false;
+    if (s === 'redo'   && !(v && v.v === 'redo')) return false;
+    if (s === 'stale'  && !isStale(i)) return false;
+    if (s === 'todo'   && i.state !== 'todo') return false;
+    if (s === 'remove' && i.state !== 'remove') return false;
+    if (q && !(i.id.includes(q) || i.title.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function card(i) {
+  const v = review[i.id] || null;
+  const stale = isStale(i);
+  const cls = stale ? 'stale' : v ? (v.v === 'ok' ? 'ok' : 'redo') : '';
+  return '<div class="card ' + cls + '" data-id="' + i.id + '">' +
+    '<div class="prev" data-src="games/' + i.id + '.html?v=' + i.mtime + '">' +
+      '<div class="prevBtn"><span>▶ Load preview</span>' + i.id + '</div>' +
+    '</div>' +
+    (stale ? '<div class="warnbar">⚠ changed since you reviewed it — look again</div>' : '') +
+    '<div class="hd">' +
+      '<div class="t">' + i.title + '</div>' +
+      (i.ml ? '<div class="ml">' + i.ml + '</div>' : '') +
+      '<div class="facts">' +
+        '<span class="pill s-' + i.state + '">' + i.state + '</span>' +
+        '<span>' + i.module + '</span><span>' + i.lines + ' lines</span>' +
+      '</div>' +
+    '</div>' +
+    (i.note ? '<div class="note">' + i.note + '</div>' : '') +
+    '<textarea placeholder="What needs changing? (sent back to me verbatim)">' + ((v && v.note) || '') + '</textarea>' +
+    '<div class="acts">' +
+      '<button class="o" data-open="games/' + i.id + '.html?v=' + i.mtime + '">Open full</button>' +
+      '<button class="y ' + (v && v.v === 'ok' ? 'on' : '') + '" data-v="ok">Approve</button>' +
+      '<button class="n ' + (v && v.v === 'redo' ? 'on' : '') + '" data-v="redo">Redo</button>' +
+    '</div></div>';
+}
+
+function render() {
+  const list = visible();
+  const byMod = {};
+  list.forEach(i => { (byMod[i.module] = byMod[i.module] || []).push(i); });
+  out.innerHTML = Object.keys(byMod).sort().map(m =>
+    '<h2>' + m + ' — ' + byMod[m].length + '</h2><div class="grid">' +
+    byMod[m].map(card).join('') + '</div>').join('')
+    || '<p class="msg" style="margin-top:20px">Nothing matches that filter.</p>';
+  tally();
+}
+
+function tally() {
+  const ok = Object.values(review).filter(v => v.v === 'ok').length;
+  const redo = Object.values(review).filter(v => v.v === 'redo').length;
+  const done = DATA.items.filter(i => i.state === 'done').length;
+  const stale = DATA.items.filter(isStale).length;
+  document.getElementById('tally').innerHTML =
+    '<span><b>' + done + '</b> built</span><span><b>' + ok + '</b> approved</span>' +
+    '<span><b>' + redo + '</b> redo</span><span><b>' + stale + '</b> changed</span>';
+}
+
+/* Scale a 1920x1080 page into whatever width the card got. */
+/* The ?v= on the src is the activity's last-modified time. Without it the
+   browser served whatever it had cached, so a rebuilt activity still showed
+   its old self and came back reviewed against a version that no longer
+   existed. Three rounds of one bug report were caused by exactly that. */
+function mountPreview(host) {
+  const f = document.createElement('iframe');
+  f.src = host.dataset.src;
+  f.loading = 'lazy';
+  host.innerHTML = '';
+  host.appendChild(f);
+  const fit = () => { f.style.transform = 'scale(' + (host.clientWidth / 1920) + ')'; };
+  fit();
+  new ResizeObserver(fit).observe(host);
+}
+
+out.addEventListener('click', (e) => {
+  const open = e.target.closest('[data-open]');
+  if (open) { window.open(open.dataset.open, '_blank'); return; }
+
+  const prev = e.target.closest('.prev');
+  if (prev && prev.querySelector('.prevBtn')) { mountPreview(prev); return; }
+
+  const vb = e.target.closest('[data-v]');
+  if (vb) {
+    const card = vb.closest('.card');
+    const id = card.dataset.id;
+    const note = card.querySelector('textarea').value.trim();
+    if (review[id] && review[id].v === vb.dataset.v && !note) delete review[id];
+    else review[id] = { v: vb.dataset.v, note: note, at: new Date().toISOString() };
+    persist();
+    /* Update this card in place. A full re-render rebuilt every textarea and
+       threw away whatever was being typed in another card. */
+    const v = review[id];
+    card.classList.remove('ok', 'redo');
+    if (v && v.v) card.classList.add(v.v === 'ok' ? 'ok' : 'redo');
+    card.querySelectorAll('[data-v]').forEach((b) => {
+      b.classList.toggle('on', !!v && v.v === b.dataset.v);
+    });
+    tally();
+  }
+});
+
+/* A note is the point of this page, so it is kept whether or not a verdict
+   has been given. Requiring Approve/Redo first silently discarded what you
+   typed. A note on its own counts as 'changes asked for'. */
+out.addEventListener('input', (e) => {
+  if (e.target.tagName !== 'TEXTAREA') return;
+  const id = e.target.closest('.card').dataset.id;
+  const note = e.target.value;
+  if (!review[id]) review[id] = { v: null, note: '', at: new Date().toISOString() };
+  review[id].note = note;
+  review[id].at = new Date().toISOString();
+  if (!note && !review[id].v) delete review[id];
+  persist();
+  tally();
+});
+
+['fMod','fState','fText'].forEach(id => document.getElementById(id).addEventListener('input', render));
+document.getElementById('loadAll').onclick = () =>
+  document.querySelectorAll('.prev .prevBtn').forEach(b => mountPreview(b.parentElement));
+
+const flash = (m) => { msg.textContent = m; setTimeout(() => {
+  msg.textContent = 'Approve or send back with a note — the note is my brief for round two.'; }, 2600); };
+
+document.getElementById('save').onclick = async () => {
+  try {
+    const r = await fetch('/save', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(review) });
+    flash(r.ok ? 'Saved to scenario-review.json.' : 'Save failed — copy the notes instead.');
+  } catch (e) { flash('Not on the review server — use Copy redo notes.'); }
+};
+/* The page's real output. Every card carrying a note or a verdict becomes one
+   block of text that can be pasted straight into Claude as the next
+   instruction, so nothing is lost between seeing a problem and reporting it. */
+var NL = String.fromCharCode(10);
+
+function buildPrompt() {
+  var byId = new Map(DATA.items.map(function (i) { return [i.id, i]; }));
+  /* Drop notes whose activity no longer exists. A removed activity cannot be
+     flagged "changed since you wrote this", so its note survived every filter
+     and was re-sent as new work every round - eight deleted boards kept
+     reappearing that way. */
+  var rows = Object.entries(review).filter(function (e) {
+    if (!byId.has(e[0])) return false;
+    return (e[1].note && e[1].note.trim()) || e[1].v;
+  });
+  if (!rows.length) return '';
+
+  /* A note written BEFORE the activity was last rebuilt has almost certainly
+     been acted on already. Sending it again as a fresh instruction is how the
+     same three notes came back three rounds running. They go in their own
+     section asking for a recheck instead. */
+  function staleRow(e) {
+    var it = byId.get(e[0]);
+    return !!(it && e[1].at && it.mtime > Math.floor(new Date(e[1].at).getTime() / 1000) + 2);
+  }
+  var resolved   = rows.filter(function (e) { return staleRow(e) && e[1].v !== 'ok'; });
+  var changes    = rows.filter(function (e) { return e[1].v !== 'ok' && !staleRow(e); });
+  var okWithNote = rows.filter(function (e) { return e[1].v === 'ok' && (e[1].note || '').trim(); });
+  var okPlain    = rows.filter(function (e) { return e[1].v === 'ok' && !(e[1].note || '').trim(); });
+
+  var L = ['Here is my review of the activities. Apply these changes.'];
+
+  if (changes.length) {
+    L.push('', 'CHANGES ASKED FOR');
+    changes.forEach(function (e) {
+      var it = byId.get(e[0]);
+      L.push('', e[0] + (it ? '  (' + it.title + ')' : ''));
+      L.push('  ' + ((e[1].note || '').trim() || 'needs rework - no note given'));
+    });
+  }
+  if (okWithNote.length) {
+    L.push('', 'APPROVED, WITH A COMMENT');
+    okWithNote.forEach(function (e) { L.push('', e[0], '  ' + e[1].note.trim()); });
+  }
+  if (okPlain.length) {
+    L.push('', 'APPROVED AS IS', '  ' + okPlain.map(function (e) { return e[0]; }).join(', '));
+  }
+  if (resolved.length) {
+    L.push('', 'ALREADY REBUILT SINCE I WROTE THESE - not new work, recheck only');
+    resolved.forEach(function (e) {
+      L.push('  ' + e[0] + ': ' + ((e[1].note || '').trim() || '(no note)'));
+    });
+  }
+  return L.join(NL);
+}
+
+/* Retires every note whose activity has been rebuilt since it was written,
+   so the list stops growing and the prompt stays about what is still wrong. */
+document.getElementById('clearResolved').onclick = function () {
+  var ids = new Map(DATA.items.map(function (i) { return [i.id, i]; }));
+  var gone = 0;
+  Object.keys(review).forEach(function (id) {
+    var it = ids.get(id), v = review[id];
+    if (!it) { delete review[id]; gone++; return; }      /* activity deleted */
+    if (v.at && it.mtime > Math.floor(new Date(v.at).getTime() / 1000) + 2) {
+      delete review[id]; gone++;
+    }
+  });
+  persist(); render();
+  flash(gone ? gone + ' resolved note(s) cleared.' : 'Nothing to clear.');
+};
+
+document.getElementById('copyPrompt').onclick = function () {
+  var txt = buildPrompt();
+  if (!txt) return flash('Nothing to send yet - type a note on a card first.');
+  navigator.clipboard.writeText(txt)
+    .then(function () { flash('Copied. Paste it straight into Claude.'); })
+    .catch(function () {
+      /* Clipboard is refused in some app views. Show the text so it can be
+         selected by hand rather than leaving the button doing nothing. */
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.cssText = 'position:fixed;inset:6%;z-index:99;background:var(--panel);' +
+        'color:var(--fg);border:2px solid var(--accent);border-radius:10px;padding:14px;font:13px/1.5 inherit';
+      document.body.appendChild(ta);
+      ta.select();
+      flash('Copy blocked - select the text and copy it by hand.');
+      ta.addEventListener('blur', function () { ta.remove(); });
+    });
+};
+
+render();
+</script>
+</body>
+</html>

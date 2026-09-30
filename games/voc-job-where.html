@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  WHERE DO THEY WORK? — Pangappara Blueroom, Vocational
+════════════════════════════════════════════════════════════════════════════
+  Three workplaces stand open. Workers arrive one at a time and the child
+  sends each to the place they belong.
+
+  Same family as pri-rooms — carry a thing to where it goes — but the
+  judgement is social rather than domestic: a fisherman belongs at the sea,
+  a postman at the post office. Placement is the right mechanic for both,
+  and re-using it here is deliberate; what changes is the knowledge it asks
+  for, not the gesture.
+
+  Content: js/jobs-data.js. Workplaces are derived from the jobs themselves,
+  so a room can never appear that nobody works in.
+════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Where Do They Work</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(165deg,#f3fbf6,#e5f4ec 70%,#d8ecdf);
+    user-select:none;touch-action:none}
+
+  .worker{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;
+    border-radius:16px;background:#fff;border:4px solid #bcdcc8;padding:6px 12px;
+    box-shadow:0 6px 15px rgba(30,80,50,.14);
+    transition:transform .14s,box-shadow .14s,border-color .14s}
+  .worker.held{cursor:grabbing;transform:scale(1.08);z-index:70;border-color:#2f8f5b;
+    box-shadow:0 14px 28px rgba(30,80,50,.28);transition:none}
+  .worker .em{font-size:clamp(32px,6.2vh,66px);line-height:1}
+  .worker .nm{font-weight:800;font-size:clamp(11px,1.8vh,19px);color:#17331f;text-align:center}
+  .worker .ml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(9.5px,1.5vh,15px);color:#547a61;text-align:center;line-height:1.4}
+  .worker.home{animation:hm .3s ease-out}
+  @keyframes hm{0%{transform:scale(1.08)}60%{transform:scale(.94)}100%{transform:none}}
+
+  .places{display:flex;gap:1vw;width:100%;flex:1;min-height:0;
+    align-items:center;justify-content:center}
+  /* Sized from the PANEL, not the viewport. 26vw is 499px, and a panel is
+     only 600px wide at three players, so three of them clipped. flex:1 with
+     a square ratio gives each a third of whatever the panel actually is. */
+  .place{flex:1 1 0;min-width:0;cursor:pointer;aspect-ratio:1;max-height:100%;
+    border-radius:16px;border:5px solid #c4dfcf;background:#fff;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+    padding:6px 4px;position:relative;overflow:hidden;transition:border-color .16s,transform .16s}
+  .place .pe{font-size:clamp(28px,5.6vh,58px);line-height:1;margin-bottom:auto;margin-top:6px}
+  .place .pn{font-weight:800;font-size:clamp(10px,1.6vh,17px);color:#17331f;text-align:center}
+  .place .pm{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(9px,1.4vh,14px);color:#547a61;text-align:center;line-height:1.4}
+  .place.hot{border-color:#2f8f5b;transform:translateY(-5px)}
+  .place.bad{animation:wob .42s ease-in-out;border-color:#e0a83c}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}
+                 60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+  .staff{position:absolute;top:4px;left:3px;right:3px;display:flex;flex-wrap:wrap;gap:2px;
+    justify-content:center;pointer-events:none}
+  .staff span{font-size:clamp(16px,2.8vh,30px);animation:drop .34s ease-out}
+  @keyframes drop{from{opacity:0;transform:translateY(-16px) scale(.6)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/jobs-data.js"></script>
+<script src="../js/three-up.js"></script>
+
+<script>
+WALL_BACKDROP.set('meadow');
+var ALL    = JOBS_DATA.all().filter(function (j) { return !!j.place; });
+var ROUNDS = 6;
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+TRIUP.start({
+  title: { en:'Where Do They Work?', ml:'എവിടെ ജോലി ചെയ്യുന്നു?' },
+  hint:  { en:'Take them to their workplace', ml:'ജോലിസ്ഥലത്തേക്ക് കൊണ്ടുപോകൂ' },
+
+  build: function (p, body, api) {
+    var st = api.state(p);
+    st.placed = 0;
+    api.pill(p, 'placed', '0 / ' + ROUNDS);
+
+    var tray   = document.createElement('div');
+    tray.style.cssText = 'display:flex;align-items:center;justify-content:center;flex-shrink:0';
+    var places = document.createElement('div'); places.className = 'places';
+    body.appendChild(tray); body.appendChild(places);
+
+    st.queue = shuffle(ALL).slice(0, ROUNDS);
+
+    function round() {
+      if (!st.queue.length) {
+        api.win(p, {
+          title: { en:'Everyone is at work!', ml:'എല്ലാവരും ജോലിസ്ഥലത്തായി!' },
+          onAgain: function () {
+            st.queue = shuffle(ALL).slice(0, ROUNDS); st.placed = 0;
+            api.pill(p, 'placed', '0 / ' + ROUNDS); round();
+          }
+        });
+        return;
+      }
+      var job = st.queue.shift();
+      st.job = job;
+
+      /* Two other workplaces, taken from workers not in this round's answer.
+         Derived from the data so a place nobody works in cannot appear. */
+      var others = [], seen = {};
+      seen[job.place.en] = 1;
+      shuffle(ALL).forEach(function (j) {
+        if (others.length < 2 && j.place && !seen[j.place.en]) {
+          seen[j.place.en] = 1; others.push(j.place);
+        }
+      });
+
+      places.innerHTML = '';
+      shuffle([job.place].concat(others)).forEach(function (pl) {
+        var d = document.createElement('div');
+        d.className = 'place';
+        d.dataset.k = pl.en;
+        d.innerHTML = '<div class="staff"></div><div class="pe">' + (pl.emoji || '📍') + '</div>' +
+          '<div class="pn">' + pl.en + '</div><div class="pm">' + pl.ml + '</div>';
+        places.appendChild(d);
+      });
+
+      tray.innerHTML = '';
+      var w = document.createElement('div');
+      w.className = 'worker';
+      w.innerHTML = '<div class="em">' + job.emoji + '</div>' +
+        '<div class="nm">' + WALL.t(job.label) + '</div>' +
+        '<div class="ml">' + job.label.ml + '</div>';
+      tray.appendChild(w);
+      bindPlaces();
+
+      if (p === 0 && WALL.voiceOn()) WALL.say(job.label.ml);
+    }
+
+    function placeAt(x, y) {
+      var hit = null;
+      places.querySelectorAll('.place').forEach(function (d) {
+        var r = d.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) hit = d;
+      });
+      return hit;
+    }
+    function clearHot(){ places.querySelectorAll('.place').forEach(function(d){d.classList.remove('hot');}); }
+
+    /* Tap, not drag, on review. Same change as pri-rooms: carrying a card
+       across a third of a wall is a lot to ask while holding the target in
+       mind, and the tap says the same thing in one move. */
+    function bindPlaces() {
+      places.querySelectorAll('.place').forEach(function (d) {
+        WALL.bindTouch(d, function () { if (st.job) drop(d); });
+      });
+    }
+
+    function drop(d) {
+      if (d.dataset.k === st.job.place.en) {
+        var s = document.createElement('span');
+        s.textContent = st.job.emoji;
+        d.querySelector('.staff').appendChild(s);
+        tray.innerHTML = '';
+        st.job = null;
+        st.placed++;
+        api.pill(p, 'placed', st.placed + ' / ' + ROUNDS);
+        WALL.tone(440 + st.placed * 60, 0.16, 'sine', 0.12);
+        api.popup(p, {
+          title: st.job.label,
+          body:  st.job.does,
+          close: { en:'Next', ml:'അടുത്തത്' },
+          onClose: round
+        });
+      } else {
+        d.classList.add('bad');
+        setTimeout(function () { d.classList.remove('bad'); }, 440);
+        WALL.sfx.nudge();
+      }
+    }
+
+    round();
+  }
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

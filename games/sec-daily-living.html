@@ -1,470 +1,158 @@
 <!DOCTYPE html>
 <!--
-════════════════════════════════════════════════════════════════════════════
-  DAILY LIVING, LIFE SYMBOLS & SKILLS — Pangappara Blueroom, Secondary #10
-  Five boards behind one menu card · zero voice narration
-════════════════════════════════════════════════════════════════════════════
+================================================================================
+  Daily Living - Pangappara Blueroom, Secondary
+================================================================================
+  Content from the tuition app's daily-living set, with a different shape as
+  asked: this is SEQUENCING, not the card board it uses there.
 
-  BRIEF
-    "DISPLAY RULE: Extra-large, high-definition visuals on simple, clean
-     backgrounds. Interactive touch targets with zero voice narration."
-    Sections: 1 Good Habits · 2 Household Appliances (3 steps each) ·
-              3 Traffic Signals · 4 Symbols of Daily Life · 5 Calendar
-    "Touch: Child taps any symbol, appliance step, or habit card -> Card
-     glows green, gently bounces, and marks a star."
-    "Finish: Exploring all cards triggers floating balloons and a
-     3-second applause sound effect!"
+  Washing hands is five steps in one order, and doing them out of order does
+  not wash your hands. That is the lesson, and only an ordering mechanic can
+  carry it - a four-choice quiz about soap cannot.
 
-  ONE CARD, FIVE BOARDS
-    The brief groups all five under a single numbered item, so this is one
-    menu entry with a tab strip rather than five entries. It also accepts
-    ?board=habits|appliances|traffic|symbols|calendar for direct entry,
-    following the games/room-sorter.html?room= precedent already in the
-    repo. Confirm the grouping matches how teachers expect to find it —
-    DEV-DOC-additional-content.md section 8, open question 6.
-
-  TRAFFIC AND SIGNS USE THE ICON SPRITE, NOT EMOJI
-    The source PDF itself renders ENTRY, EXIT, NO PARKING, ZEBRA CROSSING
-    and THIS WAY as tofu boxes — proof that emoji cannot carry these. All
-    twelve come from js/icon-sprite.js as real vector signs that keep
-    their statutory colours and stay sharp at any teacher zoom level.
-
-  ASSETS
-    Traffic, symbols and calendar need NOTHING. Habits and appliances
-    take optional photographs that fall back to emoji:
-        ../assets/new/images/habits/{brush,wash-hands,bath,healthy-food,dustbin}.jpg
-        ../assets/new/images/appliances/{washing-machine,iron,mixer}.jpg
+  Three panels. Each learner works independently and gets their own card in
+  their own panel; only panel 1 speaks, so three voices never overlap.
+================================================================================
 -->
-<html lang="en">
+<html lang="ml">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Daily Living &amp; Life Symbols</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Daily Living</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;overflow:hidden}
-  body{
-    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
-    background:linear-gradient(160deg,#ffffff,#f3f7fb 65%,#eaf1f8);
-    display:flex;flex-direction:column;
-    -webkit-tap-highlight-color:transparent;user-select:none;
-  }
-  h1{
-    text-align:center;padding:12px 60px 0;
-    font-size:calc(27px * var(--wall-scale,1));font-weight:800;color:#1e3a8a;
-  }
-  h1 .ml{display:block;font-size:calc(18px * var(--wall-scale,1));opacity:.72;font-weight:700}
-  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:8px}
-  #board .deck-card{background:#fff}
-
-  /* ── appliance step overlay ───────────────────────────────────── */
-  #steps{
-    position:fixed;inset:0;z-index:800;display:none;
-    background:rgba(15,23,42,.93);
-    align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:30px;
-  }
-  #steps.on{display:flex}
-  #stTitle{font-size:36px;font-weight:900;color:#fff;text-align:center}
-  #stTitle span{display:block;font-size:23px;opacity:.72;font-weight:700}
-  #stList{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;max-width:1100px}
-  .step{
-    width:290px;background:#fff;border-radius:24px;padding:22px;
-    display:flex;flex-direction:column;align-items:center;gap:12px;
-    box-shadow:0 14px 36px rgba(0,0,0,.35);
-  }
-  .step .n{
-    width:52px;height:52px;border-radius:50%;background:#2563eb;color:#fff;
-    display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;
-  }
-  .step .e{font-size:56px}
-  .step .txt{font-size:19px;font-weight:800;color:#1e293b;text-align:center;line-height:1.3}
-  #stClose{
-    padding:14px 34px;border-radius:18px;border:none;cursor:pointer;
-    background:linear-gradient(135deg,#fca5a5,#f87171);color:#fff;
-    font-family:inherit;font-weight:900;font-size:20px;
-  }
-
-  /* ── calendar ─────────────────────────────────────────────────── */
-  #cal{display:flex;flex-direction:column;gap:14px;align-items:center;padding:6px}
-  .cal-h{font-size:calc(26px * var(--wall-scale,1));font-weight:900;color:#1e3a8a}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
-  .cal-cell{
-    width:calc(74px * var(--wall-scale,1));height:calc(58px * var(--wall-scale,1));
-    border-radius:14px;background:#fff;border:3px solid #dbeafe;
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(165deg,#fff8fb,#fdeef5 70%,#f7e0ec);user-select:none;touch-action:none}
+  .row{display:flex;gap:.8vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .tile{border-radius:14px;background:#fff;border:3px solid #eccfdd;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 11px rgba(40,50,70,.13);
     display:flex;align-items:center;justify-content:center;
-    font-size:calc(20px * var(--wall-scale,1));font-weight:800;color:#1e293b;
-    cursor:pointer;transition:all .2s;
-  }
-  .cal-cell.dow{background:#eff6ff;color:#1d4ed8;font-size:calc(15px * var(--wall-scale,1));cursor:pointer}
-  .cal-cell.blank{background:transparent;border-color:transparent;cursor:default}
-  .cal-cell.today{border-color:#f59e0b;background:#fef3c7}
-  .cal-cell.lit{border-color:#22c55e;background:#dcfce7;
-    box-shadow:0 0 0 5px rgba(34,197,94,.2),0 0 20px rgba(34,197,94,.5)}
-  .cal-cell.bounce{animation:deckBounce .55s cubic-bezier(.28,.84,.42,1)}
-  .months{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:900px}
-  .month{
-    padding:9px 15px;border-radius:13px;background:#fff;border:3px solid #ddd6fe;
-    font-size:calc(15px * var(--wall-scale,1));font-weight:800;color:#4c1d95;cursor:pointer;
-  }
-  .month.lit{border-color:#22c55e;background:#dcfce7}
-  .cal-cap{font-size:calc(15px * var(--wall-scale,1));font-weight:800;color:#64748b}
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .em{font-size:clamp(20px,4vh,46px);line-height:1}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 4px 3px;text-align:center;
+    background:linear-gradient(to top,rgba(255,255,255,.97),rgba(255,255,255,.75) 70%,transparent);
+    font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(8px,1.3vh,13px);color:#26313b;line-height:1.3}
+  .tile.ok{border-color:#3fae7c;box-shadow:0 0 0 4px rgba(63,174,124,.3)}
+  .tile.no{animation:wob .44s ease-in-out;border-color:#e0a83c}
+  .tile.gone{opacity:.25;pointer-events:none}
+  .tile.sel{border-color:#f0872f;box-shadow:0 0 0 4px rgba(240,135,47,.3);transform:translateY(-4px)}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}
+                 60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+  .sq{width:clamp(44px,9vh,92px);height:clamp(44px,9vh,92px)}
+  .wide{width:clamp(58px,12vh,120px);height:clamp(44px,9vh,92px)}
+  .lead{font-weight:800;font-size:clamp(11px,1.9vh,20px);color:#2b3440;text-align:center;flex-shrink:0}
+  .leadml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
+    font-size:clamp(12px,2.1vh,23px);color:#8d2f52;text-align:center;flex-shrink:0}
+  .steps{display:flex;gap:.7vw;width:100%;justify-content:center;flex-wrap:wrap}
+  .slot{width:clamp(44px,9vh,92px);height:clamp(44px,9vh,92px);border:3px dashed #e0bdd0;
+    border-radius:14px;background:rgba(255,255,255,.6);display:flex;align-items:center;
+    justify-content:center;font-weight:900;color:#a8517a;font-size:clamp(13px,2.4vh,24px);
+    cursor:pointer;overflow:hidden;position:relative}
+  .slot.filled{border-style:solid;border-color:#3fae7c}
+  .slot img{width:100%;height:100%;object-fit:cover}
+  .slot.no{animation:wob .44s ease-in-out;border-color:#e0a83c}
 </style>
 </head>
 <body>
-
-<h1 id="title"></h1>
-<div id="tabs"></div>
-<div id="board"></div>
-
-<div id="steps">
-  <div id="stTitle"></div>
-  <div id="stList"></div>
-  <button id="stClose"></button>
-</div>
-
 <script src="../js/tts-engine.js"></script>
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
-<script src="../js/icon-sprite.js"></script>
-<script src="../js/flashcard-deck.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/three-up.js"></script>
 <script>
-WALL.init();
-ICONS.inject();
+WALL_BACKDROP.set('meadow');
+function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+var W='../assets/new/images/habits/';
 
-var H_IMG = '../assets/new/images/habits/';
-var A_IMG = '../assets/new/images/appliances/';
-
-var TITLE = { en: 'Daily Living, Life Symbols & Skills',
-              ml: 'ദൈനംദിന ജീവിതവും അടയാളങ്ങളും' };
-
-/* ═══════════════════════════════════════════════════════════════
-   1. GOOD HABITS
-   ═══════════════════════════════════════════════════════════════ */
-var HABITS = [
-  { id: 'brush',
-    label: { en: 'Brushing Teeth', ml: 'പല്ലു തേക്കുക' },
-    sub:   { en: 'Morning and night', ml: 'രാവിലെയും രാത്രിയും' },
-    art:   { emoji: '🪥', img: H_IMG + 'brush.jpg' }, tint: '#eff6ff' },
-
-  { id: 'wash-hands',
-    label: { en: 'Washing Hands', ml: 'കൈകൾ കഴുകുക' },
-    sub:   { en: 'With soap before eating', ml: 'ഭക്ഷണത്തിനു മുൻപ് സോപ്പിട്ട്' },
-    art:   { emoji: '🧼', img: H_IMG + 'wash-hands.jpg' }, tint: '#ecfeff' },
-
-  { id: 'bath',
-    label: { en: 'Bathing Daily', ml: 'ദിവസവും കുളിക്കുക' },
-    sub:   { en: 'A clean bath every day', ml: 'എന്നും വൃത്തിയായി കുളിക്കുക' },
-    art:   { emoji: '🚿', img: H_IMG + 'bath.jpg' }, tint: '#f0f9ff' },
-
-  { id: 'healthy-food',
-    label: { en: 'Eating Healthy Food', ml: 'നല്ല ഭക്ഷണം കഴിക്കുക' },
-    sub:   { en: 'Fruits and vegetables', ml: 'പഴങ്ങളും പച്ചക്കറികളും' },
-    art:   { emoji: '🥗', img: H_IMG + 'healthy-food.jpg' }, tint: '#f0fdf4' },
-
-  { id: 'dustbin',
-    label: { en: 'Using Dustbin', ml: 'ചവറ്റുകുട്ട ഉപയോഗിക്കുക' },
-    sub:   { en: 'Throw trash in the bin', ml: 'മാലിന്യം കുട്ടയിൽ ഇടുക' },
-    art:   { emoji: '🗑️', img: H_IMG + 'dustbin.jpg' }, tint: '#f8fafc' }
+/* Three routines rather than one, each a real photograph of the real object.
+   The previous version showed five near-identical handwashing frames and it
+   was not obvious what it was even about - so each routine now opens with a
+   titled picture of the thing being done, and the steps use the distinct
+   item photographs rather than frames from one sequence. */
+var ROUTINES=[
+ { key:'wash', ml:'\u0d15\u0d48 \u0d15\u0d34\u0d41\u0d15\u0d3e\u0d02', en:'Washing hands',
+   cover:W+'wash-hands.jpg',
+   steps:[
+    {img:W+'mug-of-water.webp', ml:'\u0d35\u0d46\u0d33\u0d4d\u0d33\u0d02 \u0d0e\u0d1f\u0d41\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+    {img:W+'soap.webp',         ml:'\u0d38\u0d4b\u0d2a\u0d4d\u0d2a\u0d4d \u0d07\u0d1f\u0d41\u0d15'},
+    {img:W+'handwash-3.webp',   ml:'\u0d28\u0d28\u0d4d\u0d28\u0d3e\u0d2f\u0d3f \u0d24\u0d47\u0d2f\u0d4d\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+    {img:W+'towel.webp',        ml:'\u0d24\u0d41\u0d35\u0d7c\u0d24\u0d4d\u0d24\u0d3f \u0d09\u0d23\u0d15\u0d4d\u0d15\u0d41\u0d15'}]},
+ { key:'teeth', ml:'\u0d2a\u0d32\u0d4d\u0d32\u0d4d \u0d24\u0d47\u0d2f\u0d4d\u0d15\u0d4d\u0d15\u0d3e\u0d02', en:'Brushing teeth',
+   cover:W+'brush.jpg',
+   steps:[
+    {img:W+'mug-of-water.webp', ml:'\u0d35\u0d46\u0d33\u0d4d\u0d33\u0d02 \u0d0e\u0d1f\u0d41\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+    {img:W+'toothbrush.webp',   ml:'\u0d2c\u0d4d\u0d30\u0d37\u0d4d \u0d0e\u0d1f\u0d41\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+    {img:W+'handwash-3.webp',   ml:'\u0d28\u0d28\u0d4d\u0d28\u0d3e\u0d2f\u0d3f \u0d24\u0d47\u0d2f\u0d4d\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+    {img:W+'towel.webp',        ml:'\u0d2e\u0d41\u0d16\u0d02 \u0d24\u0d41\u0d1f\u0d2f\u0d4d\u0d15\u0d4d\u0d15\u0d41\u0d15'}]},
+ { key:'groom', ml:'\u0d35\u0d43\u0d24\u0d4d\u0d24\u0d3f\u0d2f\u0d3e\u0d15\u0d3e\u0d02', en:'Getting ready',
+   cover:W+'bath.jpg',
+   steps:[
+    {img:W+'soap.webp',          ml:'\u0d15\u0d41\u0d33\u0d3f\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+    {img:W+'towel.webp',         ml:'\u0d24\u0d41\u0d35\u0d7c\u0d24\u0d4d\u0d24\u0d3f \u0d09\u0d23\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+    {img:W+'comb.webp',          ml:'\u0d2e\u0d41\u0d1f\u0d3f \u0d1a\u0d40\u0d15\u0d4d\u0d15\u0d41\u0d15'},
+    {img:W+'nail-clippers.webp', ml:'\u0d28\u0d16\u0d02 \u0d2e\u0d41\u0d31\u0d3f\u0d15\u0d4d\u0d15\u0d41\u0d15'}]}
 ];
 
-/* ═══════════════════════════════════════════════════════════════
-   2. HOUSEHOLD APPLIANCES — tap opens the three steps
-   ═══════════════════════════════════════════════════════════════ */
-var APPLIANCES = [
-  { id: 'washing-machine',
-    label: { en: 'Washing Machine', ml: 'വാഷിംഗ് മെഷീൻ' },
-    art:   { emoji: '🧺', img: A_IMG + 'washing-machine.jpg' }, tint: '#eff6ff',
-    steps: [
-      { e: '👕', en: 'Put dirty clothes inside the machine.',
-                 ml: 'അഴുക്കുവസ്ത്രം മെഷീനിൽ ഇടുക.' },
-      { e: '🧴', en: 'Add washing powder or soap.',
-                 ml: 'വാഷിംഗ് പൗഡർ ഇടുക.' },
-      { e: '🔘', en: 'Press the START button.',
-                 ml: 'സ്റ്റാർട്ട് ബട്ടൺ അമർത്തുക.' }
-    ] },
+TRIUP.start({
+  title:{en:'Daily Living',ml:'\u0d26\u0d48\u0d28\u0d02\u0d26\u0d3f\u0d28 \u0d1c\u0d40\u0d35\u0d3f\u0d24\u0d02'},
+  hint:{en:'Put the steps in order',ml:'\u0d15\u0d4d\u0d30\u0d2e\u0d24\u0d4d\u0d24\u0d3f\u0d32\u0d3e\u0d15\u0d4d\u0d15\u0d42'},
+  build:function(p, body, api){
+    var st=api.state(p); st.filled=0; st.held=null;
+    var cover=document.createElement('img');
+    cover.style.cssText='width:clamp(54px,11vh,116px);height:clamp(54px,11vh,116px);'+
+      'object-fit:cover;border-radius:14px;border:3px solid #eccfdd;flex-shrink:0';
+    var lead=document.createElement('div'); lead.className='leadml';
+    var slots=document.createElement('div'); slots.className='steps';
+    var rack=document.createElement('div'); rack.className='row';
+    body.appendChild(cover); body.appendChild(lead); body.appendChild(slots); body.appendChild(rack);
 
-  { id: 'iron',
-    label: { en: 'Iron Box', ml: 'ഇസ്തിരിപ്പെട്ടി' },
-    art:   { emoji: '🔌', img: A_IMG + 'iron.jpg' }, tint: '#fef2f2',
-    steps: [
-      { e: '👔', en: 'Place clothes flat on the iron board.',
-                 ml: 'വസ്ത്രം ഇസ്തിരിബോർഡിൽ നിവർത്തി വയ്ക്കുക.' },
-      { e: '🔥', en: 'Plug in and set to warm heat.',
-                 ml: 'പ്ലഗ് ഇട്ട് ചൂട് ക്രമീകരിക്കുക.' },
-      { e: '➡️', en: 'Move the iron gently across the clothes.',
-                 ml: 'പതുക്കെ ഇസ്തിരിയിടുക.' }
-    ] },
-
-  { id: 'mixer',
-    label: { en: 'Mixer Grinder', ml: 'മിക്സി' },
-    art:   { emoji: '🍹', img: A_IMG + 'mixer.jpg' }, tint: '#f5f3ff',
-    steps: [
-      { e: '🍎', en: 'Put fruits or items into the mixer jar.',
-                 ml: 'പഴങ്ങൾ മിക്സി ജാറിൽ ഇടുക.' },
-      { e: '🔒', en: 'Close the top lid tightly.',
-                 ml: 'അടപ്പ് മുറുകെ അടയ്ക്കുക.' },
-      { e: '🔛', en: 'Turn the knob to ON to blend.',
-                 ml: 'നോബ് ഓൺ ചെയ്ത് അരയ്ക്കുക.' }
-    ] }
-];
-
-/* ═══════════════════════════════════════════════════════════════
-   3. TRAFFIC SIGNALS
-   ═══════════════════════════════════════════════════════════════ */
-var TRAFFIC = [
-  { id: 'red',
-    label: { en: 'RED LIGHT', ml: 'ചുവപ്പ്' },
-    sub:   { en: 'STOP', ml: 'നിൽക്കുക' },
-    art:   { html: ICONS.use('traffic-red') }, tint: '#fef2f2' },
-
-  { id: 'yellow',
-    label: { en: 'YELLOW LIGHT', ml: 'മഞ്ഞ' },
-    sub:   { en: 'WAIT / GET READY', ml: 'കാത്തുനിൽക്കുക' },
-    art:   { html: ICONS.use('traffic-yellow') }, tint: '#fefce8' },
-
-  { id: 'green',
-    label: { en: 'GREEN LIGHT', ml: 'പച്ച' },
-    sub:   { en: 'GO', ml: 'പോകുക' },
-    art:   { html: ICONS.use('traffic-green') }, tint: '#f0fdf4' }
-];
-
-/* ═══════════════════════════════════════════════════════════════
-   4. SYMBOLS OF DAILY LIFE
-   ═══════════════════════════════════════════════════════════════ */
-var SYMBOLS = [
-  { id: 'entry',    icon: 'sign-entry',
-    label: { en: 'ENTRY', ml: 'പ്രവേശനം' },
-    sub:   { en: 'Way to go inside', ml: 'അകത്തേക്കുള്ള വഴി' } },
-
-  { id: 'exit',     icon: 'sign-exit',
-    label: { en: 'EXIT', ml: 'പുറത്തേക്ക്' },
-    sub:   { en: 'Way to go outside', ml: 'പുറത്തേക്കുള്ള വഴി' } },
-
-  { id: 'gents',    icon: 'sign-gents',
-    label: { en: 'GENTS', ml: 'പുരുഷന്മാർ' },
-    sub:   { en: "Men's washroom", ml: 'പുരുഷന്മാരുടെ ശുചിമുറി' } },
-
-  { id: 'ladies',   icon: 'sign-ladies',
-    label: { en: 'LADIES', ml: 'സ്ത്രീകൾ' },
-    sub:   { en: "Women's washroom", ml: 'സ്ത്രീകളുടെ ശുചിമുറി' } },
-
-  { id: 'this-way', icon: 'sign-this-way',
-    label: { en: 'THIS WAY', ml: 'ഈ വഴി' },
-    sub:   { en: 'Direction arrow', ml: 'ദിശ കാണിക്കുന്ന അമ്പ്' } },
-
-  { id: 'no-entry', icon: 'sign-no-entry',
-    label: { en: 'NO ENTRY', ml: 'പ്രവേശനമില്ല' },
-    sub:   { en: 'Do not go inside', ml: 'അകത്തേക്ക് കടക്കരുത്' } },
-
-  { id: 'zebra',    icon: 'sign-zebra-crossing',
-    label: { en: 'ZEBRA CROSSING', ml: 'സീബ്ര ക്രോസിംഗ്' },
-    sub:   { en: 'Safe path to cross the road', ml: 'റോഡ് മുറിച്ചുകടക്കാൻ' } },
-
-  { id: 'no-parking', icon: 'sign-no-parking',
-    label: { en: 'NO PARKING', ml: 'പാർക്കിംഗ് പാടില്ല' },
-    sub:   { en: 'Do not park vehicles here', ml: 'വാഹനം നിർത്തരുത്' } },
-
-  { id: 'no-smoking', icon: 'sign-no-smoking',
-    label: { en: 'NO SMOKING', ml: 'പുകവലി പാടില്ല' },
-    sub:   { en: 'Smoking is not allowed', ml: 'പുകവലിക്കരുത്' } }
-].map(function (s) {
-  s.art = { html: ICONS.use(s.icon) };
-  s.tint = '#ffffff';
-  return s;
-});
-
-/* ═══════════════════════════════════════════════════════════════
-   APPLIANCE STEP OVERLAY
-   ═══════════════════════════════════════════════════════════════ */
-var stepsBox = document.getElementById('steps');
-
-function openSteps(app) {
-  var b = WALL.tBoth(app.label);
-  document.getElementById('stTitle').innerHTML =
-    b.main + (b.alt && b.alt !== b.main ? '<span>' + b.alt + '</span>' : '');
-  document.getElementById('stList').innerHTML = app.steps.map(function (s, i) {
-    return '<div class="step"><div class="n">' + (i + 1) + '</div>'
-         + '<div class="e">' + s.e + '</div>'
-         + '<div class="txt">' + (WALL.isMl() ? s.ml : s.en) + '</div></div>';
-  }).join('');
-  stepsBox.classList.add('on');
-}
-function closeSteps() { stepsBox.classList.remove('on'); }
-
-WALL.bindTouch(document.getElementById('stClose'), function () {
-  WALL.sfx.tap(); closeSteps();
-});
-function paintClose() {
-  document.getElementById('stClose').textContent =
-    WALL.isMl() ? '✕ അടയ്ക്കുക' : '✕ Close';
-}
-WALL.onLang(paintClose);
-WALL.bindTouch(stepsBox, function (e) { if (e.target === stepsBox) closeSteps(); });
-
-/* ═══════════════════════════════════════════════════════════════
-   5. CALENDAR — a real current-month grid
-   ═══════════════════════════════════════════════════════════════ */
-var DOW = [
-  { en: 'Sun', ml: 'ഞായർ' }, { en: 'Mon', ml: 'തിങ്കൾ' }, { en: 'Tue', ml: 'ചൊവ്വ' },
-  { en: 'Wed', ml: 'ബുധൻ' }, { en: 'Thu', ml: 'വ്യാഴം' }, { en: 'Fri', ml: 'വെള്ളി' },
-  { en: 'Sat', ml: 'ശനി' }
-];
-var MONTHS = [
-  { en: 'January', ml: 'ജനുവരി' },   { en: 'February', ml: 'ഫെബ്രുവരി' },
-  { en: 'March',   ml: 'മാർച്ച്' },   { en: 'April',    ml: 'ഏപ്രിൽ' },
-  { en: 'May',     ml: 'മേയ്' },      { en: 'June',     ml: 'ജൂൺ' },
-  { en: 'July',    ml: 'ജൂലൈ' },      { en: 'August',   ml: 'ഓഗസ്റ്റ്' },
-  { en: 'September', ml: 'സെപ്റ്റംബർ' }, { en: 'October', ml: 'ഒക്ടോബർ' },
-  { en: 'November',  ml: 'നവംബർ' },  { en: 'December', ml: 'ഡിസംബർ' }
-];
-
-var calFound = false;
-
-function renderCalendar() {
-  var host = document.getElementById('board');
-  host.innerHTML = '';
-
-  var now = new Date();
-  var y = now.getFullYear(), m = now.getMonth(), today = now.getDate();
-  var first = new Date(y, m, 1).getDay();
-  var days = new Date(y, m + 1, 0).getDate();
-
-  var wrap = document.createElement('div');
-  wrap.id = 'cal';
-
-  var head = document.createElement('div');
-  head.className = 'cal-h';
-  head.textContent = WALL.t(MONTHS[m]) + ' ' + y;
-  wrap.appendChild(head);
-
-  var grid = document.createElement('div');
-  grid.className = 'cal-grid';
-
-  DOW.forEach(function (d) {
-    var c = document.createElement('div');
-    c.className = 'cal-cell dow';
-    c.textContent = WALL.t(d);
-    WALL.bindTouch(c, function () { hit(c); });
-    grid.appendChild(c);
-  });
-
-  for (var i = 0; i < first; i++) {
-    var b = document.createElement('div');
-    b.className = 'cal-cell blank';
-    grid.appendChild(b);
-  }
-
-  for (var d = 1; d <= days; d++) {
-    (function (d) {
-      var c = document.createElement('div');
-      c.className = 'cal-cell' + (d === today ? ' today' : '');
-      c.textContent = d;
-      WALL.bindTouch(c, function () {
-        hit(c);
-        // the brief's goal: find and highlight today
-        if (d === today && !calFound) {
-          calFound = true;
-          WALL.burstAt(c, null, 16);
-          setTimeout(function () { WALL.celebrate(); }, 300);
-        }
+    function deal(){
+      st.filled=0; st.held=null;
+      st.r = ROUTINES[Math.floor(Math.random()*ROUTINES.length)];
+      var WASH = st.r.steps;
+      cover.src = st.r.cover;
+      lead.textContent = st.r.ml;
+      if (p===0 && WALL.voiceOn()) WALL.say(st.r.ml);
+      api.pill(p,'step','0 / '+WASH.length);
+      slots.innerHTML=''; rack.innerHTML='';
+      WASH.forEach(function(_,i){
+        var s=document.createElement('div'); s.className='slot'; s.dataset.i=i;
+        s.textContent=(i+1);
+        WALL.bindTouch(s,function(){ place(s); });
+        slots.appendChild(s);
       });
-      grid.appendChild(c);
-    })(d);
+      sh(WASH.map(function(w,i){return {w:w,i:i};})).forEach(function(o){
+        var t=document.createElement('div'); t.className='tile sq'; t.dataset.i=o.i;
+        t.innerHTML='<img src="'+o.w.img+'" alt=""><div class="cap">'+o.w.ml+'</div>';
+        WALL.bindTouch(t,function(){
+          if(t.classList.contains('gone'))return;
+          if(st.held) st.held.classList.remove('sel');
+          st.held=(st.held===t)?null:t;
+          if(st.held){ st.held.classList.add('sel'); WALL.sfx.tap(); }
+        });
+        rack.appendChild(t);
+      });
+    }
+    function place(s){
+      if(!st.held||s.classList.contains('filled'))return;
+      if(s.dataset.i===st.held.dataset.i){
+        s.classList.add('filled');
+        s.innerHTML=st.held.innerHTML;
+        st.held.classList.add('gone'); st.held.classList.remove('sel'); st.held=null;
+        st.filled++; api.pill(p,'step',st.filled+' / '+st.r.steps.length);
+        WALL.tone(440+st.filled*60,.16,'sine',.12);
+        if(st.filled===st.r.steps.length)
+          api.win(p,{title:{en:'All done!',ml:'\u0d0e\u0d32\u0d4d\u0d32\u0d3e\u0d02 \u0d15\u0d34\u0d3f\u0d1e\u0d4d\u0d1e\u0d41!'},onAgain:deal});
+      } else { s.classList.add('no'); setTimeout(function(){s.classList.remove('no');},460); WALL.sfx.nudge(); }
+    }
+    deal();
   }
-  wrap.appendChild(grid);
-
-  var cap = document.createElement('div');
-  cap.className = 'cal-cap';
-  cap.textContent = WALL.isMl() ? 'ഇന്നത്തെ തീയതി തൊടുക' : "Tap today's date";
-  wrap.appendChild(cap);
-
-  var mons = document.createElement('div');
-  mons.className = 'months';
-  MONTHS.forEach(function (mo) {
-    var el = document.createElement('div');
-    el.className = 'month';
-    el.textContent = WALL.t(mo);
-    WALL.bindTouch(el, function () {
-      el.classList.add('lit'); WALL.sfx.tap();
-    });
-    mons.appendChild(el);
-  });
-  wrap.appendChild(mons);
-
-  host.appendChild(wrap);
-
-  function hit(c) {
-    c.classList.add('lit');
-    c.classList.remove('bounce'); void c.offsetWidth; c.classList.add('bounce');
-    WALL.sfx.tap();
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   BOARDS
-   ═══════════════════════════════════════════════════════════════ */
-var BOARDS = [
-  { key: 'habits',     title: { en: 'Good Habits',      ml: 'നല്ല ശീലങ്ങൾ' },      items: HABITS },
-  { key: 'appliances', title: { en: 'Appliances',       ml: 'വീട്ടുപകരണങ്ങൾ' },   items: APPLIANCES },
-  { key: 'traffic',    title: { en: 'Traffic Signals',  ml: 'ട്രാഫിക് സിഗ്നലുകൾ' }, items: TRAFFIC },
-  { key: 'symbols',    title: { en: 'Daily Symbols',    ml: 'ദൈനംദിന അടയാളങ്ങൾ' },  items: SYMBOLS },
-  { key: 'calendar',   title: { en: 'Calendar',         ml: 'കലണ്ടർ' },            custom: renderCalendar }
-];
-
-var active = null;
-var deck = null;
-
-function show(b) {
-  active = b;
-  closeSteps();
-  if (b.custom) { b.custom(); return; }
-
-  if (!deck || !deck.el || !deck.el.isConnected) {
-    deck = DECK.mount('#board', {
-      items: b.items,
-      speak: false,               // brief: zero voice narration
-      onTap: function (item) {
-        if (active && active.key === 'appliances') {
-          var a = APPLIANCES.filter(function (x) { return x.id === item.id; })[0];
-          if (a) setTimeout(function () { openSteps(a); }, 260);
-        }
-      }
-    });
-  } else {
-    deck.setItems(b.items);
-  }
-}
-
-function paintTitle() {
-  var b = WALL.tBoth(TITLE);
-  document.getElementById('title').innerHTML =
-    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
-  // the calendar draws its own text, so it must repaint on a language flip
-  if (active && active.custom) active.custom();
-}
-WALL.onLang(paintTitle);
-WALL.onSize(function () { if (active && active.custom) active.custom(); });
-
-var tabs = DECK.tabs('#tabs', BOARDS, show);
-
-var start = WALL.param('board');
-var startBoard = BOARDS.filter(function (b) { return b.key === start; })[0] || BOARDS[0];
-tabs.draw(startBoard.key);
-show(startBoard);
-
-WALL.toolbar({
-  lang: true, voice: true, size: true, height: true,
-  heightTarget: '#board',
-  reset: function () {
-    calFound = false;
-    closeSteps();
-    if (deck) deck.explored = {};
-    show(active || BOARDS[0]);
-  },
-  home: true
 });
 </script>
 <script src="../js/audio-manager.js"></script>

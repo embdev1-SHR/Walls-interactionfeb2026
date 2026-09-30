@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+════════════════════════════════════════════════════════════════════════════
+  A DAY AT WORK — Pangappara Blueroom, Vocational
+════════════════════════════════════════════════════════════════════════════
+  Four steps of one job, shuffled. The child puts them back in order.
+
+  This is the sequencing mechanic from Detective Wall, which the September
+  content had nothing like: the answer is an ORDER, not an item, so being
+  right means understanding how the work actually proceeds. A carpenter
+  measures before sawing and nails after. That is the content.
+
+  Steps come from the `day` array in js/jobs-data.js — all 18 jobs have one.
+  Wrong placements cost nothing and the tile returns to the rack.
+════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>A Day at Work</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(165deg,#f4fbff,#e6f2fb 70%,#dbeaf6);
+    user-select:none;touch-action:none}
+
+  .job{display:flex;align-items:center;gap:.8vw;flex-shrink:0}
+  .job .em{font-size:clamp(28px,5vh,54px);line-height:1}
+  .job .nm{font-weight:800;font-size:clamp(13px,2.1vh,24px);color:#1f3346}
+  .job .ml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(11px,1.7vh,18px);color:#5a7288;line-height:1.4}
+
+  /* the four numbered slots the steps go into */
+  .slots{display:flex;flex-direction:column;gap:.7vh;width:100%}
+  .slot{cursor:pointer;display:flex;align-items:center;gap:.7vw;min-height:clamp(34px,6.6vh,64px);
+    border:3px dashed #b9cfe2;border-radius:12px;background:rgba(255,255,255,.62);
+    padding:4px 8px;transition:border-color .16s,background .16s}
+  .slot .n{flex-shrink:0;width:clamp(20px,3.4vh,32px);height:clamp(20px,3.4vh,32px);
+    border-radius:50%;background:#2f6ea8;color:#fff;font-weight:800;
+    display:flex;align-items:center;justify-content:center;font-size:clamp(11px,1.8vh,17px)}
+  .slot.hot{border-color:#2f6ea8;background:rgba(47,110,168,.09)}
+  .slot.filled{border-style:solid;border-color:#3fae7c;background:rgba(63,174,124,.1)}
+  .slot.bad{animation:wob .42s ease-in-out;border-color:#e0a83c}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}
+                 60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+  /* 2x2 on review: four cards in one column made each thin and pushed the
+     last below the fold on a short panel. */
+  .rack{display:grid;grid-template-columns:1fr 1fr;gap:.6vh .6vw;width:100%}
+  .step{border-radius:12px;background:#fff;border:3px solid #cfe0ee;
+    padding:6px 10px;cursor:pointer;
+    box-shadow:0 3px 9px rgba(30,60,90,.11);transition:transform .14s,box-shadow .14s}
+  .step.held{box-shadow:0 0 0 5px rgba(47,110,168,.3);border-color:#2f6ea8;
+    transform:translateY(-4px)}
+  .step .en{font-weight:700;font-size:clamp(10.5px,1.7vh,17px);color:#1f3346;line-height:1.3}
+  .step .ml{font-family:'Noto Sans Malayalam',sans-serif;font-size:clamp(10px,1.5vh,15px);
+    color:#5a7288;line-height:1.45}
+  .step.placed{cursor:default;border-color:#3fae7c;box-shadow:none;flex:1;min-width:0}
+  .slot .step.placed{margin:0}
+</style>
+</head>
+<body>
+
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/jobs-data.js"></script>
+<script src="../js/three-up.js"></script>
+
+<script>
+WALL_BACKDROP.set('sky');
+var POOL = JOBS_DATA.all().filter(function (j) { return j.day && j.day.length === 4; });
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+TRIUP.start({
+  title: { en:'A Day at Work', ml:'ഒരു ജോലിദിനം' },
+  hint:  { en:'Put the steps in order', ml:'ക്രമത്തിൽ അടുക്കൂ' },
+
+  build: function (p, body, api) {
+    var st = api.state(p);
+    st.done = 0;
+    api.pill(p, 'jobs', '0');
+
+    var jobEl = document.createElement('div'); jobEl.className = 'job';
+    var slotsEl = document.createElement('div'); slotsEl.className = 'slots';
+    var rackEl = document.createElement('div'); rackEl.className = 'rack';
+    body.appendChild(jobEl); body.appendChild(slotsEl); body.appendChild(rackEl);
+
+    function round() {
+      var job = POOL[Math.floor(Math.random() * POOL.length)];
+      st.job = job; st.filled = 0;
+
+      jobEl.innerHTML = '<div class="em">' + job.emoji + '</div><div>' +
+        '<div class="nm">' + WALL.t(job.label) + '</div>' +
+        '<div class="ml">' + job.label.ml + '</div></div>';
+
+      slotsEl.innerHTML = '';
+      job.day.forEach(function (_, i) {
+        var s = document.createElement('div');
+        s.className = 'slot'; s.dataset.i = i;
+        s.innerHTML = '<div class="n">' + (i + 1) + '</div>';
+        slotsEl.appendChild(s);
+      });
+
+      held = null;
+      rackEl.innerHTML = '';
+      shuffle(job.day.map(function (d, i) { return { d: d, i: i }; })).forEach(function (o) {
+        var t = document.createElement('div');
+        t.className = 'step';
+        t.dataset.i = o.i;
+        t.innerHTML = '<div class="en">' + o.d.en + '</div><div class="ml">' + o.d.ml + '</div>';
+        WALL.bindTouch(t, function () { pick(t); });
+        rackEl.appendChild(t);
+      });
+
+      bindSlots();
+      if (p === 0 && WALL.voiceOn()) WALL.say(job.label.ml);
+    }
+
+    function slotAt(x, y) {
+      var hit = null;
+      slotsEl.querySelectorAll('.slot').forEach(function (s) {
+        var r = s.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) hit = s;
+      });
+      return hit;
+    }
+    function clearHot(){ slotsEl.querySelectorAll('.slot').forEach(function(s){s.classList.remove('hot');}); }
+
+    /* Click, not drag, on review. Tap a step to pick it up, tap a slot to
+       put it down. Same two decisions, none of the precision a drag needs. */
+    var held = null;
+    function pick(el) {
+      if (el.classList.contains('placed')) return;
+      if (held) held.classList.remove('held');
+      held = (held === el) ? null : el;
+      if (held) { held.classList.add('held'); WALL.sfx.tap(); }
+    }
+    function bindSlots() {
+      slotsEl.querySelectorAll('.slot').forEach(function (s) {
+        WALL.bindTouch(s, function () { if (held) place(held, s); });
+      });
+    }
+
+    function place(el, slot) {
+      if (slot.classList.contains('filled')) return;
+      if (slot.dataset.i === el.dataset.i) {
+        held = null;
+        el.classList.remove('held');
+        slot.classList.add('filled');
+        el.classList.add('placed');
+        slot.appendChild(el);
+        st.filled++;
+        WALL.tone(440 + st.filled * 60, 0.16, 'sine', 0.12);
+        if (st.filled === 4) {
+          st.done++;
+          api.pill(p, 'jobs', String(st.done));
+          setTimeout(function () {
+            api.popup(p, {
+              title: st.job.label,
+              body:  st.job.does,
+              close: { en:'Next job', ml:'അടുത്ത ജോലി' },
+              onClose: round
+            });
+          }, 420);
+        }
+      } else {
+        slot.classList.add('bad');
+        setTimeout(function () { slot.classList.remove('bad'); }, 440);
+        WALL.sfx.nudge();
+      }
+    }
+
+    round();
+  }
+});
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+{
+  "3d-viewer": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "alphabet-explorer": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "alphabet-explorer-multi": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "animal-drawing": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "arithmetica": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "arithmetica-multi": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "balloon-popper": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "butterfly-tracker": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "coloring-book": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "colour-match": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "creature-creator": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "feelings": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "fish-it": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "forest-animals": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "forest-walkthrough": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "fruit-counter": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "fruit-math": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "fruit-math-multi": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "fruit-ninja": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "fruits-vegetables": {
+    "state": "done",
+    "note": "Kept its existing mechanic (tracing, stacking, hunting, quizzing) and had the illustrated backdrop applied for consistency with the rebuilt set.",
+    "built": "2026-09-30"
+  },
+  "goalkeeper": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "hidden-animals": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "memory-match": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "model-cards": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "model-cards-2": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "money-counter": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "mosquito-clap": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "music-maker": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "number-crunch": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "number-crunch-multi": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "number-explorer": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "particle-playground": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "pattern-finder": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "pp-animal-homes": {
+    "state": "done",
+    "note": "Association - animal appears, pick where it sleeps. Decoys are real homes of other animals. horse dropped (stable.jpg rejected).",
+    "built": "2026-09-30"
+  },
+  "pp-animal-hunt": {
+    "state": "done",
+    "note": "Kept its existing mechanic (tracing, stacking, hunting, quizzing) and had the illustrated backdrop applied for consistency with the rebuilt set.",
+    "built": "2026-09-30"
+  },
+  "pp-animal-quiz": {
+    "state": "done",
+    "note": "Three panels. Audio fixed twice over: pool limited to the 6 animals with a verified file, and a speaker pad makes hearing it a TAP (a timer-fired sound is blocked by autoplay policy).",
+    "built": "2026-09-30"
+  },
+  "pp-animal-sort": {
+    "state": "done",
+    "note": "Three panels, one queue each. Binary sort with a per-child tally.",
+    "built": "2026-09-30"
+  },
+  "pp-animal-young": {
+    "state": "done",
+    "note": "Pairing. Square cards (382x382).",
+    "built": "2026-09-30"
+  },
+  "pp-animals": {
+    "state": "done",
+    "note": "Backdrop changed to meadow; cards capped at 240px so nothing clips.",
+    "built": "2026-09-30"
+  },
+  "pp-body-parts": {
+    "state": "legacy",
+    "note": "Reverted to the original. I had only added 3 lines of backdrop, never rebuilt it - that change is undone."
+  },
+  "pp-egg-count": {
+    "state": "done",
+    "note": "Egg shape: taller than wide with the wide end down, not a circle.",
+    "built": "2026-09-30"
+  },
+  "pp-hen-types": {
+    "state": "done",
+    "note": "Fine discrimination - every card is poultry, so the differences are within a category not between.",
+    "built": "2026-09-30"
+  },
+  "pp-mosquito-clap": {
+    "state": "done",
+    "note": "Rebuilt on the Fruit Ninja mechanic: targets launch on an arc with gravity, a SWIPE leaves a trail and kills what the line crosses. Butterflies are the bomb - cost a life, never points. Speed on the toolbar.",
+    "built": "2026-09-30"
+  },
+  "pp-odd-one-out": {
+    "state": "done",
+    "note": "Rebuilt as EXCLUSION - three animals share a group, one does not. Alternates which group supplies the stranger so it cannot be won by always picking the wild one. Kuttu says WHY after a correct tap.",
+    "built": "2026-09-30"
+  },
+  "pp-size-color": {
+    "state": "done",
+    "note": "Rebuilt as the sorter asked for: big / small / green bins, one object at a time, audio on each. Every object has exactly one true answer by design.",
+    "built": "2026-09-30"
+  },
+  "pp-size-quiz": {
+    "state": "done",
+    "note": "Three independent games - each panel deals its own pair and moves on immediately. Same object at two sizes, so it tests perception not knowledge.",
+    "built": "2026-09-30"
+  },
+  "pri-flower-match": {
+    "state": "done",
+    "note": "Three panels, own touches each. Fixed 4-column grid instead of wrapping, which is what overflowed before.",
+    "built": "2026-09-30"
+  },
+  "pri-flowers": {
+    "state": "done",
+    "note": "Rebuilt as visual search - find EVERY rose among 14 mixed blooms. jamanti and lotus excluded (rejected at asset review), not swapped for emoji.",
+    "built": "2026-09-30"
+  },
+  "pri-houses": {
+    "state": "done",
+    "note": "Three panels. No 3D - built on the approved photographs only, since the models were never usable.",
+    "built": "2026-09-30"
+  },
+  "pri-rooms": {
+    "state": "done",
+    "note": "Revised on review: rooms moved to the upper half and are TAPPED, not dragged. Fixed the bug that stopped object 2 appearing (burstAt was passed coordinates instead of an element and threw).",
+    "built": "2026-09-30"
+  },
+  "puzzle-balance": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "rhythm-dance": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "room-sorter": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "sec-bouquet": {
+    "state": "done",
+    "note": "Emoji/vector only, no photos. Order filling - two roses, three jasmine - so kind AND count are held at once.",
+    "built": "2026-09-30"
+  },
+  "sec-currency": {
+    "state": "done",
+    "note": "DRAWN coins and notes via currency-svg.js - all six currency photos were rejected, so nothing waits on a reshoot. Task: pay the exact amount. Overpaying is refused.",
+    "built": "2026-09-30"
+  },
+  "sec-daily-living": {
+    "state": "done",
+    "note": "Three routines (washing, teeth, getting ready) each opening with a titled photograph, steps using distinct item photos rather than five near-identical frames.",
+    "built": "2026-09-30"
+  },
+  "sec-first-aid": {
+    "state": "done",
+    "note": "Animated and DRAWN (all six photos rejected, no library replacement). Treat the injury IN ORDER - a plaster over a dirty cut is wrong.",
+    "built": "2026-09-30"
+  },
+  "sec-helpers-places": {
+    "state": "done",
+    "note": "Popup then match, as asked. Meet each helper with their own card, then place them where they work.",
+    "built": "2026-09-30"
+  },
+  "sec-mobile": {
+    "state": "done",
+    "note": "A phone that works: dial 100/101/102 and it connects, or read an arriving message and reply. Wrong digit clears the display like a real handset.",
+    "built": "2026-09-30"
+  },
+  "sec-name-build": {
+    "state": "done",
+    "note": "Square slots, five seeded names, Names button for the real class list (already applied before your note).",
+    "built": "2026-09-30"
+  },
+  "shape-sorter": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "underwater-explorer": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "vehicles": {
+    "state": "done",
+    "note": "Kept its existing mechanic (tracing, stacking, hunting, quizzing) and had the illustrated backdrop applied for consistency with the rebuilt set.",
+    "built": "2026-09-30"
+  },
+  "video-360-player": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "voc-cap-match": {
+    "state": "done",
+    "note": "Rebuilt: generalised beyond birthday to every job that wears a hat, using the drawn hats. Reversed from Job Hats - the HAT is shown and the worker chosen, so the pairing is tested both ways.",
+    "built": "2026-09-30"
+  },
+  "voc-instruments": {
+    "state": "done",
+    "note": "Drawn icons - the emoji set had one drum glyph for three instruments so three pads looked identical. Six distinct SVGs. Audio: noise cut to an attack transient, pitch carries the sound.",
+    "built": "2026-09-30"
+  },
+  "voc-party-decorate": {
+    "state": "done",
+    "note": "Banner name is a per-panel variable - tap to cycle the class list, one past the end opens the keyboard for a name not on it.",
+    "built": "2026-09-30"
+  },
+  "word-creator": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "word-explorer": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "word-matcher": {
+    "state": "legacy",
+    "note": "original Feb-Mar activity, already signed off"
+  },
+  "voc-job-hats": {
+    "state": "done",
+    "note": "FIXED FOR REAL: padding:9% resolved against the container width, collapsing the hat content box to zero so the images had nowhere to draw. Now 86x86 icons in 110x110 boxes.",
+    "built": "2026-09-30"
+  },
+  "voc-job-day": {
+    "state": "done",
+    "note": "Click to place - tap a step, tap its slot. No drag at all. 2x2 grid.",
+    "built": "2026-09-30"
+  },
+  "voc-job-tools": {
+    "state": "done",
+    "note": "New. Collect BOTH of a worker's tools from a tray of six - set completion, not single choice. All 18 jobs.",
+    "built": "2026-09-30"
+  },
+  "voc-job-call": {
+    "state": "done",
+    "note": "New. Situation -> pick the helper -> dial 100/101/102 on a real keypad. Two steps; the dial is the skill.",
+    "built": "2026-09-30"
+  },
+  "voc-job-where": {
+    "state": "done",
+    "note": "Square place cards (459x459). Tap to place.",
+    "built": "2026-09-30"
+  }
+}

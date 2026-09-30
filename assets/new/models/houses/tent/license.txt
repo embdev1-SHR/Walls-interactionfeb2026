@@ -1,0 +1,11 @@
+Model Information:
+* title:	Camping Tent
+* source:	https://sketchfab.com/3d-models/camping-tent-21cc274c86104fc997e0f172938d4205
+* author:	Adeel Qadir (https://sketchfab.com/adeelqadir2021)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Camping Tent" (https://sketchfab.com/3d-models/camping-tent-21cc274c86104fc997e0f172938d4205) by Adeel Qadir (https://sketchfab.com/adeelqadir2021) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

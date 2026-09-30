@@ -1,0 +1,112 @@
+{
+  "houses/mud-house.glb": {
+    "entry": "houses/mud-house/scene.gltf",
+    "name": "Thatched Hut",
+    "author": "stealth86",
+    "authorUrl": "https://sketchfab.com/stealth86",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-bbd820f6e49041b490eb08ac97abfda8",
+    "query": "mud hut thatched house",
+    "sizeMB": 11.2
+  },
+  "houses/bungalow.glb": {
+    "entry": "houses/bungalow/scene.gltf",
+    "name": "Fantasy Low-Poly Cabin",
+    "author": "simonaskLDE",
+    "authorUrl": "https://sketchfab.com/simonaskLDE",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-9ea62ef7342647c19978a0b053ac1ac0",
+    "query": "bungalow house low poly",
+    "sizeMB": 0
+  },
+  "houses/tent.glb": {
+    "entry": "houses/tent/scene.gltf",
+    "name": "Camping Tent",
+    "author": "Adeel Qadir",
+    "authorUrl": "https://sketchfab.com/adeelqadir2021",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-21cc274c86104fc997e0f172938d4205",
+    "query": "camping tent",
+    "sizeMB": 0.4
+  },
+  "rooms/kitchen.glb": {
+    "entry": "rooms/kitchen/scene.gltf",
+    "name": "Low Poly House Interior",
+    "author": "Paolo Mercogliano",
+    "authorUrl": "https://sketchfab.com/paolo.mercoglia",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-62b1714ef66f4e0d9f42dcd12efb3f52",
+    "query": "kitchen room interior low poly",
+    "sizeMB": 0.8
+  },
+  "rooms/bedroom.glb": {
+    "entry": "rooms/bedroom/scene.gltf",
+    "name": "Low-Poly PSX Style Wooden Interior Doors Pack",
+    "author": "Icevanilla",
+    "authorUrl": "https://sketchfab.com/vanillao03",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-02e442c6d4a24df29624808d058f010a",
+    "query": "bedroom interior low poly",
+    "sizeMB": 3.7
+  },
+  "rooms/living-room.glb": {
+    "entry": "rooms/living-room/scene.gltf",
+    "name": "Low poly living room",
+    "author": "Vladek",
+    "authorUrl": "https://sketchfab.com/vladek27",
+    "license": "Free Standard",
+    "modelUrl": "https://sketchfab.com/3d-models/none-df179eebec234798aa7fbe6c7eaf492a",
+    "query": "living room interior low poly",
+    "sizeMB": 0.2
+  },
+  "plants/tree.glb": {
+    "entry": "plants/tree/scene.gltf",
+    "name": "Maple tree",
+    "author": "atrodler",
+    "authorUrl": "https://sketchfab.com/atrodler",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-4b27adcf92f644bdabf8ecc6c5bef399",
+    "query": "tree low poly",
+    "sizeMB": 2
+  },
+  "plants/flower.glb": {
+    "entry": "plants/flower/scene.gltf",
+    "name": "(FREE) Low Poly Game Assets",
+    "author": "LowPolyBoy",
+    "authorUrl": "https://sketchfab.com/lowPolyBoy",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-bbbfbeccfc9047b8b3f15b1c90061cdf",
+    "query": "flower plant low poly",
+    "sizeMB": 1.3
+  },
+  "houses/modern-house.glb": {
+    "entry": "houses/modern-house/scene.gltf",
+    "name": "Low poly cartoon Home",
+    "author": "Omkar_suryavanshi",
+    "authorUrl": "https://sketchfab.com/Omkar_suryavanshi",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-a90011bff3f349ed91c4b29d9af0293d",
+    "query": "simple modern house cartoon low poly",
+    "sizeMB": 0.1
+  },
+  "rooms/bathroom.glb": {
+    "entry": "rooms/bathroom/scene.gltf",
+    "name": "FREE Low Poly Rubber Duck | Basic Materials",
+    "author": "wErT",
+    "authorUrl": "https://sketchfab.com/wErTT",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-6e52dbadef36426fb7fd8adaa00d2b66",
+    "query": "simple bathroom cartoon low poly",
+    "sizeMB": 0
+  },
+  "body/human.glb": {
+    "entry": "body/human/scene.gltf",
+    "name": "Set of cartoon characters Low-poly",
+    "author": "Pavlov DR",
+    "authorUrl": "https://sketchfab.com/pavlovdr",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/none-2c65f1af604847429f1ca44157ca4bfa",
+    "query": "human body cartoon low poly",
+    "sizeMB": 17.9
+  }
+}

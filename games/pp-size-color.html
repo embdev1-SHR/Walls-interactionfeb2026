@@ -1,339 +1,128 @@
 <!DOCTYPE html>
-<html lang="en">
+<!--
+================================================================================
+  Big Small Green - Pangappara Blueroom
+================================================================================
+  Rebuilt as the SORTER asked for: one object at a time comes up the queue and
+  goes into big, small, or green.
+
+  Each object carries exactly one true answer, deliberately. A big green ball
+  would have two, and a child who picked the "wrong" right answer would be
+  told they were wrong - which teaches nothing except that the wall is unfair.
+  The green items are all mid-sized and the sized items are all non-green.
+
+  Audio on every object, as asked: panel 1 names it aloud.
+
+  Three panels. Each child runs their own rounds and nobody waits for anyone
+  else to finish; only panel 1 speaks, so three voices never overlap.
+================================================================================
+-->
+<html lang="ml">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>Big / Small / Green</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Big Small Green</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',sans-serif;
-  background:linear-gradient(160deg,#FFF8E1 0%,#FFF3CD 50%,#FFEAA7 100%)}
-
-/* TOP zone: title + score — no interaction */
-.top-zone{position:fixed;top:0;left:0;right:0;height:46vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:10px;pointer-events:none;z-index:2}
-.scene-title{font-size:clamp(22px,3.8vw,42px);font-weight:900;color:#4A235A;
-  text-shadow:0 2px 8px rgba(255,255,255,.5);text-align:center}
-.score-badge{background:rgba(255,255,255,.55);backdrop-filter:blur(6px);
-  border:2px solid rgba(255,255,255,.7);border-radius:16px;
-  padding:8px 22px;font-weight:900;font-size:clamp(18px,2.8vw,30px);color:#1B5E20}
-.status-label{font-size:clamp(13px,1.8vw,19px);font-weight:700;color:#5D4037;text-align:center;
-  background:rgba(255,255,255,.4);border-radius:12px;padding:5px 16px}
-
-/* BOTTOM zone: all interactive */
-.bottom-zone{position:fixed;top:46vh;left:0;right:0;bottom:0;z-index:5;
-  display:flex;flex-direction:column;align-items:center;justify-content:space-around;
-  padding:10px 14px 18px}
-
-.prompt-label{font-size:clamp(16px,2.5vw,28px);font-weight:900;color:#4A235A;
-  text-align:center;text-shadow:0 1px 6px rgba(255,255,255,.6)}
-
-/* Objects row */
-.objects-row{display:flex;align-items:flex-end;justify-content:center;
-  gap:clamp(14px,3vw,44px)}
-.obj-card{border-radius:20px;border:3px solid rgba(255,255,255,.7);
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
-  padding:8px;cursor:pointer;
-  box-shadow:0 6px 18px rgba(0,0,0,.12);
-  transition:transform .2s,box-shadow .2s,opacity .35s;
-  -webkit-user-select:none;user-select:none;
-  background:rgba(255,255,255,.55);backdrop-filter:blur(4px)}
-.obj-card:active{transform:scale(.92)}
-.obj-card.selected{outline:4px solid #9B7FDB;transform:translateY(-10px) scale(1.08);
-  box-shadow:0 14px 32px rgba(155,127,219,.4)}
-.obj-card.matched{opacity:.3;pointer-events:none;transform:scale(.88)}
-.obj-emoji{line-height:1;display:block;text-align:center}
-.obj-label{font-size:clamp(10px,1.5vw,14px);font-weight:700;color:#4A235A;
-  text-align:center;margin-top:4px}
-
-/* Drop zones */
-.zones-row{display:flex;justify-content:center;gap:clamp(10px,2vw,36px);flex-wrap:wrap}
-.zone-card{border-radius:20px;border:3px dashed rgba(0,0,0,.25);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:10px 12px;cursor:pointer;
-  min-width:clamp(88px,15vw,154px);min-height:clamp(66px,9.5vh,100px);
-  transition:transform .2s;-webkit-user-select:none;user-select:none}
-.zone-card:active{transform:scale(.96)}
-.zone-card.correct-flash{animation:zFlash .5s ease}
-@keyframes zFlash{0%,100%{transform:scale(1)}40%{transform:scale(1.12);box-shadow:0 0 28px rgba(76,175,80,.5)}}
-.zone-card.wrong-flash{animation:zWrong .4s ease}
-@keyframes zWrong{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
-.zone-icon{font-size:clamp(24px,4.2vw,46px);margin-bottom:4px}
-.zone-label{font-size:clamp(13px,1.8vw,20px);font-weight:900;color:#fff;text-align:center}
-
-/* Language helpers (injected by pre-primary-common) */
-</style>
-<style>
-/* Teacher height control, retrofitted. Size is handled by browser zoom in the
-   boot script below - see there for why a CSS scale cannot work here. */
-body > *:not(#wallToolbar):not(script):not(style):not(link) {
-  transform: translateY(var(--wall-lift, 0px));
-}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:linear-gradient(165deg,#fbfdf4,#f2f8e4 70%,#e8f0d6);user-select:none;touch-action:none}
+  .row{display:flex;gap:.7vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .leadml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
+    font-size:clamp(11px,2vh,22px);color:#5b6f2b;text-align:center;flex-shrink:0}
+  /* Cards are square and sized from the PANEL, never the viewport: a panel is
+     a third of the wall at three players, and viewport units overflow it. */
+  .tile{flex:0 0 auto;aspect-ratio:1;width:clamp(40px,8.4vh,88px);
+    border-radius:14px;background:#fff;border:3px solid #d2e0b6;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(40,50,70,.13);
+    display:grid;place-items:center;
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .em{font-size:clamp(18px,3.6vh,42px);line-height:1}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;text-align:center;
+    background:linear-gradient(to top,rgba(255,255,255,.97),rgba(255,255,255,.75) 70%,transparent);
+    font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
+    font-size:clamp(7px,1.2vh,12px);color:#26313b;line-height:1.25}
+  .tile.ok{border-color:#3fae7c;box-shadow:0 0 0 4px rgba(63,174,124,.3)}
+  .tile.no{animation:wob .44s ease-in-out;border-color:#e0a83c}
+  .tile.gone{opacity:.22;pointer-events:none}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}
+                 60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+  .big{width:clamp(56px,13vh,132px)}
+  .bins{display:flex;gap:.7vw;width:100%;flex-shrink:0}
+  .bin{flex:1;min-width:0;border-radius:16px;border:5px dashed #cbd9ac;
+    background:rgba(255,255,255,.65);padding:7px 3px;cursor:pointer;text-align:center;
+    font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
+    font-size:clamp(10px,1.8vh,20px);color:#4a5a26;transition:border-color .16s,transform .16s}
+  .bin:active{transform:scale(.98)}
+  .bin.good{border-color:#3fae7c;border-style:solid}
+  .bin.bad{animation:wob .44s ease-in-out;border-color:#e0a83c}
+  .obj{font-size:clamp(40px,9vh,100px);line-height:1;flex-shrink:0}
 </style>
 </head>
 <body>
-
-<!-- TOP: display only -->
-<div class="top-zone">
-  <div class="scene-title">
-    <span class="pp-en">🌿 Big · Small · Green</span>
-    <span class="pp-ml">🌿 വലുത് · ചെറുത് · പച്ച</span>
-  </div>
-  <div class="score-badge">⭐ <span id="scoreNum">0</span></div>
-  <div class="status-label" id="statusLabel">
-    <span class="pp-en">Tap an object, then tap its zone!</span>
-    <span class="pp-ml">വസ്തു തൊടൂ, പിന്നെ സോൺ തൊടൂ!</span>
-  </div>
-</div>
-
-<!-- BOTTOM: interactive -->
-<div class="bottom-zone">
-  <div class="prompt-label" id="promptLabel">Which is BIG?</div>
-  <div class="objects-row" id="objectsRow"></div>
-  <div class="zones-row"   id="zonesRow"></div>
-</div>
-
 <script src="../js/tts-engine.js"></script>
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
-<script src="../js/audio-manager.js"></script>
-<script src="../js/pre-primary-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/three-up.js"></script>
 <script>
-/* ── Large item pool — draw randomly without repeating ────────── */
-const ITEM_POOL = {
-  BIG: [
-    {emoji:'🐘',size:80,en:'Elephant',  ml:'ആന'},
-    {emoji:'🦖',size:80,en:'T-Rex',     ml:'ദിനോസർ'},
-    {emoji:'🐋',size:86,en:'Whale',     ml:'തിമിംഗലം'},
-    {emoji:'🦁',size:74,en:'Lion',      ml:'സിംഹം'},
-    {emoji:'🐻',size:74,en:'Bear',      ml:'കരടി'},
-    {emoji:'🦒',size:78,en:'Giraffe',   ml:'ജിറാഫ്'},
-    {emoji:'🐊',size:76,en:'Crocodile', ml:'മുതല'},
-    {emoji:'🦏',size:80,en:'Rhino',     ml:'കണ്ടാമൃഗം'},
-    {emoji:'🦛',size:78,en:'Hippo',     ml:'ഹിപ്പോ'},
-    {emoji:'🐃',size:76,en:'Buffalo',   ml:'പോത്ത്'},
-  ],
-  SMALL: [
-    {emoji:'🐭',size:46,en:'Mouse',      ml:'എലി'},
-    {emoji:'🐝',size:42,en:'Bee',        ml:'തേനീച്ച'},
-    {emoji:'🐞',size:40,en:'Ladybug',    ml:'ലേഡിബഗ്'},
-    {emoji:'🐜',size:38,en:'Ant',        ml:'ഉറുമ്പ്'},
-    {emoji:'🦋',size:44,en:'Butterfly',  ml:'ചിത്രശലഭം'},
-    {emoji:'🐛',size:42,en:'Caterpillar',ml:'ഇലക്കൊമ്പൻ'},
-    {emoji:'🦗',size:42,en:'Cricket',    ml:'ഞൊണ്ടൻ'},
-    {emoji:'🐌',size:40,en:'Snail',      ml:'ഒച്ച്'},
-    {emoji:'🐡',size:44,en:'Pufferfish', ml:'മീൻ'},
-    {emoji:'🐦',size:44,en:'Bird',       ml:'കിളി'},
-  ],
-  GREEN: [
-    {emoji:'🐸',size:58,en:'Frog',    ml:'തവള'},
-    {emoji:'🌳',size:76,en:'Tree',    ml:'മരം'},
-    {emoji:'🌿',size:46,en:'Leaf',    ml:'ഇല'},
-    {emoji:'🥦',size:52,en:'Broccoli',ml:'ബ്രൊക്കോളി'},
-    {emoji:'🐢',size:56,en:'Turtle',  ml:'ആമ'},
-    {emoji:'🌵',size:60,en:'Cactus',  ml:'കള്ളിമുൾ'},
-    {emoji:'🥬',size:52,en:'Lettuce', ml:'ഇലക്കറി'},
-    {emoji:'🍃',size:46,en:'Herbs',   ml:'ഇലകൾ'},
-    {emoji:'🫒',size:46,en:'Olive',   ml:'ഒലിവ്'},
-    {emoji:'🥒',size:52,en:'Cucumber',ml:'വെള്ളരി'},
-  ]
-};
-
-const ZONES = [
-  {key:'BIG',   icon:'🐘',labelEn:'BIG',   labelMl:'വലുത്',  bg:'#FF8A65',border:'#FF5722'},
-  {key:'SMALL', icon:'🐭',labelEn:'SMALL', labelMl:'ചെറുത്', bg:'#64B5F6',border:'#1565C0'},
-  {key:'GREEN', icon:'🌿',labelEn:'GREEN', labelMl:'പച്ച',   bg:'#81C784',border:'#2E7D32'},
+WALL_BACKDROP.set('meadow');
+function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+/* one true answer each: green items are mid-sized, sized items are not green */
+var OBJ=[
+ {em:'\ud83d\udc18',ml:'\u0d06\u0d28',bin:'big'},
+ {em:'\ud83d\udc1c',ml:'\u0d09\u0d31\u0d41\u0d2e\u0d4d\u0d2a\u0d4d',bin:'small'},
+ {em:'\ud83c\udf3f',ml:'\u0d07\u0d32',bin:'green'},
+ {em:'\ud83d\udc0b',ml:'\u0d24\u0d3f\u0d2e\u0d3f\u0d02\u0d17\u0d32\u0d02',bin:'big'},
+ {em:'\ud83d\udc1d',ml:'\u0d24\u0d47\u0d28\u0d40\u0d1a\u0d4d\u0d1a',bin:'small'},
+ {em:'\ud83e\udd92',ml:'\u0d1c\u0d3f\u0d31\u0d3e\u0d2b',bin:'big'},
+ {em:'\ud83d\udc1e',ml:'\u0d32\u0d47\u0d21\u0d3f\u0d2c\u0d17\u0d4d',bin:'small'},
+ {em:'\ud83e\udd66',ml:'\u0d2c\u0d4d\u0d30\u0d4a\u0d15\u0d4d\u0d15\u0d4b\u0d33\u0d3f',bin:'green'},
+ {em:'\ud83e\udd52',ml:'\u0d15\u0d4d\u0d2f\u0d42\u0d15\u0d4d\u0d15\u0d02\u0d2c\u0d7c',bin:'green'}
 ];
+var BINS=[{k:'big',ml:'\u0d35\u0d32\u0d41\u0d24\u0d4d'},{k:'small',ml:'\u0d1a\u0d46\u0d31\u0d41\u0d24\u0d4d'},{k:'green',ml:'\u0d2a\u0d1a\u0d4d\u0d1a'}];
 
-const PROMPTS_EN = [
-  'Which is BIG?','Which is SMALL?','Which is GREEN?',
-  'Sort them all!','Find the BIG one!','Spot the small one!','Find the green!'
-];
-const PROMPTS_ML = [
-  'ഏതാണ് വലുത്?','ഏതാണ് ചെറുത്?','ഏതാണ് പച്ച?',
-  'എല്ലാം തരംതിരിക്കൂ!','വലിയത് കണ്ടെത്തൂ!','ചെറിയത് കണ്ടെത്തൂ!','പച്ചയേത്?'
-];
+TRIUP.start({
+  title:{en:'Big, Small, Green',ml:'\u0d35\u0d32\u0d41\u0d24\u0d4d, \u0d1a\u0d46\u0d31\u0d41\u0d24\u0d4d, \u0d2a\u0d1a\u0d4d\u0d1a'},
+  hint:{en:'Put it where it belongs',ml:'\u0d36\u0d30\u0d3f\u0d2f\u0d3e\u0d2f \u0d38\u0d4d\u0d25\u0d32\u0d24\u0d4d\u0d24\u0d4d \u0d07\u0d1f\u0d42'},
+  build:function(p, body, api){
+    var st=api.state(p);
+    var obj=document.createElement('div'); obj.className='obj';
+    var lead=document.createElement('div'); lead.className='leadml';
+    var bins=document.createElement('div'); bins.className='bins';
+    body.appendChild(obj); body.appendChild(lead); body.appendChild(bins);
+    BINS.forEach(function(b){
+      var d=document.createElement('div'); d.className='bin'; d.dataset.k=b.k;
+      d.textContent=b.ml;
+      WALL.bindTouch(d,function(){ drop(d,b.k); });
+      bins.appendChild(d);
+    });
 
-/* ── Shuffled pools (no-repeat within a cycle) ───────────────── */
-function shuffle(arr) {
-  const a=[...arr];
-  for (let i=a.length-1;i>0;i--) { const j=~~(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-  return a;
-}
-
-const pools = {};
-const cursors = {};
-function initPools() {
-  ['BIG','SMALL','GREEN'].forEach(cat => {
-    pools[cat]   = shuffle(ITEM_POOL[cat]);
-    cursors[cat] = 0;
-  });
-}
-
-function nextItem(cat) {
-  if (cursors[cat] >= pools[cat].length) {
-    pools[cat]   = shuffle(ITEM_POOL[cat]);
-    cursors[cat] = 0;
-  }
-  return pools[cat][cursors[cat]++];
-}
-
-let lastPromptIdx = -1;
-function pickPrompt() {
-  let idx;
-  do { idx=~~(Math.random()*PROMPTS_EN.length); } while(idx===lastPromptIdx);
-  lastPromptIdx = idx;
-  return {en: PROMPTS_EN[idx], ml: PROMPTS_ML[idx]};
-}
-
-/* ── State ───────────────────────────────────────────────────── */
-let score    = 0;
-let selected = null;
-let isMl     = false;
-let currentPrompt = {en:'Which is BIG?', ml:'ഏതാണ് വലുത്?'};
-
-PP.init();
-/* PP's own toolbar is not inserted: it pins to the same place as the WALL
-   toolbar and the two overlapped. WALL's is kept because it also carries size,
-   height and voice. PP's language mode is a body class its CSS depends on, and
-   nothing sets it once PP's button is gone, so drive it from WALL's toggle. */
-/* PP's own toolbar is not inserted: it pins to the same place as the WALL
-   toolbar and the two overlapped. WALL's is kept because it also carries size,
-   height and voice. `pp-ml-mode` is the body class PP's CSS depends on, and
-   nothing sets it once PP's button is gone, so it is driven from here. */
-WALL.onLang(ml => {
-  document.body.classList.toggle('pp-ml-mode', ml);
-  isMl = ml;
-  updatePromptLabel();
-});
-
-initPools();
-
-/* ── Build a new round ───────────────────────────────────────── */
-function buildRound() {
-  const big   = {...nextItem('BIG'),   answer:'BIG'};
-  const small = {...nextItem('SMALL'), answer:'SMALL'};
-  const green = {...nextItem('GREEN'), answer:'GREEN'};
-  const objects = shuffle([big, small, green]);
-
-  currentPrompt = pickPrompt();
-  updatePromptLabel();
-
-  /* Ask the question out loud. This activity is for children who are still
-     learning big/small/green — expecting them to read the prompt is the one
-     assumption the whole task should not rest on. */
-  if (typeof WALL !== 'undefined') {
-    WALL.say(isMl ? currentPrompt.ml : currentPrompt.en, isMl ? 'ml' : 'en');
-  }
-
-  const objRow  = document.getElementById('objectsRow');
-  const zoneRow = document.getElementById('zonesRow');
-  objRow.innerHTML = ''; zoneRow.innerHTML = '';
-  selected = null;
-
-  objects.forEach((obj, i) => {
-    const card = document.createElement('div');
-    card.className = 'obj-card';
-    card.dataset.answer = obj.answer;
-    card.dataset.idx    = i;
-    card.innerHTML = `
-      <span class="obj-emoji" style="font-size:${obj.size}px">${obj.emoji}</span>
-      <span class="obj-label">
-        <span class="pp-en">${obj.en}</span>
-        <span class="pp-ml">${obj.ml}</span>
-      </span>`;
-    PP.bindTouch(card, () => selectObj(card));
-    objRow.appendChild(card);
-  });
-
-  ZONES.forEach(z => {
-    const zcard = document.createElement('div');
-    zcard.className = 'zone-card';
-    zcard.dataset.key = z.key;
-    zcard.style.background  = z.bg;
-    zcard.style.borderColor = z.border;
-    zcard.innerHTML = `
-      <span class="zone-icon">${z.icon}</span>
-      <span class="zone-label">
-        <span class="pp-en">${z.labelEn}</span>
-        <span class="pp-ml">${z.labelMl}</span>
-      </span>`;
-    PP.bindTouch(zcard, () => dropOnZone(zcard));
-    zoneRow.appendChild(zcard);
-  });
-}
-
-function updatePromptLabel() {
-  document.getElementById('promptLabel').textContent =
-    isMl ? currentPrompt.ml : currentPrompt.en;
-}
-
-function selectObj(card) {
-  if (card.classList.contains('matched')) return;
-  if (selected) selected.classList.remove('selected');
-  if (selected === card) { selected=null; return; }
-  selected = card;
-  card.classList.add('selected');
-}
-
-function dropOnZone(zcard) {
-  if (!selected) return;
-  const isCorrect = selected.dataset.answer === zcard.dataset.key;
-  if (isCorrect) {
-    selected.classList.remove('selected');
-    selected.classList.add('matched');
-    zcard.classList.add('correct-flash');
-    setTimeout(() => zcard.classList.remove('correct-flash'), 550);
-    score++;
-    document.getElementById('scoreNum').textContent = score;
-    selected = null;
-    const matched = document.querySelectorAll('.obj-card.matched').length;
-    if (matched === 3) {
-      // All 3 matched — brief pause then new round immediately
-      setTimeout(buildRound, 700);
+    function next(){
+      if(!st.queue.length) return api.win(p,{
+        title:{en:'All sorted!',ml:'\u0d0e\u0d32\u0d4d\u0d32\u0d3e\u0d02 \u0d24\u0d30\u0d02\u0d24\u0d3f\u0d30\u0d3f\u0d1a\u0d4d\u0d1a\u0d41!'},onAgain:start});
+      st.cur=st.queue.shift();
+      obj.textContent=st.cur.em;
+      lead.textContent=st.cur.ml;
+      api.pill(p,'sorted',st.done+' / '+OBJ.length);
+      if(p===0&&WALL.voiceOn()) WALL.say(st.cur.ml);
     }
-  } else {
-    zcard.classList.add('wrong-flash');
-    setTimeout(() => zcard.classList.remove('wrong-flash'), 450);
+    function drop(d,k){
+      if(!st.cur) return;
+      if(k===st.cur.bin){
+        d.classList.add('good'); setTimeout(function(){d.classList.remove('good');},450);
+        st.done++; WALL.tone(440+st.done*60,.16,'sine',.12); st.cur=null; next();
+      } else { d.classList.add('bad'); setTimeout(function(){d.classList.remove('bad');},460); WALL.sfx.nudge(); }
+    }
+    function start(){ st.done=0; st.queue=sh(OBJ); next(); }
+    start();
   }
-}
-
-buildRound();
+});
 </script>
-<script>
-/* Retrofitted teacher controls. Last in the body so the activity has already
-   built its DOM before the toolbar mounts. */
-(function () {
-  if (typeof WALL === 'undefined') return;
-  WALL.init();
-
-  /* Size, on a layout that predates --wall-scale.
-     Newer activities scale by writing calc(Npx * var(--wall-scale,1)) on every
-     dimension. These pages instead pin content to the viewport, so any CSS
-     scale on a container is cancelled out by its own percentage children.
-     Browser zoom changes the viewport itself, which is why it works where that
-     does not. It scales the toolbar along with the activity.
-
-     Electron persists zoom per origin, and every activity is file://, so a size
-     chosen here would silently follow the child into the next activity and into
-     the menu. Reset on the way in and on the way out. */
-  var wf = null;
-  try { wf = require('electron').webFrame; } catch (e) {}
-  if (wf) {
-    wf.setZoomFactor(1);
-    window.addEventListener('pagehide', function () {
-      try { wf.setZoomFactor(1); } catch (e) {}
-    });
-    WALL.onSize(function (s) {
-      try { wf.setZoomFactor(s); } catch (e) {}
-    });
-  }
-
-  WALL.toolbar({ lang: true, voice: true, size: !!wf, height: true, home: true });
-})();
-</script>
+<script src="../js/audio-manager.js"></script>
 </body>
 </html>

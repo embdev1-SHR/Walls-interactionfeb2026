@@ -1,101 +1,220 @@
 <!DOCTYPE html>
 <!--
 ════════════════════════════════════════════════════════════════════════════
-  KERALA FLOWERS FLASHCARDS — Pangappara Blueroom, Primary item #4
-  Six flowers · calm music only · no voice, no sound effects
+  FLOWERS OF KERALA — Pangappara Blueroom, Primary
 ════════════════════════════════════════════════════════════════════════════
 
-  BRIEF
-    "All flower flashcards MUST load in EXTRA LARGE size by default using
-     clear, high-definition real photos on simple, clutter-free
-     backgrounds."
-    "Soft, calm background music plays softly in the room. No voice
-     narration or sound effects."
-    "The touched flashcard highlights with a bright, glowing green border.
-     The card does a gentle, cheerful bounce in place. A soft glowing star
-     icon appears at the top corner of the card."
+  Rebuilt. The previous version was a LEARN.start() config running the same
+  meet-then-find stages as every other primary activity, which is what the
+  review called copy-pasted.
 
-  THE QUIETEST ACTIVITY IN THE SET
-    This is the only board the brief asks to be silent on tap — no voice
-    AND no sound effects, just calm background music. So speak:false and
-    every card carries a no-op sound. The star, glow and bounce still
-    give the child their feedback; it is purely visual here by design.
-    Do not "fix" the silence.
+  The mechanic here is VISUAL SEARCH, taken from hidden-animals — the one
+  proven shape in the original build with no equivalent in the new content.
+  A garden fills with flowers of five kinds, all mixed together. കുട്ടു
+  names one kind and the child taps EVERY one of that kind.
 
-  ASSETS
-    Flowers come from js/flower-data.js, shared with Flower Matching and
-    Flower Bouquet. Photographs are optional and fall back to emoji.
-        ../assets/new/images/flowers/{rose,mulla,jamanti,lotus,
-                                      kanikonna,chembarathi}.jpg
+  Finding all six roses among fourteen flowers is a different demand from
+  picking a rose out of a row of four: the child has to keep searching after
+  the first success, and hold what they are looking for while they scan. A
+  row of four can be answered by elimination; a garden cannot.
+
+  ART: jamanti and lotus were rejected at asset review, so five of the seven
+  flowers are in play. They are not replaced with emoji — a photograph and a
+  cartoon side by side would give away which is which.
+
+  MALAYALAM comes from js/flower-data.js, shared with pri-flower-match.
+════════════════════════════════════════════════════════════════════════════
 -->
-<html lang="en">
+<html lang="ml">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Kerala Flowers</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Flowers of Kerala</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;overflow:hidden}
-  body{
-    font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
-    background:
-      radial-gradient(circle at 15% 15%, #fff1f2 0%, transparent 55%),
-      radial-gradient(circle at 85% 85%, #fefce8 0%, transparent 55%),
-      linear-gradient(160deg,#ffffff,#f7fbf6);
-    display:flex;flex-direction:column;
-    -webkit-tap-highlight-color:transparent;user-select:none;
-  }
-  h1{
-    text-align:center;padding:16px 60px 6px;
-    font-size:calc(30px * var(--wall-scale,1));font-weight:800;color:#9d174d;
-  }
-  h1 .ml{display:block;font-size:calc(20px * var(--wall-scale,1));opacity:.72;font-weight:700}
-  #board{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+  body{font-family:'Baloo 2','Noto Sans Malayalam',system-ui,sans-serif;
+    background:radial-gradient(circle at 20% 4%,#fff6fa 0%,transparent 55%),
+               linear-gradient(170deg,#ffffff,#f4f9f2 60%,#e6f1e3);
+    user-select:none;touch-action:none}
+
+  /* top band: information only, nothing to tap */
+  #ask{position:absolute;top:0;left:0;right:0;height:26%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:.6vh;padding:1vh 4vw 0;pointer-events:none;text-align:center}
+  #askEn{font-weight:800;font-size:clamp(17px,3.2vw,32px);color:#263a2a}
+  #askMl{font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
+    font-size:clamp(19px,3.6vw,38px);color:#8d2f52}
+  #tally{font-weight:800;font-size:clamp(12px,1.8vw,19px);color:#6d8272;letter-spacing:.06em}
+  #swatch{width:clamp(38px,6vw,64px);height:clamp(38px,6vw,64px);border-radius:12px;
+    object-fit:cover;border:3px solid #fff;box-shadow:0 3px 10px rgba(40,60,40,.2)}
+
+  /* the garden: lower three-quarters, all of it reachable */
+  #garden{position:absolute;top:27%;left:0;right:0;bottom:2vh;overflow:hidden}
+  .bloom{position:absolute;border-radius:50%;overflow:hidden;cursor:pointer;
+    border:4px solid #fff;box-shadow:0 4px 12px rgba(40,60,40,.22);
+    transition:transform .16s,box-shadow .16s,opacity .3s}
+  .bloom img{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
+  .bloom:active{transform:scale(.93)}
+  .bloom.found{border-color:#3fae7c;box-shadow:0 0 0 5px rgba(63,174,124,.35);
+    animation:pick .4s cubic-bezier(.3,1.5,.5,1);cursor:default}
+  @keyframes pick{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1.06)}}
+  .bloom.wrong{animation:wob .44s ease-in-out}
+  @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-9px) rotate(-5deg)}
+                 40%{transform:translateX(9px) rotate(5deg)}
+                 60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+  #done{position:absolute;inset:0;z-index:90;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:2vh;padding:6vw;text-align:center;
+    background:rgba(255,255,255,.95);backdrop-filter:blur(6px)}
+  #done.show{display:flex}
+  #done h2{font-size:clamp(23px,4.8vw,48px);color:#2a9d6b;font-weight:800}
+  #done .ml{font-family:'Noto Sans Malayalam',sans-serif;
+    font-size:clamp(15px,2.8vw,26px);color:#4a6a52}
+  #again{border:0;border-radius:16px;background:#8d2f52;color:#fff;font-weight:800;
+    font-size:clamp(15px,2.6vw,24px);padding:14px 40px;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
 
-<h1 id="title"></h1>
-<div id="board"></div>
+<div id="ask">
+  <div id="askEn"></div>
+  <div id="askMl"></div>
+  <img id="swatch" alt="">
+  <div id="tally"></div>
+</div>
+<div id="garden"></div>
+
+<div id="done">
+  <h2>You found them all!</h2>
+  <div class="ml">എല്ലാ പൂക്കളും കണ്ടെത്തി!</div>
+  <button id="again">↺ വീണ്ടും</button>
+</div>
 
 <script src="../js/tts-engine.js"></script>
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>
 <script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
 <script src="../js/flower-data.js"></script>
-<script src="../js/flashcard-deck.js"></script>
+<script src="../js/guide.js"></script>
+
 <script>
+WALL_BACKDROP.set('meadow');
+/* jamanti and lotus were rejected at asset review. Excluded rather than
+   substituted — a photo next to a cartoon tells a child which is which. */
+var REJECTED = ['jamanti', 'lotus'];
+var FLOWERS = Object.keys(FLOWER_DATA.all)
+  .filter(function (k) { return REJECTED.indexOf(k) === -1; })
+  .map(function (k) { return FLOWER_DATA.all[k]; });
+
+var ROUNDS = 5, BLOOMS = 14;
+var garden = document.getElementById('garden');
+var roundNo = 0, target = null, need = 0, got = 0;
+
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
 WALL.init();
-
-var TITLE = { en: 'Kerala Flowers', ml: 'കേരളത്തിലെ പൂക്കൾ' };
-
-function paintTitle() {
-  var b = WALL.tBoth(TITLE);
-  document.getElementById('title').innerHTML =
-    b.main + (b.alt && b.alt !== b.main ? '<span class="ml">' + b.alt + '</span>' : '');
-}
-WALL.onLang(paintTitle);
-
-var deck = DECK.mount('#board', {
-  items: FLOWER_DATA.flashcardSet(),
-  speak: false,        // brief: no voice narration
-  silent: true,        // brief: no sound effects either — visual only
-  columns: 3,
-  // The brief describes no "Finish" step for this board, so the reward
-  // is balloons without the applause bed rather than nothing at all.
-  onAllExplored: function (d) {
-    WALL.celebrate(d.el.getBoundingClientRect(), true);
-  }
-});
-
 WALL.toolbar({
   lang: true, voice: true, size: true, height: true,
-  heightTarget: '#board',
-  reset: function () { deck.reset(); },
-  home: true
+  reset: function () { start(); },
+  heightTarget: '#garden'
 });
+
+/* Blooms are scattered on a jittered grid rather than at pure random
+   positions: true random clumps and overlaps, which turns searching into
+   untangling and tests the wrong thing. */
+function scatter(n) {
+  var cols = Math.ceil(Math.sqrt(n * 1.5)), rows = Math.ceil(n / cols);
+  var cells = [];
+  for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) cells.push({ r: r, c: c });
+  return shuffle(cells).slice(0, n).map(function (cell) {
+    return {
+      left: ((cell.c + 0.5 + (Math.random() - 0.5) * 0.5) / cols) * 100,
+      top:  ((cell.r + 0.5 + (Math.random() - 0.5) * 0.5) / rows) * 100
+    };
+  });
+}
+
+function round() {
+  garden.innerHTML = '';
+  document.getElementById('done').classList.remove('show');
+  if (roundNo >= ROUNDS) return finish();
+
+  target = FLOWERS[roundNo % FLOWERS.length];
+  /* Between four and six of the target, the rest spread over the others, so
+     the count is never guessable from the round number. */
+  need = 4 + Math.floor(Math.random() * 3);
+  got = 0;
+
+  var others = FLOWERS.filter(function (f) { return f.id !== target.id; });
+  var plan = [];
+  for (var i = 0; i < need; i++) plan.push(target);
+  while (plan.length < BLOOMS) plan.push(others[plan.length % others.length]);
+  plan = shuffle(plan);
+
+  var spots = scatter(plan.length);
+  var size = 'clamp(52px,13vh,120px)';
+
+  plan.forEach(function (f, i) {
+    var d = document.createElement('div');
+    d.className = 'bloom';
+    d.style.cssText = 'width:' + size + ';height:' + size +
+      ';left:calc(' + spots[i].left + '% - (' + size + ')/2);top:calc(' + spots[i].top + '% - (' + size + ')/2)';
+    d.innerHTML = '<img src="' + f.art.img + '" alt="">';
+    WALL.bindTouch(d, function () { tap(d, f); });
+    garden.appendChild(d);
+  });
+
+  document.getElementById('askEn').textContent = 'Find every ' + target.label.en;
+  document.getElementById('askMl').textContent = target.label.ml + ' എല്ലാം കണ്ടെത്തൂ';
+  document.getElementById('swatch').src = target.art.img;
+  updateTally();
+
+  if (window.GUIDE) GUIDE.say(target.label);
+  if (WALL.voiceOn()) WALL.say(target.label.ml);
+}
+
+function updateTally() {
+  document.getElementById('tally').textContent = got + ' / ' + need;
+}
+
+function tap(el, f) {
+  if (el.classList.contains('found')) return;
+  if (f.id === target.id) {
+    el.classList.add('found');
+    got++;
+    updateTally();
+    WALL.tone(440 + got * 60, 0.16, 'sine', 0.12);
+    WALL.burstAt(el);
+    if (got === need) {
+      if (window.GUIDE) GUIDE.cheer({ en: 'Yes! Well done!', ml: 'കൊള്ളാം! നന്നായി!' });
+      roundNo++;
+      setTimeout(round, 1100);
+    }
+  } else {
+    /* never punish: the wrong bloom shakes, nothing is lost, keep looking */
+    el.classList.add('wrong');
+    setTimeout(function () { el.classList.remove('wrong'); }, 460);
+    WALL.sfx.nudge();
+  }
+}
+
+function finish() {
+  document.getElementById('done').classList.add('show');
+  WALL.celebrate();
+  if (WALL.voiceOn()) WALL.say('എല്ലാ പൂക്കളും കണ്ടെത്തി!');
+}
+
+function start() {
+  roundNo = 0;
+  if (window.GUIDE) { GUIDE.mount(); GUIDE.say({ en:"Let's look at the flowers!", ml:'നമുക്ക് പൂക്കൾ കാണാം!' }); }
+  setTimeout(round, 800);
+}
+
+WALL.bindTouch(document.getElementById('again'), start);
+start();
 </script>
 <script src="../js/audio-manager.js"></script>
 </body>
