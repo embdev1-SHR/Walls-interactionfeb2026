@@ -154,7 +154,7 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
     </div>
     <div class="stat-item">
       <div class="stat-label">Time</div>
-      <div class="stat-value" id="timerDisplay">60</div>
+      <div class="stat-value" id="timerDisplay">3:00</div>
     </div>
     <div class="stat-item">
       <div class="stat-label">Lives</div>
@@ -209,7 +209,16 @@ var ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-var score = 0, lives = 3, timeLeft = 60;
+
+/* Review item: 60s was too short to play or assess. One constant, so the
+   duration is changed in one place, and a m:ss readout because "180" is not
+   a clock a child can read. */
+var ROUND_SECONDS = 180;
+function fmtClock(s) {
+  s = Math.max(0, s | 0);
+  return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+}
+var score = 0, lives = 3, timeLeft = ROUND_SECONDS;
 var gameRunning = false, gameStarted = false;
 var combo = 0, comboTimer = 0;
 var fruits = [], particles = [], sliceTrails = {};
@@ -363,7 +372,7 @@ function spawnWave() {
 }
 
 function updateScore(){document.getElementById('scoreDisplay').textContent=score}
-function updateTimer(){document.getElementById('timerDisplay').textContent=timeLeft}
+function updateTimer(){document.getElementById('timerDisplay').textContent=fmtClock(timeLeft)}
 function updateLives(){
   var el=document.getElementById('livesDisplay');el.innerHTML='';
   for(var i=0;i<lives;i++){
@@ -397,7 +406,7 @@ function startGame(){
 }
 
 function restartGame(){
-  score=0;lives=3;timeLeft=60;combo=0;
+  score=0;lives=3;timeLeft=ROUND_SECONDS;combo=0;
   fruits.length=0;particles.length=0;sliceTrails={};
   updateScore();updateTimer();updateLives();
   document.getElementById('gameOver').classList.remove('show');

@@ -113,11 +113,24 @@ MODELS = [
 # than on the clarity these children need.
 # ──────────────────────────────────────────────────────────────────────────
 DESCRIPTION = (
-    "Anjali speaks in Malayalam. She speaks slowly and very clearly, "
-    "pronouncing every Malayalam letter and word carefully and correctly, "
-    "in a warm, gentle, friendly tone, as if teaching a young child. "
+    "Anjali, a young woman, speaks in Malayalam with a clear female voice. "
+    "Her voice is bright, high-pitched and cheerful, warm and affectionate, "
+    "like a kind kindergarten teacher talking to a small child. "
+    "She speaks slowly and very clearly, pronouncing every Malayalam letter "
+    "and word carefully and correctly, with a gentle smile in her voice. "
     "The recording is studio quality with no background noise."
 )
+
+# WHY THIS WORDING
+#   The first version said only "Anjali ... warm, gentle, friendly ... as if
+#   teaching a young child", and the room came back asking for a voice that is
+#   female and child-friendly — so the model was not reliably hearing either.
+#   "a young woman", "clear female voice" and "high-pitched" state the gender
+#   three ways, because this model infers it from the description rather than
+#   from the speaker name alone, and a name it half-recognises is not enough.
+#   "kind kindergarten teacher" is doing more work than "friendly" did: it
+#   names a register the model has heard, where "friendly" is an adjective it
+#   can satisfy with a newsreader.
 
 SEED = 7
 
@@ -269,6 +282,10 @@ def main() -> None:
                     help="render only the first N lines (use this first, and listen)")
     ap.add_argument("--longest", type=int, default=0,
                     help="sample the N longest lines instead of the first N")
+    ap.add_argument("--out", default=None,
+                    help="render into this folder instead of assets/voice/ml — "
+                         "use it to audition a changed DESCRIPTION without "
+                         "overwriting a bake that is already shipping")
     ap.add_argument("--force", action="store_true",
                     help="re-render lines that already have a clip")
     args = ap.parse_args()
@@ -290,6 +307,15 @@ def main() -> None:
         items = sorted(items, key=lambda kv: len(kv[0]), reverse=True)[: args.longest]
     elif args.limit:
         items = items[: args.limit]
+
+    # --out auditions a changed DESCRIPTION beside the bake that is already
+    # shipping. Rendering a new voice straight over assets/voice/ml would leave
+    # that folder half in one voice and half in another the moment it was
+    # interrupted — which the header of this file calls the one outcome worth
+    # avoiding. Audition first, then delete and re-render the real folder.
+    global OUT
+    if args.out:
+        OUT = Path(args.out)
 
     OUT.mkdir(parents=True, exist_ok=True)
     mp3 = have_ffmpeg()

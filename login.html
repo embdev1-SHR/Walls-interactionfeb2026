@@ -185,6 +185,119 @@
     box-shadow:0 3px 10px rgba(0,0,0,.08);
   }
 </style>
+<style>
+/* ════════════════════════════════════════════════════════════════════════════
+   KID-FRIENDLY THEME — same look as the main menu (index.html): the painted
+   landscape, Baloo Chettan 2, chunky white cards with a solid edge to press
+   into. Kept as one block after the original styles, so it overrides them
+   and can be reverted in one place. The adult flow itself is unchanged.
+   ════════════════════════════════════════════════════════════════════════════ */
+@font-face{
+  font-family:'Baloo Chettan 2';
+  src:url('./assets/fonts/BalooChettan2.ttf') format('truetype');
+  font-weight:400 800;font-display:swap;
+}
+html,body{
+  font-family:'Baloo Chettan 2','Nunito','Noto Sans Malayalam','Segoe UI',sans-serif;
+  background:
+    url('./assets/new/menu/menu-bg.jpg') center 38% / cover no-repeat,
+    url('./assets/new/menu/menu-bg-tiny.jpg') center 38% / cover no-repeat,
+    #3d84d6;
+  color:#2B2D42;
+}
+body::before,body::after,.bubble{display:none}
+
+.screen{
+  width:min(540px,100%);
+  border:6px solid #3E9BE9;border-radius:40px;
+  padding:34px 34px 30px;
+  box-shadow:0 12px 0 #2a6fc4,0 26px 50px rgba(20,50,110,.30);
+  overflow:visible;
+}
+.screen::before{display:none}
+.screen.active{animation:pop .42s cubic-bezier(.34,1.4,.64,1)}
+
+.brand{margin-bottom:14px}
+.brand-logo{height:96px;border-radius:20px}
+.brand-tag{font-size:14px;letter-spacing:.14em;color:#3E9BE9}
+
+h1{font-size:30px;font-weight:800;color:#2B2D42;line-height:1.1;margin-bottom:4px}
+p.sub{font-size:15px;font-weight:600;color:#6b7090;margin-bottom:20px}
+
+label{font-size:13px;letter-spacing:.06em;color:#2a6fc4;margin:14px 4px 6px}
+input,select{
+  padding:15px 18px;border-radius:18px;font-size:17px;
+  border:3px solid #D6E6FB;background:#F5F9FF;
+}
+input:focus,select:focus{border-color:#3E9BE9;box-shadow:0 0 0 4px rgba(62,155,233,.18)}
+
+/* buttons press down onto their own edge, like the menu cards */
+button{
+  min-height:58px;font-size:18px;font-weight:800;border-radius:999px;
+  background:#3E9BE9;color:#fff;
+  box-shadow:0 7px 0 #2a6fc4,0 12px 20px rgba(20,60,120,.18);
+  transition:transform .12s ease, box-shadow .12s ease, filter .15s;
+}
+button:hover{filter:brightness(1.05);box-shadow:0 7px 0 #2a6fc4,0 14px 24px rgba(20,60,120,.22)}
+button:active{transform:translateY(6px);box-shadow:0 1px 0 #2a6fc4}
+button.ghost{
+  background:#fff;color:#2a6fc4;border:3px solid #D6E6FB;
+  box-shadow:0 6px 0 #D6E6FB;
+}
+button.ghost:hover{background:#F5F9FF;color:#2a6fc4;border-color:#BCD6F7;box-shadow:0 6px 0 #BCD6F7}
+button.ghost:active{transform:translateY(5px);box-shadow:0 1px 0 #BCD6F7}
+
+/* the session choices: big, colourful, one tap */
+.mode-grid{gap:18px;margin-top:6px}
+.mode-card{
+  --c:#FF8A3D;
+  align-items:center;gap:16px;
+  padding:14px 20px 14px 14px;border-radius:28px;
+  background:#fff;border:4px solid var(--c);
+  box-shadow:0 8px 0 color-mix(in oklch,var(--c) 70%,#1b1030);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.mode-card:hover{
+  border-color:var(--c);background:#fff;transform:translateY(-3px);
+  box-shadow:0 11px 0 color-mix(in oklch,var(--c) 70%,#1b1030),0 16px 24px rgba(0,0,0,.12);
+}
+.mode-card:active{transform:translateY(7px);box-shadow:0 1px 0 color-mix(in oklch,var(--c) 70%,#1b1030)}
+#pick-guest           {--c:#FF8A3D}
+#pick-online          {--c:#3E9BE9}
+#pick-class-mode      {--c:#2FB36A}
+#pick-individual-mode {--c:#B072E8}
+.mode-card .mc-icon{
+  width:76px;height:76px;border-radius:22px;font-size:38px;
+  /* sRGB, not OKLCH: Chromium 120 gives white a hue in OKLCH, so every
+     tint drifted pink */
+  background:color-mix(in srgb,var(--c) 18%,#fff) !important;
+}
+.mode-card .mc-icon img{width:62px;height:62px;object-fit:contain;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.18));transition:transform .3s cubic-bezier(.34,1.6,.64,1)}
+.mode-card .mc-icon img + span{display:none}
+.mode-card:hover .mc-icon img{transform:scale(1.1) rotate(-6deg)}
+.mode-card .t{font-size:22px;font-weight:800;color:#2B2D42;margin-bottom:0;line-height:1.15}
+.mode-card .d{font-size:14px;font-weight:600;color:#6b7090}
+
+.scene-item{width:72px;height:72px;border-radius:22px;font-size:34px;
+  box-shadow:0 5px 0 rgba(20,60,120,.12)}
+.scene-item img{width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.16))}
+.scene-item img + span{display:none}
+
+.err{font-size:14px;color:#E0475B}
+.muted{font-size:13px;color:#8a8fa8}
+.spin{width:52px;height:52px;border:6px solid #E6F0FF;border-top-color:#3E9BE9}
+
+@media (max-height:760px){
+  .screen{padding:24px 28px 22px}
+  .brand-logo{height:72px}
+  h1{font-size:26px}
+}
+@media (prefers-reduced-motion:reduce){
+  .screen.active{animation:none}
+  .mode-card:hover,.mode-card:hover .mc-icon img{transform:none}
+}
+</style>
 </head>
 <body>
 
@@ -230,14 +343,14 @@
     <p class="sub">Choose a session mode to get started</p>
     <div class="mode-grid">
       <div class="mode-card" id="pick-guest">
-        <div class="mc-icon">🛜</div>
+        <div class="mc-icon"><img src="./assets/new/icons/login-guest.png" alt="" draggable="false" onerror="this.remove()"><span>🛜</span></div>
         <div class="mc-body">
           <div class="t">Guest / Offline</div>
           <div class="d">Play all local content. No login needed, no records saved.</div>
         </div>
       </div>
       <div class="mode-card" id="pick-online">
-        <div class="mc-icon">🔐</div>
+        <div class="mc-icon"><img src="./assets/new/icons/login-online.png" alt="" draggable="false" onerror="this.remove()"><span>🔐</span></div>
         <div class="mc-body">
           <div class="t">Online Mode</div>
           <div class="d">Sign in to access your department and track student activity.</div>
@@ -249,9 +362,9 @@
   <!-- 3 · department login -->
   <div class="screen" id="screen-login">
     <div class="scene">
-      <div class="scene-item" style="background:#fff7ed">📚</div>
-      <div class="scene-item" style="background:#f0fdf4">🧒</div>
-      <div class="scene-item" style="background:#eef1ff">✏️</div>
+      <div class="scene-item" style="background:#fff7ed"><img src="./assets/new/icons/learning.png" alt="" draggable="false" onerror="this.remove()"><span>📚</span></div>
+      <div class="scene-item" style="background:#f0fdf4"><img src="./assets/new/icons/login-individual.png" alt="" draggable="false" onerror="this.remove()"><span>🧒</span></div>
+      <div class="scene-item" style="background:#eef1ff"><img src="./assets/new/icons/creature-creator.png" alt="" draggable="false" onerror="this.remove()"><span>✏️</span></div>
     </div>
     <h1>Department Sign In</h1>
     <p class="sub">Enter the credentials set for your department in the Auticare dashboard</p>
@@ -274,22 +387,22 @@
   <!-- 5 · submode -->
   <div class="screen" id="screen-submode">
     <div class="scene">
-      <div class="scene-item" style="background:#f0fdf4">🎮</div>
-      <div class="scene-item" style="background:#eef1ff">👥</div>
-      <div class="scene-item" style="background:#fdf4ff">⭐</div>
+      <div class="scene-item" style="background:#f0fdf4"><img src="./assets/new/icons/tab-play.png" alt="" draggable="false" onerror="this.remove()"><span>🎮</span></div>
+      <div class="scene-item" style="background:#eef1ff"><img src="./assets/new/icons/login-class.png" alt="" draggable="false" onerror="this.remove()"><span>👥</span></div>
+      <div class="scene-item" style="background:#fdf4ff"><img src="./assets/new/icons/login-student.png" alt="" draggable="false" onerror="this.remove()"><span>⭐</span></div>
     </div>
     <h1>Session Type</h1>
     <p class="sub" id="submode-class-name">Choose how this session will run</p>
     <div class="mode-grid">
       <div class="mode-card" id="pick-class-mode">
-        <div class="mc-icon">👥</div>
+        <div class="mc-icon"><img src="./assets/new/icons/login-class.png" alt="" draggable="false" onerror="this.remove()"><span>👥</span></div>
         <div class="mc-body">
           <div class="t">Class Mode</div>
           <div class="d">Multiple children together. Only multiplayer games are shown.</div>
         </div>
       </div>
       <div class="mode-card" id="pick-individual-mode">
-        <div class="mc-icon">🧒</div>
+        <div class="mc-icon"><img src="./assets/new/icons/login-individual.png" alt="" draggable="false" onerror="this.remove()"><span>🧒</span></div>
         <div class="mc-body">
           <div class="t">Individual Mode</div>
           <div class="d">One child at a time. Activity is recorded to their profile.</div>
@@ -302,9 +415,9 @@
   <!-- 6 · student -->
   <div class="screen" id="screen-student">
     <div class="scene">
-      <div class="scene-item" style="background:#fff7ed">🌟</div>
-      <div class="scene-item" style="background:#f0fdf4">🧒</div>
-      <div class="scene-item" style="background:#fdf4ff">📖</div>
+      <div class="scene-item" style="background:#fff7ed"><img src="./assets/new/icons/login-student.png" alt="" draggable="false" onerror="this.remove()"><span>🌟</span></div>
+      <div class="scene-item" style="background:#f0fdf4"><img src="./assets/new/icons/login-individual.png" alt="" draggable="false" onerror="this.remove()"><span>🧒</span></div>
+      <div class="scene-item" style="background:#fdf4ff"><img src="./assets/new/icons/login-signin.png" alt="" draggable="false" onerror="this.remove()"><span>📖</span></div>
     </div>
     <h1>Who's playing?</h1>
     <p class="sub">Select the student — their activity will be recorded this session</p>

@@ -479,8 +479,13 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
             canvases.push({
                 traceCanvas,
                 drawCanvas,
-                traceCtx: traceCanvas.getContext('2d'),
-                drawCtx: drawCanvas.getContext('2d')
+                /* willReadFrequently: the accuracy check reads both canvases
+                   back with getImageData every 15 pointer moves while a child is
+                   drawing. Without the hint Chromium keeps them on the GPU and
+                   copies them back each time, which is the stutter Chrome warns
+                   about — on a wall PC, mid-stroke. */
+                traceCtx: traceCanvas.getContext('2d', { willReadFrequently: true }),
+                drawCtx: drawCanvas.getContext('2d', { willReadFrequently: true })
             });
         }
 
@@ -513,6 +518,21 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
             ctx.fillStyle = '#ff6b9d';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
+
+            /* Review: "tracing paths inside the letters are too narrow". The
+               traceable body of each letter was only the font's own stroke
+               weight. A thick round-joined stroke in the fill colour is drawn
+               first and the fill on top, which fattens every limb outward —
+               both what the child sees and the region the accuracy check
+               counts as "on the letter". Malayalam gets less: its glyphs have
+               small enclosed loops, and too fat a stroke closes them up and
+               turns the letter into a blob. */
+            const fat = fontSize * (currentCategory === 'malayalam' ? 0.055 : 0.09);
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#ff6b9d';
+            ctx.lineWidth = fat;
+            ctx.strokeText(letter, ctx.canvas.width / 2, ctx.canvas.height / 2);
             ctx.fillText(letter, ctx.canvas.width / 2, ctx.canvas.height / 2);
             
             ctx.strokeStyle = '#4CAF50';
@@ -692,13 +712,22 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
                 player.lastAccuracy = 0;
                 canvas.drawCtx.clearRect(0, 0, canvas.drawCanvas.width, canvas.drawCanvas.height);
                 
+                /* The template is ALWAYS drawn at full strength, and the hint
+                   only changes how visible the canvas is. It used to be drawn at
+                   alpha 0 when the hint was off — but the accuracy check reads
+                   this same canvas's pixels, so with nothing drawn there was
+                   nothing to match against and accuracy stayed at 0%. Turning
+                   the hint off, which is meant to make tracing harder, made it
+                   impossible. getImageData ignores CSS opacity, so scoring now
+                   sees the letter whether or not the child can. */
                 if (currentCategory === 'letters' || currentCategory === 'numbers' || currentCategory === 'malayalam') {
-                    drawLetter(canvas.traceCtx, currentItem, player.showingHint ? 0.3 : 0);
+                    drawLetter(canvas.traceCtx, currentItem, 1);
                 } else if (currentCategory === 'shapes') {
-                    drawShape(canvas.traceCtx, currentItem, player.showingHint ? 0.3 : 0);
+                    drawShape(canvas.traceCtx, currentItem, 1);
                 } else if (currentCategory === 'animals') {
-                    drawAnimal(canvas.traceCtx, currentItem, player.showingHint ? 0.3 : 0);
+                    drawAnimal(canvas.traceCtx, currentItem, 1);
                 }
+                canvas.traceCanvas.style.opacity = player.showingHint ? '0.32' : '0';
                 
                 document.getElementById(`feedback${idx + 1}`).textContent = 'Start tracing!';
                 document.getElementById(`accuracyFill${idx + 1}`).style.width = '0%';
@@ -706,74 +735,96 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
             });
         }
 
-        // Multi-touch drawing
-        function getPos(e, canvas) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            return {
-                x: (clientX - rect.left) * scaleX,
-                y: (clientY - rect.top) * scaleY
-            };
-        }
-
         function setupPlayerCanvas(playerIdx) {
             const canvas = canvases[playerIdx];
             const player = players[playerIdx];
             const drawCanvas = canvas.drawCanvas;
 
+            /* ── Review: "drawing fails with a palm or a flatter finger" ──────
+               The old handler read only e.touches[0] and drew a fixed 6px line.
+               Two things went wrong on the wall:
+                 · a flat finger or palm is a large contact, often reported as
+                   several touch points; reading only [0] made the line jump
+                   between them, and
+                 · a 6px line from a palm sweep covers almost none of the letter,
+                   so accuracy never climbed and the trace looked like it failed.
+               Pointer Events fix both. Each contact keeps its own pointerId, so
+               every finger or palm draws its own continuous line, and
+               e.width/e.height give the size of the contact — so a broad touch
+               lays down a broad stroke, the way paint would. Mouse and pen come
+               through the same events, so nothing else needs handling. */
+            const strokes = new Map();   // pointerId -> last point
+
+            function toCanvas(clientX, clientY) {
+                const rect = drawCanvas.getBoundingClientRect();
+                return {
+                    x: (clientX - rect.left) * (drawCanvas.width / rect.width),
+                    y: (clientY - rect.top) * (drawCanvas.height / rect.height)
+                };
+            }
+
+            /* Stroke width from the contact size, in canvas pixels. Floored so a
+               fingertip still draws a generous line, capped so a whole hand
+               does not flood the letter in one pass. A mouse reports 1x1, so it
+               simply gets the floor. */
+            function strokeWidth(e) {
+                const rect = drawCanvas.getBoundingClientRect();
+                const scale = drawCanvas.width / (rect.width || 1);
+                const contact = Math.max(e.width || 0, e.height || 0) * scale;
+                const floor = drawCanvas.width * 0.03;
+                const cap = drawCanvas.width * 0.11;
+                return Math.max(floor, Math.min(contact * 0.85, cap));
+            }
+
+            function paint(from, to, width) {
+                const c = canvas.drawCtx;
+                c.strokeStyle = '#4CAF50';
+                c.lineWidth = width;
+                c.lineCap = 'round';
+                c.lineJoin = 'round';
+                c.beginPath();
+                c.moveTo(from.x, from.y);
+                c.lineTo(to.x, to.y);
+                c.stroke();
+            }
+
             function startDrawing(e) {
                 e.preventDefault();
+                try { drawCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+                const pos = toCanvas(e.clientX, e.clientY);
+                strokes.set(e.pointerId, pos);
                 player.isDrawing = true;
-                const pos = getPos(e, drawCanvas);
                 player.drawnPoints.push(pos);
+                // a dot on press, so a palm that lands and lifts still counts
+                paint(pos, { x: pos.x + 0.01, y: pos.y }, strokeWidth(e));
             }
 
             function draw(e) {
-                if (!player.isDrawing) return;
+                const last = strokes.get(e.pointerId);
+                if (!last) return;
                 e.preventDefault();
-                
-                const pos = getPos(e, drawCanvas);
+                const pos = toCanvas(e.clientX, e.clientY);
+                paint(last, pos, strokeWidth(e));
+                strokes.set(e.pointerId, pos);
                 player.drawnPoints.push(pos);
-                
-                canvas.drawCtx.strokeStyle = '#4CAF50';
-                canvas.drawCtx.lineWidth = 6;
-                canvas.drawCtx.lineCap = 'round';
-                canvas.drawCtx.lineJoin = 'round';
-                
-                if (player.drawnPoints.length > 1) {
-                    canvas.drawCtx.beginPath();
-                    canvas.drawCtx.moveTo(player.drawnPoints[player.drawnPoints.length - 2].x, 
-                                          player.drawnPoints[player.drawnPoints.length - 2].y);
-                    canvas.drawCtx.lineTo(pos.x, pos.y);
-                    canvas.drawCtx.stroke();
-                    player.totalDrawnPixels++;
-                }
-                
-                if (player.totalDrawnPixels % 15 === 0 && player.totalDrawnPixels > 0) {
-                    checkCompletion(playerIdx);
-                }
+                player.totalDrawnPixels++;
+                if (player.totalDrawnPixels % 15 === 0) checkCompletion(playerIdx);
             }
 
-            function stopDrawing() {
+            function stopDrawing(e) {
+                strokes.delete(e.pointerId);
+                if (strokes.size) return;          // another finger is still down
                 if (player.isDrawing && player.drawnPoints.length > 10) {
                     checkCompletion(playerIdx);
                 }
                 player.isDrawing = false;
             }
 
-            drawCanvas.addEventListener('mousedown', startDrawing);
-            drawCanvas.addEventListener('mousemove', draw);
-            drawCanvas.addEventListener('mouseup', stopDrawing);
-            drawCanvas.addEventListener('mouseout', stopDrawing);
-
-            drawCanvas.addEventListener('touchstart', startDrawing, { passive: false });
-            drawCanvas.addEventListener('touchmove', draw, { passive: false });
-            drawCanvas.addEventListener('touchend', stopDrawing);
+            drawCanvas.style.touchAction = 'none';   // no browser panning mid-trace
+            drawCanvas.addEventListener('pointerdown', startDrawing);
+            drawCanvas.addEventListener('pointermove', draw);
+            drawCanvas.addEventListener('pointerup', stopDrawing);
+            drawCanvas.addEventListener('pointercancel', stopDrawing);
         }
 
         function checkCompletion(playerIdx) {

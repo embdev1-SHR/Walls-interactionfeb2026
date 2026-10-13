@@ -10,7 +10,10 @@ class AudioManager {
         this.volume = 0.5;
         this.audioMap = {
             // Main Pages
-            'index': 'menu',
+            /* 'index' (the menu) is deliberately unmapped. It has its own live score,
+               js/ambient-music.js — and while this entry existed the menu played
+               menu.mp3 twice: once from its own <audio> element and once from here,
+               slightly out of sync. */
             'intro': 'intro',
             'FreeCanvas': 'Free Canvas',
             'solar-system': 'solarsystem',
@@ -37,8 +40,6 @@ class AudioManager {
             'number-crunch-multi': 'jyproject-endless-shore-part2-399386',
             'fruit-math': 'jyproject-endless-shore-part2-399386',
             'fruit-math-multi': 'jyproject-endless-shore-part2-399386',
-            'alphabet-explorer': 'jyproject-endless-shore-part2-399386',
-            'alphabet-explorer-multi': 'jyproject-endless-shore-part2-399386',
             'word-explorer': 'jyproject-endless-shore-part2-399386',
             'word-creator': 'jyproject-endless-shore-part2-399386',
             'memory-match': 'jyproject-endless-shore-part2-399386',
@@ -51,26 +52,19 @@ class AudioManager {
 
             /* ── Pre-Primary games ───────────────────────────────── */
             'pp-size-color':    'forest',
-            'pp-firefly-path':  'jyproject-endless-shore-part2-399386',
             'pp-mosquito-clap': 'forest',
             'pp-body-parts':    'forest',
-            'pp-fill-outline':  'colouring',
-            'pp-path-tracer':   'trace-it',
             'pp-egg-count':     'jyproject-endless-shore-part2-399386',
-            'pp-block-stack':   'jyproject-endless-shore-part2-399386',
             'fruits-vegetables':'jyproject-endless-shore-part2-399386',
 
             /* -- Primary + Secondary modules ---------------------- */
             'pri-houses':         'Daily life scenarios',
             'pri-rooms':          'Daily life scenarios',
-            'pri-letters':        'trace-it',
             'pri-flowers':        'forest',
             'pri-flower-match':   'forest',
-            'sec-name-id':        'jyproject-endless-shore-part2-399386',
             'sec-name-build':     'jyproject-endless-shore-part2-399386',
             'sec-first-aid':      'Daily life scenarios',
             'sec-currency':       'jyproject-endless-shore-part2-399386',
-            'sec-body-plant':     'forest',
             'sec-helpers-places': 'Daily life scenarios',
             'sec-mobile':         'jyproject-endless-shore-part2-399386',
             'sec-bouquet':        'forest',
@@ -83,14 +77,27 @@ class AudioManager {
             'pp-hen-types':    'forest',
             'pp-animal-homes': 'forest',
             'pp-animal-young': 'forest',
-            'pp-animal-puzzle': 'forest',
             'pp-animal-sort':   'forest',
-            'pp-animal-path':   'trace-it',
 
             /* -- Vocational. The six Birthday modules run their own
                   synthesized music via js/birthday-common.js and so
                   deliberately do NOT include audio-manager.js. ----- */
             'voc-instruments':  'Learning',
+
+            /* Added after an audit found these logging "No audio mapping found"
+               and running silent. Tracks chosen to match the neighbours above:
+               the jobs set is working life, so it takes the same calm ambient
+               bed as the other Secondary/Vocational boards; the party and cap
+               activities are celebratory, so they take 'Learning', which is
+               what voc-instruments already uses. */
+            'voc-job-call':     'Daily life scenarios',
+            'voc-job-day':      'Daily life scenarios',
+            'voc-job-hats':     'Daily life scenarios',
+            'voc-job-tools':    'Daily life scenarios',
+            'voc-job-where':    'Daily life scenarios',
+            'voc-cap-match':    'Learning',
+            'voc-party-decorate': 'Learning',
+            'pp-size-quiz':     'forest',
 
             /* -- Older activities that include audio-manager.js but had
                   no track, so they played silence and logged a warning. */
@@ -112,6 +119,13 @@ class AudioManager {
         const audioFile = this.audioMap[pageName];
 
         console.log(`[Audio Manager] Initializing for page: ${pageName}`);
+
+        /* Pages that run their own music on purpose. Listed so they read as a
+           decision rather than as a missing mapping — the warning below is what
+           an audit uses to find activities that are silent by accident, and it
+           is only useful if it does not also fire for the ones silent by design. */
+        const OWN_AUDIO = ['index', 'alphabet-explorer', 'alphabet-explorer-multi', 'vehicles'];
+        if (!audioFile && OWN_AUDIO.indexOf(pageName) !== -1) return;
 
         if (!audioFile) {
             console.warn(`[Audio Manager] No audio mapping found for page: ${pageName}`);
@@ -135,16 +149,24 @@ class AudioManager {
             this.audio.remove();
         }
 
+        /* `../assets/` is correct from games/, which is where this manager has
+           always been used — but index.html sits at the repo root, so from
+           there the same path climbs out of the project entirely and the track
+           silently 404s. The menu has been running without its music for that
+           reason. Resolve against where the page actually is instead. */
+        const atRoot = !/\/games\//.test(window.location.pathname);
+        const base = atRoot ? './assets/Audio/' : '../assets/Audio/';
+
         this.audio = document.createElement('audio');
         this.audio.id = 'game-audio';
-        this.audio.src = `../assets/Audio/${audioFile}.mp3`;
+        this.audio.src = `${base}${audioFile}.mp3`;
         this.audio.volume = this.volume;
         this.audio.preload = 'auto';
         this.audio.crossOrigin = 'anonymous';
-        
+
         document.body.appendChild(this.audio);
 
-        console.log(`[Audio Manager] Loading: ${audioFile}.mp3 from ../assets/Audio/${audioFile}.mp3`);
+        console.log(`[Audio Manager] Loading: ${audioFile}.mp3 from ${base}${audioFile}.mp3`);
 
         // Error handling
         this.audio.addEventListener('error', (e) => {

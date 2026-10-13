@@ -14,7 +14,8 @@
     "models:list": "node scripts/fetch-sketchfab.mjs --list",
     "credits": "node scripts/build-credits.mjs",
     "assets:review": "node scripts/build-asset-review.mjs --serve",
-    "scenarios:review": "node scripts/build-scenario-review.mjs --serve"
+    "scenarios:review": "node scripts/build-scenario-review.mjs --serve",
+    "icons": "node scripts/fetch-icons.mjs && npm run credits"
   },
   "build": {
     "appId": "com.yourname.interactive-wall-games",

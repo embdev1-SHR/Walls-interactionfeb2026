@@ -328,7 +328,7 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
   </div>
   <div class="hud-box">
     <div class="hud-label">Time</div>
-    <div class="hud-val hud-time" id="timeVal">60</div>
+    <div class="hud-val hud-time" id="timeVal">3:00</div>
   </div>
 </div>
 
@@ -462,7 +462,16 @@ var cvs = document.getElementById('gameCanvas');
 var ctx = cvs.getContext('2d');
 var W, H;
 
-var saves = 0, missed = 0, combo = 0, timeLeft = 60;
+
+/* Review item: 60s was too short to play or assess. One constant, so the
+   duration is changed in one place, and a m:ss readout because "180" is not
+   a clock a child can read. */
+var ROUND_SECONDS = 180;
+function fmtClock(s) {
+  s = Math.max(0, s | 0);
+  return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+}
+var saves = 0, missed = 0, combo = 0, timeLeft = ROUND_SECONDS;
 var gameActive = false, balls = [], particles = [];
 var difficulty = 1, spawnInterval = 1600;
 var lastSpawn = 0, clockTimer = null;
@@ -909,7 +918,7 @@ function startGame() {
   clockTimer = setInterval(function() {
     if (!gameActive) { clearInterval(clockTimer); return; }
     timeLeft--;
-    document.getElementById('timeVal').textContent = timeLeft;
+    document.getElementById('timeVal').textContent = fmtClock(timeLeft);
     if (timeLeft <= 0) { clearInterval(clockTimer); endGame(); }
   }, 1000);
 }
@@ -924,20 +933,20 @@ function endGame() {
 }
 
 function restartGame() {
-  saves = 0; missed = 0; combo = 0; timeLeft = 60;
+  saves = 0; missed = 0; combo = 0; timeLeft = ROUND_SECONDS;
   difficulty = 1; spawnInterval = 1600;
   balls = []; particles = [];
   document.getElementById('savesVal').textContent = '0';
   document.getElementById('missedVal').textContent = '0';
   document.getElementById('comboVal').textContent = '0';
-  document.getElementById('timeVal').textContent = '60';
+  document.getElementById('timeVal').textContent = fmtClock(ROUND_SECONDS);
   document.getElementById('gameOverOverlay').classList.remove('show');
   gameActive = true;
   lastSpawn = Date.now();
   clockTimer = setInterval(function() {
     if (!gameActive) { clearInterval(clockTimer); return; }
     timeLeft--;
-    document.getElementById('timeVal').textContent = timeLeft;
+    document.getElementById('timeVal').textContent = fmtClock(timeLeft);
     if (timeLeft <= 0) { clearInterval(clockTimer); endGame(); }
   }, 1000);
 }

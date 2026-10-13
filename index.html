@@ -195,6 +195,19 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
   50%{box-shadow:0 6px 28px rgba(255,179,71,.6),0 0 16px rgba(255,221,89,.25)}
 }
 
+/* ── കുട്ടു on the menu ───────────────────────────────────────────────────
+   The loading screen sits at z-index 10000, so the guide's own 480 leaves the
+   owl behind it — he was there and greeting, but invisible until the menu
+   appeared. Lifted here rather than in guide.js, because 480 is correct on an
+   activity page: there he must stay under the 3D popup.
+
+   `body` prefixes are load-bearing. guide.js injects its stylesheet when it
+   runs, which is after this block in the head, so a bare `#wallGuide` rule
+   loses to it on source order at equal specificity. The extra element raises
+   specificity enough to win without reaching for !important. */
+/* (the size and z-index rules now live in the KID-FRIENDLY MENU block at the
+   end of this stylesheet, where he is the host and a little larger) */
+
 /* ── Info / credits ───────────────────────────────────────────────────────
    A quiet button on the left edge. It does not pulse and does not animate:
    the menu already has one thing competing for a child's attention and this
@@ -324,6 +337,284 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
 .ball{position:absolute;border-radius:100%;cursor:pointer;transition:transform .2s ease,opacity .2s ease;box-shadow:inset -2px -2px 4px rgba(0,0,0,0.3), -4px 8px 16px rgba(0,0,0,0.25), -2px 4px 8px rgba(0,0,0,0.15)}
 .ball:hover{transform:scale(1.1);opacity:0.9;pointer-events:auto;box-shadow:inset -2px -2px 4px rgba(0,0,0,0.3), -6px 12px 20px rgba(0,0,0,0.35), -3px 6px 12px rgba(0,0,0,0.2)}
 .ball:active{transform:scale(0.95);box-shadow:inset -1px -1px 2px rgba(0,0,0,0.2), -2px 4px 8px rgba(0,0,0,0.2), -1px 2px 4px rgba(0,0,0,0.1)}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   KID-FRIENDLY MENU
+   Kept together at the end of the stylesheet so it overrides the older rules
+   above without editing them, and can be found and reverted in one place.
+
+   The principles, in order of importance:
+     1. Reachable — tabs and cards sit in the lower two-thirds. A child at a
+        wall cannot reach the top third (the rule vehicles.html set), so that
+        space is sky, title and nothing to tap.
+     2. Few choices — three tabs of ~8 cards, not 23 cards at once.
+     3. Chunky and pressable — thick borders, a solid edge underneath that the
+        card presses down into, art that pops out over the top.
+     4. Calm — no flashing, no clutter; motion is gentle and stops for anyone
+        whose machine asks for reduced motion.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── type ─────────────────────────────────────────────────────────────────
+   Baloo Chettan 2: the Malayalam member of the Baloo family, rounded and
+   friendly, covering Malayalam and English in one face. Bundled, because the
+   wall has no network and the Google Fonts links above it never load there. */
+@font-face{
+  font-family:'Baloo Chettan 2';
+  src:url('./assets/fonts/BalooChettan2.ttf') format('truetype');
+  font-weight:400 800;font-display:swap;
+}
+#main-menu, #loading-ui, .menu-tabs, .card-grid{
+  font-family:'Baloo Chettan 2','Nunito','Noto Sans Malayalam','Segoe UI',sans-serif;
+}
+
+/* ── backdrop ──────────────────────────────────────────────────────────────
+   The supplied painting. The 441-byte blurred copy underneath paints at once,
+   so the screen is never blank while the full image decodes. Anchored a little
+   above centre so the horizon stays in view on a 16:9 crop of a 2.33:1 image. */
+#loading-screen, #main-menu{
+  background:
+    url('./assets/new/menu/menu-bg.jpg') center 38% / cover no-repeat,
+    url('./assets/new/menu/menu-bg-tiny.jpg') center 38% / cover no-repeat,
+    #3d84d6;
+}
+/* the old white-page canvases, the geometric floaters, and the 50 random
+   coloured dots — some near-black — that read as dirt on a painting */
+#particle-canvas, #menu-canvas, .float-shape, #bubble-background{display:none !important}
+
+/* ── loading card ─────────────────────────────────────────────────────────
+   The same chunky toy-button language as the menu cards: solid white, thick
+   blue border, a solid edge underneath. The progress bar is a fat rainbow
+   pill with a kite riding its front edge, so "wait" has something to watch. */
+#loading-ui{
+  gap:clamp(10px,1.6vh,18px);
+  width:min(86vw,520px);
+  background:#ffffff;
+  padding:clamp(22px,3.4vh,38px) clamp(26px,3vw,48px) clamp(20px,3vh,32px);
+  border:6px solid #3E9BE9;border-radius:clamp(30px,3vw,44px);
+  box-shadow:0 12px 0 #2a6fc4,0 26px 50px rgba(20,50,110,.30);
+}
+#loading-logo{width:clamp(110px,11vw,170px);max-width:none;border-radius:22px}
+#loading-title{
+  font-size:clamp(26px,2.6vw,42px);font-weight:800;line-height:1;
+  color:#2B2D42;margin-top:2px;
+}
+#loading-tagline{
+  font-size:clamp(12px,0.95vw,16px);font-weight:700;letter-spacing:.12em;
+  color:#3E9BE9;opacity:1;margin-top:-4px;
+}
+#loading-bar-wrap{
+  width:100%;height:clamp(22px,2.6vh,30px);margin-top:clamp(8px,1.4vh,16px);
+  background:#E6F0FF;border:4px solid #2a6fc4;border-radius:999px;
+  overflow:visible;position:relative;
+  box-shadow:inset 0 3px 0 rgba(42,111,196,.12);
+}
+#loading-bar{
+  position:relative;border-radius:999px;
+  background:
+    repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 12px,rgba(255,255,255,0) 12px 24px),
+    linear-gradient(90deg,#FF6B6B,#FFB347 25%,#FFD93D 45%,#6BCB77 65%,#4D96FF 85%,#9B72FF);
+  background-size:34px 34px,100% 100%;
+  animation:ldProg 3s cubic-bezier(.4,0,.2,1) forwards, ldStripes .9s linear infinite;
+}
+@keyframes ldStripes{to{background-position:34px 0,0 0}}
+/* the kite rides the bar's leading edge */
+#loading-bar::after{
+  content:'';position:absolute;right:-26px;top:50%;
+  width:clamp(44px,4vw,60px);aspect-ratio:1;
+  transform:translateY(-62%) rotate(8deg);
+  background:url('./assets/new/icons/tab-play.png') center/contain no-repeat;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.2));
+  animation:ldKite 1.6s ease-in-out infinite;
+}
+@keyframes ldKite{50%{transform:translateY(-74%) rotate(-6deg)}}
+#loading-dots{
+  display:flex;flex-direction:column;align-items:center;line-height:1.15;
+  letter-spacing:0;text-transform:none;color:#2B2D42;
+  animation:none;margin-top:4px;
+}
+#loading-dots .ld-ml{font-size:clamp(20px,1.8vw,28px);font-weight:800;animation:ldBlink 1.6s ease-in-out infinite}
+#loading-dots .ld-en{font-size:clamp(12px,0.95vw,15px);font-weight:700;color:#7a7f9a}
+@media (prefers-reduced-motion:reduce){
+  #loading-bar{animation:ldProg 3s cubic-bezier(.4,0,.2,1) forwards}
+  #loading-bar::after,#loading-dots .ld-ml,#loading-logo{animation:none}
+}
+
+/* ── layout: header up top, everything tappable low ───────────────────────── */
+.menu-content{justify-content:flex-start;gap:0;padding-bottom:clamp(14px,2.6vh,30px)}
+.menu-top{flex:0 0 auto;margin-top:clamp(6px,1.4vh,18px)}
+#main-logo{
+  width:clamp(64px,6vw,104px) !important;
+  border-radius:24px !important;
+  background:#fff;padding:8px;
+  box-shadow:0 6px 0 rgba(20,60,120,.20),0 12px 26px rgba(10,40,90,.25) !important;
+}
+.menu-title{
+  font-size:clamp(28px,3.6vw,62px);font-weight:800;letter-spacing:0;
+  color:#ffffff;
+  /* a thick soft outline, so white lettering reads on every part of the sky */
+  text-shadow:
+    0 3px 0 #2a6fc4, 0 -2px 0 #2a6fc4, 3px 0 0 #2a6fc4, -3px 0 0 #2a6fc4,
+    2px 2px 0 #2a6fc4, -2px 2px 0 #2a6fc4, 2px -2px 0 #2a6fc4, -2px -2px 0 #2a6fc4,
+    0 8px 18px rgba(10,40,100,.45);
+}
+.menu-subtitle{display:none}   /* കുട്ടു says it instead */
+
+/* push the tabs and cards down into the reachable band */
+.menu-tabs{margin-top:auto}
+.grid-wrapper{flex:0 0 auto;overflow:visible;padding-top:clamp(10px,2vh,24px)}
+
+/* ── tabs ────────────────────────────────────────────────────────────────── */
+.menu-tabs{
+  position:relative;z-index:2;
+  display:flex;gap:clamp(12px,1.6vw,28px);justify-content:center;
+}
+.menu-tab{
+  --tab:#3E9BE9;
+  display:flex;align-items:center;gap:clamp(8px,0.8vw,14px);
+  padding:clamp(6px,0.8vh,10px) clamp(18px,1.8vw,30px) clamp(6px,0.8vh,10px) clamp(10px,1vw,16px);
+  min-height:clamp(58px,7.4vh,84px);
+  border-radius:999px;cursor:pointer;
+  background:#ffffff;
+  border:4px solid var(--tab);
+  color:#2B2D42;
+  box-shadow:0 7px 0 color-mix(in oklch,var(--tab) 70%,#000);
+  transition:transform .14s ease, box-shadow .14s ease, background .2s ease;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.menu-tab img{
+  width:clamp(36px,3.4vw,58px);height:auto;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.18));
+  transition:transform .3s cubic-bezier(.34,1.6,.64,1);
+}
+.tab-text{display:flex;flex-direction:column;align-items:flex-start;line-height:1}
+.tab-ml{font-size:clamp(18px,1.6vw,28px);font-weight:800}
+.tab-en{font-size:clamp(11px,0.85vw,15px);font-weight:700;opacity:.65;margin-top:2px}
+.menu-tab:active{transform:translateY(5px);box-shadow:0 2px 0 color-mix(in oklch,var(--tab) 70%,#000)}
+.menu-tab.active{
+  background:var(--tab);color:#fff;
+  transform:translateY(-4px);
+  box-shadow:0 10px 0 color-mix(in oklch,var(--tab) 62%,#000),0 16px 26px rgba(0,0,0,.20);
+}
+.menu-tab.active .tab-en{opacity:.9}
+.menu-tab.active img{transform:scale(1.15) rotate(-6deg)}
+
+/* ── the cards ───────────────────────────────────────────────────────────────
+   Four across, two rows. Each card is a chunky button: thick border in a
+   darker shade of its own colour, a solid edge underneath that it presses down
+   into, and art that breaks out over the top of the tile. */
+/* Flex-wrap, not grid: a tab with 7 cards then centres its short second row
+   instead of leaving a hole at the right end of it. */
+.card-grid{
+  --col-gap:clamp(16px,1.6vw,30px);
+  display:flex;flex-wrap:wrap;justify-content:center;
+  gap:clamp(18px,1.8vw,34px) var(--col-gap);
+  /* the side margins each clear കുട്ടു in the bottom-left corner */
+  width:min(92vw,1240px,calc(100vw - 2 * (clamp(96px,8vw,132px) + 30px)));max-width:none;
+  padding-top:clamp(18px,2.6vh,34px);    /* room for the art to pop out */
+}
+.card-grid > .game-card{flex:0 0 calc((100% - 3 * var(--col-gap)) / 4);min-width:0}
+.card-grid .game-card[hidden]{display:none !important}
+.card-grid .game-card{
+  /* OKLCH, not sRGB: mixing in sRGB toward a fixed dark dragged every pastel
+     toward the same muddy brown-grey; OKLCH keeps the card's own hue and just
+     deepens it, so a pink card gets a pink edge. */
+  --edge:color-mix(in oklch,var(--art,#FFD966) 64%,#1b1030);
+  position:relative;overflow:visible;
+  display:flex;flex-direction:column;align-items:stretch;
+  min-height:0;padding:0;
+  background:#ffffff;
+  border:5px solid var(--edge);
+  border-radius:clamp(24px,2.2vw,36px);
+  box-shadow:0 10px 0 var(--edge), 0 18px 28px rgba(15,35,70,.22);
+  transition:transform .14s ease, box-shadow .14s ease;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.card-grid .game-card::before{display:none}
+.card-grid .game-card:hover{transform:translateY(-4px);box-shadow:0 14px 0 var(--edge),0 22px 32px rgba(15,35,70,.24)}
+/* pressing it pushes it down onto its own edge, like a real button */
+.card-grid .game-card:active{transform:translateY(8px);box-shadow:0 2px 0 var(--edge),0 6px 12px rgba(15,35,70,.18)}
+
+.card-art{
+  position:relative;flex:0 0 auto;
+  height:clamp(96px,calc(25vh - 118px),168px);
+  margin:clamp(6px,0.5vw,9px) clamp(6px,0.5vw,9px) 0;
+  background:var(--art,#FFD966);
+  border-radius:clamp(18px,1.7vw,28px);
+  display:flex;align-items:flex-end;justify-content:center;
+  overflow:visible;
+}
+.card-art::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(130% 90% at 50% 0%,rgba(255,255,255,.5),rgba(255,255,255,0) 60%);
+}
+/* the art is taller than its panel and anchored to the bottom, so it rises
+   out over the top edge — the single thing that most makes these read as toys */
+.card-img{
+  position:relative;z-index:1;
+  height:118%;width:auto;max-width:86%;object-fit:contain;
+  margin-bottom:4%;
+  filter:drop-shadow(0 8px 6px rgba(0,0,0,.22));
+  transition:transform .35s cubic-bezier(.34,1.6,.64,1);
+  -webkit-user-drag:none;
+}
+.card-img + .card-icon{display:none}
+.card-art .card-icon{font-size:clamp(48px,5vw,84px);position:relative;z-index:1;margin-bottom:6%}
+.card-grid .game-card:hover .card-img{transform:translateY(-6px) scale(1.06) rotate(-4deg)}
+
+.card-label{padding:clamp(6px,0.9vh,12px) 8px clamp(8px,1.1vh,14px);text-align:center}
+.card-grid .card-name{
+  font-size:clamp(17px,1.45vw,27px);font-weight:800;color:#2B2D42;
+  line-height:1.1;margin:0;
+}
+.card-sub{
+  font-size:clamp(11px,0.9vw,15px);font-weight:700;
+  color:color-mix(in oklch,var(--art,#FFD966) 40%,#2b2d42);
+  margin-top:2px;line-height:1.15;
+}
+
+/* cards pop in when a tab opens, so the change is visible rather than abrupt */
+@keyframes cardPopIn{
+  0%  {opacity:0;transform:translateY(18px) scale(.86)}
+  70% {opacity:1;transform:translateY(-4px) scale(1.03)}
+  100%{opacity:1;transform:none}
+}
+.card-grid .game-card.pop-in{animation:cardPopIn .42s cubic-bezier(.34,1.3,.64,1) both}
+
+/* ── the corners ───────────────────────────────────────────────────────────
+   Play Intro is for the adult running the session, so it sits top-left,
+   mirroring the Guest pill — out of the children's band, and no longer on
+   top of the last card on a 1280/1366-wide screen. */
+#intro-btn{
+  bottom:auto;right:auto;
+  top:clamp(14px,2vh,24px);left:clamp(14px,2vw,24px);
+  border:4px solid #F28A2E;background:#FFB347;
+  box-shadow:0 7px 0 #C9671A,0 12px 22px rgba(0,0,0,.2);
+  animation:none;border-radius:999px;
+}
+#intro-btn .intro-label{color:#5A2A0A;font-weight:800}
+#intro-btn:active{transform:translateY(5px);box-shadow:0 2px 0 #C9671A}
+#info-btn{border:3px solid #fff;background:rgba(255,255,255,.92);
+  box-shadow:0 5px 0 rgba(20,60,120,.25)}
+
+/* കുട്ടു on the menu: above the loading screen, a touch larger than on an
+   activity page — here he is the host. `body` raises specificity over the
+   stylesheet guide.js injects later. */
+body #wallGuide,body #wallGuideBubble{z-index:10050}
+body #wallGuide{width:clamp(96px,8vw,132px);height:clamp(96px,8vw,132px)}
+body #wallGuideBubble{bottom:calc(14px + clamp(96px,8vw,132px) + 8px);font-family:'Baloo Chettan 2','Noto Sans Malayalam',sans-serif}
+
+@media (prefers-reduced-motion:reduce){
+  .card-grid .game-card.pop-in{animation:none}
+  .card-grid .game-card:hover,.card-grid .game-card:hover .card-img,
+  .menu-tab.active img{transform:none}
+}
+
+/* Short screens: the art panel shrinks first, the subtitle goes last. */
+@media (max-height:800px){
+  .card-sub{display:none}
+  .card-art{height:clamp(70px,calc(25vh - 96px),168px)}
+  .card-grid{gap:16px 18px}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
@@ -333,9 +624,10 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
   <canvas id="particle-canvas"></canvas>
   <div id="loading-ui">
     <img src="./assets/images/Auticare_logo_Embright (1).png" alt="Auticare" id="loading-logo">
+    <div id="loading-title">Auticare Blueroom</div>
     <div id="loading-tagline">Interactive Learning Wall</div>
     <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
-    <div id="loading-dots">Loading</div>
+    <div id="loading-dots"><span class="ld-ml">തയ്യാറാകുന്നു…</span><span class="ld-en">Getting ready</span></div>
   </div>
   <audio id="loading-audio" preload="auto">
     <source src="./assets/Audio/Loading.mp3" type="audio/mpeg">
@@ -370,105 +662,243 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
       <div class="card-grid">
 
         <!-- Row 1 -->
-        <div class="game-card card-canvas card-stagger" data-game="canvas">
-          <div class="card-icon">🎨</div>
-          <div class="card-name">Free Canvas</div>
+        <div class="game-card card-canvas card-stagger" data-game="canvas" style="--art:#F9B9CF">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/canvas.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🎨</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Free Canvas</div>
+            <div class="card-sub">Drawing</div>
+          </div>
         </div>
-        <div class="game-card card-solar card-stagger" data-game="solar-system">
-          <div class="card-icon">🪐</div>
-          <div class="card-name">Solar System</div>
+        <div class="game-card card-solar card-stagger" data-game="solar-system" style="--art:#B9C3F5">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/solar-system.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🪐</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Solar System</div>
+            <div class="card-sub">Space</div>
+          </div>
         </div>
-        <div class="game-card card-coloring card-stagger" data-game="coloring-book">
-          <div class="card-icon">🖍️</div>
-          <div class="card-name">Coloring Book</div>
+        <div class="game-card card-coloring card-stagger" data-game="coloring-book" style="--art:#FFD966">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/coloring-book.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🖍️</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Coloring Book</div>
+            <div class="card-sub">Colours</div>
+          </div>
         </div>
-        <div class="game-card card-particles card-stagger" data-game="particle-playground">
-          <div class="card-icon">✨</div>
-          <div class="card-name">Particles</div>
+        <div class="game-card card-particles card-stagger" data-game="particle-playground" style="--art:#D8C3F6">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/particle-playground.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">✨</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Particles</div>
+            <div class="card-sub">Play</div>
+          </div>
         </div>
-        <div class="game-card card-goalkeeper card-stagger" data-game="goalkeeper">
-          <div class="card-icon">⚽</div>
-          <div class="card-name">Goalkeeper</div>
+        <div class="game-card card-goalkeeper card-stagger" data-game="goalkeeper" style="--art:#B6E35C">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/goalkeeper.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">⚽</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Goalkeeper</div>
+            <div class="card-sub">Sports</div>
+          </div>
         </div>
 
         <!-- Row 2 -->
-        <div class="game-card card-fruit card-stagger" data-game="fruit-ninja">
-          <div class="card-icon">🍉</div>
-          <div class="card-name">Fruit Ninja</div>
+        <div class="game-card card-fruit card-stagger" data-game="fruit-ninja" style="--art:#FFBCB0">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/fruit-ninja.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🍉</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Fruit Ninja</div>
+            <div class="card-sub">Action</div>
+          </div>
         </div>
-        <div class="game-card card-jungle card-stagger" data-category="jungle">
-          <div class="card-icon">🌴</div>
-          <div class="card-name">Jungle</div>
+        <div class="game-card card-jungle card-stagger" data-category="jungle" style="--art:#A5DC7F">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/jungle.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🌴</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Jungle</div>
+            <div class="card-sub">Explore</div>
+          </div>
         </div>
-        <div class="game-card card-skills card-stagger" data-category="daily-skills">
-          <div class="card-icon">🏠</div>
-          <div class="card-name">Daily Skills</div>
+        <div class="game-card card-skills card-stagger" data-category="daily-skills" style="--art:#FFCD9C">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/daily-skills.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🏠</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Daily Skills</div>
+            <div class="card-sub">Life skills</div>
+          </div>
         </div>
-        <div class="game-card card-learning card-stagger" data-category="learning">
-          <div class="card-icon">📚</div>
-          <div class="card-name">Learning</div>
+        <div class="game-card card-learning card-stagger" data-category="learning" style="--art:#FFD966">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/learning.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">📚</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Learning</div>
+            <div class="card-sub">ABC & 123</div>
+          </div>
         </div>
-        <div class="game-card card-ocean card-stagger" data-game="underwater-explorer">
-          <div class="card-icon">🌊</div>
-          <div class="card-name">Sea Explorer</div>
+        <div class="game-card card-ocean card-stagger" data-game="underwater-explorer" style="--art:#8FD3F4">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/underwater-explorer.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🌊</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Sea Explorer</div>
+            <div class="card-sub">Ocean</div>
+          </div>
         </div>
 
         <!-- Row 3 -->
-        <div class="game-card card-music card-stagger" data-game="music-maker">
-          <div class="card-icon">🎵</div>
-          <div class="card-name">Music Maker</div>
+        <div class="game-card card-music card-stagger" data-game="music-maker" style="--art:#F7B8D6">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/music-maker.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🎵</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Music Maker</div>
+            <div class="card-sub">Sounds</div>
+          </div>
         </div>
-        <div class="game-card card-forest card-stagger" data-game="creature-creator">
-          <div class="card-icon">🌳</div>
-          <div class="card-name">Trace It</div>
+        <div class="game-card card-forest card-stagger" data-game="creature-creator" style="--art:#A9DEF7">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/creature-creator.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🌳</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Trace It</div>
+            <div class="card-sub">Writing</div>
+          </div>
         </div>
         <div class="game-card card-stagger" data-game="butterfly-tracker"
-             style="background:linear-gradient(135deg,#FFB6D9,#FF69B4)">
-          <div class="card-icon">🦋</div>
-          <div class="card-name">Butterfly Tracker</div>
+             style="--art:#DAC7F7">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/butterfly-tracker.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🦋</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Butterfly Tracker</div>
+            <div class="card-sub">Follow</div>
+          </div>
         </div>
-        <div class="game-card card-balloon card-stagger" data-game="balloon-popper">
-          <div class="card-icon">🎈</div>
-          <div class="card-name">Balloon Popper</div>
+        <div class="game-card card-balloon card-stagger" data-game="balloon-popper" style="--art:#FFB9CD">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/balloon-popper.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🎈</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Balloon Popper</div>
+            <div class="card-sub">Pop!</div>
+          </div>
         </div>
-        <div class="game-card card-fish card-stagger" data-game="fish-it">
-          <div class="card-icon">🎣</div>
-          <div class="card-name">Fish It</div>
+        <div class="game-card card-fish card-stagger" data-game="fish-it" style="--art:#8FD3F4">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/fish-it.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🎣</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Fish It</div>
+            <div class="card-sub">Catch</div>
+          </div>
         </div>
 
         <!-- Row 4 -->
-        <div class="game-card card-puzzle card-stagger" data-game="puzzle-balance">
-          <div class="card-icon">⚖️</div>
-          <div class="card-name">Puzzle Balance</div>
+        <div class="game-card card-puzzle card-stagger" data-game="puzzle-balance" style="--art:#F4DAA8">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/puzzle-balance.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">⚖️</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Puzzle Balance</div>
+            <div class="card-sub">Thinking</div>
+          </div>
         </div>
-        <div class="game-card card-preprimary card-stagger" data-category="pre-primary">
-          <div class="card-icon">🦁</div>
-          <div class="card-name">Pre-Primary</div>
+        <div class="game-card card-preprimary card-stagger" data-category="pre-primary" style="--art:#B6E35C">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/pre-primary.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🦁</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">പ്രീ-പ്രൈമറി</div>
+            <div class="card-sub">Pre-Primary</div>
+          </div>
         </div>
-        <div class="game-card card-primary card-stagger" data-category="primary">
-          <div class="card-icon">🏫</div>
-          <div class="card-name">പ്രൈമറി<small>Primary</small></div>
+        <div class="game-card card-primary card-stagger" data-category="primary" style="--art:#9DD1F5">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/primary.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🏫</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">പ്രൈമറി</div>
+            <div class="card-sub">Primary</div>
+          </div>
         </div>
-        <div class="game-card card-secondary card-stagger" data-category="secondary">
-          <div class="card-icon">🎓</div>
-          <div class="card-name">സെക്കൻഡറി<small>Secondary</small></div>
+        <div class="game-card card-secondary card-stagger" data-category="secondary" style="--art:#CBB8F6">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/secondary.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🎓</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">സെക്കൻഡറി</div>
+            <div class="card-sub">Secondary</div>
+          </div>
         </div>
-        <div class="game-card card-vocational card-stagger" data-category="vocational">
-          <div class="card-icon">🥁</div>
-          <div class="card-name">തൊഴിൽപരിചയം<small>Vocational</small></div>
+        <div class="game-card card-vocational card-stagger" data-category="vocational" style="--art:#FFB79C">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/vocational.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🥁</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">തൊഴിൽപരിചയം</div>
+            <div class="card-sub">Vocational</div>
+          </div>
         </div>
-        <div class="game-card card-memory card-stagger" data-game="money-counter">
-          <div class="card-icon">🛒</div>
-          <div class="card-name">Money Counter</div>
+        <div class="game-card card-memory card-stagger" data-game="money-counter" style="--art:#A9E7CA">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/money-counter.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🛒</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Money Counter</div>
+            <div class="card-sub">Shopping</div>
+          </div>
         </div>
-        <div class="game-card card-shape card-stagger" data-game="shape-sorter">
-          <div class="card-icon">🔵</div>
-          <div class="card-name">Shape Sorter</div>
+        <div class="game-card card-shape card-stagger" data-game="shape-sorter" style="--art:#F9B9CF">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/shape-sorter.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🔵</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">Shape Sorter</div>
+            <div class="card-sub">Shapes & colours</div>
+          </div>
         </div>
         <div class="game-card card-stagger" data-game="video-360-player"
-             style="background:linear-gradient(135deg,#FF6B9D,#C44569)">
-          <div class="card-icon">🎬</div>
-          <div class="card-name">360° Videos</div>
+             style="--art:#B6C8F1">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/video-360-player.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">🎬</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name">360° Videos</div>
+            <div class="card-sub">Watch</div>
+          </div>
         </div>
 
       </div><!-- /.card-grid -->
@@ -520,11 +950,23 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
 </script>
 <script src="./js/session-controls.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- The menu and loading backgrounds are now assets/new/landscape.svg, a static
+     drawing set in CSS. Three scripts used to live here and are gone on purpose:
+       · three.min.js came from cdnjs — a CDN, at runtime. The wall has no
+         network, so it never loaded there, and menu-background.js failed
+         silently inside its try/catch. The menu has had no 3D background on
+         the wall at all; only on a networked dev machine.
+       · menu-background.js and hyperdrive-animation.js each ran a
+         requestAnimationFrame loop that never stopped — the loading one kept
+         rendering long after the loading screen was gone. Two GPU loops for
+         a backdrop, on a wall PC, for nothing a child could see.
+       · hyperdrive also painted translucent white over its canvas every
+         frame, which would have washed any landscape behind it out to white. -->
+
+<script src="./js/ambient-music.js"></script>
 <script src="./js/credits-data.js"></script>
-<script src="./js/hyperdrive-animation.js"></script>
-<script src="./js/menu-background.js"></script>
 <script src="./js/game-loader.js"></script>
+<script src="./js/menu-tabs.js"></script>
 
 <!-- Voice + കുട്ടു on the menu.
      The menu has always been silent: none of the voice stack was loaded here,
@@ -667,13 +1109,13 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
 
   window._startBubbles = function() {
     resize();
-    for (var i = 0; i < 7; i++) {
+    for (var i = 0; i < 4; i++) {
       spawn();
       bubbles[bubbles.length - 1].y = Math.random() * bc.height;
     }
     running = true;
     draw();
-    setInterval(spawn, 900);
+    setInterval(spawn, 2600);   // was 900ms: a calmer sky, not a busy one
   };
 })();
 
@@ -753,12 +1195,12 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
   var menuAudio = document.getElementById('menu-audio');
 
   btn.addEventListener('click', function(e) {
-    if (menuAudio) menuAudio.pause();
+    if (window.AMBIENT) AMBIENT.stop(300);
     if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
     location.href = 'intro.html';
   });
   btn.addEventListener('touchend', function(e) {
-    if (menuAudio) menuAudio.pause();
+    if (window.AMBIENT) AMBIENT.stop(300);
     e.preventDefault();
     location.href = 'intro.html';
   });
@@ -770,23 +1212,22 @@ window.addEventListener('load', function() {
   var loadingAudio = document.getElementById('loading-audio');
   var menuAudio = document.getElementById('menu-audio');
 
-  if (loadingAudio) {
-    loadingAudio.volume = 0.6;
-    loadingAudio.play().catch(function(e) { console.log('Audio autoplay prevented:', e); });
-  }
+  /* One continuous score from the loading screen into the menu, rather than
+     Loading.mp3 cut off and menu.mp3 started — a hard switch between two
+     tracks is exactly the kind of abrupt change these children notice.
+     js/ambient-music.js explains the sound itself. The two <audio> elements
+     are left in the page, unused, so reverting is a two-line change. */
+  if (window.AMBIENT) AMBIENT.start();
 
   setTimeout(function() {
     loading.style.display = 'none';
     menu.style.display = 'flex';
 
-    if (loadingAudio) { loadingAudio.pause(); loadingAudio.currentTime = 0; }
-    if (menuAudio) {
-      menuAudio.volume = 0.5;
-      menuAudio.play().catch(function(e) { console.log('Audio autoplay prevented:', e); });
-    }
+    // the score keeps playing straight through the handoff
 
     if (window._startBubbles) window._startBubbles();
-    if (window._startFloatingBalls) window._startFloatingBalls();
+    /* the 50 random floating dots are gone from this design — not started,
+       rather than started and hidden, which would still animate all 50 */
     // Render 3D Twemoji for all emoji in the menu
     if (window.twemoji) {
       twemoji.parse(document.getElementById('main-menu'), {
@@ -985,6 +1426,12 @@ window._startFloatingBalls = (function() {
                 return '<li>' + esc(p.author) +
                        (p.count > 1 ? ' <span class="lic">×' + p.count + '</span>' : '') + '</li>';
               }).join('') + '</ul>';
+    }
+    if (d.icons && d.icons.count) {
+      /* MIT: shipping the art is conditional on shipping this notice. */
+      html += '<h3>Menu artwork</h3>' +
+              '<div class="note">The ' + d.icons.count + ' illustrations on the main menu cards are ' +
+              'Microsoft Fluent Emoji (3D).</div><ul><li>' + esc(d.icons.notice) + '</li></ul>';
     }
     if (!html) html = '<div class="note">No third-party assets are in use.</div>';
     host.innerHTML = html;

@@ -394,5 +394,9 @@ window.CREDITS_DATA = {
    "author": "Наталья Масик",
    "count": 1
   }
- ]
+ ],
+ "icons": {
+  "count": 32,
+  "notice": "Fluent Emoji — Copyright (c) Microsoft Corporation. MIT License."
+ }
 };

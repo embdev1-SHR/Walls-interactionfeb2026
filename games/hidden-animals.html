@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Hidden Animals - Bamboo Forest</title>
+<!-- Needed now that the popup leads in Malayalam. On the wall, which has no
+     network, this link simply fails and Windows falls back to Nirmala UI —
+     the script still renders, just not in Noto. Same arrangement as every
+     other activity in this repo. -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{
@@ -20,12 +25,17 @@ canvas{position:absolute;inset:0;z-index:0}
   font-size:clamp(32px,5vw,48px);
   cursor:pointer;line-height:1;
   transition:filter .5s ease,opacity .5s ease,transform .5s ease,font-size .5s ease;
-  filter:saturate(.15) brightness(.55) hue-rotate(50deg);
-  opacity:.32;
+  /* Review: the animals were too hard to spot. They sat at .32 opacity under a
+     heavy desaturate-and-darken, which on a bright wall left almost nothing to
+     see and turned the activity into sweeping a finger across the screen.
+     Raised so a child can find them by looking — still tinted toward the
+     background, so it stays a search rather than a list. */
+  filter:saturate(.45) brightness(.82) hue-rotate(20deg);
+  opacity:.62;
 }
 .animal-btn:hover{
-  opacity:.45;
-  filter:saturate(.25) brightness(.65) hue-rotate(30deg);
+  opacity:.8;
+  filter:saturate(.7) brightness(.95) hue-rotate(10deg);
 }
 .animal-btn.found{
   font-size:clamp(64px,9vw,100px);
@@ -54,6 +64,10 @@ canvas{position:absolute;inset:0;z-index:0}
   100%{transform:translateX(-50%) scale(1) translateY(0);opacity:1}
 }
 .popup-emoji{font-size:32px;text-align:center;display:block;margin-bottom:4px}
+/* Malayalam leads in the popup, so it needs the Malayalam face and room to
+   breathe; the English line under it is deliberately quieter. */
+.popup-name{font-family:"Noto Sans Malayalam",inherit}
+.popup-en{font-size:.68em;opacity:.68;margin-top:-2px}
 .popup-name{font-size:16px;font-weight:700;color:#81c784;text-align:center;margin-bottom:4px}
 .popup-desc{font-size:12px;color:rgba(255,255,255,.7);text-align:center;line-height:1.4}
 
@@ -229,26 +243,26 @@ var wrap = document.getElementById('gameWrap');
 var W, H;
 
 var ALL_ANIMALS = [
-  { emoji:'\uD83E\uDD8A', name:'Fox', desc:'Quick and cunning hunters that thrive in forests worldwide.' },
-  { emoji:'\uD83D\uDC3B', name:'Bear', desc:'Powerful omnivores that can smell food from 20 miles away.' },
-  { emoji:'\uD83E\uDD8C', name:'Deer', desc:'Graceful herbivores whose antlers grow up to an inch per day.' },
-  { emoji:'\uD83E\uDD89', name:'Owl', desc:'Nocturnal hunters that can locate prey in complete darkness.' },
-  { emoji:'\uD83E\uDD9D', name:'Raccoon', desc:'Curious creatures with nimble paws that open almost anything.' },
-  { emoji:'\uD83D\uDC3F\uFE0F', name:'Squirrel', desc:'Busy foragers that bury thousands of nuts each autumn.' },
-  { emoji:'\uD83E\uDD94', name:'Hedgehog', desc:'Tiny insect hunters that curl into a spiny ball for protection.' },
-  { emoji:'\uD83D\uDC30', name:'Rabbit', desc:'Swift burrowers that zigzag to escape predators.' },
-  { emoji:'\uD83E\uDD85', name:'Eagle', desc:'Powerful raptors with a wingspan of up to 7 feet.' },
-  { emoji:'\uD83E\uDD8E', name:'Lizard', desc:'Cold-blooded climbers that can regrow their tail if lost.' },
-  { emoji:'\uD83D\uDC0D', name:'Snake', desc:'Legless hunters that sense prey using heat and vibration.' },
-  { emoji:'\uD83E\uDD9C', name:'Parrot', desc:'Colorful birds that mimic sounds and live over 50 years.' },
-  { emoji:'\uD83D\uDC38', name:'Frog', desc:'Amphibians that absorb water through their skin.' },
-  { emoji:'\uD83E\uDD8B', name:'Butterfly', desc:'Delicate flyers that taste with their feet.' },
-  { emoji:'\uD83D\uDC22', name:'Turtle', desc:'Ancient reptiles that have existed for 200 million years.' },
-  { emoji:'\uD83E\uDDA5', name:'Sloth', desc:'Slow tree dwellers that sleep up to 20 hours a day.' },
-  { emoji:'\uD83D\uDC12', name:'Monkey', desc:'Intelligent primates that use tools and live in social groups.' },
-  { emoji:'\uD83E\uDD9A', name:'Peacock', desc:'Dazzling birds whose tail feathers can span 5 feet.' },
-  { emoji:'\uD83E\uDD86', name:'Duck', desc:'Waterproof birds with feathers that keep them perfectly dry.' },
-  { emoji:'\uD83D\uDC1D', name:'Bee', desc:'Tiny pollinators that visit 5,000 flowers in a single day.' }
+  { emoji:'🦊', name:'Fox',       ml:'കുറുക്കൻ',   desc:'Quick and cunning hunters that thrive in forests worldwide.' },
+  { emoji:'🐻', name:'Bear',      ml:'കരടി',       desc:'Powerful omnivores that can smell food from 20 miles away.' },
+  { emoji:'🦌', name:'Deer',      ml:'മാൻ',        desc:'Graceful herbivores whose antlers grow up to an inch per day.' },
+  { emoji:'🦉', name:'Owl',       ml:'മൂങ്ങ',       desc:'Nocturnal hunters that can locate prey in complete darkness.' },
+  { emoji:'🐘', name:'Elephant',  ml:'ആന',         desc:'The largest land animal, and a familiar sight in Kerala.' },
+  { emoji:'🐿️', name:'Squirrel',  ml:'അണ്ണാൻ',     desc:'Busy foragers that bury thousands of nuts each autumn.' },
+  { emoji:'🦁', name:'Lion',      ml:'സിംഹം',      desc:'The king of the forest, who lives and hunts in a pride.' },
+  { emoji:'🐰', name:'Rabbit',    ml:'മുയൽ',       desc:'Swift burrowers that zigzag to escape predators.' },
+  { emoji:'🦅', name:'Eagle',     ml:'കഴുകൻ',      desc:'Powerful raptors with a wingspan of up to 7 feet.' },
+  { emoji:'🦎', name:'Lizard',    ml:'പല്ലി',       desc:'Cold-blooded climbers that can regrow their tail if lost.' },
+  { emoji:'🐍', name:'Snake',     ml:'പാമ്പ്',      desc:'Legless hunters that sense prey using heat and vibration.' },
+  { emoji:'🦜', name:'Parrot',    ml:'തത്ത',       desc:'Colorful birds that mimic sounds and live over 50 years.' },
+  { emoji:'🐸', name:'Frog',      ml:'തവള',        desc:'Amphibians that absorb water through their skin.' },
+  { emoji:'🦋', name:'Butterfly', ml:'ചിത്രശലഭം',  desc:'Delicate flyers that taste with their feet.' },
+  { emoji:'🐢', name:'Turtle',    ml:'ആമ',         desc:'Ancient reptiles that have existed for 200 million years.' },
+  { emoji:'🐅', name:'Tiger',     ml:'കടുവ',       desc:'A striped hunter, and the national animal of India.' },
+  { emoji:'🐒', name:'Monkey',    ml:'കുരങ്ങ്',     desc:'Intelligent primates that use tools and live in social groups.' },
+  { emoji:'🦚', name:'Peacock',   ml:'മയിൽ',       desc:'Dazzling birds whose tail feathers can span 5 feet.' },
+  { emoji:'🦆', name:'Duck',      ml:'താറാവ്',      desc:'Waterproof birds with feathers that keep them perfectly dry.' },
+  { emoji:'🐝', name:'Bee',       ml:'തേനീച്ച',     desc:'Tiny pollinators that visit 5,000 flowers in a single day.' }
 ];
 
 var GAME_COUNT = 8;
@@ -592,11 +606,19 @@ function showPopup(a) {
   popup.className = 'info-popup';
   popup.style.left = a.x + 'px';
   popup.style.top = Math.max(60, a.y - 80) + 'px';
+  /* Review asked for the Malayalam name when an animal is tapped. It leads,
+     with English underneath — the rule the rest of the app follows. */
   popup.innerHTML =
     '<span class="popup-emoji">' + a.emoji + '</span>' +
-    '<div class="popup-name">' + a.name + '</div>' +
+    '<div class="popup-name">' + (a.ml || a.name) + '</div>' +
+    '<div class="popup-name popup-en">' + a.name + '</div>' +
     '<div class="popup-desc">' + a.desc + '</div>';
   wrap.appendChild(popup);
+
+  /* Spoken as well as shown: a child who cannot yet read the script still gets
+     the word. WALL.say honours the teacher's mute and prefers a baked clip;
+     the names not yet baked fall back to the device voice. */
+  if (window.WALL && a.ml) { try { WALL.say(a.ml, 'ml'); } catch (e) {} }
   setTimeout(function() {
     popup.style.transition = 'opacity .4s';
     popup.style.opacity = '0';

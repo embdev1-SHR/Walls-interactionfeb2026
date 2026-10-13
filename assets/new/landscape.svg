@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Menu + loading backdrop — an anime-style landscape.
+
+  Hand-drawn SVG rather than an image: it is a few KB, scales to any wall
+  without blurring, and needs no asset licence. The style is cel-shaded in the
+  way Ghibli and Shinkai backgrounds are: flat colour fields, clouds with a hard
+  blue-grey underside, atmospheric haze making far ridges paler and bluer.
+
+  Coconut palms on the far ridge so it reads as Kerala, not anywhere.
+
+  Deliberately calm: soft pastels, no high-contrast detail behind the cards,
+  because a busy backdrop competes with the cards for a child's attention.
+  preserveAspectRatio slice + anchored at the bottom keeps the ground on the
+  ground at any screen shape.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMax slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#4FA7EA"/>
+      <stop offset="0.42" stop-color="#8CC9F1"/>
+      <stop offset="0.66" stop-color="#C6E5F6"/>
+      <stop offset="0.80" stop-color="#FFEBCB"/>
+      <stop offset="1"    stop-color="#FFD9A6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"   stop-color="#FFF8E1" stop-opacity="0.95"/>
+      <stop offset="0.35" stop-color="#FFEFC4" stop-opacity="0.55"/>
+      <stop offset="1"   stop-color="#FFE3AE" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mtnFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9BFE6"/>
+      <stop offset="1" stop-color="#D4E1F2"/>
+    </linearGradient>
+    <linearGradient id="mtnNear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8AAAD9"/>
+      <stop offset="1" stop-color="#B9CDEA"/>
+    </linearGradient>
+    <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0.6" stop-color="#F2F7FC" stop-opacity="0.55"/>
+      <stop offset="1"   stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="hillFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A8D98C"/>
+      <stop offset="1" stop-color="#93CC7C"/>
+    </linearGradient>
+    <linearGradient id="hillMid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7CC862"/>
+      <stop offset="1" stop-color="#5FB04F"/>
+    </linearGradient>
+    <linearGradient id="hillNear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5BB04B"/>
+      <stop offset="1" stop-color="#3E8F3B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- sky -->
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+
+  <!-- sun, low and warm, with soft rays -->
+  <circle cx="1460" cy="470" r="560" fill="url(#glow)"/>
+  <g fill="#FFFFFF" opacity="0.10">
+    <path d="M1460 470 L1120 -40 L1240 -40 Z"/>
+    <path d="M1460 470 L1420 -40 L1540 -40 Z"/>
+    <path d="M1460 470 L1720 -40 L1840 -40 Z"/>
+    <path d="M1460 470 L1960 120 L1960 240 Z"/>
+  </g>
+  <circle cx="1460" cy="470" r="68" fill="#FFF8E6"/>
+
+  <!-- big cumulus, left. Three cel tones — shadow, body, sunlit highlight —
+       each a copy of the same puffs lifted a little further toward the sun.
+       That stacking is what gives anime clouds their volume; two tones read
+       as a cut-out. -->
+  <g>
+    <g fill="#C6D9EF">
+      <circle cx="300" cy="330" r="92"/><circle cx="410" cy="288" r="122"/>
+      <circle cx="530" cy="310" r="106"/><circle cx="632" cy="346" r="80"/>
+      <circle cx="226" cy="368" r="60"/><circle cx="712" cy="372" r="54"/>
+      <ellipse cx="470" cy="388" rx="270" ry="34"/>
+    </g>
+    <g fill="#EAF3FC">
+      <circle cx="300" cy="314" r="86"/><circle cx="410" cy="270" r="116"/>
+      <circle cx="530" cy="294" r="100"/><circle cx="630" cy="332" r="72"/>
+      <circle cx="232" cy="354" r="52"/><circle cx="706" cy="360" r="44"/>
+    </g>
+    <g fill="#FFFFFF">
+      <circle cx="318" cy="298" r="66"/><circle cx="428" cy="252" r="94"/>
+      <circle cx="546" cy="278" r="78"/><circle cx="640" cy="318" r="50"/>
+    </g>
+  </g>
+
+  <!-- cumulus, centre-right, smaller and higher -->
+  <g>
+    <g fill="#CCDDF1">
+      <circle cx="1050" cy="190" r="64"/><circle cx="1130" cy="160" r="84"/>
+      <circle cx="1215" cy="182" r="70"/><circle cx="1285" cy="206" r="50"/>
+      <ellipse cx="1165" cy="236" rx="170" ry="24"/>
+    </g>
+    <g fill="#EDF5FC">
+      <circle cx="1050" cy="178" r="58"/><circle cx="1130" cy="146" r="78"/>
+      <circle cx="1215" cy="170" r="64"/><circle cx="1283" cy="196" r="42"/>
+    </g>
+    <g fill="#FFFFFF">
+      <circle cx="1068" cy="166" r="42"/><circle cx="1144" cy="134" r="60"/>
+      <circle cx="1226" cy="160" r="44"/>
+    </g>
+  </g>
+
+  <!-- a few distant birds — the most Ghibli detail there is, and tiny -->
+  <!-- placed in open sky between the two right-hand clouds: the first spot
+       chosen sat beside the menu's title and read as a stray mark on the text -->
+  <g stroke="#56708F" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.55">
+    <path d="M1452 132 q9 -8 18 0 q9 -8 18 0"/>
+    <path d="M1500 110 q7 -6 14 0 q7 -6 14 0"/>
+    <path d="M1424 100 q6 -5 12 0 q6 -5 12 0"/>
+  </g>
+
+  <!-- a wisp, far right -->
+  <g>
+    <g fill="#DCE8F5">
+      <circle cx="1730" cy="300" r="44"/><circle cx="1792" cy="282" r="56"/>
+      <circle cx="1852" cy="300" r="42"/><ellipse cx="1792" cy="334" rx="110" ry="16"/>
+    </g>
+    <g fill="#FFFFFF">
+      <circle cx="1730" cy="290" r="38"/><circle cx="1792" cy="270" r="50"/>
+      <circle cx="1852" cy="290" r="34"/>
+    </g>
+  </g>
+
+  <!-- distant mountains (the Ghats), pale with haze -->
+  <!-- Ridgelines are curves, not zigzags: straight-edged peaks are what made
+       the first draft read as clip-art rather than an anime background. -->
+  <path fill="url(#mtnFar)" d="M0 646 C60 600 120 552 176 546 C232 540 270 582 322 590
+        C380 560 420 504 474 494 C530 486 580 556 642 572 C700 546 740 520 794 520
+        C850 522 890 572 944 584 C1010 540 1060 488 1114 482 C1170 478 1220 548 1274 560
+        C1330 534 1380 512 1434 510 C1500 510 1550 572 1612 586 C1670 556 1720 526 1772 526
+        C1830 528 1870 560 1920 574 L1920 1080 L0 1080 Z"/>
+  <path fill="url(#mtnNear)" d="M0 700 Q190 612 380 668 T760 652 T1140 636 T1520 676 T1920 646
+        L1920 1080 L0 1080 Z"/>
+
+  <!-- atmospheric haze lying in the valleys between the ranges — the thing
+       that makes distance read as distance rather than as stacked shapes -->
+  <rect x="0" y="600" width="1920" height="200" fill="url(#haze)"/>
+
+  <!-- far hill -->
+  <path fill="url(#hillFar)" d="M0 772 Q240 700 520 746 T1080 736 T1600 752 T1920 726
+        L1920 1080 L0 1080 Z"/>
+
+  <!-- coconut palms on the far hill — this is what makes it Kerala -->
+  <g stroke="#5F8F4E" stroke-linecap="round" fill="none" opacity="0.9">
+    <g transform="translate(1000 742)">
+      <path d="M0 0 Q6 -34 -4 -70" stroke-width="5"/>
+      <g stroke-width="4">
+        <path d="M-4 -70 q-22 -6 -40 8"/><path d="M-4 -70 q-14 -18 -36 -16"/>
+        <path d="M-4 -70 q10 -20 32 -18"/><path d="M-4 -70 q22 -4 38 12"/>
+        <path d="M-4 -70 q2 -20 -6 -34"/>
+      </g>
+    </g>
+    <g transform="translate(1046 740) scale(0.82)">
+      <path d="M0 0 Q-6 -32 4 -70" stroke-width="5"/>
+      <g stroke-width="4">
+        <path d="M4 -70 q-22 -6 -40 8"/><path d="M4 -70 q-14 -18 -36 -16"/>
+        <path d="M4 -70 q10 -20 32 -18"/><path d="M4 -70 q22 -4 38 12"/>
+      </g>
+    </g>
+    <g transform="translate(1612 750) scale(0.9)">
+      <path d="M0 0 Q7 -36 -3 -72" stroke-width="5"/>
+      <g stroke-width="4">
+        <path d="M-3 -72 q-22 -6 -40 8"/><path d="M-3 -72 q-14 -18 -36 -16"/>
+        <path d="M-3 -72 q10 -20 32 -18"/><path d="M-3 -72 q22 -4 38 12"/>
+        <path d="M-3 -72 q2 -20 -6 -34"/>
+      </g>
+    </g>
+    <g transform="translate(300 750) scale(0.78)">
+      <path d="M0 0 Q-5 -34 5 -70" stroke-width="5"/>
+      <g stroke-width="4">
+        <path d="M5 -70 q-22 -6 -40 8"/><path d="M5 -70 q-14 -18 -36 -16"/>
+        <path d="M5 -70 q10 -20 32 -18"/><path d="M5 -70 q22 -4 38 12"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- mid hill, with a light rim along its crest -->
+  <path fill="url(#hillMid)" d="M0 852 Q300 772 640 822 T1300 812 T1920 800
+        L1920 1080 L0 1080 Z"/>
+  <path fill="none" stroke="#9BDA7E" stroke-width="5" stroke-linecap="round" opacity="0.7"
+        d="M0 852 Q300 772 640 822 T1300 812 T1920 800"/>
+
+  <!-- round-canopy trees on the mid hill -->
+  <g>
+    <g transform="translate(170 822)">
+      <rect x="-5" y="0" width="10" height="34" fill="#6E5236"/>
+      <circle cx="0" cy="-12" r="34" fill="#3F8E3E"/><circle cx="-14" cy="-20" r="20" fill="#57A64D"/>
+    </g>
+    <g transform="translate(240 830) scale(0.8)">
+      <rect x="-5" y="0" width="10" height="34" fill="#6E5236"/>
+      <circle cx="0" cy="-12" r="34" fill="#3F8E3E"/><circle cx="-14" cy="-20" r="20" fill="#57A64D"/>
+    </g>
+    <g transform="translate(1520 812)">
+      <rect x="-5" y="0" width="10" height="34" fill="#6E5236"/>
+      <circle cx="0" cy="-12" r="34" fill="#3F8E3E"/><circle cx="-14" cy="-20" r="20" fill="#57A64D"/>
+    </g>
+    <g transform="translate(1596 818) scale(0.86)">
+      <rect x="-5" y="0" width="10" height="34" fill="#6E5236"/>
+      <circle cx="0" cy="-12" r="34" fill="#3F8E3E"/><circle cx="-14" cy="-20" r="20" fill="#57A64D"/>
+    </g>
+    <g transform="translate(1668 814) scale(0.7)">
+      <rect x="-5" y="0" width="10" height="34" fill="#6E5236"/>
+      <circle cx="0" cy="-12" r="34" fill="#3F8E3E"/><circle cx="-14" cy="-20" r="20" fill="#57A64D"/>
+    </g>
+  </g>
+
+  <!-- near hill -->
+  <path fill="url(#hillNear)" d="M0 938 Q420 864 900 910 T1920 892 L1920 1080 L0 1080 Z"/>
+
+  <!-- a winding path up the hill, for depth -->
+  <path fill="#EEDFB0" d="M820 1080 C880 1010 1180 992 1090 934 C1022 892 962 874 1000 842
+        L1016 844 C984 872 1050 892 1120 934 C1220 994 980 1022 1066 1080 Z"/>
+
+  <!-- foreground flowers -->
+  <g>
+    <g fill="#FFFFFF">
+      <circle cx="120" cy="1000" r="6"/><circle cx="210" cy="1040" r="5"/><circle cx="340" cy="985" r="6"/>
+      <circle cx="560" cy="1050" r="5"/><circle cx="1380" cy="1010" r="6"/><circle cx="1610" cy="1045" r="5"/>
+      <circle cx="1760" cy="990" r="6"/><circle cx="1870" cy="1040" r="5"/>
+    </g>
+    <g fill="#FF9EBB">
+      <circle cx="160" cy="1030" r="5"/><circle cx="420" cy="1020" r="6"/><circle cx="640" cy="995" r="5"/>
+      <circle cx="1290" cy="1045" r="5"/><circle cx="1500" cy="995" r="6"/><circle cx="1820" cy="1012" r="5"/>
+    </g>
+    <g fill="#FFE066">
+      <circle cx="260" cy="1005" r="5"/><circle cx="480" cy="990" r="5"/><circle cx="700" cy="1035" r="6"/>
+      <circle cx="1220" cy="1000" r="5"/><circle cx="1440" cy="1040" r="5"/><circle cx="1700" cy="1022" r="6"/>
+    </g>
+  </g>
+
+  <!-- grass tufts along the near crest -->
+  <g stroke="#3B8A38" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8">
+    <path d="M60 950 l-6 -14 M60 950 l0 -16 M60 950 l6 -14"/>
+    <path d="M460 918 l-6 -14 M460 918 l0 -16 M460 918 l6 -14"/>
+    <path d="M1260 905 l-6 -14 M1260 905 l0 -16 M1260 905 l6 -14"/>
+    <path d="M1720 900 l-6 -14 M1720 900 l0 -16 M1720 900 l6 -14"/>
+  </g>
+</svg>

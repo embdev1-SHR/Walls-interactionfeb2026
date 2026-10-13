@@ -107,13 +107,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* rest unchanged */
 .hint-area{text-align:center}
-.hint-emoji{font-size:clamp(48px,7vw,80px)}
-.hint-text{font-size:clamp(12px,1.3vw,16px);color:rgba(255,255,255,.45);margin-top:4px}
+/* Review: the hint picture was too small to recognise across a wall. */
+.hint-emoji{font-size:clamp(84px,12vw,150px);line-height:1.05}
+.hint-text{font-size:clamp(15px,1.7vw,22px);color:rgba(255,255,255,.45);margin-top:4px}
 .word-slots{display:flex;gap:clamp(6px,1vw,12px);justify-content:center;flex-wrap:wrap}
 .slot{
-  width:clamp(40px,5vw,60px);height:clamp(48px,6vw,68px);
+  width:clamp(52px,6.2vw,76px);height:clamp(62px,7.4vw,86px);
   display:flex;align-items:center;justify-content:center;
-  font-size:clamp(22px,3vw,36px);font-weight:800;
+  font-size:clamp(28px,3.7vw,46px);font-weight:800;
   background:rgba(255,255,255,.04);border:3px solid rgba(251,191,36,.15);
   border-radius:12px;transition:all .3s;color:transparent;
 }
@@ -122,12 +123,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @keyframes slotPulse{0%,100%{box-shadow:0 0 12px rgba(251,191,36,.2)}50%{box-shadow:0 0 20px rgba(251,191,36,.5)}}
 .slot.wrong{animation:slotShake .4s ease;border-color:#ef4444}
 @keyframes slotShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.slot.ml-slot{width:clamp(48px,6vw,72px);font-size:clamp(20px,2.8vw,32px)}
+.slot.ml-slot{width:clamp(62px,7.4vw,92px);font-size:clamp(26px,3.4vw,42px)}
 .letter-tiles{display:flex;gap:clamp(6px,1vw,10px);justify-content:center;flex-wrap:wrap;max-width:clamp(320px,60vw,600px)}
 .tile{
-  width:clamp(44px,5.5vw,64px);height:clamp(44px,5.5vw,64px);
+  width:clamp(58px,6.8vw,82px);height:clamp(58px,6.8vw,82px);
   display:flex;align-items:center;justify-content:center;
-  font-size:clamp(20px,2.5vw,32px);font-weight:700;
+  font-size:clamp(26px,3.2vw,42px);font-weight:700;
   background:rgba(255,255,255,.06);border:2px solid rgba(251,191,36,.2);
   border-radius:12px;cursor:pointer;transition:all .3s;
   color:rgba(255,255,255,.7);
@@ -135,7 +136,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .tile:hover{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.5);transform:scale(1.08)}
 .tile:active{transform:scale(.93)}
 .tile.used{opacity:.25;pointer-events:none;transform:scale(.85)}
-.tile.ml-tile{width:clamp(52px,6vw,72px);font-size:clamp(18px,2.2vw,28px)}
+.tile.ml-tile{width:clamp(66px,7.6vw,92px);font-size:clamp(24px,3vw,38px)}
 .celebration{position:fixed;inset:0;pointer-events:none;z-index:100}
 .confetti{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall var(--dur) ease-in forwards}
 @keyframes confettiFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
@@ -247,7 +248,10 @@ var ML_WORDS = [
   {word:'\u0D2A\u0D15\u0D4D\u0D37\u0D3F',hint:'Bird',emoji:'\uD83D\uDC26'},
   {word:'\u0D15\u0D3E\u0D31\u0D4D\u0D31\u0D4D',hint:'Wind',emoji:'\uD83C\uDF2C\uFE0F'},
   {word:'\u0D2E\u0D34',hint:'Rain',emoji:'\uD83C\uDF27\uFE0F'},
-  {word:'\u0D28\u0D3F\u0D32',hint:'Moon',emoji:'\uD83C\uDF19'},
+  /* Review: "\u0D28\u0D3F\u0D32" was unfamiliar to primary students in this context \u2014 it
+     reads as floor/level as readily as moon. \u0D1A\u0D28\u0D4D\u0D26\u0D4D\u0D30\u0D7B is the word they are
+     taught, and a full moon is a clearer picture than a crescent. */
+  {word:'\u0D1A\u0D28\u0D4D\u0D26\u0D4D\u0D30\u0D7B',hint:'Moon',emoji:'\uD83C\uDF15'},
   {word:'\u0D15\u0D23\u0D4D\u0D23\u0D4D',hint:'Eye',emoji:'\uD83D\uDC41\uFE0F'},
   {word:'\u0D15\u0D48',hint:'Hand',emoji:'\u270B'},
   {word:'\u0D2A\u0D42\u0D1A\u0D4D\u0D1A',hint:'Cat',emoji:'\uD83D\uDC31'},

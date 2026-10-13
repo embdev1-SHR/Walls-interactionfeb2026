@@ -1,0 +1,131 @@
+{
+  "canvas": {
+    "emoji": "Artist palette",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Artist%20palette/3D/artist_palette_3d.png"
+  },
+  "solar-system": {
+    "emoji": "Ringed planet",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Ringed%20planet/3D/ringed_planet_3d.png"
+  },
+  "coloring-book": {
+    "emoji": "Crayon",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Crayon/3D/crayon_3d.png"
+  },
+  "particle-playground": {
+    "emoji": "Sparkles",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Sparkles/3D/sparkles_3d.png"
+  },
+  "goalkeeper": {
+    "emoji": "Soccer ball",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Soccer%20ball/3D/soccer_ball_3d.png"
+  },
+  "fruit-ninja": {
+    "emoji": "Watermelon",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Watermelon/3D/watermelon_3d.png"
+  },
+  "jungle": {
+    "emoji": "Palm tree",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Palm%20tree/3D/palm_tree_3d.png"
+  },
+  "daily-skills": {
+    "emoji": "House with garden",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/House%20with%20garden/3D/house_with_garden_3d.png"
+  },
+  "learning": {
+    "emoji": "Books",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Books/3D/books_3d.png"
+  },
+  "underwater-explorer": {
+    "emoji": "Tropical fish",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Tropical%20fish/3D/tropical_fish_3d.png"
+  },
+  "music-maker": {
+    "emoji": "Musical notes",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Musical%20notes/3D/musical_notes_3d.png"
+  },
+  "creature-creator": {
+    "emoji": "Pencil",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Pencil/3D/pencil_3d.png"
+  },
+  "butterfly-tracker": {
+    "emoji": "Butterfly",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Butterfly/3D/butterfly_3d.png"
+  },
+  "balloon-popper": {
+    "emoji": "Balloon",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Balloon/3D/balloon_3d.png"
+  },
+  "fish-it": {
+    "emoji": "Fishing pole",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Fishing%20pole/3D/fishing_pole_3d.png"
+  },
+  "puzzle-balance": {
+    "emoji": "Balance scale",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Balance%20scale/3D/balance_scale_3d.png"
+  },
+  "pre-primary": {
+    "emoji": "Lion",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Lion/3D/lion_3d.png"
+  },
+  "primary": {
+    "emoji": "School",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/School/3D/school_3d.png"
+  },
+  "secondary": {
+    "emoji": "Graduation cap",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Graduation%20cap/3D/graduation_cap_3d.png"
+  },
+  "vocational": {
+    "emoji": "Drum",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Drum/3D/drum_3d.png"
+  },
+  "money-counter": {
+    "emoji": "Shopping cart",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Shopping%20cart/3D/shopping_cart_3d.png"
+  },
+  "shape-sorter": {
+    "emoji": "Star",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Star/3D/star_3d.png"
+  },
+  "video-360-player": {
+    "emoji": "Clapper board",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Clapper%20board/3D/clapper_board_3d.png"
+  },
+  "_licence": "Fluent Emoji — Copyright (c) Microsoft Corporation. MIT License.",
+  "tab-learn": {
+    "emoji": "Light bulb",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Light%20bulb/3D/light_bulb_3d.png"
+  },
+  "tab-play": {
+    "emoji": "Kite",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Kite/3D/kite_3d.png"
+  },
+  "tab-explore": {
+    "emoji": "Telescope",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Telescope/3D/telescope_3d.png"
+  },
+  "login-guest": {
+    "emoji": "Rocket",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Rocket/3D/rocket_3d.png"
+  },
+  "login-online": {
+    "emoji": "Locked with key",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Locked%20with%20key/3D/locked_with_key_3d.png"
+  },
+  "login-class": {
+    "emoji": "Children crossing",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Children%20crossing/3D/children_crossing_3d.png"
+  },
+  "login-individual": {
+    "emoji": "Child",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Child/Default/3D/child_3d_default.png"
+  },
+  "login-signin": {
+    "emoji": "School",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/School/3D/school_3d.png"
+  },
+  "login-student": {
+    "emoji": "Glowing star",
+    "source": "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Glowing%20star/3D/glowing_star_3d.png"
+  }
+}

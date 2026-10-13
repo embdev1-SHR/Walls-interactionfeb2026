@@ -132,6 +132,21 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
     const ML_FULL_SET = ['അ','ആ','ഇ','ഈ','ഉ','ഊ','ഋ','എ','ഏ','ഐ','ഒ','ഓ','ഔ','ം','ഃ','ക','ഖ','ഗ','ഘ','ങ','ച','ഛ','ജ','ഝ','ഞ','ട','ഠ','ഡ','ഢ','ണ','ത','ഥ','ദ','ധ','ന','പ','ഫ','ബ','ഭ','മ','യ','ര','ല','വ','ശ','ഷ','സ','ഹ','ള','ഴ','റ','ൺ','ൻ','ർ','ൽ','ൾ','ൿ'];
 
     const ML_DATA = [
+      /* ── NEEDS A NATIVE SPEAKER ────────────────────────────────────────
+         The review asked for foundational Malayalam words, and several of the
+         originals were not Malayalam at all: ണത്താർ and ങാപ്പ are not words,
+         ടമാടോ was a misspelled loanword, and ഛത്രി / ഝരി / ഥാർ are Hindi or
+         Sanskrit. Those I was sure of are fixed, and തറ / പാറ are in as the
+         review named them.
+
+         STILL UNRESOLVED, and deliberately left rather than guessed at:
+           ഋ ഃ ഔ ഖ ഛ ഝ ഠ ഢ ഥ ഭ ഴ
+         Malayalam barely begins words with most of these — they occur in the
+         middle (ങ in തേങ്ങ, ണ in കണ്ണ്), which is how a real primer teaches
+         them. Picking medial-example words is a judgement a Malayalam speaker
+         should make, not me. I have already had to correct my own Malayalam in
+         this repo more than once.
+         ──────────────────────────────────────────────────────────────────── */
       { letter: 'അ', word: 'അമ്മ', meaning: 'Mother', emoji: '👩', phonetic: 'a' },
       { letter: 'ആ', word: 'ആന', meaning: 'Elephant', emoji: '🐘', phonetic: 'aa' },
       { letter: 'ഇ', word: 'ഇല', meaning: 'Leaf', emoji: '🌿', phonetic: 'i' },
@@ -151,23 +166,23 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
       { letter: 'ഖ', word: 'ഖഡ്ഗം', meaning: 'Sword', emoji: '⚔️', phonetic: 'kha' },
       { letter: 'ഗ', word: 'ഗജം', meaning: 'Elephant', emoji: '🐘', phonetic: 'ga' },
       { letter: 'ഘ', word: 'ഘടികാരം', meaning: 'Clock', emoji: '⏰', phonetic: 'gha' },
-      { letter: 'ങ', word: 'ങാപ്പ', meaning: 'Gape', emoji: '😮', phonetic: 'nga' },
+      { letter: 'ങ', word: 'തേങ്ങ', meaning: 'Coconut', emoji: '🥥', phonetic: 'nga' },
       { letter: 'ച', word: 'ചന്ദ്രൻ', meaning: 'Moon', emoji: '🌕', phonetic: 'cha' },
       { letter: 'ഛ', word: 'ഛത്രി', meaning: 'Umbrella', emoji: '☂️', phonetic: 'chha' },
       { letter: 'ജ', word: 'ജലം', meaning: 'Water', emoji: '💧', phonetic: 'ja' },
       { letter: 'ഝ', word: 'ഝരി', meaning: 'Waterfall', emoji: '🌊', phonetic: 'jha' },
       { letter: 'ഞ', word: 'ഞാൻ', meaning: 'I', emoji: '🧑', phonetic: 'nya' },
-      { letter: 'ട', word: 'ടമാടോ', meaning: 'Tomato', emoji: '🍅', phonetic: 'ta' },
+      { letter: 'ട', word: 'കട', meaning: 'Shop', emoji: '🏪', phonetic: 'ta' },
       { letter: 'ഠ', word: 'ഠാക്ക', meaning: 'Bag', emoji: '👜', phonetic: 'tha' },
       { letter: 'ഡ', word: 'ഡോക്ടർ', meaning: 'Doctor', emoji: '👨‍⚕️', phonetic: 'da' },
       { letter: 'ഢ', word: 'ഢക്ക', meaning: 'Drum', emoji: '🥁', phonetic: 'dha' },
-      { letter: 'ണ', word: 'ണത്താർ', meaning: 'Peacock', emoji: '🦚', phonetic: 'na' },
-      { letter: 'ത', word: 'തത്ത', meaning: 'Parrot', emoji: '🦜', phonetic: 'tha' },
+      { letter: 'ണ', word: 'കണ്ണ്', meaning: 'Eye', emoji: '👁️', phonetic: 'na' },
+      { letter: 'ത', word: 'തറ', meaning: 'Floor', emoji: '🏠', phonetic: 'tha' },
       { letter: 'ഥ', word: 'ഥാർ', meaning: 'Desert', emoji: '🏜️', phonetic: 'thha' },
       { letter: 'ദ', word: 'ദീപം', meaning: 'Lamp', emoji: '🪔', phonetic: 'da' },
       { letter: 'ധ', word: 'ധനം', meaning: 'Wealth', emoji: '💰', phonetic: 'dha' },
       { letter: 'ന', word: 'നായ', meaning: 'Dog', emoji: '🐶', phonetic: 'na' },
-      { letter: 'പ', word: 'പൂവ്', meaning: 'Flower', emoji: '🌸', phonetic: 'pa' },
+      { letter: 'പ', word: 'പാറ', meaning: 'Rock', emoji: '🪨', phonetic: 'pa' },
       { letter: 'ഫ', word: 'ഫലം', meaning: 'Fruit', emoji: '🍎', phonetic: 'pha' },
       { letter: 'ബ', word: 'ബാലൻ', meaning: 'Boy', emoji: '🧒', phonetic: 'ba' },
       { letter: 'ഭ', word: 'ഭ്രമരം', meaning: 'Bee', emoji: '🐝', phonetic: 'bha' },
@@ -378,7 +393,10 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
       }
     }, { passive: true });
   </script>
-  <script src="../js/audio-manager.js"></script>
+  <!-- Review: the background track drowned out the letter pronunciation,
+       which is the entire point of this activity. audio-manager.js is
+       deliberately not loaded here, and the audioMap entry is gone too so
+       nothing re-adds it by accident. -->
 <script>
 /* Retrofitted teacher controls. Last in the body so the activity has already
    built its DOM before the toolbar mounts. */

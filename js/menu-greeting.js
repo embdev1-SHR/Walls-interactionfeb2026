@@ -78,7 +78,21 @@
     return set[n % set.length];
   }
 
+  /* GREET_EVERY_LOAD
+     This file originally greeted once per launch, on the reasoning that a
+     child returning from an activity has already heard it and a greeting on
+     every return becomes noise to tune out. That reasoning still stands and is
+     worth re-reading if the wall ever feels chatty — flip this to false and the
+     once-per-launch behaviour comes back exactly as it was.
+
+     It is true nonetheless that the room asked for a greeting on every load:
+     children arrive and leave mid-session, and the one who walks up while
+     another is mid-activity never hears it otherwise. The rotation below means
+     consecutive greetings differ, which is what makes repetition bearable. */
+  var GREET_EVERY_LOAD = true;
+
   function alreadyGreeted() {
+    if (GREET_EVERY_LOAD) return false;
     try { return sessionStorage.getItem(SEEN) === '1'; } catch (e) { return false; }
   }
   function markGreeted() {

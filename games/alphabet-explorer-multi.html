@@ -251,7 +251,10 @@ document.getElementById('backBtn').addEventListener('touchend', function(e) {
     window.addEventListener('beforeunload', stop);
   })();
 </script>
-<script src="../js/audio-manager.js"></script>
+  <!-- Review: the background track drowned out the letter pronunciation,
+       which is the entire point of this activity. audio-manager.js is
+       deliberately not loaded here, and the audioMap entry is gone too so
+       nothing re-adds it by accident. -->
 <script>
 /* Retrofitted teacher controls. Last in the body so the activity has already
    built its DOM before the toolbar mounts. */

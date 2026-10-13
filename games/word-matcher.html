@@ -12,6 +12,8 @@
 :root {
   --p1:#FF6B6B; --p2:#4ECDC4; --p3:#A29BFE;
   --offset-x: 0px;
+  --offset-y: 0px;      /* review: allow downward positioning, not just sideways */
+  --board-scale: 1;     /* review: height was too large and could not be reduced */
 }
 
 html, body { width:100%; height:100%; overflow:hidden; }
@@ -48,8 +50,21 @@ body {
 .split-container {
   flex:1; display:flex; flex-direction:row;
   overflow:hidden; min-width:0;
-  transform: translateX(var(--offset-x));
-  transition: transform 0.25s ease;
+  /* Review items: the board could only be nudged sideways, and its height was
+     too large to fit some children. It now moves on both axes and scales.
+
+     These are LAYOUT properties — relative left/top and zoom — not a transform.
+     The original used `transform: translateX(...)`, which is a compositor
+     property: it moves the painted pixels but not the box, so the panels'
+     own scroll and hit areas stayed where they were. `zoom` reflows, so a
+     shrunken board is genuinely shorter rather than just drawn smaller, and
+     every touch target lands where it looks. This is the same mechanism the
+     teacher toolbar uses for size on the legacy activities. */
+  position: relative;
+  left: var(--offset-x);
+  top: var(--offset-y);
+  zoom: var(--board-scale);
+  transition: left 0.25s ease, top 0.25s ease;
 }
 
 .player-panel {
@@ -404,6 +419,30 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
     </div>
 
     <div class="tb-divider"></div>
+
+    <!-- Review: move the board DOWN as well as sideways. A second vertical
+         slider rather than a second meaning for the first one, so a teacher
+         never has to remember which mode the control is in. -->
+    <div class="tb-slider-group">
+      <div class="tb-slider-icons"><span>▲</span></div>
+      <input type="range" class="tb-slider" id="posSliderY"
+             min="-200" max="300" value="0" step="4"
+             orient="vertical">
+      <div class="tb-slider-icons"><span>▼</span></div>
+    </div>
+
+    <div class="tb-divider"></div>
+
+    <!-- Review: the board was too tall and could not be made smaller. -->
+    <div class="tb-slider-group">
+      <div class="tb-slider-icons"><span>⤢</span></div>
+      <input type="range" class="tb-slider" id="sizeSlider"
+             min="55" max="110" value="100" step="5"
+             orient="vertical">
+      <div class="tb-slider-icons"><span>⤡</span></div>
+    </div>
+
+    <div class="tb-divider"></div>
     <div class="tb-section-label">CTRL</div>
 
   </div>
@@ -636,12 +675,55 @@ slider.addEventListener("input", ()=> applyOffset(slider.value));
   },{passive:false});
 })();
 
-// Center
-document.getElementById("tbCenter").addEventListener("click",()=>{
-  slider.value=0; applyOffset(0);
-});
+/* ── Review additions: vertical position and board height ──────────────────
+   Both are built the same way as the horizontal slider above, including its
+   touch handling — these are vertical range inputs with touch-action:none, so
+   without an explicit touch handler a drag on the wall does nothing at all. */
+const sliderY = document.getElementById("posSliderY");
+const sliderS = document.getElementById("sizeSlider");
+
+function applyOffsetY(val){
+  document.documentElement.style.setProperty("--offset-y", val+"px");
+}
+function applyScale(pct){
+  document.documentElement.style.setProperty("--board-scale", (pct/100));
+}
+
+sliderY.addEventListener("input", ()=> applyOffsetY(sliderY.value));
+sliderS.addEventListener("input", ()=> applyScale(sliderS.value));
+
+/* Shared touch driver for a vertical slider: drag up raises the value.
+   Factored out because there are now three of these and they behaved
+   subtly differently when each had its own copy. */
+function bindVerticalDrag(el, onChange){
+  let startY=0, startVal=0;
+  el.addEventListener("touchstart", e=>{
+    startY = e.touches[0].clientY;
+    startVal = parseInt(el.value);
+    e.preventDefault();
+  },{passive:false});
+  el.addEventListener("touchmove", e=>{
+    const dy = startY - e.touches[0].clientY;
+    const range = parseInt(el.max) - parseInt(el.min);
+    const delta = Math.round((dy / el.offsetHeight) * range);
+    const v = Math.max(parseInt(el.min), Math.min(parseInt(el.max), startVal + delta));
+    el.value = v;
+    onChange(v);
+    e.preventDefault();
+  },{passive:false});
+}
+bindVerticalDrag(sliderY, applyOffsetY);
+bindVerticalDrag(sliderS, applyScale);
+
+// Center — now resets all three, since it is the one "put it back" control
+function resetBoard(){
+  slider.value = 0;  applyOffset(0);
+  sliderY.value = 0; applyOffsetY(0);
+  sliderS.value = 100; applyScale(100);
+}
+document.getElementById("tbCenter").addEventListener("click", resetBoard);
 document.getElementById("tbCenter").addEventListener("touchend", e=>{
-  e.preventDefault(); slider.value=0; applyOffset(0);
+  e.preventDefault(); resetBoard();
 },{passive:false});
 
 // ── BACK BUTTON ───────────────────────────────────────────────────────────────
