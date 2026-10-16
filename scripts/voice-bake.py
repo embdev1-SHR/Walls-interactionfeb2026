@@ -116,10 +116,42 @@ DESCRIPTION = (
     "Anjali, a young woman, speaks in Malayalam with a clear female voice. "
     "Her voice is bright, high-pitched and cheerful, warm and affectionate, "
     "like a kind kindergarten teacher talking to a small child. "
-    "She speaks slowly and very clearly, pronouncing every Malayalam letter "
-    "and word carefully and correctly, with a gentle smile in her voice. "
-    "The recording is studio quality with no background noise."
+    "She speaks slowly and steadily, at a calm and even pace, pronouncing every "
+    "Malayalam letter and word carefully and correctly, with a gentle smile in "
+    "her voice. The recording is studio quality with no background noise."
 )
+
+# ──────────────────────────────────────────────────────────────────────────
+# FOUR LANGUAGES (the universal language setting)
+#
+# Owly speaks English, Hindi, Malayalam or Kannada, chosen on the menu. Each
+# language is its own corpus, folder and voice, rendered with --lang:
+#
+#     python scripts/voice-bake.py --lang en
+#
+# Every voice is female, named (one of the model's recommended speakers for
+# that language — naming one is what keeps the timbre the same clip to clip),
+# and asked for the same thing the room asked for: slow and steady.
+# The corpora for en/hi/kn are written by voice-lines.mjs from the Malayalam
+# one plus content/i18n, so all four say the same things.
+# ──────────────────────────────────────────────────────────────────────────
+def _desc(name, language):
+    return (
+        f"{name}, a young woman, speaks in {language} with a clear female voice. "
+        "Her voice is bright, high-pitched and cheerful, warm and affectionate, "
+        "like a kind kindergarten teacher talking to a small child. "
+        "She speaks slowly and steadily, at a calm and even pace, pronouncing "
+        f"every {language} word carefully and correctly, with a gentle smile in "
+        "her voice. The recording is studio quality with no background noise."
+    )
+
+
+LANG_CFG = {
+    "ml": {"lines": "malayalam.json", "heard": "heard.json",    "desc": DESCRIPTION},
+    "en": {"lines": "english.json",   "heard": "heard-en.json", "desc": _desc("Mary", "English")},
+    "hi": {"lines": "hindi.json",     "heard": "heard-hi.json", "desc": _desc("Divya", "Hindi")},
+    "kn": {"lines": "kannada.json",   "heard": "heard-kn.json", "desc": _desc("Anu", "Kannada")},
+}
 
 # WHY THIS WORDING
 #   The first version said only "Anjali ... warm, gentle, friendly ... as if
@@ -193,6 +225,30 @@ _NUM_ML = {
 }
 
 
+# Kannada: the same Hindi-digit problem as Malayalam. Only what the Kannada
+# corpus actually uses; unknown_numbers() reports any gap before a render.
+_NUM_KN = {
+    0: "ಸೊನ್ನೆ", 1: "ಒಂದು", 2: "ಎರಡು", 3: "ಮೂರು", 4: "ನಾಲ್ಕು", 5: "ಐದು",
+    6: "ಆರು", 7: "ಏಳು", 8: "ಎಂಟು", 9: "ಒಂಬತ್ತು", 10: "ಹತ್ತು",
+    20: "ಇಪ್ಪತ್ತು", 30: "ಮೂವತ್ತು", 48: "ನಲವತ್ತೆಂಟು", 50: "ಐವತ್ತು", 100: "ನೂರು",
+    180: "ನೂರ ಎಂಬತ್ತು",
+}
+
+# Symbols and abbreviations that are fine to READ but not to SAY, per language.
+# (The Malayalam ones live in _ABBREV above.)
+_SAY = {
+    "kn": [(re.compile(r"ಕಿ\.\s*ಮೀ\.?"), "ಕಿಲೋಮೀಟರ್"), (re.compile(r"ಸೆಂ\.\s*ಮೀ\.?"), "ಸೆಂಟಿಮೀಟರ್"),
+           (re.compile(r"°"), " ಡಿಗ್ರಿ")],
+    "hi": [(re.compile(r"किमी"), "किलोमीटर"), (re.compile(r"सेमी"), "सेंटीमीटर"), (re.compile(r"°"), " डिग्री")],
+    "en": [(re.compile(r"(?<=\d)\s*°"), " degrees")],
+}
+LANG = "ml"          # set from --lang in main()
+
+
+def _nums():
+    return {"ml": _NUM_ML, "kn": _NUM_KN}.get(LANG)
+
+
 def strip_symbols(text: str) -> str:
     """Drop decorative emoji and arrows, keeping every Malayalam character.
 
@@ -226,20 +282,27 @@ def unknown_numbers(lines) -> dict:
     for line in lines:
         prepared = _GROUPED.sub("", strip_symbols(line))
         prepared = re.sub(r"₹\s*\d+", "", prepared)
+        table = _nums()
+        if table is None:          # English and Hindi read digits correctly
+            continue
         for group in re.findall(r"\d+", prepared):
-            if int(group) not in _NUM_ML:
+            if int(group) not in table:
                 found.setdefault(group, []).append(line)
     return found
 
 
 def speakable(text: str) -> str:
     """The line as the model should hear it."""
+    # spoken words for symbols first: strip_symbols() would delete "°"
+    for pat, full in _SAY.get(LANG, []):
+        text = pat.sub(full, text)
     text = strip_symbols(text)
     text = _SLASH_SPACED.sub(", ", text)   # alternatives: pause
     text = _SLASH_TIGHT.sub(" ", text)     # units: no pause, no comma
     text = _GROUPED.sub("", text)          # 40,000 -> 40000, before digits
     for pat, full in _ABBREV:
         text = pat.sub(full, text)
+    text = re.sub(r"\s*=\s*", ", ", text)        # "ಎಚ್ಚರ = alert" style glosses
 
     # Currency labels read "₹5 അഞ്ച് രൂപ നാണയം" — the numeral and the Malayalam
     # both say five. Expanding the numeral would render "അഞ്ച് അഞ്ച് രൂപ നാണയം",
@@ -247,7 +310,9 @@ def speakable(text: str) -> str:
     # the ₹N token is dropped whole rather than spelled out.
     text = re.sub(r"₹\s*\d+", "", text)
 
-    text = re.sub(r"\d+", lambda m: _NUM_ML.get(int(m.group()), m.group()), text)
+    table = _nums()
+    if table:
+        text = re.sub(r"\d+", lambda m: table.get(int(m.group()), m.group()), text)
     return re.sub(r"\s{2,}", " ", text).strip()
 
 
@@ -286,10 +351,21 @@ def main() -> None:
                     help="render into this folder instead of assets/voice/ml — "
                          "use it to audition a changed DESCRIPTION without "
                          "overwriting a bake that is already shipping")
+    ap.add_argument("--lang", default="ml", choices=sorted(LANG_CFG),
+                    help="which language's corpus to render (default ml)")
     ap.add_argument("--force", action="store_true",
                     help="re-render lines that already have a clip")
     args = ap.parse_args()
     utf8_console()
+
+    global LANG, LINES, OUT, HEARD, DESCRIPTION
+    LANG = args.lang
+    cfg = LANG_CFG[LANG]
+    LINES = ROOT / "content" / "voice" / cfg["lines"]
+    OUT = ROOT / "assets" / "voice" / LANG
+    HEARD = ROOT / "content" / "voice" / cfg["heard"]
+    DESCRIPTION = cfg["desc"]
+    print(f"language: {LANG}  ->  {OUT.relative_to(ROOT)}")
 
     if not LINES.exists():
         sys.exit(f"{LINES} is not there. Run: node scripts/voice-lines.mjs")
@@ -313,7 +389,6 @@ def main() -> None:
     # that folder half in one voice and half in another the moment it was
     # interrupted — which the header of this file calls the one outcome worth
     # avoiding. Audition first, then delete and re-render the real folder.
-    global OUT
     if args.out:
         OUT = Path(args.out)
 
@@ -325,7 +400,7 @@ def main() -> None:
 
     gaps = unknown_numbers(t for t, _ in items)
     if gaps:
-        print(f"\n! {len(gaps)} number(s) have no Malayalam spelling and will be")
+        print(f"\n! {len(gaps)} number(s) have no {LANG} spelling and will be")
         print("  read out in Hindi. Add them to _NUM_ML and re-render those lines:")
         for group, where in sorted(gaps.items(), key=lambda kv: -len(kv[1])):
             print(f"    {group:>7}  in {len(where)} line(s)  e.g. {where[0][:50]}")

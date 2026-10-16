@@ -43,14 +43,23 @@
 (function (global) {
   'use strict';
 
-  var DIR = '../assets/voice/ml/';
+  /* Pages in games/ reach assets one level up; the menu (index.html) sits
+     beside them. The old hardcoded '../assets/voice/ml/' was right for games
+     and wrong for the menu, where it pointed outside the app — so the menu's
+     baked greeting never played and fell through to a device voice, which on
+     Windows is silence. */
+  var ROOT = /\/games\//.test(global.location ? global.location.pathname : '') ? '../' : './';
+  function dirFor(lang) { return ROOT + 'assets/voice/' + lang + '/'; }
   var cache = {};        // filename -> HTMLAudioElement
   var dead = {};         // filename -> true, once it has failed to play
   var playing = null;
   var missLogged = {};
 
-  function manifest() {
-    return global.VOICE_MANIFEST || null;
+  /** The manifest for one language (Malayalam when none is named). */
+  function manifest(lang) {
+    var all = global.VOICE_MANIFESTS;
+    if (all) return all[lang || 'ml'] || null;
+    return (!lang || lang === 'ml') ? (global.VOICE_MANIFEST || null) : null;
   }
 
   /** Normalise the way the renderer did, so lookups match exactly. */
@@ -61,8 +70,8 @@
     return s.trim();
   }
 
-  function has(text) {
-    var m = manifest();
+  function has(text, lang) {
+    var m = manifest(lang);
     return !!(m && m[key(text)]);
   }
 
@@ -77,8 +86,9 @@
    * @returns {boolean} true if a clip is playing; false means the caller
    *          should fall back to the device voice.
    */
-  function say(text) {
-    var m = manifest();
+  function say(text, lang) {
+    lang = lang || 'ml';
+    var m = manifest(lang);
     if (!m) return false;
 
     var k = key(text);
@@ -102,7 +112,7 @@
     var el = cache[file];
     if (!el) {
       try {
-        el = new Audio(DIR + file);
+        el = new Audio(dirFor(lang) + file);
         el.preload = 'auto';
         cache[file] = el;
       } catch (e) { return false; }
@@ -123,7 +133,7 @@
           playing = null;
           dead[file] = true;
           delete cache[file];
-          deviceFallback(text);
+          deviceFallback(text, lang);
         });
       }
       return true;
@@ -134,17 +144,22 @@
   }
 
   /** Used only when a clip was listed but would not actually play. */
-  function deviceFallback(text) {
+  function deviceFallback(text, lang) {
     try {
-      if (global.TTSEngine) global.TTSEngine.speak(String(text), 'ml', null);
+      if (lang === 'hi' || lang === 'kn') {
+        if (global.WALL_SETTINGS) global.WALL_SETTINGS.deviceSpeak(String(text), lang);
+      } else if (global.TTSEngine) global.TTSEngine.speak(String(text), lang === 'en' ? 'en' : 'ml', null);
     } catch (e) {}
   }
 
   /** How much of what the app says is actually baked. For the console. */
   function coverage() {
-    var m = manifest();
-    if (!m) return { manifest: false };
-    return { manifest: true, lines: Object.keys(m).length };
+    var out = {};
+    ['ml', 'en', 'hi', 'kn'].forEach(function (l) {
+      var m = manifest(l);
+      out[l] = m ? Object.keys(m).length : 0;
+    });
+    return out;
   }
 
   global.VOICE = {

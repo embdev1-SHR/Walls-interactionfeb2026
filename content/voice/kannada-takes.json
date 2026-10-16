@@ -1,0 +1,424 @@
+{
+ "a": {
+  "letter": "ಅ",
+  "seed": 11,
+  "prompt": "ಅ.",
+  "seconds": 0.38,
+  "takes": 3,
+  "flag": null
+ },
+ "aa": {
+  "letter": "ಆ",
+  "seed": 7,
+  "prompt": "ಆ!",
+  "seconds": 0.3,
+  "takes": 2,
+  "flag": null
+ },
+ "i": {
+  "letter": "ಇ",
+  "seed": 7,
+  "prompt": "ಇ!",
+  "seconds": 0.4,
+  "takes": 2,
+  "flag": null
+ },
+ "ii": {
+  "letter": "ಈ",
+  "seed": 7,
+  "prompt": "ಈ.",
+  "seconds": 0.4,
+  "takes": 1,
+  "flag": null
+ },
+ "u": {
+  "letter": "ಉ",
+  "seed": 7,
+  "prompt": "ಉ.",
+  "seconds": 0.38,
+  "takes": 1,
+  "flag": null
+ },
+ "uu": {
+  "letter": "ಊ",
+  "seed": 7,
+  "prompt": "ಊ.",
+  "seconds": 0.28,
+  "takes": 1,
+  "flag": null
+ },
+ "ru": {
+  "letter": "ಋ",
+  "seed": 7,
+  "prompt": "ಋ!",
+  "seconds": 0.36,
+  "takes": 2,
+  "flag": null
+ },
+ "e": {
+  "letter": "ಎ",
+  "seed": 11,
+  "prompt": "ಎ!",
+  "seconds": 0.4,
+  "takes": 4,
+  "flag": null
+ },
+ "ee": {
+  "letter": "ಏ",
+  "seed": 7,
+  "prompt": "ಏ!",
+  "seconds": 0.56,
+  "takes": 2,
+  "flag": null
+ },
+ "ai": {
+  "letter": "ಐ",
+  "seed": 11,
+  "prompt": "ಐ.",
+  "seconds": 0.38,
+  "takes": 3,
+  "flag": null
+ },
+ "o": {
+  "letter": "ಒ",
+  "seed": 7,
+  "prompt": "ಒ!",
+  "seconds": 0.52,
+  "takes": 2,
+  "flag": null
+ },
+ "oo": {
+  "letter": "ಓ",
+  "seed": 7,
+  "prompt": "ಓ.",
+  "seconds": 0.3,
+  "takes": 1,
+  "flag": null
+ },
+ "au": {
+  "letter": "ಔ",
+  "seed": 11,
+  "prompt": "ಔ!",
+  "seconds": 0.44,
+  "takes": 4,
+  "flag": null
+ },
+ "am": {
+  "letter": "ಅಂ",
+  "seed": 11,
+  "prompt": "ಅಂ!",
+  "seconds": 0.4,
+  "takes": 4,
+  "flag": null
+ },
+ "ah": {
+  "letter": "ಅಃ",
+  "seed": 11,
+  "prompt": "ಅಃ.",
+  "seconds": 0.34,
+  "takes": 3,
+  "flag": null
+ },
+ "ka": {
+  "letter": "ಕ",
+  "seed": 101,
+  "prompt": "ಕ!",
+  "seconds": 0.44,
+  "takes": 10,
+  "flag": null
+ },
+ "kha": {
+  "letter": "ಖ",
+  "seed": 7,
+  "prompt": "ಖ.",
+  "seconds": 0.24,
+  "takes": 1,
+  "flag": null
+ },
+ "ga": {
+  "letter": "ಗ",
+  "seed": 7,
+  "prompt": "ಗ!",
+  "seconds": 0.42,
+  "takes": 2,
+  "flag": null
+ },
+ "gha": {
+  "letter": "ಘ",
+  "seed": 7,
+  "prompt": "ಘ.",
+  "seconds": 0.24,
+  "takes": 1,
+  "flag": null
+ },
+ "nga": {
+  "letter": "ಙ",
+  "seed": 7,
+  "prompt": "ಙ.",
+  "seconds": 0.36,
+  "takes": 1,
+  "flag": null
+ },
+ "cha": {
+  "letter": "ಚ",
+  "seed": 7,
+  "prompt": "ಚ.",
+  "seconds": 0.3,
+  "takes": 1,
+  "flag": null
+ },
+ "chha": {
+  "letter": "ಛ",
+  "seed": 7,
+  "prompt": "ಛ.",
+  "seconds": 0.36,
+  "takes": 1,
+  "flag": null
+ },
+ "ja": {
+  "letter": "ಜ",
+  "seed": 7,
+  "prompt": "ಜ.",
+  "seconds": 0.72,
+  "takes": 1,
+  "flag": null
+ },
+ "jha": {
+  "letter": "ಝ",
+  "seed": 7,
+  "prompt": "ಝ!",
+  "seconds": 0.5,
+  "takes": 2,
+  "flag": null
+ },
+ "nya": {
+  "letter": "ಞ",
+  "seed": 7,
+  "prompt": "ಞ.",
+  "seconds": 0.38,
+  "takes": 1,
+  "flag": null
+ },
+ "tta": {
+  "letter": "ಟ",
+  "seed": 7,
+  "prompt": "ಟ!",
+  "seconds": 0.34,
+  "takes": 12,
+  "flag": "first utterance cut from a repeating take"
+ },
+ "ttha": {
+  "letter": "ಠ",
+  "seed": 7,
+  "prompt": "ಠ.",
+  "seconds": 0.64,
+  "takes": 1,
+  "flag": null
+ },
+ "dda": {
+  "letter": "ಡ",
+  "seed": 7,
+  "prompt": "ಡ.",
+  "seconds": 0.5,
+  "takes": 1,
+  "flag": null
+ },
+ "ddha": {
+  "letter": "ಢ",
+  "seed": 7,
+  "prompt": "ಢ!",
+  "seconds": 0.3,
+  "takes": 2,
+  "flag": null
+ },
+ "nna": {
+  "letter": "ಣ",
+  "seed": 7,
+  "prompt": "ಣ.",
+  "seconds": 0.44,
+  "takes": 1,
+  "flag": null
+ },
+ "ta": {
+  "letter": "ತ",
+  "seed": 7,
+  "prompt": "ತ.",
+  "seconds": 0.24,
+  "takes": 1,
+  "flag": null
+ },
+ "tha": {
+  "letter": "ಥ",
+  "seed": 11,
+  "prompt": "ಥ!",
+  "seconds": 0.22,
+  "takes": 4,
+  "flag": null
+ },
+ "da": {
+  "letter": "ದ",
+  "seed": 11,
+  "prompt": "ದ!",
+  "seconds": 0.28,
+  "takes": 4,
+  "flag": null
+ },
+ "dha": {
+  "letter": "ಧ",
+  "seed": 7,
+  "prompt": "ಧ.",
+  "seconds": 0.26,
+  "takes": 1,
+  "flag": null
+ },
+ "na": {
+  "letter": "ನ",
+  "seed": 7,
+  "prompt": "ನ.",
+  "seconds": 0.42,
+  "takes": 1,
+  "flag": null
+ },
+ "pa": {
+  "letter": "ಪ",
+  "seed": 101,
+  "prompt": "ಪ!",
+  "seconds": 0.3,
+  "takes": 10,
+  "flag": null
+ },
+ "pha": {
+  "letter": "ಫ",
+  "seed": 101,
+  "prompt": "ಫ!",
+  "seconds": 0.28,
+  "takes": 10,
+  "flag": null
+ },
+ "ba": {
+  "letter": "ಬ",
+  "seed": 7,
+  "prompt": "ಬ!",
+  "seconds": 0.32,
+  "takes": 2,
+  "flag": null
+ },
+ "bha": {
+  "letter": "ಭ",
+  "seed": 11,
+  "prompt": "ಭ.",
+  "seconds": 0.46,
+  "takes": 3,
+  "flag": null
+ },
+ "ma": {
+  "letter": "ಮ",
+  "seed": 7,
+  "prompt": "ಮ.",
+  "seconds": 0.42,
+  "takes": 1,
+  "flag": null
+ },
+ "ya": {
+  "letter": "ಯ",
+  "seed": 7,
+  "prompt": "ಯ!",
+  "seconds": 0.32,
+  "takes": 2,
+  "flag": null
+ },
+ "ra": {
+  "letter": "ರ",
+  "seed": 7,
+  "prompt": "ರ.",
+  "seconds": 0.66,
+  "takes": 1,
+  "flag": null
+ },
+ "la": {
+  "letter": "ಲ",
+  "seed": 7,
+  "prompt": "ಲ.",
+  "seconds": 0.44,
+  "takes": 1,
+  "flag": null
+ },
+ "va": {
+  "letter": "ವ",
+  "seed": 11,
+  "prompt": "ವ!",
+  "seconds": 0.24,
+  "takes": 4,
+  "flag": null
+ },
+ "sha": {
+  "letter": "ಶ",
+  "seed": 11,
+  "prompt": "ಶ!",
+  "seconds": 0.38,
+  "takes": 4,
+  "flag": null
+ },
+ "ssa": {
+  "letter": "ಷ",
+  "seed": 7,
+  "prompt": "ಷ.",
+  "seconds": 0.28,
+  "takes": 1,
+  "flag": null
+ },
+ "sa": {
+  "letter": "ಸ",
+  "seed": 7,
+  "prompt": "ಸ.",
+  "seconds": 0.36,
+  "takes": 1,
+  "flag": null
+ },
+ "ha": {
+  "letter": "ಹ",
+  "seed": 11,
+  "prompt": "ಹ!",
+  "seconds": 0.46,
+  "takes": 4,
+  "flag": null
+ },
+ "lla": {
+  "letter": "ಳ",
+  "seed": 7,
+  "prompt": "ಳ.",
+  "seconds": 0.36,
+  "takes": 1,
+  "flag": null
+ },
+ "line:hello": {
+  "text": "ಬನ್ನಿ, ಕನ್ನಡ ಅಕ್ಷರಗಳನ್ನು ಕಲಿಯೋಣ! ಒಂದು ಅಕ್ಷರವನ್ನು ಮುಟ್ಟಿ.",
+  "seed": 7,
+  "seconds": 5.34,
+  "flag": null
+ },
+ "line:vowels": {
+  "text": "ಸ್ವರಗಳು",
+  "seed": 7,
+  "seconds": 0.6,
+  "flag": null
+ },
+ "line:cons": {
+  "text": "ವ್ಯಂಜನಗಳು",
+  "seed": 7,
+  "seconds": 0.84,
+  "flag": null
+ },
+ "line:all": {
+  "text": "ಎಲ್ಲಾ ಅಕ್ಷರಗಳನ್ನು ಕೇಳೋಣ.",
+  "seed": 7,
+  "seconds": 2.06,
+  "flag": null
+ },
+ "line:done": {
+  "text": "ಶಭಾಷ್! ಎಲ್ಲಾ ಅಕ್ಷರಗಳನ್ನು ಕೇಳಿದೆ!",
+  "seed": 7,
+  "seconds": 2.84,
+  "flag": null
+ }
+}

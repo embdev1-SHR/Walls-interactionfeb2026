@@ -84,6 +84,12 @@
   }
 
   function t(o) { return (global.WALL && WALL.t) ? WALL.t(o) : (o && (o.en || o.ml)) || ''; }
+  /* The chosen language big and a smaller second line (universal language
+     setting); without wall-common, English over Malayalam as before. */
+  function both(o) {
+    if (global.WALL && WALL.tBoth) return WALL.tBoth(o);
+    return { main: (o && o.en) || '', alt: (o && o.ml) || '' };
+  }
 
   /**
    * Builds the page and returns the handles an activity needs.
@@ -120,8 +126,9 @@
       board: board,
 
       ask: function (o) {
-        ask.querySelector('.pk-en').textContent = o.en || '';
-        ask.querySelector('.pk-ml').textContent = o.ml || '';
+        var b = both(o);
+        ask.querySelector('.pk-en').textContent = b.main;
+        ask.querySelector('.pk-ml').textContent = b.alt;
       },
       tally: function (txt) { ask.querySelector('.pk-tally').textContent = txt || ''; },
 
@@ -131,7 +138,7 @@
         d.className = 'pk-card';
         d.innerHTML = (item.img ? '<img src="' + item.img + '" alt="">'
                                 : '<div class="pk-emoji">' + (item.emoji || '') + '</div>') +
-                      (item.ml ? '<div class="pk-cap">' + item.ml + '</div>' : '');
+                      (item.ml ? '<div class="pk-cap">' + t(item.en ? { en: item.en, ml: item.ml } : item.ml) + '</div>' : '');
         if (onTap && global.WALL) WALL.bindTouch(d, function () { onTap(d, item); });
         return d;
       },
@@ -184,8 +191,9 @@
       },
 
       finish: function (o) {
-        done.querySelector('h2').textContent = (o && o.en) || 'Well done!';
-        done.querySelector('.ml').textContent = (o && o.ml) || '';
+        var b = both(o || { en: 'Well done!', ml: 'കൊള്ളാം!' });
+        done.querySelector('h2').textContent = b.main || 'Well done!';
+        done.querySelector('.ml').textContent = b.alt;
         done.classList.add('show');
         if (global.WALL) { WALL.celebrate(); if (WALL.voiceOn() && o && o.ml) WALL.say(o.ml); }
       },

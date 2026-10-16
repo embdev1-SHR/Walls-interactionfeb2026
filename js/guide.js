@@ -1,23 +1,25 @@
 /**
- * guide.js — കുട്ടു, the Malayalam guide character
+ * guide.js — Owly (കുട്ടു), the wall's guide character
  * ══════════════════════════════════════════════════════════════════════════
  *
- * A small elephant calf who stands in the bottom-left corner, says what the
- * child should do next in Malayalam, and reacts to what they do.
+ * A cheerful owl in round glasses who stands in the bottom-left corner, says
+ * what the child should do next — in whichever of English, Hindi, Malayalam
+ * or Kannada the teacher chose on the menu — and reacts to what they do.
  *
  * WHY A CHARACTER AND NOT A TEXT PROMPT
- *   Most of the children at the wall do not read yet, in either language. A
+ *   Most of the children at the wall do not read yet, in any language. A
  *   written instruction is decoration to them. A character who says it out
  *   loud, points at the thing, and visibly reacts when they get it right is
  *   the instruction. It also gives the activity somewhere to put the voice —
  *   a disembodied sentence from nowhere is easy to ignore, a voice with a face
  *   is not.
  *
- * WHY AN ELEPHANT
- *   Kerala. It is the animal these children already know, already like, and
- *   already have a word for. Drawn in SVG rather than shipped as an image so
- *   it scales to any wall without a second asset, and so it can blink, bob and
- *   flap its ears without a sprite sheet.
+ * HOW HE IS DRAWN
+ *   Four supplied illustrations (assets/avatar/owly-*.png): happy, cheering,
+ *   curious and sad, cut out by scripts/build-owly.py. He moves with CSS —
+ *   a gentle bob, a listening head-tilt, a bounce while he talks, a jump when
+ *   he cheers — and all of it stops for anyone whose machine asks for reduced
+ *   motion.
  *
  * WHERE IT SITS
  *   Bottom-LEFT, deliberately:
@@ -50,7 +52,7 @@
 (function (global) {
   'use strict';
 
-  var NAME = { en: 'Kuttu', ml: 'കുട്ടു' };
+  var NAME = { en: 'Owly', ml: 'കുട്ടു' };
 
   var el = null, bubble = null, bubbleText = null, svg = null, ring = null;
   var last = null;             // last line, for repeat()
@@ -61,78 +63,25 @@
   function W() { return global.WALL; }
   function isMl() { return W() ? W().isMl() : true; }
 
-  /* ── the character ────────────────────────────────────────────────────
-     Plain SVG shapes. The eyes and ears are given ids so they can be
-     animated without re-rendering the whole drawing. */
-  /* An owl. The eyes are deliberately enormous — that is what makes an owl
-     read as an owl at a glance, and it also makes the blink carry across a
-     room, which matters for a character whose job is to be noticed.
-     Colours are saturated and outlined: an earlier pastel version of this
-     character disappeared against the pale menu background. A dark outline
-     also helps with low contrast sensitivity, which is common alongside the
-     visual-tracking delays the brief describes. */
-  /* Built as named groups so each part can move on its own:
-       #g-head      tilts curiously now and then, the way owls do
-       #g-tuft-l/r  twitch
-       #g-wing-l/r  flap when he cheers
-       #g-eyes      blinks (the whole group squashes)
-       #g-pupils    looks around, and looks AT whatever he points to
-       #g-beak-lo   drops while he is talking, so speech has a mouth
-     Drawing order matters: tufts sit inside the head group (so they tilt with
-     it) but are drawn before the face disc, so they stay behind it. */
-  var ART =
-    '<svg viewBox="0 0 120 124" width="100%" height="100%" aria-hidden="true">' +
-      '<ellipse cx="60" cy="118" rx="31" ry="5.5" fill="rgba(60,40,20,.20)"/>' +
-      '<g stroke="#6b4423" stroke-width="2.6" stroke-linejoin="round">' +
-        '<ellipse cx="60" cy="74" rx="36" ry="42" fill="#c08a4e"/>' +
-      '</g>' +
-      // wings, tucked at the sides — pivot at the shoulder for the flap
-      '<path id="g-wing-l" d="M26 60 q-8 24 4 42 q8 6 12 -2 q-10 -20 -6 -40 Z" ' +
-        'fill="#a9703f" stroke="#6b4423" stroke-width="2.6" stroke-linejoin="round"/>' +
-      '<path id="g-wing-r" d="M94 60 q8 24 -4 42 q-8 6 -12 -2 q10 -20 6 -40 Z" ' +
-        'fill="#a9703f" stroke="#6b4423" stroke-width="2.6" stroke-linejoin="round"/>' +
-      '<g stroke="#6b4423" stroke-width="2.6" stroke-linejoin="round">' +
-        '<ellipse cx="60" cy="84" rx="21" ry="26" fill="#f0d9b5"/>' +
-        // belly feather marks
-        '<path d="M52 78 q4 3 8 0 q4 3 8 0 M54 90 q3 3 6 0 q3 3 6 0" ' +
-          'stroke="#d8b98a" stroke-width="1.8" fill="none" stroke-linecap="round"/>' +
-        '<path d="M48 114 l-5 6 M48 114 l0 7 M48 114 l5 6" stroke="#e08a2f" ' +
-          'stroke-width="3.4" stroke-linecap="round" fill="none"/>' +
-        '<path d="M72 114 l-5 6 M72 114 l0 7 M72 114 l5 6" stroke="#e08a2f" ' +
-          'stroke-width="3.4" stroke-linecap="round" fill="none"/>' +
-      '</g>' +
-      '<g id="g-head">' +
-        '<path id="g-tuft-l" d="M34 30 L30 8 L50 22 Z" fill="#a9703f" ' +
-          'stroke="#6b4423" stroke-width="2.6" stroke-linejoin="round"/>' +
-        '<path id="g-tuft-r" d="M86 30 L90 8 L70 22 Z" fill="#a9703f" ' +
-          'stroke="#6b4423" stroke-width="2.6" stroke-linejoin="round"/>' +
-        '<ellipse cx="60" cy="48" rx="33" ry="29" fill="#d9a56a" ' +
-          'stroke="#6b4423" stroke-width="2.6"/>' +
-        '<g id="g-eyes">' +
-          '<circle cx="44" cy="45" r="15" fill="#fffaf2" stroke="#6b4423" stroke-width="2.4"/>' +
-          '<circle cx="76" cy="45" r="15" fill="#fffaf2" stroke="#6b4423" stroke-width="2.4"/>' +
-          '<g id="g-pupils">' +
-            '<circle cx="45.5" cy="46" r="7.4" fill="#2e2016"/>' +
-            '<circle cx="74.5" cy="46" r="7.4" fill="#2e2016"/>' +
-            '<circle cx="48" cy="43" r="2.7" fill="#fff"/>' +
-            '<circle cx="77" cy="43" r="2.7" fill="#fff"/>' +
-          '</g>' +
-        '</g>' +
-        // the inside of the mouth, revealed when the lower beak drops
-        '<ellipse cx="60" cy="61" rx="4.6" ry="3.2" fill="#6a2b12"/>' +
-        '<path id="g-beak-lo" d="M55.5 59 L64.5 59 L60 65.5 Z" fill="#c9741a" ' +
-          'stroke="#6b4423" stroke-width="2" stroke-linejoin="round"/>' +
-        '<path d="M52.5 53 L67.5 53 L60 61.5 Z" fill="#e8921f" ' +
-          'stroke="#6b4423" stroke-width="2.2" stroke-linejoin="round"/>' +
-        // brow line, which is what gives an owl its friendly-serious look
-        '<path d="M30 32 q14 -7 26 2 M90 32 q-14 -7 -26 2" stroke="#6b4423" ' +
-          'stroke-width="2.8" stroke-linecap="round" fill="none"/>' +
-      '</g>' +
-    '</svg>';
+  /* ── the character: Owly ────────────────────────────────────────────────
+     Four supplied poses (assets/avatar/owly-*.png, cut out by
+     scripts/build-owly.py). One is shown at a time and they cross-fade:
+       happy    waving, books under his wing — his normal self, talking, pointing
+       cheer    wings up — when a child gets something right
+       curious  question marks — while he is thinking
+     There is a sad pose too, and it is deliberately NOT used for mistakes: this
+     wall never answers a wrong tap with a sad face. GUIDE.mood('sad') exists
+     for a page that has a real reason (a story), nothing more. */
+  var ROOT = /\/games\//.test(global.location ? global.location.pathname : '') ? '../' : './';
+  var POSES = ['happy', 'cheer', 'curious', 'sad'];
+  var ART = '<div class="owly">' + POSES.map(function (p) {
+    return '<img class="owly-pose" data-pose="' + p + '" src="' + ROOT + 'assets/avatar/owly-' + p +
+           '.png" alt="" draggable="false">';
+  }).join('') + '</div>';
 
   var CSS = [
-    '#wallGuide{position:fixed;left:18px;bottom:14px;z-index:480;',
-    '  width:calc(112px * var(--wall-scale,1));height:calc(112px * var(--wall-scale,1));',
+    '#wallGuide{position:fixed;left:18px;bottom:10px;z-index:480;',
+    '  width:calc(140px * var(--wall-scale,1));height:calc(140px * var(--wall-scale,1));',
     '  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;',
     '  transition:transform .35s cubic-bezier(.34,1.4,.64,1),opacity .3s;',
     '  animation:guideBob 3.4s ease-in-out infinite}',
@@ -142,47 +91,28 @@
     '#wallGuide.lean{transform:rotate(-7deg) translateX(6px)}',
     '@keyframes guideBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
     '@keyframes guideCheer{0%,100%{transform:translateY(0) rotate(0)}',
-    '  30%{transform:translateY(-16px) rotate(-6deg)}',
+    '  30%{transform:translateY(-18px) rotate(-6deg)}',
     '  60%{transform:translateY(-4px) rotate(5deg)}}',
-    /* ── the owl's own movement ──────────────────────────────────────────
-       transform-box:fill-box makes transform-origin percentages refer to each
-       part's own bounding box. Without it SVG measures origins from the whole
-       canvas, and a wing "pivoting at the shoulder" swings from the corner of
-       the picture instead. */
-    '#wallGuide svg *{transform-box:fill-box}',
-
-    // head: a curious tilt now and then, held, then back. Owls do this, and it
-    // is the single movement that most makes him look like he is listening.
-    '#g-head{transform-origin:50% 92%;animation:owlTilt 7.5s ease-in-out infinite}',
-    '@keyframes owlTilt{0%,28%,100%{transform:rotate(0)}',
-    '  36%,50%{transform:rotate(-8deg)}58%{transform:rotate(0)}',
-    '  76%,86%{transform:rotate(6deg)}}',
-
-    // ear tufts: a quick twitch, out of step with each other
-    '#g-tuft-l{transform-origin:85% 100%;animation:owlTuftL 5.2s ease-in-out infinite}',
-    '#g-tuft-r{transform-origin:15% 100%;animation:owlTuftR 5.2s ease-in-out infinite .6s}',
-    '@keyframes owlTuftL{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-14deg)}94%{transform:rotate(5deg)}}',
-    '@keyframes owlTuftR{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(14deg)}94%{transform:rotate(-5deg)}}',
-
-    // wings: pivot at the shoulder, flap only when he is pleased
-    '#g-wing-l{transform-origin:90% 8%}',
-    '#g-wing-r{transform-origin:10% 8%}',
-    '#wallGuide.flap #g-wing-l{animation:owlFlapL .3s ease-in-out 4}',
-    '#wallGuide.flap #g-wing-r{animation:owlFlapR .3s ease-in-out 4}',
-    '@keyframes owlFlapL{0%,100%{transform:rotate(0)}50%{transform:rotate(32deg)}}',
-    '@keyframes owlFlapR{0%,100%{transform:rotate(0)}50%{transform:rotate(-32deg)}}',
-
-    // beak: tucked shut at rest, chattering while he speaks
-    '#g-beak-lo{transform:translateY(-2.6px)}',
-    '#wallGuide.talk #g-beak-lo{animation:owlTalk .19s ease-in-out infinite alternate}',
-    '@keyframes owlTalk{from{transform:translateY(-2.6px)}to{transform:translateY(2.8px)}}',
-
-    // pupils: eased, with a little overshoot, so a glance reads as a glance
-    '#g-pupils{transition:transform .38s cubic-bezier(.34,1.35,.64,1)}',
+    /* the poses: stacked, one visible, cross-faded */
+    '#wallGuide .owly{position:relative;width:100%;height:100%;transform-origin:50% 92%;',
+    '  animation:owlyTilt 8s ease-in-out infinite}',
+    '#wallGuide .owly-pose{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;',
+    '  object-position:50% 100%;opacity:0;transition:opacity .25s;-webkit-user-drag:none;',
+    '  filter:drop-shadow(0 6px 8px rgba(40,25,10,.28))}',
+    '#wallGuide[data-pose="happy"] .owly-pose[data-pose="happy"],',
+    '#wallGuide[data-pose="cheer"] .owly-pose[data-pose="cheer"],',
+    '#wallGuide[data-pose="curious"] .owly-pose[data-pose="curious"],',
+    '#wallGuide[data-pose="sad"] .owly-pose[data-pose="sad"]{opacity:1}',
+    /* a listening tilt now and then — owls do this */
+    '@keyframes owlyTilt{0%,30%,100%{transform:rotate(0)}38%,50%{transform:rotate(-5deg)}',
+    '  58%{transform:rotate(0)}76%,84%{transform:rotate(4deg)}}',
+    /* while he talks: a small rhythmic bounce, so speech has a body */
+    '#wallGuide.talk .owly{animation:owlyTalk .34s ease-in-out infinite alternate}',
+    '@keyframes owlyTalk{from{transform:scale(1,1)}to{transform:scale(1.035,.965) translateY(2%)}}',
 
     /* speech bubble sits ABOVE the character and never covers it */
     '#wallGuideBubble{position:fixed;left:14px;z-index:481;',
-    '  bottom:calc(14px + 112px * var(--wall-scale,1) + 8px);',
+    '  bottom:calc(10px + 140px * var(--wall-scale,1) + 8px);',
     '  max-width:min(32vw,400px);padding:calc(13px * var(--wall-scale,1)) calc(18px * var(--wall-scale,1));',
     '  background:rgba(255,255,255,.97);border:3px solid #7fb4dc;border-radius:20px;',
     '  box-shadow:0 10px 28px rgba(20,60,95,.24);color:#1c3d56;font-weight:800;',
@@ -218,9 +148,7 @@
        reduce motion, he keeps his blink and his talking beak — those carry
        meaning — and drops the idle fidgeting and the flap, which do not. */
     '@media (prefers-reduced-motion:reduce){',
-    '  #wallGuide,#wallGuide.cheer,#wallGuideRing,#g-head,#g-tuft-l,#g-tuft-r,',
-    '  #wallGuide.flap #g-wing-l,#wallGuide.flap #g-wing-r{animation:none}',
-    '  #g-pupils{transition:none}}'
+    '  #wallGuide,#wallGuide.cheer,#wallGuideRing,#wallGuide .owly,#wallGuide.talk .owly{animation:none}}'
   ].join('');
 
   function injectCSS() {
@@ -252,16 +180,24 @@
     ring.id = 'wallGuideRing';
     document.body.appendChild(ring);
 
-    svg = el.querySelector('svg');
+    setPose('happy');
 
     /* Tap to hear it again. Bound on the element itself rather than through
        WALL.bindTouch so the guide works on a page that has no WALL. */
     el.addEventListener('click', function () { repeat(); });
 
-    startBlinking();
-    startLooking();
     if (W() && W().onLang) W().onLang(function () { if (last) render(last); });
   }
+
+  /* ── pose ───────────────────────────────────────────────────────────── */
+  var poseTimer = null;
+  function setPose(p, ms) {
+    if (!el || POSES.indexOf(p) === -1) return;
+    el.setAttribute('data-pose', p);
+    clearTimeout(poseTimer);
+    if (ms) poseTimer = setTimeout(function () { el.setAttribute('data-pose', 'happy'); }, ms);
+  }
+  function mood(p, ms) { if (!mounted) mount(); setPose(p, ms); return GUIDE; }
 
   /* ── where he is looking ───────────────────────────────────────────────
      Pupils can travel ±3.4 units sideways and ±2.4 up/down inside the eye
@@ -340,18 +276,33 @@
     }, next);
   }
 
+  function S() { return global.WALL_SETTINGS || null; }
+
   function render(line) {
     if (!bubble) return;
     var main = bubble.querySelector('.main');
     var sub = bubble.querySelector('.sub');
+    var lang = S() ? S().lang() : (isMl() ? 'ml' : 'en');
     if (typeof line === 'string') {
-      main.textContent = line;
+      main.textContent = S() ? S().tr(line) : line;
       sub.textContent = '';
+    } else if (line.kn) {
+      /* A Kannada page: he says it in Kannada, with its meaning underneath in
+         the room's language (see js/kannada-voice.js). */
+      main.textContent = line.kn;
+      var mean = lang === 'ml' ? line.mlSub : (S() ? S().tr({ en: line.en, ml: line.mlSub }) : line.en);
+      sub.textContent = mean || line.en || '';
+    } else if (S()) {
+      /* The chosen language big; underneath, English for anyone who reads it
+         — or Malayalam under English, since this room reads Malayalam. */
+      main.textContent = S().tr(line);
+      var other = lang === 'en' ? (line.ml || '') : S().englishOf(line);
+      sub.textContent = other && other !== main.textContent ? other : '';
     } else {
       var ml = isMl();
       main.textContent = ml ? (line.ml || line.en || '') : (line.en || line.ml || '');
-      var other = ml ? (line.en || '') : (line.ml || '');
-      sub.textContent = other && other !== main.textContent ? other : '';
+      var o2 = ml ? (line.en || '') : (line.ml || '');
+      sub.textContent = o2 && o2 !== main.textContent ? o2 : '';
     }
     bubble.classList.add('show');
   }
@@ -370,10 +321,15 @@
 
     /* WALL.say already honours the teacher's voice toggle and prefers a baked
        Malayalam clip over the device voice, so nothing extra is needed here. */
+    /* A Kannada line goes to the baked Kannada voice, never to WALL.say(),
+       which only knows Malayalam and English and would read it wrongly. */
+    var kannada = line && typeof line === 'object' && line.kn && global.KN_VOICE;
+    // opts.done: run once his Kannada line has finished (or failed, or the voice is off)
+    if (kannada) { try { global.KN_VOICE.say(line.kn, opts.done); } catch (e) { if (opts.done) opts.done(); } }
+
     if (W()) {
       try {
-        if (typeof line === 'string') W().say(line);
-        else W().say(line);
+        if (!kannada) W().say(line);
       } catch (e) {}
       /* Only move the beak when there is actually going to be a voice. A
          beak chattering in silence — the teacher has muted him, or there is
@@ -427,6 +383,7 @@
     ring.style.opacity = '0.95';
 
     el.classList.add('lean');
+    setPose('happy');
     setTimeout(function () { el.classList.remove('lean'); }, 900);
 
     /* He looks at it as well as ringing it. A child follows a gaze far more
@@ -457,13 +414,15 @@
     if (!mounted) mount();
     el.classList.remove('cheer', 'flap');
     void el.offsetWidth;          // restart the animations
-    el.classList.add('cheer', 'flap');   // bounce, and flap his wings
+    el.classList.add('cheer', 'flap');   // bounce, wings up
+    setPose('cheer', 2600);
     setTimeout(function () { el.classList.remove('cheer', 'flap'); }, 1300);
     if (line) say(line, { hold: 2600 });
     return GUIDE;
   }
 
   function think() {
+    setPose('curious', 3200);
     if (bubble) bubble.classList.remove('show');
     unpoint();
     stopTalking();
@@ -476,7 +435,7 @@
   var GUIDE = {
     NAME: NAME,
     mount: mount, say: say, point: point, unpoint: unpoint,
-    cheer: cheer, think: think, repeat: repeat, hide: hide, show: show,
+    cheer: cheer, think: think, repeat: repeat, hide: hide, show: show, mood: mood,
     get mounted() { return mounted; }
   };
 

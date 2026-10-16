@@ -14,3 +14,5 @@ __pycache__/
 # Build output
 release/
 release.zip
+release (*).zip
+Auticare-*.zip

@@ -39,7 +39,11 @@
   var HEIGHT_STEP = 34;
   var HEIGHT_MAX  = 120;
 
-  var state = { sizeIdx: 2, height: 0, ml: true, voice: true };
+  /* The language now comes from the universal setting (js/wall-settings.js,
+     chosen on the main menu, English on every launch). `ml` is kept as a
+     derived flag because pages ask WALL.isMl() and receive it in onLang. */
+  var S = function () { return global.WALL_SETTINGS || null; };
+  var state = { sizeIdx: 2, height: 0, ml: S() ? S().lang() === 'ml' : true, voice: true };
 
   var sizeCbs = [], heightCbs = [], langCbs = [], voiceCbs = [];
   var heightEls = [];
@@ -71,14 +75,21 @@
 
   function t(obj) {
     if (obj == null) return '';
+    if (S()) return S().tr(obj);
     if (typeof obj === 'string') return obj;
     if (state.ml) return obj.ml || obj.en || '';
     return obj.en || obj.ml || '';
   }
 
-  /** Both languages stacked — the big label plus its translation. */
+  /** The chosen language big, with a smaller second line: English under any
+      other language, and Malayalam under English (the room reads it). */
   function tBoth(obj) {
     if (!obj || typeof obj === 'string') return { main: t(obj), alt: '' };
+    if (S()) {
+      var main = S().tr(obj);
+      var alt = S().lang() === 'en' ? (obj.ml || '') : S().englishOf(obj);
+      return { main: main, alt: alt && alt !== main ? alt : '' };
+    }
     return state.ml
       ? { main: obj.ml || obj.en || '', alt: obj.en || '' }
       : { main: obj.en || obj.ml || '', alt: obj.ml || '' };
@@ -104,7 +115,7 @@
       var el = document.getElementById(id);
       if (el) el.textContent = val;
     };
-    set('wallLang',  state.ml ? '🌐 ML' : '🌐 EN');
+    set('wallLang',  '🌐 ' + (S() ? S().lang().toUpperCase() : (state.ml ? 'ML' : 'EN')));
     set('wallVoice', t(TB_TEXT.voice));
     set('wallReset', t(TB_TEXT.reset));
     set('wallHome',  t(TB_TEXT.home));
@@ -117,10 +128,23 @@
   }
 
   function setLang(ml) {
+    if (S()) { S().setLang(ml ? 'ml' : 'en'); return; }   // the listener below does the rest
     state.ml = !!ml;
     document.body.classList.toggle('wall-ml', state.ml);
     relabelToolbar();
     fire(langCbs, state.ml);
+  }
+
+  /* One language for the whole wall: when it changes — from the menu panel or
+     this page's toolbar — every page re-renders through its onLang callbacks. */
+  if (S()) {
+    S().onChange(function (what) {
+      if (what !== 'lang') return;
+      state.ml = S().lang() === 'ml';
+      if (document.body) document.body.classList.toggle('wall-ml', state.ml);
+      relabelToolbar();
+      fire(langCbs, state.ml);
+    });
   }
 
   function onLang(cb) { langCbs.push(cb); cb(state.ml); }
@@ -343,12 +367,34 @@
 
   function onVoice(cb) { voiceCbs.push(cb); cb(state.voice); }
 
+  /* Universal-language speech. The line is translated to the chosen language
+     and spoken with that language's baked clip; then a device voice; then
+     nothing. A line that has no translation is spoken in the language it is
+     actually written in — never English text through a Hindi voice. A forced
+     language (say(x, 'ml')) is not honoured here: the teacher's choice on the
+     menu is the one that counts. */
+  var SCRIPT = { ml: /[ഀ-ൿ]/, hi: /[ऀ-ॿ]/, kn: /[ಀ-೿]/ };
+  function writtenIn(str) {
+    for (var k in SCRIPT) if (SCRIPT[k].test(str)) return k;
+    return 'en';
+  }
+  function sayIn(text, word) {
+    var str = S().tr(text);
+    if (!str) return;
+    var lang = writtenIn(str);
+    if (global.VOICE && global.VOICE.say(str, lang)) return;
+    if (lang === 'hi' || lang === 'kn') { S().deviceSpeak(str, lang); return; }
+    if (!global.TTSEngine) return;
+    try { global.TTSEngine.speak(str, lang, word || null); } catch (e) {}
+  }
+
   /**
    * say('Rose') | say({en:'Rose', ml:'റോസപ്പൂവ്'})
    * Picks the language from the current toggle unless one is forced.
    */
   function say(text, forceLang, word) {
     if (!state.voice) return;
+    if (S()) return sayIn(text, word);
     var str, lang;
     if (text && typeof text === 'object') {
       str  = t(text);
@@ -556,7 +602,7 @@
     if (opts.menu) bindTouch(document.getElementById('wallMenu'),
                              function () { close(); opts.menu.onTap && opts.menu.onTap(); });
     if (opts.lang) bindTouch(document.getElementById('wallLang'),
-                             function () { setLang(!state.ml); });
+                             function () { if (S()) S().cycleLang(); else setLang(!state.ml); });
     if (opts.voice) bindTouch(document.getElementById('wallVoice'),
                               function () { setVoice(!state.voice); });
     if (opts.size) {
@@ -573,7 +619,11 @@
 
     if (opts.heightTarget) heightTarget(opts.heightTarget);
 
-    setLang(state.ml);
+    /* With the universal setting, only re-label: setLang(state.ml) would turn
+       Hindi or Kannada into English, since state.ml can only say "Malayalam
+       or not". */
+    if (S()) { document.body.classList.toggle('wall-ml', state.ml); relabelToolbar(); }
+    else setLang(state.ml);
     setVoice(state.voice);
     applySize();
   }

@@ -97,6 +97,15 @@ const CATEGORIES = {
             { name: 'Party Decoration',   ml: '🎈 ജന്മദിന അലങ്കാരം', game: 'voc-party-decorate' }
         ]
     },
+    // Kannada starts with the alphabet on its own; words and the rest join
+    // later as more options here.
+    'kannada': {
+        title: 'Kannada',
+        titleMl: 'കന്നഡ',
+        options: [
+            { name: 'Kannada Letters', ml: '🔤 കന്നഡ അക്ഷരങ്ങൾ', game: 'kn-alphabets' }
+        ]
+    },
     'pre-primary': {
         title: 'Pre-Primary',
         options: [
@@ -215,6 +224,28 @@ function handleOptionTap(option) {
     setTimeout(() => loadGame(option.game), 300);
 }
 
+/* Submenu labels in the universal language (js/wall-settings.js). Entries are
+   { name, ml } with an emoji in front of one or the other ("🦁 Animal Hunt",
+   "🏠 വീടുകളുടെ തരങ്ങൾ"): the emoji is kept, the words are translated, and the
+   English (or Malayalam, under English) goes small underneath. */
+const EMOJI_HEAD = /^[^A-Za-z0-9\u0D00-\u0D7F]+/;
+function splitEmoji(t) {
+    const m = String(t || '').match(EMOJI_HEAD);
+    return m ? { icon: m[0].trim(), text: t.slice(m[0].length).trim() } : { icon: '', text: String(t || '').trim() };
+}
+function labelHTML(en, ml) {
+    const S = window.WALL_SETTINGS;
+    const e = splitEmoji(en), m = splitEmoji(ml);
+    const icon = e.icon || m.icon;
+    if (!S) {
+        return ml ? '<span class="opt-ml">' + ml + '</span><span class="opt-en">' + en + '</span>' : en;
+    }
+    const main = S.tr({ en: e.text, ml: m.text || undefined });
+    const alt = S.lang() === 'en' ? m.text : e.text;
+    return '<span class="opt-ml">' + (icon ? icon + ' ' : '') + main + '</span>' +
+           (alt && alt !== main ? '<span class="opt-en">' + alt + '</span>' : '');
+}
+
 function showSubmenu(categoryName) {
     const category = CATEGORIES[categoryName];
     if (!category) return;
@@ -223,17 +254,15 @@ function showSubmenu(categoryName) {
     const box       = document.getElementById('submenu-box');
     const titleEl   = document.getElementById('submenu-title');
     const optsCont  = document.getElementById('submenu-options');
-    titleEl.innerHTML = category.titleMl
-      ? '<span class="opt-ml">' + category.titleMl + '</span>' +
-        '<span class="opt-en">' + category.title + '</span>'
-      : category.title;
+    titleEl.innerHTML = labelHTML(category.title, category.titleMl);
     optsCont.innerHTML  = '';
     box.classList.remove('pp-grid');
     // All level modules use the compact 3-up grid; Secondary has 9
     // entries and would otherwise render as one very tall column.
     if (categoryName === 'pre-primary' || categoryName === 'primary' ||
         categoryName === 'secondary' ||
-        categoryName === 'vocational') box.classList.add('pp-grid');
+        categoryName === 'vocational' ||
+        categoryName === 'kannada') box.classList.add('pp-grid');
 
     // \u2500\u2500 Back button \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.parent) {
@@ -259,7 +288,7 @@ function showSubmenu(categoryName) {
             if (!categoryAllowed(sub.key)) return; // mode gating
             const subEl = document.createElement('div');
             subEl.className   = 'submenu-option';
-            subEl.textContent = sub.name;
+            subEl.innerHTML   = labelHTML(sub.name, sub.ml);
             const goSub = (e) => {
                 if (e.type === 'click' && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
                 if (e.type === 'touchend') e.preventDefault();
@@ -281,12 +310,7 @@ function showSubmenu(categoryName) {
             optEl.className   = 'submenu-option';
             // Malayalam-first, English underneath. Entries without an
             // ml (the older categories) render exactly as before.
-            if (option.ml) {
-                optEl.innerHTML = '<span class="opt-ml">' + option.ml + '</span>' +
-                                  '<span class="opt-en">' + option.name + '</span>';
-            } else {
-                optEl.textContent = option.name;
-            }
+            optEl.innerHTML = labelHTML(option.name, option.ml);
             const goOpt = (e) => {
                 if (e.type === 'click' && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
                 if (e.type === 'touchend') e.preventDefault();
@@ -558,6 +582,9 @@ function loadGame(gameName) {
                 break;
             case 'pp-animal-sort':
                 window.location.href = 'games/pp-animal-sort.html';
+                break;
+            case 'kn-alphabets':
+                window.location.href = 'games/kannada-alphabets.html';
                 break;
             case 'voc-job-hats':
                 window.location.href = 'games/voc-job-hats.html';

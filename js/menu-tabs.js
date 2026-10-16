@@ -28,15 +28,15 @@
   'use strict';
 
   var TABS = [
-    { key: 'learn',   ml: 'പഠിക്കാം',    en: 'Learn',   colour: '#3E9BE9', icon: 'tab-learn',
+    { key: 'learn',   label: { en: 'Learn', ml: 'പഠിക്കാം' },   colour: '#3E9BE9', icon: 'tab-learn',
       say: { ml: 'നമുക്ക് പഠിക്കാം!', en: "Let's learn!" },
-      cards: ['pre-primary', 'primary', 'secondary', 'vocational',
+      cards: ['pre-primary', 'primary', 'secondary', 'vocational', 'kannada',
               'learning', 'daily-skills', 'money-counter', 'creature-creator'] },
-    { key: 'play',    ml: 'കളിക്കാം',    en: 'Play',    colour: '#FF8A3D', icon: 'tab-play',
+    { key: 'play',    label: { en: 'Play', ml: 'കളിക്കാം' },    colour: '#FF8A3D', icon: 'tab-play',
       say: { ml: 'നമുക്ക് കളിക്കാം!', en: "Let's play!" },
       cards: ['goalkeeper', 'fruit-ninja', 'balloon-popper', 'fish-it',
               'butterfly-tracker', 'puzzle-balance', 'shape-sorter', 'particle-playground'] },
-    { key: 'explore', ml: 'കണ്ടെത്താം', en: 'Explore', colour: '#2FB36A', icon: 'tab-explore',
+    { key: 'explore', label: { en: 'Explore', ml: 'കണ്ടെത്താം' }, colour: '#2FB36A', icon: 'tab-explore',
       say: { ml: 'നമുക്ക് കണ്ടെത്താം!', en: "Let's explore!" },
       cards: ['canvas', 'coloring-book', 'music-maker', 'solar-system',
               'underwater-explorer', 'jungle', 'video-360-player'] }
@@ -63,8 +63,7 @@
       b.style.setProperty('--tab', t.colour);
       b.innerHTML =
         '<img src="./assets/new/icons/' + t.icon + '.png" alt="" draggable="false" onerror="this.remove()">' +
-        '<span class="tab-text"><span class="tab-ml">' + t.ml + '</span>' +
-        '<span class="tab-en">' + t.en + '</span></span>';
+        '<span class="tab-text"><span class="tab-ml"></span><span class="tab-en"></span></span>';
       b.addEventListener('click', function () { select(t.key, true); });
       bar.appendChild(b);
     });
@@ -84,9 +83,27 @@
       }
     });
 
+    relabel();
+    // the universal language (js/wall-settings.js): re-label when it changes
+    if (global.WALL_SETTINGS) global.WALL_SETTINGS.onChange(function (w) { if (w === 'lang') relabel(); });
+
     var start = 'learn';
     try { start = sessionStorage.getItem(STORE) || 'learn'; } catch (e) {}
     select(start, false);
+  }
+
+  /** Tab names in the chosen language, with English (or Malayalam under
+      English) small underneath. */
+  function relabel() {
+    var S = global.WALL_SETTINGS;
+    Array.prototype.forEach.call(document.querySelectorAll('.menu-tab'), function (b) {
+      var t = TABS.filter(function (x) { return x.key === b.dataset.tab; })[0];
+      if (!t) return;
+      var main = S ? S.tr(t.label) : t.label.ml;
+      var alt = S ? (S.lang() === 'en' ? t.label.ml : t.label.en) : t.label.en;
+      b.querySelector('.tab-ml').textContent = main;
+      b.querySelector('.tab-en').textContent = alt !== main ? alt : '';
+    });
   }
 
   function select(key, spoken) {
@@ -117,6 +134,11 @@
       }
     });
 
+    /* how many cards this tab shows, so CSS can go five-across when a tab
+       outgrows two rows of four (a third row would run off the screen) */
+    var grid = document.querySelector('.card-grid');
+    if (grid) grid.dataset.count = document.querySelectorAll('.card-grid .game-card[data-tab="' + tab.key + '"]').length;
+
     document.documentElement.style.setProperty('--tab-colour', tab.colour);
 
     if (spoken && global.GUIDE) {
@@ -127,5 +149,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
   else build();
 
-  global.MENU_TABS = { select: select, TABS: TABS };
+  global.MENU_TABS = { select: select, relabel: relabel, TABS: TABS };
 })(typeof window !== 'undefined' ? window : globalThis);

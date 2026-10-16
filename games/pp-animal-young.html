@@ -39,8 +39,11 @@
     font-size:clamp(17px,3.2vw,32px);color:#1d6b63}
   #tally{font-weight:800;font-size:clamp(11px,1.6vw,17px);color:#6b8089;letter-spacing:.05em}
 
-  .row{position:absolute;left:0;right:0;display:flex;gap:1.4vw;
-    justify-content:center;align-items:center;padding:0 2.5vw}
+  /* side margins clear Owly in the bottom-left corner (140px at 18px in,
+     scaled by the Size control); mirrored right so the rows stay centred */
+  .row{--side:max(2.5vw,calc(150px * var(--wall-scale,1)));
+    position:absolute;left:0;right:0;display:flex;gap:1.4vw;
+    justify-content:center;align-items:center;padding:0 var(--side)}
   #mums{top:20%;height:37%}
   #kids{top:59%;height:37%}
 
@@ -48,7 +51,7 @@
      object-fit:cover trims the sides of a landscape picture. A square card
      keeps the animal recognisable, which is the whole point of the round. */
   .card{position:relative;flex:0 0 auto;aspect-ratio:1;
-    height:min(100%,22vw);width:auto;
+    height:min(100%,22vw,calc((100vw - 2 * var(--side) - 4.2vw) / 4));width:auto;
     border-radius:18px;overflow:hidden;background:#fff;border:5px solid #cfdde2;
     cursor:pointer;box-shadow:0 5px 14px rgba(30,60,70,.16);
     transition:transform .15s,border-color .15s,box-shadow .15s,opacity .3s}
@@ -92,6 +95,8 @@
   <button id="again">↺ വീണ്ടും</button>
 </div>
 
+<script src="../js/i18n-data.js"></script>
+<script src="../js/wall-settings.js"></script>
 <script src="../js/tts-engine.js"></script>
 <script src="../js/voice-manifest.js"></script>
 <script src="../js/voice-clips.js"></script>

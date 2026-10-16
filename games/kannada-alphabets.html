@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  Kannada Letters (ಕನ್ನಡ ಅಕ್ಷರಗಳು) - Pangappara Blueroom
+================================================================================
+  The first activity of the Kannada module: the alphabet on its own, no words
+  yet. EXPLORE, with no fail state — every tap is right. Tap a letter, hear
+  it, see it big. That is the whole activity, on purpose: a new script is a
+  lot to take in, and the only job here is to make the shapes and sounds
+  familiar.
+
+  HOW IT IS LAID OUT ON THE WALL
+    · Top: the title. Nothing to tap up there — children cannot reach it.
+    · Middle: the stage — the chosen letter, very large, with its Malayalam
+      twin beside it (ಕ = ക). The children read Malayalam first, so "this is
+      your ക, written the Kannada way" is the shortest bridge there is.
+    · Low: two big group buttons (vowels / consonants) and the letter tiles,
+      sized by fit() to fill the reachable band on any screen.
+
+  SOUND
+    Each letter is a baked clip, assets/voice/kn/kn_<id>.mp3, recorded by
+    scripts/voice-bake-kn.py. Windows has no Kannada voice, so there is no
+    device fallback worth having — an unbaked letter is simply quiet (with a
+    soft tone so the tap still feels answered), never read in English.
+
+  REWARD
+    A heard letter gets a star. Hear every letter in a group and കുട്ടു
+    cheers. There is no score, no timer, nothing to lose.
+================================================================================
+-->
+<html lang="kn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Kannada Letters</title>
+<style>
+  /* Both fonts are bundled — the wall has no network. Baloo Tamma 2 is the
+     Kannada member of the Baloo family the menu uses (Baloo Chettan 2), so
+     the two scripts look like they belong together. */
+  @font-face{font-family:'Baloo 2';src:url('../assets/fonts/Baloo2.ttf') format('truetype');font-weight:400 800;font-display:swap}
+  @font-face{font-family:'Baloo Tamma 2';src:url('../assets/fonts/BalooTamma2.ttf') format('truetype');font-weight:400 800;font-display:swap}
+  @font-face{font-family:'Baloo Chettan 2';src:url('../assets/fonts/BalooChettan2.ttf') format('truetype');font-weight:400 800;font-display:swap}
+
+  :root{
+    --vowel:#FF8A3D;  --vowel-edge:#C75A14;  --vowel-tint:#FFF1E6;
+    --cons:#3E9BE9;   --cons-edge:#2464B0;   --cons-tint:#E8F3FF;
+    --ink:#2B2D42;
+    --grp:var(--vowel); --grp-edge:var(--vowel-edge); --grp-tint:var(--vowel-tint);
+    /* the bottom-left corner belongs to കുട്ടു (112px at 18px in, scaled by
+       the Size control); keep the tiles clear of him, and mirror it right */
+    --side:max(calc(176px * var(--wall-scale,1)),9vw);
+  }
+  body.cons{--grp:var(--cons);--grp-edge:var(--cons-edge);--grp-tint:var(--cons-tint)}
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Baloo Chettan 2','Baloo 2','Baloo Tamma 2','Noto Sans Malayalam','Nirmala UI',system-ui,sans-serif;
+    color:var(--ink);user-select:none;-webkit-user-select:none;touch-action:none;
+    background:
+      url('../assets/new/menu/menu-bg.jpg') center 38%/cover no-repeat,
+      url('../assets/new/menu/menu-bg-tiny.jpg') center 38%/cover no-repeat,
+      #3d84d6;
+  }
+  .kn{font-family:'Baloo Tamma 2','Nirmala UI','Tunga',sans-serif}
+  .ml{font-family:'Baloo Chettan 2','Baloo 2','Noto Sans Malayalam','Nirmala UI',sans-serif}
+
+  #app{
+    position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+    padding:clamp(10px,2vh,24px) var(--side) clamp(12px,2.2vh,26px);
+  }
+
+  /* ── title ── */
+  .head{text-align:center;flex:0 0 auto}
+  .head .kn{
+    display:block;font-size:clamp(30px,3.6vw,60px);font-weight:800;line-height:1.05;color:#fff;
+    text-shadow:0 3px 0 #2a6fc4,0 -2px 0 #2a6fc4,3px 0 0 #2a6fc4,-3px 0 0 #2a6fc4,
+      2px 2px 0 #2a6fc4,-2px 2px 0 #2a6fc4,2px -2px 0 #2a6fc4,-2px -2px 0 #2a6fc4,0 8px 18px rgba(10,40,100,.45);
+  }
+  .head .ml{
+    display:inline-block;margin-top:4px;padding:2px 16px;border-radius:999px;
+    background:rgba(255,255,255,.9);font-weight:700;font-size:clamp(13px,1.2vw,19px);color:#2a6fc4;
+  }
+
+  /* ── stage: the chosen letter, very large ── */
+  .stage{
+    flex:0 0 auto;margin-top:clamp(8px,1.6vh,20px);
+    display:flex;align-items:center;gap:clamp(18px,2.4vw,40px);
+    background:#fff;border:6px solid var(--grp);border-radius:clamp(30px,3vw,46px);
+    box-shadow:0 12px 0 var(--grp-edge),0 24px 40px rgba(20,50,110,.25);
+    padding:clamp(6px,1vh,12px) clamp(24px,3vw,50px);
+    cursor:pointer;transition:border-color .3s, box-shadow .3s;
+  }
+  .stage:active{transform:translateY(6px);box-shadow:0 4px 0 var(--grp-edge)}
+  .big{
+    min-width:1.2em;text-align:center;
+    font-size:clamp(110px,22vh,250px);font-weight:800;line-height:1.15;color:var(--grp);
+    text-shadow:0 6px 0 color-mix(in srgb,var(--grp-edge) 35%,transparent);
+  }
+  .big.pop{animation:bigPop .45s cubic-bezier(.34,1.5,.64,1)}
+  @keyframes bigPop{0%{transform:scale(.6);opacity:.2}100%{transform:none;opacity:1}}
+  .twin{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:clamp(120px,11vw,190px)}
+  .twin-cap{font-size:clamp(12px,1vw,16px);font-weight:700;color:#7a7f9a}
+  .twin-ml{
+    font-size:clamp(46px,8vh,96px);font-weight:800;line-height:1.1;color:var(--ink);
+    background:var(--grp-tint);border-radius:24px;padding:0 22px;
+  }
+  .twin-r{font-family:'Baloo Tamma 2',sans-serif;font-size:clamp(18px,1.7vw,28px);font-weight:700;color:#7a7f9a}
+  .speaker{font-size:clamp(14px,1.1vw,18px);font-weight:700;color:var(--grp-edge)}
+
+  /* ── group buttons ── */
+  .groups{
+    flex:0 0 auto;display:flex;gap:clamp(12px,1.6vw,26px);justify-content:center;flex-wrap:wrap;
+    margin-top:clamp(14px,2.6vh,30px);
+  }
+  .grp{
+    --c:#3E9BE9;--e:#2464B0;
+    display:flex;align-items:center;gap:10px;cursor:pointer;
+    min-height:clamp(56px,7vh,78px);padding:4px clamp(18px,1.8vw,30px);
+    background:#fff;color:var(--ink);border:4px solid var(--c);border-radius:999px;
+    box-shadow:0 7px 0 var(--e);font:inherit;
+    transition:transform .14s ease, box-shadow .14s ease, background .2s;
+  }
+  .grp .kn{font-size:clamp(20px,1.8vw,30px);font-weight:800;line-height:1}
+  .grp .ml{font-size:clamp(12px,0.95vw,15px);font-weight:700;opacity:.7;display:block;line-height:1.1}
+  .grp .glyph{font-size:clamp(26px,2.4vw,40px);font-weight:800;line-height:1}
+  .grp.on{background:var(--c);color:#fff;transform:translateY(-4px);box-shadow:0 11px 0 var(--e),0 16px 24px rgba(0,0,0,.18)}
+  .grp.on .ml{opacity:.95}
+  .grp:active{transform:translateY(5px);box-shadow:0 2px 0 var(--e)}
+  .grp[data-g="vowel"]{--c:var(--vowel);--e:var(--vowel-edge)}
+  .grp[data-g="consonant"]{--c:var(--cons);--e:var(--cons-edge)}
+  .grp[data-g="all"]{--c:#2FB36A;--e:#1E7A47}
+  .grp.playing{animation:grpPulse 1s ease-in-out infinite}
+  @keyframes grpPulse{50%{filter:brightness(1.12)}}
+
+  /* ── tiles ── */
+  /* the tiles own all the height left under the buttons; fit() sizes them
+     to fill it, and they sit centred in it, low on the wall */
+  .grid{
+    flex:1 1 0;min-height:0;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;
+    gap:var(--gap,14px);margin-top:clamp(10px,1.8vh,22px);padding-top:12px;width:100%;
+  }
+  .tile{
+    position:relative;width:var(--t,110px);height:var(--t,110px);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    background:#fff;border:4px solid var(--grp);border-radius:calc(var(--t,110px) * .24);
+    box-shadow:0 7px 0 var(--grp-edge),0 12px 18px rgba(15,35,70,.18);
+    font-size:calc(var(--t,110px) * .58);font-weight:800;line-height:1;color:var(--ink);
+    transition:transform .12s ease, box-shadow .12s ease, background .2s;
+  }
+  .tile .kn{transform:translateY(4%)}
+  .tile:active{transform:translateY(6px);box-shadow:0 1px 0 var(--grp-edge)}
+  .tile.heard{background:var(--grp-tint)}
+  .tile.heard::after{
+    content:'★';position:absolute;top:-12px;right:-10px;
+    font-size:calc(var(--t,110px) * .26);color:#FFC93C;
+    text-shadow:0 2px 0 #C98A00,0 0 6px rgba(255,255,255,.8);
+  }
+  .tile.now{background:var(--grp);color:#fff;transform:translateY(-6px) scale(1.06);
+    box-shadow:0 13px 0 var(--grp-edge),0 18px 24px rgba(15,35,70,.25)}
+  .tile.in{animation:tileIn .38s cubic-bezier(.34,1.3,.64,1) both}
+  @keyframes tileIn{0%{opacity:0;transform:translateY(16px) scale(.8)}100%{opacity:1;transform:none}}
+
+  @media (prefers-reduced-motion:reduce){
+    .big.pop,.tile.in,.grp.playing{animation:none}
+    .tile.now{transform:none}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="head">
+    <span class="kn">ಕನ್ನಡ ಅಕ್ಷರಗಳು</span>
+    <span class="ml" data-say="title">കന്നഡ അക്ഷരങ്ങൾ · Kannada Letters</span>
+  </div>
+
+  <div class="stage" id="stage" role="button" aria-label="Hear the letter again">
+    <div class="big kn" id="big">ಅ</div>
+    <div class="twin">
+      <div class="twin-cap ml" id="twinCap">മലയാളത്തിൽ</div>
+      <div class="twin-ml ml" id="twin">അ</div>
+      <div class="twin-r" id="roman">a</div>
+      <div class="speaker"><span class="kn">🔊 ಮತ್ತೊಮ್ಮೆ ಕೇಳಿ</span></div>
+    </div>
+  </div>
+
+  <div class="groups">
+    <button class="grp" data-g="vowel"><span class="glyph kn">ಅ</span>
+      <span><span class="kn">ಸ್ವರಗಳು</span><span class="ml" data-say="vowels">സ്വരങ്ങൾ · Vowels</span></span></button>
+    <button class="grp" data-g="consonant"><span class="glyph kn">ಕ</span>
+      <span><span class="kn">ವ್ಯಂಜನಗಳು</span><span class="ml" data-say="cons">വ്യഞ്ജനങ്ങൾ · Consonants</span></span></button>
+    <button class="grp" data-g="all"><span class="glyph">▶</span>
+      <span><span class="kn">ಎಲ್ಲಾ ಕೇಳೋಣ</span><span class="ml" data-say="all">എല്ലാം കേൾക്കാം · Hear them all</span></span></button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script src="../js/i18n-data.js"></script>
+<script src="../js/wall-settings.js"></script>
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/guide.js"></script>
+<script src="../js/kannada-letters.js"></script>
+<script src="../js/kannada-voice.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var KN = window.KANNADA_LETTERS;
+  /* Everything spoken here is Kannada, in the baked Kannada voice: the
+     letters and കുട്ടു's lines both (js/kannada-voice.js). */
+  var LINES = window.KN_LINES;
+
+  var grid = document.getElementById('grid');
+  var big = document.getElementById('big');
+  var twin = document.getElementById('twin');
+  var roman = document.getElementById('roman');
+  var stage = document.getElementById('stage');
+
+  var group = 'vowel';
+  var current = KN.vowels[0];
+  var heard = {};            // id -> true
+  var cheered = {};          // group -> true, so the cheer happens once
+  var seq = null;
+
+  function list() { return group === 'vowel' ? KN.vowels : KN.consonants; }
+
+  /* ── sound: one Kannada player for letters and lines alike ── */
+  function stopAudio() { KN_VOICE.stop(); }
+  /** Play a letter's clip; calls done() when it ends (or fails). */
+  function speak(x, done) { KN_VOICE.playFile(x.clip, done); }
+
+  /* ── showing a letter ── */
+  function show(x, opts) {
+    current = x;
+    big.textContent = x.l;
+    showTwin(x);
+    big.classList.remove('pop'); void big.offsetWidth; big.classList.add('pop');
+    Array.prototype.forEach.call(grid.children, function (t) {
+      t.classList.toggle('now', t.dataset.id === x.id);
+    });
+    if (!(opts && opts.quiet)) speak(x);
+  }
+
+  /* ── the letter in the room's own script ─────────────────────────────
+     Kannada, Malayalam and Devanagari sit at matching places in Unicode, so
+     ಕ's twin is ക in Malayalam and क in Hindi, computed rather than typed.
+     In English (or Kannada itself) the twin is the Roman sound, "ka". */
+  var CAPTIONS = {
+    title:  { en: 'Kannada Letters', ml: 'കന്നഡ അക്ഷരങ്ങൾ' },
+    vowels: { en: 'Vowels', ml: 'സ്വരങ്ങൾ' },
+    cons:   { en: 'Consonants', ml: 'വ്യഞ്ജനങ്ങൾ' },
+    all:    { en: 'Hear them all', ml: 'എല്ലാം കേൾക്കാം' }
+  };
+  // pairs, not an { en, ml } object: the translation collector must not read
+  // these as one English/Malayalam pair
+  var TWIN_CAP = [['ml', 'മലയാളത്തിൽ'], ['hi', 'हिन्दी में'], ['en', 'Sounds like'], ['kn', 'ಉಚ್ಚಾರ']];
+  function twinCap(L) {
+    var hit = TWIN_CAP.filter(function (p) { return p[0] === L; })[0] || TWIN_CAP[2];
+    return hit[1];
+  }
+  function lang() { return window.WALL_SETTINGS ? WALL_SETTINGS.lang() : 'ml'; }
+  function devanagari(kn) {
+    var out = '';
+    for (var i = 0; i < kn.length; i++) {
+      var c = kn.charCodeAt(i);
+      out += (c >= 0x0C80 && c <= 0x0CFF) ? String.fromCharCode(c - 0x380) : kn[i];
+    }
+    return out;
+  }
+  function showTwin(x) {
+    var L = lang();
+    document.getElementById('twinCap').textContent = twinCap(L);
+    if (L === 'ml')      { twin.textContent = x.ml; roman.textContent = x.r; roman.style.display = ''; }
+    else if (L === 'hi') { twin.textContent = devanagari(x.l); roman.textContent = x.r; roman.style.display = ''; }
+    else                 { twin.textContent = x.r; roman.style.display = 'none'; }
+  }
+  function relabel() {
+    document.querySelectorAll('[data-say]').forEach(function (n) {
+      var c = CAPTIONS[n.dataset.say];
+      var main = WALL.t(c), en = c.en;
+      n.textContent = main === en ? en : main + ' · ' + en;
+    });
+    showTwin(current);
+  }
+
+  function markHeard(x, tile) {
+    heard[x.id] = true;
+    if (tile) tile.classList.add('heard');
+    var all = list().every(function (y) { return heard[y.id]; });
+    if (all && !cheered[group]) {
+      cheered[group] = true;
+      setTimeout(function () {
+        WALL.celebrate(stage.getBoundingClientRect(), true);
+        if (window.GUIDE) GUIDE.cheer(LINES.done);
+      }, 900);
+    }
+  }
+
+  /* ── tiles ── */
+  function build() {
+    grid.innerHTML = '';
+    list().forEach(function (x, i) {
+      var t = document.createElement('div');
+      t.className = 'tile in' + (heard[x.id] ? ' heard' : '');
+      t.dataset.id = x.id;
+      t.style.animationDelay = (i * 22) + 'ms';
+      t.innerHTML = '<span class="kn">' + x.l + '</span>';
+      WALL.bindTouch(t, function () {
+        stopSequence();
+        show(x);
+        WALL.burstAt(t, null, 10);
+        markHeard(x, t);
+      });
+      grid.appendChild(t);
+    });
+    fit();
+  }
+
+  /* Biggest square tile that fits the space left under the buttons. */
+  function fit() {
+    var n = grid.children.length;
+    if (!n) return;
+    var W = grid.clientWidth;
+    var H = grid.clientHeight - 12;          // less the room for the ★ badges
+    var gap = Math.max(10, Math.min(20, W * 0.012));
+    var best = 0;
+    for (var c = 1; c <= n; c++) {
+      var rows = Math.ceil(n / c);
+      var s = Math.min((W - (c - 1) * gap) / c, (H - (rows - 1) * gap - 14) / rows);
+      if (s > best) best = s;
+    }
+    best = Math.max(48, Math.min(150, Math.floor(best)));
+    grid.style.setProperty('--t', best + 'px');
+    grid.style.setProperty('--gap', gap + 'px');
+  }
+
+  /* ── groups ── */
+  function setGroup(g, spoken) {
+    stopSequence();
+    group = g;
+    document.body.classList.toggle('cons', g === 'consonant');
+    document.querySelectorAll('.grp[data-g="vowel"],.grp[data-g="consonant"]').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.g === g);
+    });
+    build();
+    show(list()[0], { quiet: true });
+    if (spoken && window.GUIDE) GUIDE.say(g === 'vowel' ? LINES.vowels : LINES.cons, { hold: 1800 });
+  }
+
+  /* ── hear them all: walk the group in order ── */
+  function stopSequence() {
+    if (!seq) return;
+    seq = null;
+    stopAudio();
+    document.querySelector('.grp[data-g="all"]').classList.remove('playing');
+  }
+  function playAll() {
+    if (seq) { stopSequence(); return; }   // second tap stops it
+    var token = seq = {};
+    var items = list(), i = 0;
+    document.querySelector('.grp[data-g="all"]').classList.add('playing');
+    function next() {
+      if (seq !== token) return;
+      if (i >= items.length) { stopSequence(); return; }
+      var x = items[i++];
+      var tile = grid.querySelector('[data-id="' + x.id + '"]');
+      show(x, { quiet: true });
+      markHeard(x, tile);
+      speak(x, function () { setTimeout(next, 450); });
+    }
+    // കുട്ടു announces it in Kannada, and the first letter follows his line
+    if (window.GUIDE) GUIDE.say(LINES.all, { hold: 2400, done: function () { setTimeout(next, 300); } });
+    else next();
+  }
+
+  document.querySelectorAll('.grp').forEach(function (b) {
+    WALL.bindTouch(b, function () {
+      if (b.dataset.g === 'all') playAll();
+      else setGroup(b.dataset.g, true);
+    });
+  });
+  WALL.bindTouch(stage, function () { stopSequence(); show(current); });
+
+  WALL.init();
+  WALL.toolbar({ lang: true, voice: true, height: true, home: true });
+  WALL.heightTarget('#app');
+  WALL.onLang(relabel);
+  window.addEventListener('resize', fit);
+  WALL.onVoice(function (on) { if (!on) { stopSequence(); stopAudio(); } });
+
+  setGroup('vowel', false);
+  // fonts change the measured height of the stage, so fit again once they land
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  setTimeout(function () { if (window.GUIDE) GUIDE.say(LINES.hello, { hold: 3600 }); }, 600);
+
+  window.KN_PAGE = { setGroup: setGroup, playAll: playAll, fit: fit };
+})();
+</script>
+</body>
+</html>

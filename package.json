@@ -1,6 +1,6 @@
 {
   "name": "interactive-wall-games",
-  "version": "1.0.0",
+  "version": "1.7.0",
   "private": true,
   "main": "main.js",
   "scripts": {
@@ -47,10 +47,19 @@
       "node_modules/three/examples/jsm/loaders/GLTFLoader.js",
       "node_modules/three/examples/jsm/loaders/KTX2Loader.js",
       "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js",
-      "package.json"
+      "package.json",
+      "!assets/avatar/[A-Z]*.png",
+      "!assets/voice/ml-slow/**"
     ],
     "directories": {
       "output": "release"
+    },
+    "artifactName": "Auticare ${version} Setup.${ext}",
+    "nsis": {
+      "shortcutName": "Auticare",
+      "uninstallDisplayName": "Auticare ${version}",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
     }
   },
   "devDependencies": {
@@ -59,5 +68,6 @@
   },
   "dependencies": {
     "three": "^0.182.0"
-  }
+  },
+  "description": "Auticare Blueroom interactive wall"
 }

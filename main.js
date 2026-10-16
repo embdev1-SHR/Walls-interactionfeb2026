@@ -80,6 +80,9 @@ function createWindow() {
     fullscreen: true,
     frame: false,
     backgroundColor: '#000000',
+    title: 'Auticare',
+    // taskbar / Alt-Tab icon: the Auticare ring with Owly (scripts/build-icon.py)
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,

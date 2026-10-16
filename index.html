@@ -358,13 +358,25 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
    Baloo Chettan 2: the Malayalam member of the Baloo family, rounded and
    friendly, covering Malayalam and English in one face. Bundled, because the
    wall has no network and the Google Fonts links above it never load there. */
+/* Baloo 2: the Devanagari member, for Hindi (universal language setting) */
+@font-face{
+  font-family:'Baloo 2';
+  src:url('./assets/fonts/Baloo2.ttf') format('truetype');
+  font-weight:400 800;font-display:swap;
+}
+/* Baloo Tamma 2: the Kannada member of the same family, for the Kannada card */
+@font-face{
+  font-family:'Baloo Tamma 2';
+  src:url('./assets/fonts/BalooTamma2.ttf') format('truetype');
+  font-weight:400 800;font-display:swap;
+}
 @font-face{
   font-family:'Baloo Chettan 2';
   src:url('./assets/fonts/BalooChettan2.ttf') format('truetype');
   font-weight:400 800;font-display:swap;
 }
 #main-menu, #loading-ui, .menu-tabs, .card-grid{
-  font-family:'Baloo Chettan 2','Nunito','Noto Sans Malayalam','Segoe UI',sans-serif;
+  font-family:'Baloo Chettan 2','Baloo 2','Baloo Tamma 2','Nunito','Noto Sans Malayalam','Nirmala UI','Segoe UI',sans-serif;
 }
 
 /* ── backdrop ──────────────────────────────────────────────────────────────
@@ -509,10 +521,15 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
   display:flex;flex-wrap:wrap;justify-content:center;
   gap:clamp(18px,1.8vw,34px) var(--col-gap);
   /* the side margins each clear കുട്ടു in the bottom-left corner */
-  width:min(92vw,1240px,calc(100vw - 2 * (clamp(96px,8vw,132px) + 30px)));max-width:none;
+  width:min(92vw,1240px,calc(100vw - 2 * (clamp(124px,10vw,170px) + 30px)));max-width:none;
   padding-top:clamp(18px,2.6vh,34px);    /* room for the art to pop out */
 }
 .card-grid > .game-card{flex:0 0 calc((100% - 3 * var(--col-gap)) / 4);min-width:0}
+/* nine or ten cards: five across, so it is still two rows */
+.card-grid[data-count="9"] > .game-card,
+.card-grid[data-count="10"] > .game-card{flex-basis:calc((100% - 4 * var(--col-gap)) / 5)}
+.card-grid[data-count="9"] .card-name,
+.card-grid[data-count="10"] .card-name{font-size:clamp(14px,1.12vw,22px)}
 .card-grid .game-card[hidden]{display:none !important}
 .card-grid .game-card{
   /* OKLCH, not sRGB: mixing in sRGB toward a fixed dark dragged every pastel
@@ -600,8 +617,8 @@ img.twemoji{height:1em;width:1em;vertical-align:-0.1em;display:inline-block;poin
    activity page — here he is the host. `body` raises specificity over the
    stylesheet guide.js injects later. */
 body #wallGuide,body #wallGuideBubble{z-index:10050}
-body #wallGuide{width:clamp(96px,8vw,132px);height:clamp(96px,8vw,132px)}
-body #wallGuideBubble{bottom:calc(14px + clamp(96px,8vw,132px) + 8px);font-family:'Baloo Chettan 2','Noto Sans Malayalam',sans-serif}
+body #wallGuide{width:clamp(124px,10vw,170px);height:clamp(124px,10vw,170px)}
+body #wallGuideBubble{bottom:calc(10px + clamp(124px,10vw,170px) + 8px);font-family:'Baloo Chettan 2','Baloo 2','Baloo Tamma 2','Noto Sans Malayalam','Nirmala UI',sans-serif}
 
 @media (prefers-reduced-motion:reduce){
   .card-grid .game-card.pop-in{animation:none}
@@ -627,7 +644,7 @@ body #wallGuideBubble{bottom:calc(14px + clamp(96px,8vw,132px) + 8px);font-famil
     <div id="loading-title">Auticare Blueroom</div>
     <div id="loading-tagline">Interactive Learning Wall</div>
     <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
-    <div id="loading-dots"><span class="ld-ml">തയ്യാറാകുന്നു…</span><span class="ld-en">Getting ready</span></div>
+    <div id="loading-dots"><span class="ld-ml">Getting ready</span><span class="ld-en">തയ്യാറാകുന്നു…</span></div>
   </div>
   <audio id="loading-audio" preload="auto">
     <source src="./assets/Audio/Loading.mp3" type="audio/mpeg">
@@ -869,6 +886,18 @@ body #wallGuideBubble{bottom:calc(14px + clamp(96px,8vw,132px) + 8px);font-famil
             <div class="card-sub">Vocational</div>
           </div>
         </div>
+        <!-- Kannada module: letters first (games/kannada-alphabets.html); more
+             activities join it as options in game-loader.js CATEGORIES.kannada -->
+        <div class="game-card card-kannada card-stagger" data-category="kannada" style="--art:#FFE07A">
+          <div class="card-art">
+            <img class="card-img" src="./assets/new/icons/kannada.png" alt="" draggable="false" onerror="this.remove()">
+            <div class="card-icon">ಅ</div>
+          </div>
+          <div class="card-label">
+            <div class="card-name kn-name">ಕನ್ನಡ</div>
+            <div class="card-sub">കന്നഡ · Kannada</div>
+          </div>
+        </div>
         <div class="game-card card-memory card-stagger" data-game="money-counter" style="--art:#A9E7CA">
           <div class="card-art">
             <img class="card-img" src="./assets/new/icons/money-counter.png" alt="" draggable="false" onerror="this.remove()">
@@ -941,6 +970,9 @@ body #wallGuideBubble{bottom:calc(14px + clamp(96px,8vw,132px) + 8px);font-famil
 </div>
 
 <!-- Auticare session/mode layer — must load before game-loader.js -->
+<!-- universal language + voice settings: first, so every script after it speaks through them -->
+<script src="./js/i18n-data.js"></script>
+<script src="./js/wall-settings.js"></script>
 <script src="./js/auticare-config.js"></script>
 <script src="./js/api-client.js"></script>
 <script src="./js/session.js"></script>
@@ -980,6 +1012,8 @@ body #wallGuideBubble{bottom:calc(14px + clamp(96px,8vw,132px) + 8px);font-famil
 <script src="./js/wall-common.js"></script>
 <script src="./js/guide.js"></script>
 <script src="./js/menu-greeting.js"></script>
+<!-- right-middle 🌐: language, volume, speed, pitch for the whole wall -->
+<script src="./js/settings-panel.js"></script>
 <script>MENU_GREETING.init();</script>
 
 <script>
@@ -1433,6 +1467,10 @@ window._startFloatingBalls = (function() {
               '<div class="note">The ' + d.icons.count + ' illustrations on the main menu cards are ' +
               'Microsoft Fluent Emoji (3D).</div><ul><li>' + esc(d.icons.notice) + '</li></ul>';
     }
+    /* Bundled fonts. The OFL text ships beside each file in assets/fonts. */
+    html += '<h3>Fonts</h3><ul>' +
+            '<li>Baloo Chettan 2 (Malayalam), Baloo 2 (Hindi) and Baloo Tamma 2 (Kannada) — Copyright 2019 ' +
+            'The Baloo 2 Project Authors. SIL Open Font License 1.1.</li></ul>';
     if (!html) html = '<div class="note">No third-party assets are in use.</div>';
     host.innerHTML = html;
   }
