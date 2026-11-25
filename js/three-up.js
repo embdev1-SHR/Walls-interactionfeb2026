@@ -74,6 +74,16 @@
       '.tu-body{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;',
       '  justify-content:flex-end;gap:2.2vh;overflow:hidden;position:relative;',
       '  padding:var(--tu-reach) 3% 4.5vh}',
+      /* PICTURES SIZED FROM THE PANEL. The room, about almost every activity
+         here: "images are very small". Each page capped its tiles at 88-132px
+         whatever the panel; fit() now picks the largest square that fits the
+         space actually left in the panel and hands it over as --tu-tile. */
+      '.tu-body>.row>.tile{width:var(--tu-tile,88px)!important;height:var(--tu-tile,88px)!important;',
+      '  flex:0 0 auto!important;max-width:none!important}',
+      '.tu-body>.row>.tile.wide{width:calc(var(--tu-tile,88px) * 1.3)!important}',
+      '.tu-body>.row>.tile .cap{font-size:clamp(10px,calc(var(--tu-tile,88px) * .1),26px)!important;padding:3px 5px 4px!important}',
+      '.tu-body>.row>.tile .em{font-size:calc(var(--tu-tile,88px) * .52)!important}',
+      '.tu-body>.row{gap:clamp(8px,1.2vw,22px)!important}',
       '.tu-hint{flex-shrink:0;text-align:center;font-weight:800;color:#8b8fa8;',
       '  padding:4px 6px;background:rgba(255,255,255,.72);font-size:clamp(8px,1.6vw,12px)}',
       /* per-panel popup — never page-wide */
@@ -82,7 +92,8 @@
       '  background:rgba(255,255,255,.95);backdrop-filter:blur(5px);text-align:center}',
       '.tu-pop.show{display:flex;animation:tuPop .22s ease-out}',
       '@keyframes tuPop{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:none}}',
-      '.tu-pop img{max-width:74%;max-height:34vh;object-fit:contain;border-radius:14px}',
+      /* the picture is the point of the popup (review: "the image should come in the middle") */
+      '.tu-pop img{max-width:90%;max-height:52vh;object-fit:contain;border-radius:18px;box-shadow:0 8px 22px rgba(0,0,0,.18)}',
       '.tu-pop-t{font-weight:900;font-size:clamp(16px,3.6vw,30px)}',
       '.tu-pop-b{font-weight:700;font-size:clamp(11px,2.1vw,17px);color:#555b73;line-height:1.35}',
       '.tu-pop-x{margin-top:.6vh;border:0;border-radius:13px;padding:9px 26px;color:#fff;',
@@ -246,6 +257,55 @@
     setHint: function (p, o) { panels[p].hint.textContent = txt(o); }
   };
 
+  /* ── fit: the largest tiles the panel can hold ─────────────
+     For every .row of .tile in a panel body: the height left after the
+     body's other children (the prompt, a picture, buttons) is shared between
+     the tile rows, and the tile count is laid out in whichever number of
+     columns gives the biggest square. Re-run whenever a panel's content
+     changes (a new round deals new tiles) and on resize. */
+  var MAX_TILE = 330, MIN_TILE = 48, fitQueued = false;
+  function queueFit() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function () { fitQueued = false; panels.forEach(function (pn) { fitPanel(pn.body); }); });
+  }
+  function fitPanel(body) {
+    var tileRows = [].filter.call(body.children, function (c) {
+      return c.classList.contains('row') && c.querySelector(':scope > .tile');
+    });
+    if (!tileRows.length) return;
+    var cs = getComputedStyle(body);
+    var innerH = body.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var innerW = body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var gap = parseFloat(cs.rowGap) || 0;
+    var shown = [].filter.call(body.children, function (c) { return getComputedStyle(c).display !== 'none'; });
+    var others = 0;
+    shown.forEach(function (c) { if (tileRows.indexOf(c) === -1) others += c.offsetHeight; });
+    var perRow = (innerH - others - gap * Math.max(0, shown.length - 1)) / tileRows.length;
+    tileRows.forEach(function (r) {
+      var n = r.querySelectorAll(':scope > .tile').length;
+      var rg = parseFloat(getComputedStyle(r).columnGap) || 10;
+      var aspect = r.querySelector(':scope > .tile.wide') ? 1.3 : 1;
+      var best = 0;
+      for (var c = 1; c <= n; c++) {
+        var rows = Math.ceil(n / c);
+        var s = Math.min((innerW - (c - 1) * rg) / c / aspect, (perRow - (rows - 1) * rg - 6) / rows);
+        if (s > best) best = s;
+      }
+      best = Math.max(MIN_TILE, Math.min(MAX_TILE, Math.floor(best)));
+      r.style.setProperty('--tu-tile', best + 'px');
+    });
+  }
+  function watchFit() {
+    if (!global.MutationObserver) return;
+    panels.forEach(function (pn) {
+      new MutationObserver(queueFit).observe(pn.body, { childList: true, subtree: true, characterData: true });
+    });
+    global.addEventListener('resize', queueFit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(queueFit);
+    queueFit();
+  }
+
   /* ── boot ───────────────────────────────────────────────── */
   function run(n) {
     api.players = n;
@@ -263,6 +323,7 @@
     /* Each panel's content is built independently, so touches in one
        never reach another — no pointer-id bookkeeping needed. */
     for (var q = 0; q < n; q++) cfg.build(q, panels[q].body, api);
+    watchFit();
     if (cfg.onReady) cfg.onReady(api);
   }
 
@@ -295,6 +356,7 @@
       if (cfg.pick === false) run(cfg.players || 3); else chooser();
     },
     api: function () { return api; },
+    fit: function () { queueFit(); },
     COLOURS: COLOURS
   };
 

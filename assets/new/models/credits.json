@@ -108,5 +108,35 @@
     "modelUrl": "https://sketchfab.com/3d-models/none-2c65f1af604847429f1ca44157ca4bfa",
     "query": "human body cartoon low poly",
     "sizeMB": 17.9
+  },
+  "animals/goat.glb": {
+    "entry": "animals/goat/scene.gltf",
+    "name": "Goat",
+    "author": "Tolibjon",
+    "authorUrl": "https://sketchfab.com/tolibjon",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/goat-15692d6248564a19bf2514ce2344ce70",
+    "query": "uid:15692d6248564a19bf2514ce2344ce70",
+    "sizeMB": 5.8
+  },
+  "animals/cat.glb": {
+    "entry": "animals/cat/scene.gltf",
+    "name": "cat",
+    "author": "toti.shroom",
+    "authorUrl": "https://sketchfab.com/toti.shroom",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/cat-51cc3bfb49b64128aa54ffa29f36d8c1",
+    "query": "uid:51cc3bfb49b64128aa54ffa29f36d8c1",
+    "sizeMB": 2.5
+  },
+  "animals/dog.glb": {
+    "entry": "animals/dog/scene.gltf",
+    "name": "dog",
+    "author": "neighbor",
+    "authorUrl": "https://sketchfab.com/kylekip",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/dog-e395f26615ca445ab32f01ded17ff3bf",
+    "query": "uid:e395f26615ca445ab32f01ded17ff3bf",
+    "sizeMB": 10.1
   }
 }

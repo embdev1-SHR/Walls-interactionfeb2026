@@ -47,6 +47,7 @@
   var LANG_KEY = 'auticareLang';             // sessionStorage: English each launch
   var VOICE_KEY = 'auticareVoiceSettings';   // localStorage: the room's preference
   var DEFAULTS = { volume: 0.9, speed: 1.0, pitch: 1.0 };
+  var WORD_PACE = 0.85;     // a lone word plays at 85% of the chosen speed
   var RANGE = { volume: [0, 1], speed: [0.6, 1.4], pitch: [0.75, 1.3] };
 
   /* What Owly says when the language changes, and when the teacher tests the
@@ -72,6 +73,11 @@
   var lang = (function () {
     var l = null;
     try { l = sessionStorage.getItem(LANG_KEY); } catch (e) {}
+    // ?lang=ml on the URL wins — for testing a page in one language from its first paint
+    try {
+      var q = /[?&]lang=(en|hi|ml|kn)\b/.exec(global.location.search || '');
+      if (q) { l = q[1]; sessionStorage.setItem(LANG_KEY, l); }
+    } catch (e) {}
     return CODES.indexOf(l) !== -1 ? l : 'en';
   })();
 
@@ -247,7 +253,8 @@
       speed/pitch. Resolves when it is ready to play. */
   function prepareVoice(el) {
     if (!el.__wallSrc) el.__wallSrc = el.currentSrc || el.src;
-    var p = voice.pitch, s = voice.speed, src = el.__wallSrc;
+    // single words a touch slower than sentences (flag set by voice-clips.js)
+    var p = voice.pitch, s = voice.speed * (el.__wallWord ? WORD_PACE : 1), src = el.__wallSrc;
     function rate(r) {
       try { el.preservesPitch = true; } catch (e) {}
       el.defaultPlaybackRate = r; el.playbackRate = r;

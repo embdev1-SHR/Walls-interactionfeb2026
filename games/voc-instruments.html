@@ -88,7 +88,17 @@ var INSTR=[
    hiss. Noise is now a short transient only - the attack of a stick on a
    skin - at a fraction of the volume, and the PITCH carries the instrument.
    A chenda and a chengila are told apart by pitch and decay, not by hiss. */
+/* Each instrument now has its OWN sound file (the room: "the sound of each
+   instrument is repeating — each instrument should have a unique sound"):
+   chenda is a real recording; the other five are rendered from models of the
+   instruments themselves by scripts/make-instrument-sounds.py. The live
+   synthesis below stays only as the fallback if a file is ever missing. */
+var SOUNDS={};
 function strike(i){
+  if(!SOUNDS[i.k]) SOUNDS[i.k]=WALL.sound('../assets/new/audio/instruments/'+i.k+'.mp3', function(){ synth(i); });
+  SOUNDS[i.k]();
+}
+function synth(i){
   if(i.kind==='drum'){
     /* a struck skin: strong low fundamental, a fifth above it, and the
        briefest click of contact */
@@ -128,8 +138,12 @@ TRIUP.start({
         strike(i);
         pad.classList.remove('hit'); void pad.offsetWidth; pad.classList.add('hit');
         st.hits++; api.pill(p,'played',String(st.hits));
-        /* only panel 1 names it, or three panels speak over each other */
-        if(p===0&&WALL.voiceOn()) WALL.say(i.ml);
+        /* only panel 1 names it, or three panels speak over each other;
+           the name comes after the instrument has been heard, not over it */
+        if(p===0&&WALL.voiceOn()){
+          clearTimeout(st.nameT);
+          st.nameT=setTimeout(function(){ WALL.say(i.ml); },1400);
+        }
       });
       grid.appendChild(pad);
     });

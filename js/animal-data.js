@@ -55,7 +55,7 @@
     tiger:    { ml: 'കടുവ',    en: 'Tiger',         emoji: '🐯', img: NEW + 'tiger.jpg',    snd: SND_OLD + 'tiger.mp3' },
     elephant: { ml: 'കാട്ടാന', en: 'Wild Elephant', emoji: '🐘', img: OLD + 'Elephant.png', snd: SND_OLD + 'elephant.mp3' },
     snake:    { ml: 'പാമ്പ്',  en: 'Snake',         emoji: '🐍', img: NEW + 'snake.jpg',    snd: SND_OLD + 'rattlesnake.mp3' },
-    monkey:   { ml: 'കുരങ്ങ്', en: 'Monkey',        emoji: '🐵', img: OLD + 'monkey.png',   snd: SND_NEW + 'monkey-chatter.mp3' },
+    monkey:   { ml: 'കുരങ്ങൻ', en: 'Monkey',        emoji: '🐵', img: OLD + 'monkey.png',   snd: SND_NEW + 'monkey-chatter.mp3' },
     bear:     { ml: 'കരടി',    en: 'Bear',          emoji: '🐻', img: NEW + 'bear.jpg',     snd: SND_OLD + 'bear.mp3' },
 
     /* ── quiz distractors / sorting ──────────────────────────────── */
@@ -135,11 +135,15 @@
     }, delay == null ? 1100 : delay);
   }
 
+  /* One player per animal, made once and kept, so the file is already
+     loading (or loaded) by the time a child taps. */
+  var players = {};
   function playSound(id) {
     var a = A[id];
     if (!a || !W()) return;
-    if (a.snd) W().sound(a.snd, W().sfx.tap)();
-    else W().sfx.tap();
+    if (!a.snd) { W().sfx.tap(); return; }
+    if (!players[id]) players[id] = W().sound(a.snd, W().sfx.tap);
+    players[id]();
   }
 
   global.ANIMALS = {

@@ -55,6 +55,28 @@
   @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
   .order{font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
     font-size:clamp(12px,2.2vh,24px);color:#7a3f8f;text-align:center;flex-shrink:0}
+  /* ── the bouquet, as big as the panel allows ── */
+  .bq{position:relative;flex:1 1 auto;min-height:0;width:min(100%,62vh);aspect-ratio:1/1.05;max-height:100%}
+  .bq .stems{position:absolute;inset:0;width:100%;height:100%}
+  .bq .wrap{position:absolute;left:12%;right:12%;bottom:0;width:76%;height:42%}
+  .bq .heads{position:absolute;inset:0}
+  .bq .head{position:absolute;width:24%;aspect-ratio:1;transform:translate(-50%,0);
+    display:grid;place-items:center;animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
+  .bq .head span{font-size:min(9vh,16vw);line-height:1;filter:drop-shadow(0 3px 3px rgba(0,0,0,.2))}
+  .bq .head img{width:66%!important;height:66%!important}   /* same size as an emoji head */
+  .bq .head img,.fl .pic img,.ghost img{width:100%;height:100%;object-fit:cover;border-radius:50%;
+    border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+  .tray{flex:0 0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(6px,1vw,14px)}
+  .fl{width:clamp(70px,11vh,130px);display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:#fff;border-radius:16px;padding:6px 4px;box-shadow:0 4px 10px rgba(40,50,70,.15);
+    cursor:grab;touch-action:none;user-select:none}
+  .fl .pic{width:80%;aspect-ratio:1;display:grid;place-items:center}
+  .fl .pic span{font-size:clamp(40px,7vh,84px);line-height:1}
+  .fl .nm{font-family:'Noto Sans Malayalam','Baloo 2',sans-serif;font-weight:800;font-size:clamp(10px,1.6vh,16px);color:#26313b;text-align:center}
+  .ghost{position:fixed;z-index:200;width:clamp(70px,12vh,140px);aspect-ratio:1;transform:translate(-50%,-50%);
+    pointer-events:none;display:grid;place-items:center}
+  .ghost span{font-size:clamp(50px,9vh,100px);line-height:1}
+  @keyframes pop{from{transform:translate(-50%,0) scale(.2)}to{transform:translate(-50%,0) scale(1)}}
 </style>
 </head>
 <body>
@@ -69,58 +91,85 @@
 <script>
 WALL_BACKDROP.set('meadow');
 function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+/* REBUILT on review: "clear big images needed. What I meant is to drag each
+   flower to make a big bouquet." A tray of flowers below; drag one (or tap
+   it) into the bouquet and it joins the bunch on a stem. Nine flowers make a
+   full bouquet. Any flower in any order — making it is the activity. */
+var IMG='../assets/new/images/flowers/';
 var FLOWERS=[
- {k:'rose',em:'\ud83c\udf39',ml:'\u0d31\u0d4b\u0d38\u0d2a\u0d4d\u0d2a\u0d42\u0d35\u0d4d'},
- {k:'mulla',em:'\ud83e\udd0d',ml:'\u0d2e\u0d41\u0d32\u0d4d\u0d32\u0d2a\u0d4d\u0d2a\u0d42\u0d35\u0d4d'},
- {k:'sun',em:'\ud83c\udf3b',ml:'\u0d38\u0d42\u0d30\u0d4d\u0d2f\u0d15\u0d3e\u0d28\u0d4d\u0d24\u0d3f'},
- {k:'hibi',em:'\ud83c\udf3a',ml:'\u0d1a\u0d46\u0d2e\u0d4d\u0d2a\u0d30\u0d24\u0d4d\u0d24\u0d3f'},
- {k:'tulip',em:'\ud83c\udf37',ml:'\u0d1f\u0d32\u0d3f\u0d2a\u0d4d'}
+ {en:'Rose',      ml:'റോസാപ്പൂവ്',  em:'🌹'},
+ {en:'Sunflower', ml:'സൂര്യകാന്തി', em:'🌻'},
+ {en:'Hibiscus',  ml:'ചെമ്പരത്തി',  em:'🌺'},
+ {en:'Tulip',     ml:'ടുലിപ്',       em:'🌷'},
+ {en:'Jasmine',   ml:'മുല്ലപ്പൂവ്',  img:IMG+'mulla.jpg'},
+ {en:'Marigold',  ml:'ജമന്തി',      img:IMG+'jamanti.jpg'}
 ];
-var ML=['\u0d2a\u0d42\u0d1c\u0d4d\u0d2f\u0d02','\u0d12\u0d28\u0d4d\u0d28\u0d4d','\u0d30\u0d23\u0d4d\u0d1f\u0d4d','\u0d2e\u0d42\u0d28\u0d4d\u0d28\u0d4d','\u0d28\u0d3e\u0d32\u0d4d'];
+var FULL=9;
+/* where each new flower head sits, as % of the bouquet box (a fan) */
+var SLOTS=[[50,30],[30,38],[70,38],[40,16],[60,16],[18,24],[82,24],[50,4],[30,4]];
+function head(f){ return f.img ? '<img src="'+f.img+'" alt="">' : '<span>'+f.em+'</span>'; }
+var WRAP='<svg class="wrap" viewBox="0 0 100 70" preserveAspectRatio="xMidYMax meet">'+
+  '<path d="M8 4 L50 68 L92 4 Q50 18 8 4Z" fill="#f7b2c9" stroke="#e07fa2" stroke-width="1.5"/>'+
+  '<path d="M20 8 L50 68 L80 8" fill="none" stroke="#e98fb0" stroke-width="1"/>'+
+  '<path d="M38 40 q12 -6 24 0 l-4 6 q-8 -4 -16 0z" fill="#d6336c"/></svg>';
 
 TRIUP.start({
-  title:{en:'Flower Bouquet',ml:'\u0d2a\u0d42\u0d1a\u0d4d\u0d1a\u0d46\u0d23\u0d4d\u0d1f\u0d4d'},
-  hint:{en:'Make the bouquet asked for',ml:'\u0d2a\u0d31\u0d2f\u0d41\u0d28\u0d4d\u0d28 \u0d2a\u0d42\u0d1a\u0d4d\u0d1a\u0d46\u0d23\u0d4d\u0d1f\u0d4d \u0d09\u0d23\u0d4d\u0d1f\u0d3e\u0d15\u0d4d\u0d15\u0d42'},
+  title:{en:'Flower Bouquet',ml:'പൂച്ചെണ്ട്'},
+  hint:{en:'Drag the flowers into the bouquet',ml:'പൂക്കൾ പൂച്ചെണ്ടിലേക്ക് വലിച്ചിടൂ'},
   build:function(p, body, api){
-    var st=api.state(p); st.made=0;
-    var order=document.createElement('div'); order.className='order';
-    var vase=document.createElement('div'); vase.className='vase'; vase.textContent='\ud83c\udffa';
-    var held=document.createElement('div'); held.className='held';
-    var grid=document.createElement('div'); grid.className='row';
-    body.appendChild(order); body.appendChild(vase); body.appendChild(held); body.appendChild(grid);
-    api.pill(p,'made','0');
+    var st=api.state(p); st.n=0;
+    var bq=document.createElement('div'); bq.className='bq';
+    bq.innerHTML='<svg class="stems" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><div class="heads"></div>'+WRAP;
+    var tray=document.createElement('div'); tray.className='tray';
+    body.appendChild(bq); body.appendChild(tray);
+    var heads=bq.querySelector('.heads'), stems=bq.querySelector('.stems');
+    api.pill(p,'flowers','0 / '+FULL);
 
-    function round(){
-      var want=sh(FLOWERS).slice(0,2);
-      st.need={}; st.got={};
-      want.forEach(function(f){ st.need[f.k]=1+Math.floor(Math.random()*2); st.got[f.k]=0; });
-      order.textContent=want.map(function(f){ return ML[st.need[f.k]]+' '+f.ml; }).join(', ');
-      held.innerHTML='';
-      grid.innerHTML='';
-      FLOWERS.forEach(function(f){
-        var t=document.createElement('div'); t.className='tile sq';
-        t.innerHTML='<div class="em">'+f.em+'</div><div class="cap">'+f.ml+'</div>';
-        WALL.bindTouch(t,function(){ pick(f,t); });
-        grid.appendChild(t);
+    function reset(){ st.n=0; heads.innerHTML=''; stems.innerHTML=''; api.pill(p,'flowers','0 / '+FULL); }
+    function add(f){
+      if(st.n>=FULL) return;
+      var s=SLOTS[st.n];
+      var h=document.createElement('div'); h.className='head';
+      h.style.left=s[0]+'%'; h.style.top=s[1]+'%'; h.innerHTML=head(f);
+      heads.appendChild(h);
+      var ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+      ln.setAttribute('x1',s[0]); ln.setAttribute('y1',s[1]+14); ln.setAttribute('x2',50); ln.setAttribute('y2',78);
+      ln.setAttribute('stroke','#3f9a3a'); ln.setAttribute('stroke-width','2.2'); ln.setAttribute('stroke-linecap','round');
+      stems.appendChild(ln);
+      st.n++; api.pill(p,'flowers',st.n+' / '+FULL);
+      WALL.tone(440+st.n*50,.14,'sine',.12);
+      if(p===0&&WALL.voiceOn()) WALL.say(f);
+      if(st.n===FULL) setTimeout(function(){
+        api.win(p,{title:{en:'A lovely bouquet!',ml:'മനോഹരമായ പൂച്ചെണ്ട്!'},onAgain:reset});
+      },700);
+    }
+
+    /* drag a copy of the flower; drop it anywhere over the bouquet. A plain
+       tap adds it too — some children cannot hold a drag. */
+    FLOWERS.forEach(function(f){
+      var t=document.createElement('div'); t.className='fl';
+      t.innerHTML='<div class="pic">'+head(f)+'</div><div class="nm">'+WALL.t(f)+'</div>';
+      t.addEventListener('pointerdown',function(e){
+        e.preventDefault();
+        var x0=e.clientX, y0=e.clientY, moved=false;
+        var g=document.createElement('div'); g.className='ghost'; g.innerHTML=head(f);
+        document.body.appendChild(g);
+        function at(x,y){ g.style.left=x+'px'; g.style.top=y+'px'; }
+        at(x0,y0);
+        try{ t.setPointerCapture(e.pointerId); }catch(_){}
+        function mv(ev){ if(ev.pointerId!==e.pointerId) return; if(Math.abs(ev.clientX-x0)+Math.abs(ev.clientY-y0)>12) moved=true; at(ev.clientX,ev.clientY); }
+        function up(ev){
+          if(ev.pointerId!==e.pointerId) return;
+          t.removeEventListener('pointermove',mv); t.removeEventListener('pointerup',up); t.removeEventListener('pointercancel',up);
+          var r=bq.getBoundingClientRect();
+          var inside=ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
+          g.remove();
+          if(!moved||inside) add(f);
+        }
+        t.addEventListener('pointermove',mv); t.addEventListener('pointerup',up); t.addEventListener('pointercancel',up);
       });
-      if(p===0&&WALL.voiceOn()) WALL.say(order.textContent);
-    }
-    function pick(f,t){
-      if(st.need[f.k]===undefined || st.got[f.k]>=st.need[f.k]){
-        t.classList.add('no'); setTimeout(function(){t.classList.remove('no');},460);
-        WALL.sfx.nudge(); return;
-      }
-      st.got[f.k]++;
-      var s=document.createElement('span'); s.textContent=f.em; held.appendChild(s);
-      WALL.tone(440+held.children.length*60,.16,'sine',.12);
-      var done=Object.keys(st.need).every(function(k){ return st.got[k]===st.need[k]; });
-      if(done){
-        st.made++; api.pill(p,'made',String(st.made));
-        api.popup(p,{title:{en:'A lovely bouquet!',ml:'\u0d2e\u0d28\u0d4b\u0d39\u0d30\u0d2e\u0d3e\u0d2f \u0d2a\u0d42\u0d1a\u0d4d\u0d1a\u0d46\u0d23\u0d4d\u0d1f\u0d4d!'},
-          close:{en:'Next order',ml:'\u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d24\u0d4d'},onClose:round});
-      }
-    }
-    round();
+      tray.appendChild(t);
+    });
   }
 });
 </script>

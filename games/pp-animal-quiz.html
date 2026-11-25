@@ -106,7 +106,7 @@ TRIUP.start({
             t.classList.add('ok'); st.n++;
             api.pill(p,'score',st.n+' / '+ROUNDS);
             WALL.tone(440+st.n*60,.16,'sine',.12);
-            api.popup(p,{title:{en:a.en,ml:a.ml},
+            api.popup(p,{img:a.img,title:{en:a.en,ml:a.ml},
               close:{en:'Next',ml:'\u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d24\u0d4d'},onClose:deal});
           } else { t.classList.add('no'); setTimeout(function(){t.classList.remove('no');},460); WALL.sfx.nudge(); }
         });

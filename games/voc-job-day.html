@@ -60,6 +60,14 @@
     color:#5a7288;line-height:1.45}
   .step.placed{cursor:default;border-color:#3fae7c;box-shadow:none;flex:1;min-width:0}
   .slot .step.placed{margin:0}
+
+  /* ── bigger, real pictures (review: "big images needed", "real images") ── */
+  .ph{display:block;object-fit:cover;border-radius:16px;box-shadow:0 6px 16px rgba(30,40,60,.18)}
+  .jobph{width:min(26vh,40%);height:min(26vh,40%)}
+  #job .em,.job .em{font-size:min(18vh,120px)!important}
+  /* every step has a big picture (review: "no images are there") */
+  .step{display:flex;align-items:center;gap:12px}
+  .step .sem{font-size:clamp(34px,6vh,64px);line-height:1;flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -97,7 +105,7 @@ TRIUP.start({
       var job = POOL[Math.floor(Math.random() * POOL.length)];
       st.job = job; st.filled = 0;
 
-      jobEl.innerHTML = '<div class="em">' + job.emoji + '</div><div>' +
+      jobEl.innerHTML = JOBS_DATA.art(job, 'ph jobph') + '<div>' +
         '<div class="nm">' + WALL.t(job.label) + '</div>' +
         '<div class="ml">' + job.label.ml + '</div></div>';
 
@@ -115,7 +123,8 @@ TRIUP.start({
         var t = document.createElement('div');
         t.className = 'step';
         t.dataset.i = o.i;
-        t.innerHTML = '<div class="en">' + o.d.en + '</div><div class="ml">' + o.d.ml + '</div>';
+        t.innerHTML = (o.d.em ? '<div class="sem">' + o.d.em + '</div>' : '') +
+          (function(b){ return '<div><div class="en">' + b.main + '</div><div class="ml">' + b.alt + '</div></div>'; })(WALL.tBoth(o.d));
         WALL.bindTouch(t, function () { pick(t); });
         rackEl.appendChild(t);
       });

@@ -322,21 +322,28 @@
    *   var bell = WALL.sound('../assets/new/audio/doorbell.mp3', WALL.sfx.tap);
    *   bell();
    */
+  /* A real recording, with a synthesized fallback only when the file is
+     genuinely missing or broken. It used to require 'canplaythrough' before
+     playing — so a player made and played in the same tap (what
+     ANIMALS.playSound did) ALWAYS fell back to the tap blip: the room's
+     "no sound" in Animal Quiz. A loading element simply plays once it can. */
   function sound(url, fallback) {
-    var el = null, ok = false;
+    var el = null, ok = false, bad = false;
     try {
       el = new Audio(url);
       el.preload = 'auto';
       el.addEventListener('canplaythrough', function () { ok = true; });
-      el.addEventListener('error', function () { ok = false; });
+      el.addEventListener('error', function () { bad = true; });
     } catch (e) { el = null; }
     return function () {
-      if (!state.voice && false) return;   // sound effects are not gated by the voice toggle
-      if (ok && el) {
+      if (el && !bad) {
         try {
-          var c = el.cloneNode();
+          // a finished, loaded clip is cloned so taps can overlap; a loading one plays itself
+          var c = ok ? el.cloneNode() : el;
           c.volume = 0.7;
-          c.play().catch(function () {});
+          if (!ok) c.currentTime = 0;
+          var p = c.play();
+          if (p && p.catch) p.catch(function () { if (fallback) fallback(); });
           return;
         } catch (e) { /* fall through */ }
       }

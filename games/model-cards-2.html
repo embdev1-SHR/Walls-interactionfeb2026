@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Animal Parts</title>
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<script type="module" src="../js/vendor/model-viewer.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -80,6 +80,25 @@ model-viewer{position:absolute;top:0;left:0;width:100%;height:100%;background:tr
 }
 .Hotspot:not([data-visible]) .HotspotAnnotation{display:none}
 .HotspotAnnotation{pointer-events:none}
+
+/* ── leader-line labels ─────────────────────────────────────────────────────
+   The button is a 26px dot ON the body part; its name sits in a pill at the
+   end of a line, away from the part, so the part itself stays visible.
+   Odd/even hotspots lean opposite ways so neighbouring labels do not stack. */
+.Hotspot[data-visible]{width:26px;height:26px;padding:0;border-radius:50%;
+  background:#fff;border:5px solid #16a34a;box-shadow:0 0 0 4px rgba(255,255,255,.45),0 3px 10px rgba(0,0,0,.5);
+  position:relative;overflow:visible}
+.Hotspot[data-visible] .HotspotAnnotation{position:absolute;bottom:calc(100% + 42px);left:50%;
+  transform:translateX(-12%);background:rgba(240,253,244,.97);color:#14532d;border-radius:999px;
+  padding:6px 14px;font-size:clamp(13px,1.25vw,19px);font-weight:900;white-space:nowrap;
+  box-shadow:0 3px 12px rgba(0,0,0,.45)}
+.Hotspot[data-visible]::after{content:'';position:absolute;left:50%;bottom:100%;width:3px;height:44px;
+  background:#fff;transform-origin:bottom center;transform:translateX(-50%) rotate(18deg);
+  box-shadow:0 0 4px rgba(0,0,0,.5);pointer-events:none}
+.Hotspot[data-visible].hs-alt .HotspotAnnotation{transform:translateX(-88%)}
+.Hotspot[data-visible].hs-alt::after{transform:translateX(-50%) rotate(-18deg)}
+.Hotspot[data-visible].hs-active{background:#4ade80;border-color:#fff}
+.Hotspot[data-visible].hs-active .HotspotAnnotation{background:linear-gradient(135deg,#4ade80,#16a34a);color:#052e16}
 
 .mvpb{display:block;width:40%;height:3px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:4px;overflow:hidden;background:rgba(255,255,255,.15)}
 .mvpb.hide{visibility:hidden}
@@ -236,116 +255,109 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
 ══════════════════════════════════════════════════════ */
 const ANIMALS = [
 
-  /* ─── CAMEL ─── */
+  /* ─── ELEPHANT ─── (review: replaces the camel) */
   {
-    id:'camel', name:{en:'Camel',ml:'ഒട്ടകം'}, emoji:'🐪',
-    glb:'../3dmodels/camel.glb',
+    id:'elephant', name:{en:'Elephant',ml:'ആന'}, emoji:'🐘',
+    orbit:'-60deg 80deg auto',   // starts showing the side its parts are on
+    glb:'../3dmodels/elephant__gajah.glb',
     hotspots:[
       { slot:'hotspot-1',
-        position:'-0.044040920431406616m 2.166422007595352m 0.10579811611361144m',
-        normal:'0.001275271467538882m 0.8012688806452009m 0.5983030624961495m',
-        icon:'🏔️', label:{en:'Hump',ml:'കൂമ്പ്'},
+        position:'-32.50248605628303m 244.88281484485958m 550.3185694951021m',
+        normal:'-0.9025353318876125m -0.2772257271179788m 0.32950852935610814m',
+        icon:'🐘', label:{en:'Trunk',ml:'തുമ്പിക്കൈ'},
         desc:{
-          en:'A camel\'s hump stores fat — not water! It holds up to 36 kg of fat used as energy when food is scarce. As fat is used, the hump shrinks and flops to the side.',
-          ml:'ഒട്ടകത്തിന്റെ കൂമ്പ് വെള്ളമല്ല, കൊഴുപ്പ് സൂക്ഷിക്കുന്നു! ഭക്ഷണം ലഭ്യമല്ലാത്തപ്പോൾ ഊർജ്ജമായി ഉപയോഗിക്കും. ഉപയോഗിക്കുമ്പോൾ കൂമ്പ് ചെറുതായി ഒരു വശത്തേക്ക് ചരിഞ്ഞ് വീഴും.'
+          en:'The long trunk is its nose. It drinks and picks up food with it.',
+          ml:'നീണ്ട തുമ്പിക്കൈ അതിന്റെ മൂക്കാണ്. വെള്ളം കുടിക്കാനും തീറ്റ എടുക്കാനും.'
         }
       },
       { slot:'hotspot-2',
-        position:'1.7656521100496128m 2.1707923705938974m 0.05205571722271884m',
-        normal:'0.3331440933997676m 0.7574361786414727m 0.5615206570713586m',
-        icon:'👃', label:{en:'Nose',ml:'മൂക്ക്'},
+        position:'110.08920579025698m 345.26714895763735m 607.3757273120661m',
+        normal:'-0.9405568740960237m 0.055376223589741015m 0.33509139119299314m',
+        icon:'🦷', label:{en:'Tusks',ml:'കൊമ്പുകൾ'},
         desc:{
-          en:'Camels can close their nostrils completely to block blowing sand during desert storms, keeping airways clear and protected.',
-          ml:'മരുഭൂമി കൊടുങ്കാറ്റിൽ മണൽ തടയാൻ ഒട്ടകത്തിന് മൂക്ക് പൂർണ്ണമായി അടക്കാൻ കഴിയും. ശ്വാസനാളി സ്വച്ഛമായി സൂക്ഷിക്കുന്നു.'
+          en:'Tusks are two very long teeth.',
+          ml:'കൊമ്പുകൾ രണ്ട് നീണ്ട പല്ലുകളാണ്.'
+        }
+      },
+      { slot:'hotspot-3',
+        position:'-209.4019693061407m 562.0457438697938m 216.5764438186019m',
+        normal:'-0.8308817659655695m -0.47442190144078605m 0.2907909049802727m',
+        icon:'👂', label:{en:'Ears',ml:'ചെവികൾ'},
+        desc:{
+          en:'Big ears flap like fans to keep the elephant cool.',
+          ml:'വലിയ ചെവികൾ വിശറി പോലെ ആട്ടി ആന തണുപ്പിക്കുന്നു.'
         }
       },
       { slot:'hotspot-4',
-        position:'1.8122870206218373m 2.0178643324340673m -0.011683125760551928m',
-        normal:'0.8082829473322416m 0.5810262750176174m -0.09532651672570909m',
-        icon:'🌵', label:{en:'Mouth',ml:'വായ'},
+        position:'-87.44766725102068m 518.9570481167829m 406.8250499840542m',
+        normal:'-0.9460300575172771m 0.06204665956345165m 0.31808386050045795m',
+        icon:'👁️', label:{en:'Eyes',ml:'കണ്ണുകൾ'},
         desc:{
-          en:'Camels have extremely tough mouths lined with thick skin — tough enough to eat thorny desert plants like cacti without any injury.',
-          ml:'കട്ടിയുള്ള തൊലിയാൽ ആവൃതമായ ശക്തമായ വായ. കള്ളിച്ചെടി പോലുള്ള മുൾ സസ്യങ്ങൾ പരുക്കൊന്നും കൂടാതെ ഭക്ഷിക്കും.'
+          en:'Small eyes with long eyelashes.',
+          ml:'നീണ്ട കൺപീലികളുള്ള ചെറിയ കണ്ണുകൾ.'
         }
       },
       { slot:'hotspot-5',
-        position:'1.3279999459890786m 2.2588129278740876m -0.08893402126080913m',
-        normal:'0.9462798371004232m 0.30493894051389014m -0.10754865157435874m',
-        icon:'👂', label:{en:'Ear',ml:'ചെവി'},
+        position:'-111.21844358852923m 181.30165696212154m 165.07788246163753m',
+        normal:'-0.7860383444596312m -0.12797252847819604m 0.604786535063455m',
+        icon:'🦵', label:{en:'Legs',ml:'കാലുകൾ'},
         desc:{
-          en:'Camel ears are lined with fine inner hair that filters out sand and dust. They can also detect sounds from very long distances across the open desert.',
-          ml:'അകത്ത് നേർത്ത രോമങ്ങൾ ഉള്ള ചെവി മണലും പൊടിയും അരിച്ചെടുക്കുന്നു. തുറന്ന മരുഭൂമിയിൽ ദൂരത്ത് നിന്നുള്ള ശബ്ദം കേൾക്കാനും ശേഷി.'
-        }
-      },
-      { slot:'hotspot-6',
-        position:'1.2127578367381324m 1.683081611206365m 0.1473328804985764m',
-        normal:'0.22068658603303404m -0.11232833130758652m 0.9688548790870269m',
-        icon:'🦒', label:{en:'Neck',ml:'കഴുത്ത്'},
-        desc:{
-          en:'The camel\'s long neck allows it to reach food on tall trees. It also acts as a heat radiator, helping regulate body temperature in extreme desert heat.',
-          ml:'ഉയർന്ന മരങ്ങളിലെ ഭക്ഷണം എത്തിപ്പിടിക്കാൻ നീണ്ട കഴുത്ത്. അതിതീവ്ര ചൂടിൽ ശരീര താപനില നിയന്ത്രിക്കുന്ന ചൂട് വികിരണ ഉപകരണം കൂടിയാണ്.'
-        }
-      },
-      { slot:'hotspot-7',
-        position:'-0.9331397913743414m 1.433047614660974m 0.020032653419773172m',
-        normal:'-0.3828259422373167m -0.020591918545782194m 0.9235909651142733m',
-        icon:'🐫', label:{en:'Tail',ml:'വാൽ'},
-        desc:{
-          en:'A camel\'s tail helps swat insects. Tail movements also communicate mood to other camels — a raised tail signals alertness or agitation.',
-          ml:'കീടങ്ങളെ അകറ്റാൻ ഒട്ടകത്തിന്റെ വാൽ. മറ്റ് ഒട്ടകങ്ങൾക്ക് മൂഡ് അറിയിക്കാൻ ഉതകുന്നു — ഉയർത്തിയ വാൽ ജാഗ്രത അല്ലെങ്കിൽ ഉദ്വേഗം സൂചിപ്പിക്കുന്നു.'
+          en:'Four strong legs, thick like tree trunks.',
+          ml:'മരത്തടി പോലെ കട്ടിയുള്ള നാല് ബലമുള്ള കാലുകൾ.'
         }
       }
     ]
   },
 
-  /* ─── OWL ─── */
+  /* ─── GOAT ─── (review: replaces the owl) */
   {
-    id:'owl', name:{en:'Owl',ml:'മൂങ്ങ'}, emoji:'🦉',
-    glb:'../3dmodels/owl.glb',
+    id:'goat', name:{en:'Goat',ml:'ആട്'}, emoji:'🐐',
+    orbit:'-60deg 80deg auto',   // starts showing the side its parts are on
+    glb:'../assets/new/models/animals/goat/scene.gltf',
     hotspots:[
       { slot:'hotspot-1',
-        position:'-194.89961709863883m 229.6467177663795m -206.90882388360444m',
-        normal:'-0.600972724686657m 0.1227709128213467m -0.7897842028983038m',
-        icon:'🪝', label:{en:'Beak',ml:'കൊക്ക്'},
+        position:'-0.28970433547326774m 1.922124981641228m 0.3848827425727824m',
+        normal:'-0.585064867676779m 0.0025142989429281465m 0.810982600868341m',
+        icon:'🪵', label:{en:'Horns',ml:'കൊമ്പുകൾ'},
         desc:{
-          en:'An owl\'s hooked beak is designed for tearing prey apart. Made of keratin (same as human fingernails), it is sharp, curved, and self-sharpening.',
-          ml:'ഇരയെ കീറിമുറിക്കാൻ ഡിസൈൻ ചെയ്ത കൊളുത്ത് കൊക്ക്. കെരാറ്റിൻ കൊണ്ട് നിർമ്മിതം — മനുഷ്യ നഖത്തേ അതേ വസ്തു. കൂർമ്മത, വളഞ്ഞ ആകൃതി, സ്വയം മൂർച്ചപ്പെടൽ.'
+          en:'Two curved horns on its head.',
+          ml:'തലയിൽ രണ്ട് വളഞ്ഞ കൊമ്പുകൾ.'
         }
       },
       { slot:'hotspot-2',
-        position:'-229.00208366901757m 301.1279114497103m -112.78686150837666m',
-        normal:'-0.6005239456316459m 0.7867214586785993m -0.14296970720266913m',
-        icon:'👁️', label:{en:'Eyes',ml:'കണ്ണുകൾ'},
+        position:'-0.24953911464827033m 1.5932094584918792m 0.45008006159568176m',
+        normal:'-0.4757027180033365m -0.5404827074812543m 0.6939635199331238m',
+        icon:'👂', label:{en:'Ears',ml:'ചെവികൾ'},
         desc:{
-          en:'Owl eyes are fixed in their sockets and cannot move. Instead, owls rotate their entire head up to 270° to look around — impossible for humans!',
-          ml:'മൂങ്ങയുടെ കണ്ണ് ഗോളകത്തിൽ ഉറച്ചുനിൽക്കുന്നു, ചലിക്കില്ല. പകരം തല 270 ഡിഗ്രി വരെ തിരിക്കും — മനുഷ്യർക്ക് അസാധ്യം!'
+          en:'Ears that turn to hear every sound.',
+          ml:'എല്ലാ ശബ്ദവും കേൾക്കാൻ തിരിയുന്ന ചെവികൾ.'
         }
       },
       { slot:'hotspot-3',
-        position:'-225.95230773796516m 127.45515933504652m 99.06114389372806m',
-        normal:'-0.8325043977716278m 0.22981833020513232m 0.5041031271402948m',
-        icon:'🪶', label:{en:'Wings',ml:'ചിറകുകൾ'},
+        position:'-0.09525466789663237m 1.533323968776429m 0.5334495390049097m',
+        normal:'-0.5962342247710194m -0.07864485640621949m 0.7989491446722667m',
+        icon:'👁️', label:{en:'Eyes',ml:'കണ്ണുകൾ'},
         desc:{
-          en:'Owl wing feathers have special comb-like serrated edges that break up air turbulence during flight, making owls virtually silent hunters.',
-          ml:'ചിറകിലെ ചീർ ആകൃതിയിലുള്ള ഞരമ്പ് വായു പ്രക്ഷോഭം ഒഴിവാക്കുന്നു — പൂർണ്ണ നിശ്ശബ്ദ ശിക്കാരി. ഇര ഒരിക്കലും ശബ്ദം കേൾക്കില്ല.'
+          en:'Its eyes see far on every side.',
+          ml:'ചുറ്റും ദൂരേക്ക് കാണുന്ന കണ്ണുകൾ.'
         }
       },
       { slot:'hotspot-4',
-        position:'-139.1280462466509m -312.1515877076364m 16.306825488361476m',
-        normal:'-0.5019760315633274m 0.5408898102832183m -0.6748764900837172m',
-        icon:'🦅', label:{en:'Claws',ml:'നഖം'},
+        position:'0.00044971607029671844m 1.3598108684489405m 0.7087771770516311m',
+        normal:'-0.40168886581978047m 0.5140551917484222m 0.7578874025294994m',
+        icon:'👄', label:{en:'Mouth',ml:'വായ'},
         desc:{
-          en:'Owls have talons — sharp, curved, powerful claws that can grip prey with up to 500 psi of crushing force. They use two toes forward and two backward for a stronger grip.',
-          ml:'500 psi ഗ്രിപ്പ് ബലമുള്ള ടാലോൺ — കൂർത്ത, വളഞ്ഞ, ശക്തമായ നഖം. ശക്തമായ പിടിക്ക് 2 വിരൽ മുന്നോട്ടും 2 പിന്നോട്ടും.'
+          en:'It chews leaves and grass all day.',
+          ml:'ദിവസം മുഴുവൻ ഇലയും പുല്ലും ചവയ്ക്കുന്നു.'
         }
       },
       { slot:'hotspot-5',
-        position:'282.2788229985008m -304.73391960819146m 197.1658158066855m',
-        normal:'0.7649552928769119m 0.46000570108373684m 0.4508194260122982m',
-        icon:'🎯', label:{en:'Tail',ml:'വാൽ'},
+        position:'-0.17327047707283733m 0.29123731757097493m 0.1870403605492435m',
+        normal:'-0.6715134810297274m 0.23019419062230947m 0.7043296667037942m',
+        icon:'🦵', label:{en:'Legs',ml:'കാലുകൾ'},
         desc:{
-          en:'An owl\'s tail feathers act as a brake and rudder during flight — helping the owl steer, change direction mid-air, and slow down for precision landings.',
-          ml:'പറക്കലിൽ ബ്രേക്കും ചുക്കാനും ആയ വാൽ തൂവലുകൾ. ദിശ മാറ്റുക, വേഗം കുറക്കുക, കൃത്യമായ ലാൻഡിംഗ് — ഇവ സഹായിക്കുന്നു.'
+          en:'Strong legs that are good at climbing.',
+          ml:'കയറാൻ മിടുക്കുള്ള ബലമുള്ള കാലുകൾ.'
         }
       }
     ]
@@ -447,6 +459,7 @@ function makeCard(a) {
 
     const mv = document.createElement('model-viewer');
     mv.setAttribute('src', a.glb);
+    if (a.orbit) mv.setAttribute('camera-orbit', a.orbit);
     mv.setAttribute('camera-controls', '');
     mv.setAttribute('tone-mapping', 'neutral');
     mv.setAttribute('shadow-intensity', '1');
@@ -466,7 +479,7 @@ function makeCard(a) {
 
     a.hotspots.forEach(hs => {
       const btn = document.createElement('button');
-      btn.className = 'Hotspot';
+      btn.className = 'Hotspot' + (a.hotspots.indexOf(hs) % 2 ? ' hs-alt' : '');
       btn.setAttribute('slot', hs.slot);
       if (hs.surface) {
         btn.setAttribute('data-surface', hs.surface);

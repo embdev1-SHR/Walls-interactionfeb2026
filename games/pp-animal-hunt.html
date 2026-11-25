@@ -378,7 +378,7 @@ const ANIMAL_DEFS = [
     desc:{en:'The king of the jungle! Lions live in groups called prides and have a loud roar.',
           ml:'കാടിന്റെ രാജാവ്! സിംഹങ്ങൾ കൂട്ടമായി ജീവിക്കുന്നു, ഉച്ചത്തിൽ അലറും.'},
     img:'../assets/animals%20img/lion.png',     audio:null,                                    scale:1.0 },
-  { key:'monkey',   name:{en:'Monkey',   ml:'കുരങ്ങ്'},
+  { key:'monkey',   name:{en:'Monkey',   ml:'കുരങ്ങൻ'},
     desc:{en:'A clever and playful animal that loves climbing trees and eating bananas.',
           ml:'മരം കയറ്റത്തിൽ മിടുക്കനായ ഒരു കുസൃതി ജന്തു. വാഴപ്പഴം ഇഷ്ടഭക്ഷണം.'},
     img:'../assets/animals%20img/monkey.png',   audio:null,                                    scale:1.0 },
@@ -399,7 +399,13 @@ const ANIMAL_DEFS = [
 /* ─────────────────────────────────────────
    STATE
 ───────────────────────────────────────── */
-let lang          = 'en';
+/* The universal language (menu 🌐) — this page used to keep its own and start
+   in English every time. */
+const S = window.WALL_SETTINGS || null;
+let lang          = S ? S.lang() : 'en';
+const PROMPT      = { en:'FIND THE', ml:'ഈ മൃഗത്തെ കണ്ടെത്തൂ' };
+/** A {en, ml} pair in the current language (Hindi/Kannada from content/i18n). */
+function T(o){ return S ? S.tr(o, lang) : (lang === 'ml' ? o.ml : o.en); }
 let audioEnabled  = true;
 let bgAudio       = null;
 let secsPerAnimal = 10;
@@ -534,10 +540,14 @@ function ttsSpeak(text, code, rate = 0.82, pitch = 1.15){
   speechSynthesis.speak(u);
 }
 
+/* Through the wall's voice: the baked clip in the chosen language (slow, single
+   word), then a device voice. The old direct ml-IN call was silent on Windows,
+   which ships no Malayalam voice — so the name was only ever heard in English. */
 function speakName(def, delay = 0){
   setTimeout(() => {
-    const txt = lang === 'ml' ? def.name.ml : def.name.en;
-    ttsSpeak(txt, lang === 'ml' ? 'ml-IN' : 'en-US');
+    if(!audioEnabled) return;
+    if(window.WALL) { WALL.say(def.name); return; }
+    ttsSpeak(T(def.name), lang === 'ml' ? 'ml-IN' : 'en-US');
   }, delay);
 }
 
@@ -620,8 +630,8 @@ function showTask(){
   const def  = queue[qIdx];
   currentKey = def.key;
   canClick   = true;
-  const nm   = lang === 'ml' ? def.name.ml : def.name.en;
-  document.getElementById('td-prompt').textContent = lang === 'ml' ? 'ഈ മൃഗത്തെ കണ്ടെത്തൂ' : 'FIND THE';
+  const nm   = T(def.name);
+  document.getElementById('td-prompt').textContent = T(PROMPT);
   document.getElementById('td-name').textContent   = nm;
   speakName(def, 350);
   startCountdown();
@@ -645,7 +655,7 @@ function handleClick(key, slotEl, cx, cy){
 
     const lbl = document.getElementById('lbl-' + key);
     const def = ANIMAL_DEFS.find(d => d.key === key);
-    lbl.textContent = lang === 'ml' ? def.name.ml : def.name.en;
+    lbl.textContent = T(def.name);
     lbl.classList.add('show');
 
     slotEl.classList.add('correct-flash');
@@ -677,8 +687,8 @@ let descDuration = 4000;
 function showDesc(def){
   const popup  = document.getElementById('desc-popup');
   const bar    = document.getElementById('dp-bar');
-  document.getElementById('dp-name').textContent = lang === 'ml' ? def.name.ml : def.name.en;
-  document.getElementById('dp-text').textContent = lang === 'ml' ? def.desc.ml : def.desc.en;
+  document.getElementById('dp-name').textContent = T(def.name);
+  document.getElementById('dp-text').textContent = T(def.desc);
 
   popup.classList.add('show');
 
@@ -784,10 +794,15 @@ function startGame(){
 ───────────────────────────────────────── */
 function setPgLang(l){
   lang = l;
+  if(S) S.setLang(l);
   document.getElementById('pg-lang-en').classList.toggle('active', l === 'en');
   document.getElementById('pg-lang-ml').classList.toggle('active', l === 'ml');
   document.getElementById('btn-lang').textContent = l.toUpperCase();
 }
+// show the language the page started in (from the menu), without changing it
+document.getElementById('pg-lang-en').classList.toggle('active', lang === 'en');
+document.getElementById('pg-lang-ml').classList.toggle('active', lang === 'ml');
+document.getElementById('btn-lang').textContent = lang.toUpperCase();
 document.getElementById('pg-lang-en').addEventListener('click', () => setPgLang('en'));
 document.getElementById('pg-lang-ml').addEventListener('click', () => setPgLang('ml'));
 document.getElementById('pg-lang-en').addEventListener('touchend', e => { e.preventDefault(); setPgLang('en'); });
@@ -833,16 +848,15 @@ document.getElementById('btn-audio').addEventListener('click', () => {
 });
 
 document.getElementById('btn-lang').addEventListener('click', () => {
-  lang = lang === 'en' ? 'ml' : 'en';
+  if(S){ S.cycleLang(); lang = S.lang(); } else lang = lang === 'en' ? 'ml' : 'en';
   document.getElementById('btn-lang').textContent = lang.toUpperCase();
   ANIMAL_DEFS.forEach(def => {
-    document.getElementById('lbl-' + def.key).textContent =
-      lang === 'ml' ? def.name.ml : def.name.en;
+    document.getElementById('lbl-' + def.key).textContent = T(def.name);
   });
   if(started && !finished && currentKey){
     const def = ANIMAL_DEFS.find(d => d.key === currentKey);
-    const nm  = lang === 'ml' ? def.name.ml : def.name.en;
-    document.getElementById('td-prompt').textContent = lang === 'ml' ? 'ഈ മൃഗത്തെ കണ്ടെത്തൂ' : 'FIND THE';
+    const nm  = T(def.name);
+    document.getElementById('td-prompt').textContent = T(PROMPT);
     document.getElementById('td-name').textContent   = nm;
     speakName(def, 300);
   }

@@ -23,6 +23,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { collect as collectPairs } from './i18n-collect.mjs';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_JSON = join(ROOT, 'content', 'voice', 'malayalam.json');
@@ -153,6 +154,33 @@ function main() {
     const have = existsSync(dir) ? new Set(readdirSync(dir)) : new Set();
     const baked = Object.values(m).filter((f) => have.has(f)).length;
     console.log(`${lang}: ${list.length} lines -> content/voice/${file}  (${baked}/${list.length} baked)`);
+  }
+
+  /* ── a teacher's own recording beats the model ─────────────────────────
+     The room heard "കോഴി" mispronounced, and no model can be checked for a
+     Malayalam ഴ automatically (Whisper was tried; it cannot). So a person's
+     recording wins wherever one exists:
+         content/voice/recorded/<lang>/<exact line>.<mp3|m4a|wav|ogg|aac|opus>
+     e.g. content/voice/recorded/ml/കോഴി.m4a, straight off a phone. It is
+     trimmed, loudness-matched and filed as rec_<hash>.mp3 beside the baked
+     clips; the manifest then points that line at it. */
+  for (const lang of Object.keys(manifests)) {
+    const dir = join(ROOT, 'content', 'voice', 'recorded', lang);
+    if (!existsSync(dir)) continue;
+    for (const f of readdirSync(dir)) {
+      const m = /^(.+)\.(mp3|m4a|wav|ogg|aac|opus)$/i.exec(f);
+      if (!m) continue;
+      const text = m[1].normalize('NFC').trim();
+      const outName = clipName(text, 'rec_' + lang);
+      const out = join(ROOT, 'assets', 'voice', lang, outName);
+      if (!existsSync(out)) {
+        execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', join(dir, f), '-af',
+          'silenceremove=start_periods=1:start_threshold=-42dB,areverse,silenceremove=start_periods=1:start_threshold=-42dB,areverse,loudnorm=I=-18:TP=-2',
+          '-ac', '1', '-ar', '44100', '-codec:a', 'libmp3lame', '-qscale:a', '4', out]);
+      }
+      manifests[lang][text] = outName;
+      console.log(`recorded by a person: [${lang}] ${text} -> ${outName}`);
+    }
   }
 
   /* The runtime manifest is emitted as a plain script, not JSON. The app

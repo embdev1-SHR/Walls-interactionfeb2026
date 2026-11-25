@@ -183,11 +183,13 @@
       },
       climb: function (n) { if (global.WALL) WALL.tone(440 + n * 60, 0.16, 'sine', 0.12); },
 
-      note: function (o) {
+      /** opts.quiet: show the card without speaking — for a page that
+          speaks the line itself at its own moment (after an animal sound). */
+      note: function (o, opts) {
         if (!o) { note.classList.remove('show'); return; }
         note.firstChild.textContent = t(o);
         note.classList.add('show');
-        if (global.WALL && WALL.voiceOn() && o.ml) WALL.say(o.ml);
+        if (!(opts && opts.quiet) && global.WALL && WALL.voiceOn() && o.ml) WALL.say(o.ml);
       },
 
       finish: function (o) {

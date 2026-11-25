@@ -101,7 +101,7 @@ TRIUP.start({
         WALL.bindTouch(t,function(){
           if(st.met[h.k])return; st.met[h.k]=1; t.classList.add('ok');
           api.pill(p,'met',Object.keys(st.met).length+' / '+HELPERS.length);
-          api.popup(p,{title:{en:h.en,ml:h.ml},body:h.fact,close:{en:'Next',ml:'\u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d24\u0d4d'},
+          api.popup(p,{img:h.img,title:{en:h.en,ml:h.ml},body:h.fact,close:{en:'Next',ml:'\u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d24\u0d4d'},
             onClose:function(){ if(Object.keys(st.met).length===HELPERS.length) match(); }});
         });
         grid.appendChild(t);

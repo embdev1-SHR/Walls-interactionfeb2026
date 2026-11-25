@@ -13,7 +13,10 @@ window.MODEL_MANIFEST = {
  "plants/flower.glb": "plants/flower/scene.gltf",
  "houses/modern-house.glb": "houses/modern-house/scene.gltf",
  "rooms/bathroom.glb": "rooms/bathroom/scene.gltf",
- "body/human.glb": "body/human/scene.gltf"
+ "body/human.glb": "body/human/scene.gltf",
+ "animals/goat.glb": "animals/goat/scene.gltf",
+ "animals/cat.glb": "animals/cat/scene.gltf",
+ "animals/dog.glb": "animals/dog/scene.gltf"
 };
 
 /* Resolve a slot to a real path, or null when nothing is downloaded. */

@@ -45,7 +45,8 @@
   @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}
                  60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
   .sq{width:clamp(44px,9vh,92px);height:clamp(44px,9vh,92px)}
-  .who{display:grid;place-items:center;width:clamp(56px,11vh,116px);height:clamp(56px,11vh,116px);
+  /* the hat IS the question: big (review: "big images are needed") */
+  .who{display:grid;place-items:center;width:min(30vh,60%);height:auto;aspect-ratio:1;
     border-radius:16px;background:#fff;border:4px solid #e6cfae;flex-shrink:0;
     box-shadow:0 6px 15px rgba(90,60,30,.16)}
   .who img{width:82%;height:82%;object-fit:contain}
@@ -90,7 +91,7 @@ TRIUP.start({
       grid.innerHTML='';
       sh([job].concat(wrong)).forEach(function(j){
         var t=document.createElement('div'); t.className='tile sq';
-        t.innerHTML='<div class="em">'+j.emoji+'</div><div class="cap">'+j.label.ml+'</div>';
+        t.innerHTML=(j.img?'<img src="'+j.img+'" alt="">':'<div class="em">'+j.emoji+'</div>')+'<div class="cap">'+j.label.ml+'</div>';
         WALL.bindTouch(t,function(){
           if(j.id===job.id){
             st.score++; api.pill(p,'score',st.score+' / '+ROUNDS);

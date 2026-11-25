@@ -93,6 +93,13 @@ const WANT = {
   'plants/flower.glb':        'flower plant low poly',
 
   'body/human.glb':           'human body cartoon low poly',
+
+  /* Animal Parts / 3D Animal Explorer (review: elephant + goat instead of owl
+     + camel; cat + Indian dog instead of bear + deer). Pinned by uid: chosen
+     by eye with scripts/sketchfab-search.mjs, not "first downloadable hit". */
+  'animals/goat.glb':         'uid:15692d6248564a19bf2514ce2344ce70',
+  'animals/cat.glb':          'uid:51cc3bfb49b64128aa54ffa29f36d8c1',
+  'animals/dog.glb':          'uid:e395f26615ca445ab32f01ded17ff3bf',
 };
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -238,11 +245,13 @@ async function main() {
   for (const slot of todo) {
     const q = WANT[slot];
     try {
-      const search = await api(
-        'https://api.sketchfab.com/v3/search?type=models&downloadable=true&archives_flavours=false' +
-        `&count=24&q=${encodeURIComponent(q)}`, token);
+      const results = q.startsWith('uid:')
+        ? [await api(`https://api.sketchfab.com/v3/models/${q.slice(4)}`, token)]
+        : (await api(
+            'https://api.sketchfab.com/v3/search?type=models&downloadable=true&archives_flavours=false' +
+            `&count=24&q=${encodeURIComponent(q)}`, token)).results;
 
-      const { model, notes } = choose(search.results || []);
+      const { model, notes } = choose(results || []);
       if (!model) {
         console.log(`  skip  ${slot.padEnd(26)} nothing usable for "${q}"`);
         notes.slice(0, 2).forEach((n) => console.log(`          ${n}`));

@@ -53,9 +53,11 @@ function draw(){
     pk.board.appendChild(pk.card({ img:a.img, ml:a.ml }, function(el){
       el.classList.add('pk-right');
       setTimeout(function(){ el.classList.remove('pk-right'); }, 900);
+      /* The animal's own sound, then its name ONCE (the room heard it twice:
+         this page said it and the note card said it again, over the sound). */
       ANIMALS.playSound(id);
-      setTimeout(function(){ if (WALL.voiceOn()) WALL.say(a.ml); }, 700);
-      pk.note({ en:a.en, ml:a.ml });
+      ANIMALS.speakAfterSound(id);
+      pk.note({ en:a.en, ml:a.ml }, { quiet: true });
       seen[id] = 1;
       pk.tally(Object.keys(seen).length + ' / ' + SET.length);
     }));

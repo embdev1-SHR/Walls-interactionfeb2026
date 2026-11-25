@@ -53,6 +53,9 @@
   .money svg{width:100%;height:100%}
   .target{font-weight:900;font-size:clamp(20px,4.2vh,44px);color:#1d6b2f;
     background:#eaf6ec;border:3px solid #b9dcc2;border-radius:12px;padding:2px 18px;flex-shrink:0}
+  /* the money fills its tile (tiles are sized by three-up's fit) */
+  .tile.money svg{width:92%!important;height:auto!important;max-height:92%}
+  .tile.money .cur-ph{width:100%;height:100%;object-fit:contain;background:#fff}
 </style>
 </head>
 <body>
@@ -97,7 +100,15 @@ TRIUP.start({
     function piece(v,isCoin){
       var t=document.createElement('div');
       t.className='tile money '+(isCoin?'sq':'wide');
-      t.innerHTML=isCoin?coinSVG(v,80):noteSVG(v,110,64);
+      /* REAL PHOTOS when the centre provides them (review: "real images of
+         currency is needed"). No freely licensed photos of single, current
+         Indian coins and notes exist to ship, so a photo of each one goes in
+         assets/new/images/currency/ as coin-1.jpg … coin-10.jpg and
+         note-10.jpg … note-100.jpg, and is used at once. Until a file is
+         there, the drawn coin or note shows — never an empty tile. */
+      var drawn=isCoin?coinSVG(v,240):noteSVG(v,330,192);
+      t.innerHTML='<img class="cur-ph" src="../assets/new/images/currency/'+(isCoin?'coin-':'note-')+v+'.jpg" alt="">';
+      t.firstChild.onerror=function(){ t.innerHTML=drawn; };
       WALL.bindTouch(t,function(){ pay(v,t); });
       return t;
     }

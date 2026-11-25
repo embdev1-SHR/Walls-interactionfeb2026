@@ -16,13 +16,15 @@
   },
   "animals/rooster.jpg": {
     "photographer": "Erwin Bosman",
-    "url": "https://www.pexels.com/photo/vibrant-rooster-crowing-at-sunrise-on-farm-36733592/",
-    "query": "rooster crowing"
+    "url": "https://www.pexels.com/photo/vibrant-rooster-perched-on-a-branch-outdoors-37342276/",
+    "query": "rooster standing full body",
+    "chosen": "by eye"
   },
   "animals/colourful-hen.jpg": {
     "photographer": "Erwin Bosman",
-    "url": "https://www.pexels.com/photo/close-up-of-domestic-hens-on-farm-38278287/",
-    "query": "colourful hen feathers"
+    "url": "https://www.pexels.com/photo/36267926/",
+    "query": "hen full body farm",
+    "chosen": "by eye"
   },
   "animals/sheep.jpg": {
     "photographer": "Ruben Reijgwart",
@@ -125,44 +127,52 @@
     "query": "lamb baby sheep"
   },
   "homes/coop.jpg": {
-    "photographer": "Abdulrhman Alkady",
-    "url": "https://www.pexels.com/photo/flock-of-white-and-black-birds-on-brown-soil-3981364/",
-    "query": "chicken coop"
+    "photographer": "TIVASEE .",
+    "url": "https://www.pexels.com/photo/rooster-and-duck-in-rustic-wooden-coop-outdoors-32727462/",
+    "query": "poultry house wooden",
+    "chosen": "by eye"
   },
   "homes/cow-shed.jpg": {
-    "photographer": "Giulia Botan",
-    "url": "https://www.pexels.com/photo/black-and-white-photo-of-cows-on-a-pasture-27035492/",
-    "query": "cow shed barn"
+    "photographer": "Diego Romero",
+    "url": "https://www.pexels.com/photo/view-of-cows-standing-in-a-barn-18461648/",
+    "query": "cow in cowshed india",
+    "chosen": "by eye"
   },
   "homes/kennel.jpg": {
-    "photographer": "Wladimir Miranda",
-    "url": "https://www.pexels.com/photo/playful-dog-chewing-on-cage-bars-indoors-35447158/",
-    "query": "dog kennel house"
+    "photographer": "Tony Mrst",
+    "url": "https://www.pexels.com/photo/a-brown-and-white-dog-in-a-wooden-dog-house-10759378/",
+    "query": "dog in wooden dog house",
+    "chosen": "by eye"
   },
   "homes/goat-shed.jpg": {
-    "photographer": "Alina Autumn",
-    "url": "https://www.pexels.com/photo/goats-walking-by-wooden-planks-on-farm-11560471/",
-    "query": "goat shed pen"
+    "photographer": "Steward Masweneng",
+    "url": "https://www.pexels.com/photo/a-brown-goat-in-the-farm-8432736/",
+    "query": "goats in shed",
+    "chosen": "by eye"
   },
   "homes/cat-basket.jpg": {
-    "photographer": "Singlár Zsuzsa",
-    "url": "https://www.pexels.com/photo/a-cat-lying-on-woven-chair-with-cushion-15011316/",
-    "query": "cat basket bed"
+    "photographer": "Vishnu PV",
+    "url": "https://www.pexels.com/photo/shallow-focus-photo-of-orange-tabby-kitten-in-plastic-basket-7508190/",
+    "query": "cat sleeping in basket",
+    "chosen": "by eye"
   },
   "homes/stable.jpg": {
-    "photographer": "Hakan Sapci",
-    "url": "https://www.pexels.com/photo/horse-stable-with-people-engaged-in-daily-activities-38390596/",
-    "query": "horse stable"
+    "photographer": "Joolsmagools  ®️",
+    "url": "https://www.pexels.com/photo/a-horse-in-a-sunlit-stable-in-werribee-south-38621147/",
+    "query": "horse in stable stall",
+    "chosen": "by eye"
   },
   "homes/pond.jpg": {
-    "photographer": "Andy Bergstrom",
-    "url": "https://www.pexels.com/photo/aerial-view-of-houses-around-the-reservoir-in-the-suburbs-8461880/",
-    "query": "village pond"
+    "photographer": "Luo Chris",
+    "url": "https://www.pexels.com/photo/duck-on-lake-surface-11327838/",
+    "query": "ducks swimming pond",
+    "chosen": "by eye"
   },
   "homes/sheep-pen.jpg": {
-    "photographer": "ALENA MARUK",
-    "url": "https://www.pexels.com/photo/sheep-in-front-of-a-log-fence-14681716/",
-    "query": "sheep pen fence"
+    "photographer": "Mahmoud Yahyaoui",
+    "url": "https://www.pexels.com/photo/pretty-sheep-28120890/",
+    "query": "sheep in pen fence",
+    "chosen": "by eye"
   },
   "flowers/rose.jpg": {
     "photographer": "Saddam Umar  Husain",
@@ -170,9 +180,10 @@
     "query": "red rose flower"
   },
   "flowers/mulla.jpg": {
-    "photographer": "Feri Feri",
-    "url": "https://www.pexels.com/photo/white-crepe-jasmine-flower-with-green-leaves-9543903/",
-    "query": "jasmine flower white"
+    "photographer": "liu",
+    "url": "https://www.pexels.com/photo/elegant-jasmine-flowers-arranged-in-a-wooden-bowl-34932170/",
+    "query": "jasmine flowers white mogra",
+    "chosen": "by eye"
   },
   "flowers/jamanti.jpg": {
     "photographer": "Steven May",
@@ -325,9 +336,10 @@
     "query": "indian bus stand"
   },
   "places/hospital.jpg": {
-    "photographer": "mitbg000",
-    "url": "https://www.pexels.com/photo/low-angle-shot-of-a-building-exterior-seen-from-behind-green-trees-20811933/",
-    "query": "hospital building"
+    "photographer": "B Ằ N G",
+    "url": "https://www.pexels.com/photo/a-residential-building-6008826/",
+    "query": "hospital building",
+    "chosen": "by eye"
   },
   "places/railway-station.jpg": {
     "photographer": "Tarun Baisoya",
@@ -438,5 +450,209 @@
     "photographer": "Sergej  *****",
     "url": "https://www.pexels.com/photo/serene-countryside-field-with-farmhouse-31425380/",
     "query": "green grass farm field"
+  },
+  "jobs/barber.jpg": {
+    "photographer": "Son Hoa Nguyen",
+    "url": "https://www.pexels.com/photo/traditional-barber-at-lao-cai-outdoor-market-33934111/",
+    "query": "barber cutting hair",
+    "chosen": "by eye"
+  },
+  "jobs/doctor.jpg": {
+    "photographer": "Tran Nhu Tuan",
+    "url": "https://www.pexels.com/photo/young-doctor-holding-a-stethoscope-19601385/",
+    "query": "indian doctor stethoscope",
+    "chosen": "by eye"
+  },
+  "jobs/driver.jpg": {
+    "photographer": "Boss  kewell",
+    "url": "https://www.pexels.com/photo/experienced-bus-driver-in-urban-setting-29221981/",
+    "query": "indian bus driver",
+    "chosen": "by eye"
+  },
+  "jobs/fisherman.jpg": {
+    "photographer": "Mhmd Drweesh",
+    "url": "https://www.pexels.com/photo/traditional-fishing-on-the-nile-river-egypt-39460943/",
+    "query": "kerala fisherman net",
+    "chosen": "by eye"
+  },
+  "jobs/nurse.jpg": {
+    "photographer": "Tran Nhu Tuan",
+    "url": "https://www.pexels.com/photo/confident-female-nurse-in-medical-uniform-29995629/",
+    "query": "indian nurse uniform",
+    "chosen": "by eye"
+  },
+  "jobs/potter.jpg": {
+    "photographer": "widiarto proboprasetyo",
+    "url": "https://www.pexels.com/photo/indonesian-potter-crafting-clay-pot-in-jakarta-35473885/",
+    "query": "indian potter wheel clay",
+    "chosen": "by eye"
+  },
+  "jobs/shopkeeper.jpg": {
+    "photographer": "Rahul Sapra",
+    "url": "https://www.pexels.com/photo/merchant-on-street-12436195/",
+    "query": "indian shopkeeper shop",
+    "chosen": "by eye"
+  },
+  "jobs/teacher.jpg": {
+    "photographer": "Yan Krukau",
+    "url": "https://www.pexels.com/photo/male-teacher-teaching-a-lesson-8617769/",
+    "query": "indian teacher classroom blackboard",
+    "chosen": "by eye"
+  },
+  "places/paddy-field.jpg": {
+    "photographer": "Rudi dito",
+    "url": "https://www.pexels.com/photo/tranquil-rice-field-in-indonesia-on-a-sunny-day-33810114/",
+    "query": "kerala paddy field",
+    "chosen": "by eye"
+  },
+  "places/police-station.jpg": {
+    "photographer": "Joni Tuohimaa",
+    "url": "https://www.pexels.com/photo/building-with-clock-7541123/",
+    "query": "police station building",
+    "chosen": "by eye"
+  },
+  "places/fire-station.jpg": {
+    "photographer": "Christian Palau",
+    "url": "https://www.pexels.com/photo/red-fire-truck-on-a-sunny-road-in-spain-38446779/",
+    "query": "fire station fire truck",
+    "chosen": "by eye"
+  },
+  "places/pottery.jpg": {
+    "photographer": "Raman Yv",
+    "url": "https://www.pexels.com/photo/vases-with-flowers-and-handmade-pots-19884207/",
+    "query": "clay pots pottery shop",
+    "chosen": "by eye"
+  },
+  "places/road.jpg": {
+    "photographer": "Nguyễn Văn Quý Ngọc",
+    "url": "https://www.pexels.com/photo/buses-on-the-road-side-8987745/",
+    "query": "indian road traffic bus",
+    "chosen": "by eye"
+  },
+  "places/sea.jpg": {
+    "photographer": "Alef Morais",
+    "url": "https://www.pexels.com/photo/scenic-boat-with-red-sail-on-calm-waters-29881448/",
+    "query": "fishing boats sea kerala",
+    "chosen": "by eye"
+  },
+  "places/shop.jpg": {
+    "photographer": "Stacey Koenitz",
+    "url": "https://www.pexels.com/photo/boxes-near-display-counter-2564460/",
+    "query": "indian grocery shop",
+    "chosen": "by eye"
+  },
+  "places/tailor-shop.jpg": {
+    "photographer": "Louis_ Every Click",
+    "url": "https://www.pexels.com/photo/elderly-woman-sewing-in-malaysian-shop-36799021/",
+    "query": "tailor shop clothes sewing",
+    "chosen": "by eye"
+  },
+  "places/house.jpg": {
+    "photographer": "V_shnu Srv_n",
+    "url": "https://www.pexels.com/photo/traditional-rural-house-surrounded-by-greenery-31674740/",
+    "query": "kerala house",
+    "chosen": "by eye"
+  },
+  "places/garden.jpg": {
+    "photographer": "Sam  Divita",
+    "url": "https://www.pexels.com/photo/pink-flowers-with-green-leaves-9225145/",
+    "query": "flower garden plants",
+    "chosen": "by eye"
+  },
+  "places/coconut-grove.jpg": {
+    "photographer": "Ayu Deasy",
+    "url": "https://www.pexels.com/photo/tropical-palm-trees-against-blue-sky-37556480/",
+    "query": "coconut plantation kerala",
+    "chosen": "by eye"
+  },
+  "places/barber-shop.jpg": {
+    "photographer": "Wilcle Nunes",
+    "url": "https://www.pexels.com/photo/luxury-interior-design-of-living-room-27165073/",
+    "query": "barbershop interior",
+    "chosen": "by eye"
+  },
+  "places/school.jpg": {
+    "photographer": "Nitin Khajotia",
+    "url": "https://www.pexels.com/photo/cheerful-schoolgirl-outdoors-in-jaipur-india-39112159/",
+    "query": "school building children uniform",
+    "chosen": "by eye"
+  },
+  "places/workshop.jpg": {
+    "photographer": "Kim Stiver",
+    "url": "https://www.pexels.com/photo/handheld-tools-hang-on-workbench-909256/",
+    "query": "woodworking shop tools wall",
+    "chosen": "by eye"
+  },
+  "places/kitchen.jpg": {
+    "photographer": "Zechen Li",
+    "url": "https://www.pexels.com/photo/pots-on-the-stove-in-the-kitchen-16927367/",
+    "query": "kitchen cooking pots stove",
+    "chosen": "by eye"
+  },
+  "places/post-office.jpg": {
+    "photographer": "Changhee Kim",
+    "url": "https://www.pexels.com/photo/a-red-mailbox-9153344/",
+    "query": "post office",
+    "chosen": "by eye"
+  },
+  "feelings/happy.jpg": {
+    "photographer": "AMIT KUMAR",
+    "url": "https://www.pexels.com/photo/charming-portrait-of-a-smiling-child-29790577/",
+    "query": "happy child smiling face",
+    "chosen": "by eye"
+  },
+  "feelings/excited.jpg": {
+    "photographer": "Son Hoa Nguyen",
+    "url": "https://www.pexels.com/photo/joyful-child-portrait-in-lao-cai-vietnam-33871404/",
+    "query": "excited child cheering",
+    "chosen": "by eye"
+  },
+  "feelings/love.jpg": {
+    "photographer": "Son Hoa Nguyen",
+    "url": "https://www.pexels.com/photo/mother-and-child-outdoors-in-lao-cai-vietnam-34045803/",
+    "query": "child hugging mother love",
+    "chosen": "by eye"
+  },
+  "feelings/silly.jpg": {
+    "photographer": "Murry Lee",
+    "url": "https://www.pexels.com/photo/playful-child-making-a-funny-face-34988575/",
+    "query": "child funny face tongue out",
+    "chosen": "by eye"
+  },
+  "feelings/bored.jpg": {
+    "photographer": "Dario Moscato",
+    "url": "https://www.pexels.com/photo/portrait-of-a-sad-girl-wearing-eyeglasses-7860708/",
+    "query": "bored child chin on hand",
+    "chosen": "by eye"
+  },
+  "feelings/scared.jpg": {
+    "photographer": "Achi Murusidze",
+    "url": "https://www.pexels.com/photo/moody-black-and-white-teen-portrait-outdoors-32782837/",
+    "query": "frightened kid hiding face",
+    "chosen": "by eye"
+  },
+  "feelings/sad.jpg": {
+    "photographer": "Son Hoa Nguyen",
+    "url": "https://www.pexels.com/photo/portrait-of-a-young-girl-in-lao-cai-vietnam-33970124/",
+    "query": "little girl crying tears",
+    "chosen": "by eye"
+  },
+  "daily/wash-1-wet.jpg": {
+    "photographer": "Jacek Jan Skorupski",
+    "url": "https://www.pexels.com/photo/a-person-washing-his-hands-4328899/",
+    "query": "child washing hands water tap",
+    "chosen": "by eye"
+  },
+  "daily/teeth-2-brush.jpg": {
+    "photographer": "Duc Nguyen",
+    "url": "https://www.pexels.com/photo/cute-child-in-bright-red-sweater-outdoors-29632685/",
+    "query": "child brushing teeth",
+    "chosen": "by eye"
+  },
+  "daily/groom-3-comb.jpg": {
+    "photographer": "Dario Moscato",
+    "url": "https://www.pexels.com/photo/a-young-girl-in-knitted-sweater-7860729/",
+    "query": "child combing hair",
+    "chosen": "by eye"
   }
 }

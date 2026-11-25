@@ -51,18 +51,27 @@
     font-size:clamp(12px,2.1vh,23px);color:#3d4f8f;text-align:center;flex-shrink:0}
   .phone{background:#20242e;border-radius:20px;padding:8px 7px 10px;flex-shrink:0;
     box-shadow:0 10px 24px rgba(20,25,40,.3);display:flex;flex-direction:column;gap:5px;
-    width:clamp(120px,26vh,240px)}
+    width:min(46vh,92%)}   /* was 26vh: a phone a child can actually use on a wall */
   .scr{background:#0e1218;border-radius:10px;min-height:clamp(34px,7vh,72px);padding:5px 8px;
     color:#7ef0a6;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.12em;
     font-size:clamp(12px,2.4vh,26px);display:flex;align-items:center;justify-content:center;
     text-align:center;word-break:break-word}
   .scr.msg{color:#cfe0ff;letter-spacing:0;font-family:'Noto Sans Malayalam',sans-serif;
-    font-size:clamp(9px,1.7vh,17px);line-height:1.4}
+    font-size:clamp(13px,2.4vh,26px);line-height:1.4}
   .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
   .k{background:#2e3542;color:#fff;border-radius:8px;text-align:center;cursor:pointer;
     padding:clamp(3px,.7vh,8px) 0;font-weight:800;font-size:clamp(11px,2vh,22px)}
   .k:active{background:#3d4657}
   .k.call{background:#2f9e5b}.k.del{background:#8f3b3b}
+  /* message replies: chat bubbles, big enough to tap */
+  .scr.msg{display:flex;flex-direction:column;gap:8px;align-items:stretch;justify-content:flex-start;padding:10px}
+  .scr .in{align-self:flex-start;background:#fff;color:#1f2a37;border-radius:14px 14px 14px 4px;padding:8px 12px;font-weight:800;max-width:90%;text-align:left}
+  .scr .out{align-self:flex-end;background:#d9fdd3;color:#14532d;border-radius:14px 14px 4px 14px;padding:8px 12px;font-weight:800;max-width:90%}
+  .replies{flex-direction:column;gap:10px;padding:10px 4px}
+  .rep{background:#25a85a;color:#fff;font-weight:900;text-align:center;border-radius:999px;padding:12px 14px;
+    font-family:'Noto Sans Malayalam','Baloo 2',sans-serif;font-size:clamp(14px,2.4vh,24px);cursor:pointer;
+    box-shadow:0 5px 0 #1a7a41}
+  .rep:active{transform:translateY(4px);box-shadow:0 1px 0 #1a7a41}
 </style>
 </head>
 <body>
@@ -81,8 +90,16 @@ var TASKS=[
  {kind:'dial',who:{en:'Police',ml:'\u0d2a\u0d4b\u0d32\u0d40\u0d38\u0d4d'},num:'100'},
  {kind:'dial',who:{en:'Fire service',ml:'\u0d05\u0d17\u0d4d\u0d28\u0d3f\u0d36\u0d2e\u0d28 \u0d38\u0d47\u0d28'},num:'101'},
  {kind:'dial',who:{en:'Ambulance',ml:'\u0d06\u0d02\u0d2c\u0d41\u0d32\u0d7b\u0d38\u0d4d'},num:'102'},
- {kind:'msg',text:{en:'Amma: Are you coming home?',ml:'\u0d05\u0d2e\u0d4d\u0d2e: \u0d35\u0d40\u0d1f\u0d4d\u0d1f\u0d3f\u0d32\u0d47\u0d15\u0d4d\u0d15\u0d4d \u0d35\u0d30\u0d41\u0d28\u0d4d\u0d28\u0d41\u0d23\u0d4d\u0d1f\u0d4b?'},
-  reply:{en:'Yes',ml:'\u0d09\u0d23\u0d4d\u0d1f\u0d4d'}}
+ /* Messages are answered with REPLY BUTTONS, like a real phone — not the
+    dial pad (review: "how to give replies through telephone dialing — only
+    a dial pad is given — change that"). Any reply is fine: the skill is
+    reading a message and answering it. */
+ {kind:'msg',text:{en:'Amma: Are you coming home?',ml:'അമ്മ: വീട്ടിലേക്ക് വരുന്നുണ്ടോ?'},
+  replies:[{en:'Yes, I am coming',ml:'ഉണ്ട്, വരുന്നു'},{en:'A little later',ml:'കുറച്ച് കഴിഞ്ഞ്'},{en:'No',ml:'ഇല്ല'}]},
+ {kind:'msg',text:{en:'Achan: Did you eat?',ml:'അച്ഛൻ: ഭക്ഷണം കഴിച്ചോ?'},
+  replies:[{en:'Yes, I ate',ml:'കഴിച്ചു'},{en:'Not yet',ml:'ഇല്ല, ഇതുവരെ'},{en:'Eating now',ml:'ഇപ്പോൾ കഴിക്കുന്നു'}]},
+ {kind:'msg',text:{en:'Teacher: Bring your book tomorrow.',ml:'ടീച്ചർ: നാളെ പുസ്തകം കൊണ്ടുവരണം.'},
+  replies:[{en:'OK, teacher',ml:'ശരി, ടീച്ചർ'},{en:'Thank you',ml:'നന്ദി'},{en:'Which book?',ml:'ഏത് പുസ്തകം?'}]}
 ];
 
 TRIUP.start({
@@ -92,9 +109,9 @@ TRIUP.start({
     var st=api.state(p); st.done=0; st.typed='';
     var lead=document.createElement('div'); lead.className='leadml';
     var ph=document.createElement('div'); ph.className='phone';
-    ph.innerHTML='<div class="scr"></div><div class="keys"></div>';
+    ph.innerHTML='<div class="scr"></div><div class="keys"></div><div class="replies"></div>';
     body.appendChild(lead); body.appendChild(ph);
-    var scr=ph.querySelector('.scr'), keys=ph.querySelector('.keys');
+    var scr=ph.querySelector('.scr'), keys=ph.querySelector('.keys'), reps=ph.querySelector('.replies');
     api.pill(p,'done','0');
 
     ['1','2','3','4','5','6','7','8','9','del','0','call'].forEach(function(d){
@@ -108,26 +125,35 @@ TRIUP.start({
     function round(){
       st.task=TASKS[Math.floor(Math.random()*TASKS.length)];
       st.typed=''; scr.classList.remove('msg');
+      var isMsg=st.task.kind==='msg';
+      keys.style.display=isMsg?'none':'';
+      reps.style.display=isMsg?'flex':'none';
+      reps.innerHTML='';
       if(st.task.kind==='dial'){
         lead.textContent=st.task.who.ml+' \u0d35\u0d3f\u0d33\u0d3f\u0d15\u0d4d\u0d15\u0d42  ('+st.task.num+')';
         scr.textContent='';
       } else {
         lead.textContent='\u0d38\u0d28\u0d4d\u0d26\u0d47\u0d36\u0d24\u0d4d\u0d24\u0d3f\u0d28\u0d4d \u0d2e\u0d31\u0d41\u0d2a\u0d1f\u0d3f \u0d28\u0d7d\u0d15\u0d42';
         scr.classList.add('msg');
-        scr.textContent=st.task.text.ml;
+        scr.innerHTML='<div class="in">'+WALL.t(st.task.text)+'</div>';
+        st.task.replies.forEach(function(r){
+          var b=document.createElement('div'); b.className='rep';
+          b.textContent=WALL.t(r);
+          WALL.bindTouch(b,function(){ reply(r); });
+          reps.appendChild(b);
+        });
       }
       if(p===0&&WALL.voiceOn()) WALL.say(lead.textContent);
     }
+    function reply(r){
+      if(st.sent) return; st.sent=true;
+      scr.innerHTML+='<div class="out">'+WALL.t(r)+' \u2713\u2713</div>';
+      WALL.tone(660,.12,'sine',.12);
+      if(p===0&&WALL.voiceOn()) WALL.say(r);
+      setTimeout(finish,1100);
+    }
     function press(d){
-      if(st.task.kind==='msg'){
-        /* any key sends the reply: the lesson is that a message is answered,
-           not which key does it */
-        if(d==='call'||/[0-9]/.test(d)){
-          scr.textContent=st.task.reply.ml+' \u2713';
-          finish();
-        }
-        return;
-      }
+      if(st.task.kind==='msg') return;
       if(d==='del'){ st.typed=st.typed.slice(0,-1); scr.textContent=st.typed; return; }
       if(d==='call'){
         if(st.typed===st.task.num){ scr.textContent='\u260e '+st.typed; finish(); }
@@ -140,6 +166,7 @@ TRIUP.start({
       } else { st.typed=''; scr.textContent=''; WALL.sfx.nudge(); }
     }
     function finish(){
+      st.sent=false;
       st.done++; api.pill(p,'done',String(st.done));
       api.popup(p,{title:{en:'Well done!',ml:'\u0d15\u0d4a\u0d33\u0d4d\u0d33\u0d3e\u0d02!'},
         close:{en:'Next',ml:'\u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d24\u0d4d'},onClose:round});

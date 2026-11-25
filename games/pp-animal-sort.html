@@ -56,10 +56,12 @@
   .pen.good{border-color:#3fae7c;border-style:solid}
   .pen.bad{animation:wob .44s ease-in-out;border-color:#e0a83c}
   .pen h3{font-family:'Noto Sans Malayalam',sans-serif;font-weight:900;
-    font-size:clamp(9px,1.6vh,18px);color:#2f5240;margin-bottom:3px;text-align:center}
+    font-size:clamp(16px,3.4vh,40px);color:#2f5240;margin-bottom:3px;text-align:center}
+  .pens{min-height:18vh}
   .pen .got{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}
-  .pen .got span{font-size:clamp(14px,2.6vh,30px)}
-  .now{width:clamp(56px,12vh,120px);height:clamp(56px,12vh,120px);border-radius:16px;
+  .pen .got span{font-size:clamp(20px,4vh,46px)}
+  /* the animal is the whole question: big (the room: "animals image is very small") */
+  .now{width:min(36vh,72%);height:auto;aspect-ratio:1;border-radius:22px;
     overflow:hidden;border:4px solid #fff;box-shadow:0 6px 15px rgba(40,60,50,.22);flex-shrink:0}
   .now img{width:100%;height:100%;object-fit:cover;display:block}
 </style>
@@ -85,8 +87,10 @@ TRIUP.start({
     var st=api.state(p);
     var now=document.createElement('div'); now.className='now';
     var pens=document.createElement('div'); pens.className='pens';
-    pens.innerHTML='<div class="pen" data-k="farm"><h3>\u0d28\u0d3e\u0d1f\u0d4d\u0d1f\u0d41</h3><div class="got"></div></div>'+
-                   '<div class="pen" data-k="wild"><h3>\u0d15\u0d3e\u0d1f\u0d4d\u0d1f\u0d41</h3><div class="got"></div></div>';
+    /* നാട് / കാട് (naadu / kaadu) — the room: the old നാട്ടു / കാട്ടു are
+       adjective forms that do not stand alone */
+    pens.innerHTML='<div class="pen" data-k="farm"><h3>'+WALL.t({en:'Farm',ml:'\u0d28\u0d3e\u0d1f\u0d4d'})+'</h3><div class="got"></div></div>'+
+                   '<div class="pen" data-k="wild"><h3>'+WALL.t({en:'Wild',ml:'\u0d15\u0d3e\u0d1f\u0d4d'})+'</h3><div class="got"></div></div>';
     body.appendChild(now); body.appendChild(pens);
     pens.querySelectorAll('.pen').forEach(function(pen){
       WALL.bindTouch(pen,function(){ drop(pen); });

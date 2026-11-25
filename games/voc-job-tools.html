@@ -56,6 +56,11 @@
   .tool.wrong{animation:wob .42s ease-in-out;border-color:#e0a83c}
   @keyframes wob{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}
                  60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+  /* ── bigger, real pictures (review: "big images needed", "real images") ── */
+  .ph{display:block;object-fit:cover;border-radius:16px;box-shadow:0 6px 16px rgba(30,40,60,.18)}
+  .whoph{width:min(28vh,60%);height:min(28vh,60%);margin:0 auto 6px}
+  .who .em{font-size:min(18vh,120px)!important}
 </style>
 </head>
 <body>
@@ -105,7 +110,7 @@ TRIUP.start({
       var job = st.queue.shift();
       st.job = job; st.got = 0;
 
-      who.innerHTML = '<div class="em">' + job.emoji + '</div>' +
+      who.innerHTML = JOBS_DATA.art(job, 'ph whoph') +
         '<div class="nm">' + WALL.t(job.label) + '</div>' +
         '<div class="ml">' + job.label.ml + '</div>';
 

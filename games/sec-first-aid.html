@@ -3,17 +3,16 @@
 ================================================================================
   First Aid Box - Pangappara Blueroom, Secondary
 ================================================================================
-  Animated rather than a card board, as asked, and DRAWN rather than
-  photographed: all six first-aid photographs were rejected at asset review
-  and no replacement exists in the libraries, so the items are SVG here and
-  the activity is not held up waiting for a reshoot.
+  REBUILT on review: "what I meant is introducing the items in a first aid
+  box. When the child touches the first aid box the items come in extra large
+  clear images which are understandable for the students."
 
-  A small accident happens, and the learner treats it IN ORDER - clean it,
-  apply antiseptic, then cover it. Order is the content: a plaster over a
-  dirty cut is the wrong answer even though a plaster is involved.
+  So: a big first-aid box. Every touch opens it and brings out the next item,
+  as large as the panel allows, with its name shown and spoken. When every
+  item is out, Owly cheers and the box can be packed again. Nothing to get
+  wrong — this is meeting the items, not a test.
 
-  Three panels. Each learner works independently and gets their own card in
-  their own panel; only panel 1 speaks, so three voices never overlap.
+  Three panels, each with its own box; only panel 1 speaks.
 ================================================================================
 -->
 <html lang="ml">
@@ -57,6 +56,21 @@
     font-size:clamp(11px,2.1vh,23px);color:#8f2f2f;text-align:center;flex-shrink:0}
   .aid{width:clamp(44px,9vh,92px);height:clamp(44px,9vh,92px)}
   .aid svg{width:100%;height:100%}
+  /* ── box + the item it brings out, as big as the panel allows ── */
+  .aid-item{flex:1 1 auto;min-height:0;width:100%;display:grid;place-items:center;cursor:pointer}
+  .aid-item svg{width:min(46vh,80%);height:auto}
+  .aid-item .em{font-size:min(36vh,40vw);line-height:1}
+  .aid-item.pop{animation:aidPop .5s cubic-bezier(.34,1.5,.64,1)}
+  @keyframes aidPop{from{transform:translateY(40%) scale(.3);opacity:0}to{transform:none;opacity:1}}
+  .aid-name{flex:0 0 auto;text-align:center;min-height:1.2em}
+  .aid-name .m{display:block;font-family:'Noto Sans Malayalam','Baloo 2',sans-serif;font-weight:900;
+    font-size:clamp(24px,5vh,54px);color:#a8322b}
+  .aid-name .a{display:block;font-weight:800;font-size:clamp(14px,2.4vh,26px);color:#6b7080}
+  .aid-box{flex:0 0 auto;width:min(22vh,46%);cursor:pointer;filter:drop-shadow(0 8px 10px rgba(80,20,20,.25))}
+  .aid-box svg{width:100%;height:auto;display:block}
+  .aid-box.open{animation:boxOpen .45s ease-out}
+  @keyframes boxOpen{30%{transform:scale(1.12) rotate(-4deg)}60%{transform:scale(.95) rotate(3deg)}}
+  @media (prefers-reduced-motion:reduce){.aid-item.pop,.aid-box.open{animation:none}}
 </style>
 </head>
 <body>
@@ -72,61 +86,56 @@
 WALL_BACKDROP.set('meadow');
 function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function svg(b){return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">'+b+'</svg>';}
-var ITEMS={
- water:{ml:'\u0d35\u0d46\u0d33\u0d4d\u0d33\u0d02',en:'Water',
-   art:svg('<path d="M24 6 C14 20 10 26 10 32 a14 14 0 0 0 28 0 c0-6-4-12-14-26z" fill="#63b8e8"/><path d="M19 30 a6 6 0 0 0 6 6" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>')},
- anti:{ml:'\u0d06\u0d28\u0d4d\u0d31\u0d3f\u0d38\u0d46\u0d2a\u0d4d\u0d31\u0d4d\u0d31\u0d3f\u0d15\u0d4d',en:'Antiseptic',
-   art:svg('<rect x="17" y="6" width="14" height="7" rx="2" fill="#8a8f9c"/><path d="M15 13 h18 v25 a5 5 0 0 1-5 5 h-8 a5 5 0 0 1-5-5z" fill="#c8543f"/><rect x="20" y="22" width="8" height="12" rx="2" fill="#fff" opacity=".85"/>')},
- cotton:{ml:'\u0d2a\u0d1e\u0d4d\u0d1e\u0d3f',en:'Cotton',
-   art:svg('<circle cx="18" cy="24" r="10" fill="#fdfdfd" stroke="#ddd" stroke-width="2"/><circle cx="29" cy="20" r="9" fill="#fdfdfd" stroke="#ddd" stroke-width="2"/><circle cx="27" cy="30" r="8" fill="#fdfdfd" stroke="#ddd" stroke-width="2"/>')},
- plaster:{ml:'\u0d2c\u0d3e\u0d7b\u0d21\u0d47\u0d1c\u0d4d',en:'Plaster',
-   art:svg('<rect x="6" y="19" width="36" height="12" rx="6" fill="#e8b98a" transform="rotate(-20 24 25)"/><circle cx="24" cy="24" r="4.5" fill="#cf9c68"/>')},
- scissors:{ml:'\u0d15\u0d24\u0d4d\u0d30\u0d3f\u0d15',en:'Scissors',
-   art:svg('<path d="M12 8 L32 32 M36 8 L16 32" stroke="#8a8f9c" stroke-width="4" stroke-linecap="round"/><circle cx="14" cy="38" r="5" fill="none" stroke="#8a8f9c" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="none" stroke="#8a8f9c" stroke-width="4"/>')}
-};
-var CASES=[
- {em:'\ud83e\ude79',story:{ml:'\u0d2e\u0d41\u0d1f\u0d3f\u0d2f\u0d3f\u0d7d \u0d2e\u0d41\u0d31\u0d3f\u0d35\u0d4d',en:'A cut on the knee'},order:['water','anti','plaster']},
- {em:'\ud83e\udde4',story:{ml:'\u0d15\u0d48\u0d2f\u0d3f\u0d7d \u0d2a\u0d4a\u0d1f\u0d3f',en:'Dirt on the hand'},order:['water','cotton','plaster']}
+/* Emoji where Windows draws a clear picture of the thing; drawn SVG for the
+   three it has none for (antiseptic bottle, cotton, bandage roll). */
+function big(e){ return '<div class="em">'+e+'</div>'; }
+var ITEMS=[
+ {en:'Plaster',     ml:'പ്ലാസ്റ്റർ',     art:big('🩹')},
+ {en:'Bandage',     ml:'ബാൻഡേജ്',      art:svg('<rect x="9" y="12" width="22" height="24" rx="11" fill="#f4f4f0" stroke="#cfcac0" stroke-width="2"/><circle cx="20" cy="24" r="5" fill="#e2ddd2"/><path d="M30 16 h10 v16 h-10" fill="#f4f4f0" stroke="#cfcac0" stroke-width="2"/>')},
+ {en:'Cotton',      ml:'പഞ്ഞി',         art:svg('<circle cx="18" cy="24" r="10" fill="#fdfdfd" stroke="#ddd" stroke-width="2"/><circle cx="29" cy="20" r="9" fill="#fdfdfd" stroke="#ddd" stroke-width="2"/><circle cx="27" cy="30" r="8" fill="#fdfdfd" stroke="#ddd" stroke-width="2"/>')},
+ {en:'Antiseptic',  ml:'ആന്റിസെപ്റ്റിക്', art:svg('<rect x="17" y="6" width="14" height="7" rx="2" fill="#8a8f9c"/><path d="M15 13 h18 v25 a5 5 0 0 1-5 5 h-8 a5 5 0 0 1-5-5z" fill="#c8543f"/><rect x="20" y="22" width="8" height="12" rx="2" fill="#fff" opacity=".85"/>')},
+ {en:'Scissors',    ml:'കത്രിക',        art:big('✂️')},
+ {en:'Thermometer', ml:'തെർമോമീറ്റർ',  art:big('🌡️')},
+ {en:'Gloves',      ml:'കയ്യുറ',         art:big('🧤')},
+ {en:'Tablets',     ml:'ഗുളിക',         art:big('💊')}
 ];
+var BOX=svg('<rect x="5" y="14" width="38" height="28" rx="5" fill="#e63946"/><rect x="17" y="8" width="14" height="8" rx="3" fill="none" stroke="#b81d2b" stroke-width="3"/>'+
+            '<rect x="20" y="20" width="8" height="18" rx="1.5" fill="#fff"/><rect x="15" y="25" width="18" height="8" rx="1.5" fill="#fff"/>');
 
 TRIUP.start({
-  title:{en:'First Aid',ml:'\u0d2b\u0d38\u0d4d\u0d31\u0d4d\u0d31\u0d4d \u0d0e\u0d2f\u0d4d\u0d21\u0d4d'},
-  hint:{en:'Treat it in order',ml:'\u0d15\u0d4d\u0d30\u0d2e\u0d24\u0d4d\u0d24\u0d3f\u0d7d \u0d1a\u0d3f\u0d15\u0d3f\u0d24\u0d4d\u0d38\u0d3f\u0d15\u0d4d\u0d15\u0d42'},
+  title:{en:'First Aid Box',ml:'ഫസ്റ്റ് എയ്ഡ് ബോക്സ്'},
+  hint:{en:'Touch the box!',ml:'പെട്ടി തൊടൂ!'},
   build:function(p, body, api){
-    var st=api.state(p); st.done=0;
-    var hurt=document.createElement('div'); hurt.className='hurt';
-    var story=document.createElement('div'); story.className='story';
-    var grid=document.createElement('div'); grid.className='row';
-    body.appendChild(hurt); body.appendChild(story); body.appendChild(grid);
-    api.pill(p,'treated','0');
+    var st=api.state(p); st.at=0;
+    var item=document.createElement('div'); item.className='aid-item';
+    var name=document.createElement('div'); name.className='aid-name';
+    var box=document.createElement('div'); box.className='aid-box'; box.innerHTML=BOX;
+    body.appendChild(item); body.appendChild(name); body.appendChild(box);
+    api.pill(p,'seen','0 / '+ITEMS.length);
 
-    function round(){
-      st.case=CASES[Math.floor(Math.random()*CASES.length)];
-      st.at=0;
-      hurt.textContent=st.case.em; hurt.classList.remove('healed');
-      story.textContent=st.case.story.ml;
-      grid.innerHTML='';
-      sh(Object.keys(ITEMS)).forEach(function(k){
-        var t=document.createElement('div'); t.className='tile aid';
-        t.innerHTML=ITEMS[k].art+'<div class="cap">'+ITEMS[k].ml+'</div>';
-        WALL.bindTouch(t,function(){ use(k,t); });
-        grid.appendChild(t);
-      });
-      if(p===0&&WALL.voiceOn()) WALL.say(st.case.story.ml);
+    function show(){
+      var it=ITEMS[st.at];
+      item.innerHTML=it.art;
+      item.classList.remove('pop'); void item.offsetWidth; item.classList.add('pop');
+      var b=WALL.tBoth(it);
+      name.innerHTML='<span class="m">'+b.main+'</span>'+(b.alt?'<span class="a">'+b.alt+'</span>':'');
+      if(p===0&&WALL.voiceOn()) WALL.say(it);
+      st.at++;
+      api.pill(p,'seen',st.at+' / '+ITEMS.length);
+      if(st.at===ITEMS.length){
+        setTimeout(function(){
+          if(window.GUIDE&&p===0) GUIDE.cheer({en:'You know the first aid box!',ml:'ഫസ്റ്റ് എയ്ഡ് ബോക്സ് അറിയാം!'});
+          api.win(p,{title:{en:'You know the first aid box!',ml:'ഫസ്റ്റ് എയ്ഡ് ബോക്സ് അറിയാം!'},onAgain:reset});
+        },1800);
+      }
     }
-    function use(k,t){
-      if(k===st.case.order[st.at]){
-        t.classList.add('ok'); t.classList.add('gone');
-        st.at++; WALL.tone(440+st.at*60,.16,'sine',.12);
-        if(st.at===st.case.order.length){
-          hurt.textContent='\ud83d\ude0a'; hurt.classList.add('healed');
-          st.done++; api.pill(p,'treated',String(st.done));
-          api.popup(p,{title:{en:'All better!',ml:'\u0d38\u0d41\u0d16\u0d2e\u0d3e\u0d2f\u0d3f!'},
-            close:{en:'Next',ml:'\u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d24\u0d4d'},onClose:round});
-        }
-      } else { t.classList.add('no'); setTimeout(function(){t.classList.remove('no');},460); WALL.sfx.nudge(); }
-    }
-    round();
+    function reset(){ st.at=0; item.innerHTML=''; name.innerHTML=''; api.pill(p,'seen','0 / '+ITEMS.length); }
+    WALL.bindTouch(box,function(){
+      if(st.at>=ITEMS.length) return;
+      box.classList.remove('open'); void box.offsetWidth; box.classList.add('open');
+      show();
+    });
+    WALL.bindTouch(item,function(){ if(st.at && WALL.voiceOn()) WALL.say(ITEMS[st.at-1]); });
   }
 });
 </script>

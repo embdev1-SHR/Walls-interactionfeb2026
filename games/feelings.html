@@ -134,8 +134,10 @@
   .emo-grid{
     display:grid; grid-template-columns:1fr 1fr;
     gap:clamp(10px,1.4vw,18px);
-    width:100%; max-width:360px; z-index:2;
+    width:100%; max-width:min(520px,52vh); z-index:2;
   }
+  .emo-btn.photo{padding:0;overflow:hidden;background:#fff}
+  .emo-btn.photo img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
   .emo-btn{
     aspect-ratio:1; border-radius:20px;
     background:rgba(255,255,255,.1);
@@ -243,7 +245,7 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
 <div id="modal">
   <div class="modal-card">
     <h1>😊 Feelings Finder</h1>
-    <p>See the <strong>emotion word</strong> — tap the <strong>matching emoji!</strong><br>
+    <p>See the <strong>emotion word</strong> — tap the <strong>matching face!</strong><br>
        വികാരം കണ്ടുപിടിക്കൂ!</p>
     <div class="modal-btns">
       <button class="m-btn" id="btn1p"><span>👤</span>1 Player</button>
@@ -268,7 +270,7 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
     <div class="score-badge" id="sb0">⭐ 0 / 10</div>
     <div class="emo-word" id="word0"></div>
     <div class="emo-ml"   id="ml0"></div>
-    <div class="emo-hint">Tap the matching emoji!</div>
+    <div class="emo-hint">Tap the matching face!</div>
     <div class="emo-grid" id="choices0"></div>
     <div class="done-overlay" id="done0">
       <div class="done-star">⭐</div>
@@ -280,7 +282,7 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
     <div class="score-badge" id="sb1">⭐ 0 / 10</div>
     <div class="emo-word" id="word1"></div>
     <div class="emo-ml"   id="ml1"></div>
-    <div class="emo-hint">Tap the matching emoji!</div>
+    <div class="emo-hint">Tap the matching face!</div>
     <div class="emo-grid" id="choices1"></div>
     <div class="done-overlay" id="done1">
       <div class="done-star">⭐</div>
@@ -292,7 +294,7 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
     <div class="score-badge" id="sb2">⭐ 0 / 10</div>
     <div class="emo-word" id="word2"></div>
     <div class="emo-ml"   id="ml2"></div>
-    <div class="emo-hint">Tap the matching emoji!</div>
+    <div class="emo-hint">Tap the matching face!</div>
     <div class="emo-grid" id="choices2"></div>
     <div class="done-overlay" id="done2">
       <div class="done-star">⭐</div>
@@ -320,19 +322,24 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
 <script>
 (function(){
 
+/* Real children's faces where a clear photograph exists (review: "rather
+   than emojis, real human emotions are preferred"; Pexels, chosen by eye).
+   Surprised, angry, tired, confused and proud had no photo a child would
+   read at a glance, so those keep their emoji rather than show a wrong face. */
+const IMG = '../assets/new/images/feelings/';
 const EMOTIONS = [
-  { word:'HAPPY',      ml:'സന്തോഷം',          emoji:'😊', color:'#fbbf24' },
-  { word:'SAD',        ml:'സങ്കടം',            emoji:'😢', color:'#60a5fa' },
+  { word:'HAPPY',      ml:'സന്തോഷം',          img:IMG+'happy.jpg', emoji:'😊', color:'#fbbf24' },
+  { word:'SAD',        ml:'സങ്കടം',            img:IMG+'sad.jpg', emoji:'😢', color:'#60a5fa' },
   { word:'ANGRY',      ml:'ദേഷ്യം',            emoji:'😠', color:'#f87171' },
   { word:'SURPRISED',  ml:'അദ്ഭുതം',           emoji:'😲', color:'#c084fc' },
-  { word:'SCARED',     ml:'പേടി',              emoji:'😨', color:'#6ee7b7' },
-  { word:'EXCITED',    ml:'ആവേശം',            emoji:'🤩', color:'#fb923c' },
+  { word:'SCARED',     ml:'പേടി',              img:IMG+'scared.jpg', emoji:'😨', color:'#6ee7b7' },
+  { word:'EXCITED',    ml:'ആവേശം',            img:IMG+'excited.jpg', emoji:'🤩', color:'#fb923c' },
   { word:'TIRED',      ml:'ക്ഷീണം',            emoji:'😴', color:'#94a3b8' },
-  { word:'LOVE',       ml:'സ്നേഹം',            emoji:'😍', color:'#f472b6' },
-  { word:'SILLY',      ml:'തമാശ',              emoji:'😜', color:'#34d399' },
+  { word:'LOVE',       ml:'സ്നേഹം',            img:IMG+'love.jpg', emoji:'😍', color:'#f472b6' },
+  { word:'SILLY',      ml:'തമാശ',              img:IMG+'silly.jpg', emoji:'😜', color:'#34d399' },
   { word:'CONFUSED',   ml:'ആശയക്കുഴപ്പം',     emoji:'😕', color:'#fcd34d' },
-  { word:'BORED',      ml:'മടുപ്പ്',            emoji:'😑', color:'#9ca3af' },
-  { word:'PROUD',      ml:'അഭിമാനം',           emoji:'😤', color:'#a3e635' },
+  { word:'BORED',      ml:'മടുപ്പ്',            img:IMG+'bored.jpg', emoji:'😑', color:'#9ca3af' },
+  { word:'PROUD',      ml:'അഭിമാനം',           emoji:'🥇', color:'#a3e635' },
 ];
 
 const ROUNDS = 10;
@@ -406,13 +413,25 @@ function renderPanel(i){
     WALL.say(WALL.isMl() ? emo.ml : emo.word, WALL.isMl() ? 'ml' : 'en');
   }
 
-  const others  = EMOTIONS.filter(e => e !== emo);
+  /* Never offer a wrong answer that is also a fair answer: a child shown
+     HAPPY who taps the dancing EXCITED child is not wrong. Feelings a child
+     could reasonably mix up are never in the same round. (PROUD's emoji was
+     😤 — the "huffing" face — which reads as angry, so it is now a medal.) */
+  const CLOSE = { HAPPY:['EXCITED','LOVE','SILLY','PROUD'], EXCITED:['HAPPY','SILLY','PROUD','SURPRISED'],
+                  LOVE:['HAPPY'], SILLY:['HAPPY','EXCITED'], PROUD:['HAPPY','EXCITED'],
+                  SAD:['TIRED','BORED','SCARED'], TIRED:['SAD','BORED'], BORED:['SAD','TIRED','CONFUSED'],
+                  ANGRY:['SCARED'], SCARED:['SAD','SURPRISED','ANGRY'], SURPRISED:['SCARED','EXCITED','CONFUSED'],
+                  CONFUSED:['SURPRISED','BORED'] };
+  const near    = CLOSE[emo.word] || [];
+  const others  = EMOTIONS.filter(e => e !== emo && near.indexOf(e.word) === -1);
   const choices = shuffle([emo, ...shuffle(others).slice(0,3)]);
   const grid    = document.getElementById('choices'+i);
   grid.innerHTML = '';
   choices.forEach(ch=>{
     const btn = document.createElement('button');
-    btn.className = 'emo-btn'; btn.textContent = ch.emoji;
+    btn.className = 'emo-btn' + (ch.img ? ' photo' : '');
+    if (ch.img) btn.innerHTML = '<img src="' + ch.img + '" alt="" draggable="false">';
+    else btn.textContent = ch.emoji;
     btn.addEventListener('pointerdown', e=>{ e.stopPropagation(); onAnswer(i, ch.emoji===emo.emoji, btn); });
     grid.appendChild(btn);
   });

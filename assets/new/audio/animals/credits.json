@@ -1,0 +1,80 @@
+{
+  "meow.mp3": {
+    "file": "File:Maullido de gata hembra joven.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Maullido_de_gata_hembra_joven.ogg",
+    "licence": "CC0",
+    "author": "George Miquilena"
+  },
+  "bark.mp3": {
+    "file": "File:Barking of a dog.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Barking_of_a_dog.ogg",
+    "licence": "CC BY-SA 3.0",
+    "author": "Amada44"
+  },
+  "baah.mp3": {
+    "file": "File:Sheep bleating.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Sheep_bleating.ogg",
+    "licence": "Public domain",
+    "author": "earthcalling"
+  },
+  "bleat.mp3": {
+    "file": "File:Herd of goats bleating.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Herd_of_goats_bleating.ogg",
+    "licence": "Public domain",
+    "author": "stephan"
+  },
+  "cluck.mp3": {
+    "file": "File:Hen announcing shes lain an egg.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Hen_announcing_shes_lain_an_egg.ogg",
+    "licence": "Public domain",
+    "author": "alys"
+  },
+  "rooster-crow.mp3": {
+    "file": "File:Medium rooster crowing.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Medium_rooster_crowing.ogg",
+    "licence": "Public domain",
+    "author": "alys"
+  },
+  "neigh.mp3": {
+    "file": "File:Wiehern.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Wiehern.ogg",
+    "licence": "Public domain",
+    "author": "Hü."
+  },
+  "quack.mp3": {
+    "file": "File:Pekin duck & mallard.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Pekin_duck_%26_mallard.ogg",
+    "licence": "CC BY-SA 4.0",
+    "author": "WaderClub"
+  },
+  "oink.mp3": {
+    "file": "File:Pig grunt - Erdie.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Pig_grunt_-_Erdie.ogg",
+    "licence": "CC BY 3.0",
+    "author": "erdie"
+  },
+  "lion-roar.mp3": {
+    "file": "File:Lion raring-sound1TamilNadu178.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Lion_raring-sound1TamilNadu178.ogg",
+    "licence": "Public domain",
+    "author": "த*உழவன்"
+  },
+  "monkey-chatter.mp3": {
+    "file": "File:Dusky-leaf-monkey-call-kaeng-krachan.ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Dusky-leaf-monkey-call-kaeng-krachan.ogg",
+    "licence": "CC BY-SA 4.0",
+    "author": "Rushenb"
+  },
+  "frog-ribbit.mp3": {
+    "file": "File:Hyla arborea (HS).ogg",
+    "url": "https://commons.wikimedia.org/wiki/File:Hyla_arborea_(HS).ogg",
+    "licence": "CC BY-SA 3.0",
+    "author": "Hsuepfle"
+  },
+  "bird-chirp.mp3": {
+    "file": "File:Passer domesticus - House Sparrow XC108385.mp3",
+    "url": "https://commons.wikimedia.org/wiki/File:Passer_domesticus_-_House_Sparrow_XC108385.mp3",
+    "licence": "CC BY-SA 4.0",
+    "author": "Alexander Kurthy"
+  }
+}

@@ -70,6 +70,13 @@
     return s.trim();
   }
 
+  /** One or two words, no sentence punctuation: "കോഴി", "നായ / പട്ടി". */
+  function isWord(text) {
+    var t = String(text || '').replace(/[\/,]/g, ' ').trim();
+    if (!t || /[.!?।]/.test(t)) return false;
+    return t.split(/\s+/).length <= 2;
+  }
+
   function has(text, lang) {
     var m = manifest(lang);
     return !!(m && m[key(text)]);
@@ -122,6 +129,10 @@
     stop();
 
     try {
+      /* A single word (an animal's name, a colour) is played a little slower
+         than a sentence — the room asked for "slow, single pronunciation of
+         the word". js/wall-settings.js reads this flag when it sets the rate. */
+      el.__wallWord = isWord(k);
       el.currentTime = 0;
       var p = el.play();
       playing = el;

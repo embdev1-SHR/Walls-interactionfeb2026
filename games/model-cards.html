@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>3D Animal Explorer</title>
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<script type="module" src="../js/vendor/model-viewer.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -131,6 +131,25 @@ model-viewer{
 }
 .Hotspot:not([data-visible]) .HotspotAnnotation{display:none}
 .HotspotAnnotation{pointer-events:none}
+
+/* ── leader-line labels ─────────────────────────────────────────────────────
+   The button is a 26px dot ON the body part; its name sits in a pill at the
+   end of a line, away from the part, so the part itself stays visible.
+   Odd/even hotspots lean opposite ways so neighbouring labels do not stack. */
+.Hotspot[data-visible]{width:26px;height:26px;padding:0;border-radius:50%;
+  background:#fff;border:5px solid #16a34a;box-shadow:0 0 0 4px rgba(255,255,255,.45),0 3px 10px rgba(0,0,0,.5);
+  position:relative;overflow:visible}
+.Hotspot[data-visible] .HotspotAnnotation{position:absolute;bottom:calc(100% + 42px);left:50%;
+  transform:translateX(-12%);background:rgba(240,253,244,.97);color:#14532d;border-radius:999px;
+  padding:6px 14px;font-size:clamp(13px,1.25vw,19px);font-weight:900;white-space:nowrap;
+  box-shadow:0 3px 12px rgba(0,0,0,.45)}
+.Hotspot[data-visible]::after{content:'';position:absolute;left:50%;bottom:100%;width:3px;height:44px;
+  background:#fff;transform-origin:bottom center;transform:translateX(-50%) rotate(18deg);
+  box-shadow:0 0 4px rgba(0,0,0,.5);pointer-events:none}
+.Hotspot[data-visible].hs-alt .HotspotAnnotation{transform:translateX(-88%)}
+.Hotspot[data-visible].hs-alt::after{transform:translateX(-50%) rotate(-18deg)}
+.Hotspot[data-visible].hs-active{background:#4ade80;border-color:#fff}
+.Hotspot[data-visible].hs-active .HotspotAnnotation{background:linear-gradient(135deg,#4ade80,#16a34a);color:#052e16}
 
 /* loading bar */
 .mvpb{display:block;width:40%;height:3px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:4px;overflow:hidden;background:rgba(255,255,255,.15)}
@@ -337,42 +356,62 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
    DATA
 ══════════════════════════════════════════════════════ */
 const ANIMALS = [
+  /* ─── CAT ─── (review: replaces the bear) */
   {
-    id:'bear', name:{en:'Brown Bear',ml:'തവിട്ടുകരടി'}, emoji:'🐻',
-    glb:'../3dmodels/bear.glb',
+    id:'cat', name:{en:'Cat',ml:'പൂച്ച'}, emoji:'🐱',
+    orbit:'20deg 80deg auto',   // starts showing the side its parts are on
+    glb:'../assets/new/models/animals/cat/scene.gltf',
     hotspots:[
-      { slot:'hotspot-3', surface:'0 0 222 223 224 6.053 -11.126 6.073',
-        icon:'👃', label:{en:'Nose',ml:'മൂക്ക്'},
-        desc:{
-          en:'The bear\'s nose detects scents from over 20 miles away — 7× more sensitive than a bloodhound. It is their most powerful sense organ.',
-          ml:'20 മൈൽ ദൂരത്ത് നിന്ന് ഗന്ധം മണക്കും — ബ്ലഡ്ഹൗണ്ടിനേക്കാൾ 7 മടങ്ങ് ശേഷി. ഏറ്റവും ശക്തമായ ഇന്ദ്രിയ അവയവം.'
-        }
-      },
-      { slot:'hotspot-5', surface:'0 0 1143 1107 1105 -0.773 0.815 0.958',
-        icon:'🦵', label:{en:'Legs',ml:'കാലുകൾ'},
-        desc:{
-          en:'Powerful muscular legs let bears run at 35 mph (56 km/h). Longer hind legs allow them to stand fully upright.',
-          ml:'ശക്തമായ കാലുകൾ. മണിക്കൂറിൽ 56 കിലോമീറ്റർ വേഗം. നീണ്ട പിൻ കാലുകൾ ഉപയോഗിച്ച് നേരേ നിൽക്കാൻ ശേഷി.'
-        }
-      },
-      { slot:'hotspot-7', surface:'0 0 3547 3548 3545 -1.001 -0.864 2.865',
+      { slot:'hotspot-1',
+        position:'0.4018723734593858m 0.26068519747138663m 0.0646899398704362m',
+        normal:'0.7552909071141712m -0.1259020015356827m 0.643182969022005m',
         icon:'👂', label:{en:'Ears',ml:'ചെവികൾ'},
         desc:{
-          en:'Bear ears hear beyond human frequency range. Each ear rotates independently to pinpoint the exact direction of a sound.',
-          ml:'മനുഷ്യ ഇന്ദ്രിയ പരിധിക്കപ്പുറം ശബ്ദം കേൾക്കും. ദിശ കൃത്യമായി കണ്ടെത്താൻ ഓരോ ചെവിയും സ്വതന്ത്രമായി ചലിക്കും.'
+          en:'Pointed ears that hear tiny sounds.',
+          ml:'ചെറിയ ശബ്ദം പോലും കേൾക്കുന്ന കൂർത്ത ചെവികൾ.'
         }
       },
-      { slot:'hotspot-9', surface:'0 0 1522 1605 1643 0.771 0.838 -0.609',
-        icon:'🐾', label:{en:'Claws',ml:'നഖങ്ങൾ'},
+      { slot:'hotspot-2',
+        position:'0.46210527995690287m 0.21279857638563024m 0.04730326701156567m',
+        normal:'0.631194530910645m 0.03264715242037534m 0.774937176542287m',
+        icon:'👁️', label:{en:'Eyes',ml:'കണ്ണുകൾ'},
         desc:{
-          en:'Non-retractable claws grow up to 4 inches. Used for digging, climbing trees, tearing logs for insects, and catching fish.',
-          ml:'ഉൾ വലിക്കാൻ കഴിയാത്ത 4 ഇഞ്ച് നഖങ്ങൾ. ഖനനം, മരം കയറൽ, ഭക്ഷണ തിരയൽ, മീൻ പിടി ഇവയ്ക്ക്.'
+          en:'Cats see well even in the dark.',
+          ml:'ഇരുട്ടിലും പൂച്ചയ്ക്ക് നന്നായി കാണാം.'
+        }
+      },
+      { slot:'hotspot-3',
+        position:'0.4834718286178616m 0.1784621343777405m 0.018696720302302555m',
+        normal:'0.7321583941798809m 0.260974579995868m 0.6291552705238337m',
+        icon:'👃', label:{en:'Nose',ml:'മൂക്ക്'},
+        desc:{
+          en:'A small nose with long whiskers beside it.',
+          ml:'ചെറിയ മൂക്ക്, അരികിൽ നീണ്ട മീശ.'
+        }
+      },
+      { slot:'hotspot-4',
+        position:'-0.46393127104711085m 0.186948442504688m 0.00827571881540927m',
+        normal:'0.8347829123220184m 0.10065092969002983m 0.5413010988790822m',
+        icon:'〰️', label:{en:'Tail',ml:'വാൽ'},
+        desc:{
+          en:'The tail helps the cat balance.',
+          ml:'വാൽ പൂച്ചയെ ബാലൻസ് ചെയ്യാൻ സഹായിക്കുന്നു.'
+        }
+      },
+      { slot:'hotspot-5',
+        position:'0.31576010988694203m -0.301103553218674m 0.07154437616866931m',
+        normal:'0.18726516596102719m 0.5947549051317365m 0.7817917628367083m',
+        icon:'🐾', label:{en:'Paws',ml:'കൈകാലുകൾ'},
+        desc:{
+          en:'Soft paws, so the cat walks very quietly.',
+          ml:'മൃദുവായ പാദങ്ങൾ, അതിനാൽ പൂച്ച ശബ്ദമില്ലാതെ നടക്കുന്നു.'
         }
       }
     ]
   },
   {
     id:'cow', name:{en:'Cow',ml:'പശു'}, emoji:'🐄',
+    orbit:'60deg 80deg auto',   // starts showing the side its parts are on
     glb:'../3dmodels/cow.glb',
     hotspots:[
       { slot:'hotspot-1',
@@ -422,53 +461,55 @@ const ANIMALS = [
       }
     ]
   },
+  /* ─── DOG ─── (review: an Indian dog, replaces the deer) */
   {
-    id:'deer', name:{en:'Deer',ml:'മാൻ'}, emoji:'🦌',
-    glb:'../3dmodels/Deer.glb',
+    id:'dog', name:{en:'Dog',ml:'നായ'}, emoji:'🐕',
+    orbit:'60deg 80deg auto',   // starts showing the side its parts are on
+    glb:'../assets/new/models/animals/dog/scene.gltf',
     hotspots:[
       { slot:'hotspot-1',
-        position:'2.094822898944067m 3.548937289500917m 0.7188764094416316m',
-        normal:'-0.07881216631729135m -0.2362355428653201m 0.9684944040765042m',
-        icon:'👁️', label:{en:'Eyes',ml:'കണ്ണുകൾ'},
+        position:'0.06908095249026423m 0.18070344194806726m 0.7983016739907698m',
+        normal:'0.900229556245924m -0.05713139100784818m 0.43165119045680256m',
+        icon:'👂', label:{en:'Ears',ml:'ചെവികൾ'},
         desc:{
-          en:'Large side-set eyes give deer nearly 310° of vision. They see well in low light — perfect for spotting predators at dawn and dusk.',
-          ml:'വശത്ത് ഉള്ള വലിയ കണ്ണുകൾ 310 ഡിഗ്രി കാഴ്ച. പ്രഭാതത്തിലും സന്ധ്യയിലും വേട്ടക്കാരെ കണ്ടുപിടിക്കാൻ.'
+          en:'Soft ears that hear sounds far away.',
+          ml:'ദൂരെയുള്ള ശബ്ദം കേൾക്കുന്ന മൃദുവായ ചെവികൾ.'
+        }
+      },
+      { slot:'hotspot-2',
+        position:'0.016757886461747157m 0.16340826703333344m 0.9185861778067328m',
+        normal:'0.9595519448795513m 0.2810473079997743m -0.016506839308321634m',
+        icon:'👃', label:{en:'Nose',ml:'മൂക്ക്'},
+        desc:{
+          en:'A wet nose that smells very well.',
+          ml:'നന്നായി മണം പിടിക്കുന്ന നനഞ്ഞ മൂക്ക്.'
         }
       },
       { slot:'hotspot-3',
-        position:'2.269271245684886m 4.518758627394128m 0.23081259611235982m',
-        normal:'0.8759071153204872m -0.3197575161241151m 0.36130576554087696m',
-        icon:'🦌', label:{en:'Horns',ml:'കൊമ്പ്'},
+        position:'0.026565049859477406m 0.20017295769387927m 0.8598523337404422m',
+        normal:'0.48363015069633947m -0.05062975997409259m 0.873806903579047m',
+        icon:'👁️', label:{en:'Eyes',ml:'കണ്ണുകൾ'},
         desc:{
-          en:'Only male deer (stags) grow antlers, shed and regrown each year. Used for fighting rivals — they grow over 1 cm per day.',
-          ml:'ആൺ മാൻ മാത്രം; ഓരോ വർഷവും കൊഴിഞ്ഞ് പുതിയത്. ഇണ ചേരൽ കാലത്ത് ഉപയോഗം — ദിനേന 1 സെ.മീ. വളരും.'
+          en:'Kind brown eyes that watch everything.',
+          ml:'എല്ലാം നോക്കുന്ന തവിട്ടു കണ്ണുകൾ.'
         }
       },
       { slot:'hotspot-4',
-        position:'0.9490830812981486m 1.4696482526067411m 0.6439119566348125m',
-        normal:'-0.39234916859107694m -0.15265354951775653m 0.90706065052207m',
+        position:'0.019490206643790326m 0.057931512650440053m 0.19102314602040832m',
+        normal:'0.9989205700662219m -0.011596878362553718m -0.04498007459774411m',
+        icon:'〰️', label:{en:'Tail',ml:'വാൽ'},
+        desc:{
+          en:'A happy dog wags its tail.',
+          ml:'സന്തോഷമുള്ള നായ വാൽ ആട്ടുന്നു.'
+        }
+      },
+      { slot:'hotspot-5',
+        position:'0.08464203182722549m -0.12034092955515732m 0.6732692968579734m',
+        normal:'0.8376379541075394m -0.10236180415685193m 0.5365488970152583m',
         icon:'🦵', label:{en:'Legs',ml:'കാലുകൾ'},
         desc:{
-          en:'Slender legs built for speed — deer run at 30 mph (48 km/h) and leap obstacles up to 10 feet (3 m) high.',
-          ml:'വേഗതയ്ക്കുള്ള കാലുകൾ. മണിക്കൂറിൽ 48 കിലോമീറ്റർ ഓടും, 3 മീറ്റർ ഉയരത്തിൽ ചാടും.'
-        }
-      },
-      { slot:'hotspot-6',
-        position:'-1.5301964441847282m 2.3864301984913956m -0.05027298950205972m',
-        normal:'-0.7656953351397662m 0.14559301818164994m -0.6265088401626581m',
-        icon:'🏳️', label:{en:'Tail',ml:'വാൽ'},
-        desc:{
-          en:'Called a "flag" — when raised it flashes white as a danger warning visible to other deer from far away.',
-          ml:'"ഫ്ലാഗ്" — ഉയർത്തുമ്പോൾ വെളുത്ത അടിഭാഗം കാണും. ദൂരത്ത് ഉള്ള മറ്റ് മാനുകൾക്ക് അപകട മുന്നറിയിപ്പ്.'
-        }
-      },
-      { slot:'hotspot-7',
-        position:'1.8360538124481072m 3.7603520127105625m -0.056575957569832025m',
-        normal:'0.9118694187579258m -0.3921583477750974m 0.12126827039414918m',
-        icon:'👂', label:{en:'Ear',ml:'ചെവി'},
-        desc:{
-          en:'Large ears rotate independently to detect sounds from multiple directions at once — an early-warning system against predators.',
-          ml:'ഒരേ സമയം ഒന്നിലധികം ദിശ ശ്രദ്ധിക്കാൻ ചെവി സ്വതന്ത്രമായി ചലിക്കും. വേട്ടക്കാരെ നേരത്തെ കണ്ടെത്തും.'
+          en:'Four legs for running and playing.',
+          ml:'ഓടാനും കളിക്കാനും നാല് കാലുകൾ.'
         }
       }
     ]
@@ -517,6 +558,7 @@ function makeCard(a) {
 
     const mv = document.createElement('model-viewer');
     mv.setAttribute('src', a.glb);
+    if (a.orbit) mv.setAttribute('camera-orbit', a.orbit);
     mv.setAttribute('camera-controls', '');
     mv.setAttribute('tone-mapping', 'neutral');
     mv.setAttribute('shadow-intensity', '1');
@@ -538,7 +580,7 @@ function makeCard(a) {
     /* hotspots */
     a.hotspots.forEach(hs => {
       const btn = document.createElement('button');
-      btn.className = 'Hotspot';
+      btn.className = 'Hotspot' + (a.hotspots.indexOf(hs) % 2 ? ' hs-alt' : '');
       btn.setAttribute('slot', hs.slot);
       if (hs.surface) {
         btn.setAttribute('data-surface', hs.surface);

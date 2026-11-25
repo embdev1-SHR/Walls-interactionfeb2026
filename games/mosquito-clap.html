@@ -286,6 +286,9 @@ function spawnMosq(id){
     buzz:null
   };
 
+  // on screen from the first frame, not at 0,0 until the loop moves it
+  el.style.left=(m.x-44)+'px'; el.style.top=(m.y-44)+'px';
+
   el.addEventListener('pointerdown', e=>{
     e.stopPropagation();
     if(!m.alive||!running) return;
@@ -422,7 +425,12 @@ function startGame(){
   const freqs=[190,210,228];
   for(let i=0;i<MOSQ_COUNT;i++){
     const m=spawnMosq(i);
-    m.buzz=makeBuzz(freqs[i]);
+    /* freqs[i % …]: MOSQ_COUNT went from 3 to 8 but this list stayed at three,
+       so the 4th mosquito got an undefined pitch, Web Audio threw, and
+       startGame() died half-way — no movement, no timer, and the mosquitoes
+       made so far stacked at 0,0 under the score bar. The room's "no
+       mosquitos in the activity". */
+    m.buzz=makeBuzz(freqs[i % freqs.length]);
     mosqs.push(m);
   }
 

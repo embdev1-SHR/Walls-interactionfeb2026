@@ -55,7 +55,7 @@
      shopping list for the audio pass, not a file that exists. */
   var JOBS = {
     doctor: {
-      id: 'doctor', emoji: '🧑‍⚕️', img: null,
+      id: 'doctor', emoji: '🧑‍⚕️', img: IMG + 'doctor.jpg',
       label: { en: 'Doctor', ml: 'ഡോക്ടർ' },
       does:  { en: 'Treats people who are unwell', ml: 'രോഗികളെ ചികിത്സിക്കുന്നു' },
       place: { en: 'Hospital', ml: 'ആശുപത്രി', emoji: '🏥' },
@@ -68,15 +68,15 @@
       sound: 'heartbeat through a stethoscope',
       call:  { when: { en: 'Someone is unwell', ml: 'ആർക്കോ സുഖമില്ല' }, number: '102' },
       day: [
-        { en: 'Puts on the white coat',   ml: 'വെള്ള കോട്ട് ധരിക്കുന്നു' },
-        { en: 'Listens to the patient',   ml: 'രോഗിയെ പരിശോധിക്കുന്നു' },
-        { en: 'Writes the medicine down', ml: 'മരുന്ന് എഴുതിക്കൊടുക്കുന്നു' },
-        { en: 'The patient gets better',  ml: 'രോഗി സുഖം പ്രാപിക്കുന്നു' }
+        { em: '🥼', en: 'Puts on the white coat',   ml: 'വെള്ള കോട്ട് ധരിക്കുന്നു' },
+        { em: '🩺', en: 'Listens to the patient',   ml: 'രോഗിയെ പരിശോധിക്കുന്നു' },
+        { em: '📝', en: 'Writes the medicine down', ml: 'മരുന്ന് എഴുതിക്കൊടുക്കുന്നു' },
+        { em: '😊', en: 'The patient gets better',  ml: 'രോഗി സുഖം പ്രാപിക്കുന്നു' }
       ]
     },
 
     nurse: {
-      id: 'nurse', emoji: '👩‍⚕️', img: null,
+      id: 'nurse', emoji: '👩‍⚕️', img: IMG + 'nurse.jpg',
       label: { en: 'Nurse', ml: 'നഴ്സ്' },
       does:  { en: 'Looks after patients', ml: 'രോഗികളെ പരിചരിക്കുന്നു' },
       place: { en: 'Hospital', ml: 'ആശുപത്രി', emoji: '🏥' },
@@ -89,15 +89,15 @@
       sound: 'hospital monitor beep',
       call:  { when: { en: 'Someone is hurt', ml: 'ആർക്കോ പരിക്കേറ്റു' }, number: '102' },
       day: [
-        { en: 'Checks the ward',        ml: 'വാർഡ് പരിശോധിക്കുന്നു' },
-        { en: 'Gives the medicine',     ml: 'മരുന്ന് നൽകുന്നു' },
-        { en: 'Dresses the wound',      ml: 'മുറിവ് കെട്ടുന്നു' },
-        { en: 'Writes in the register', ml: 'രജിസ്റ്ററിൽ എഴുതുന്നു' }
+        { em: '🛏️', en: 'Checks the ward',        ml: 'വാർഡ് പരിശോധിക്കുന്നു' },
+        { em: '💊', en: 'Gives the medicine',     ml: 'മരുന്ന് നൽകുന്നു' },
+        { em: '🩹', en: 'Dresses the wound',      ml: 'മുറിവ് കെട്ടുന്നു' },
+        { em: '📒', en: 'Writes in the register', ml: 'രജിസ്റ്ററിൽ എഴുതുന്നു' }
       ]
     },
 
     teacher: {
-      id: 'teacher', emoji: '👩‍🏫', img: null,
+      id: 'teacher', emoji: '👩‍🏫', img: IMG + 'teacher.jpg',
       label: { en: 'Teacher', ml: 'അധ്യാപിക / ടീച്ചർ' },
       does:  { en: 'Teaches in school', ml: 'സ്കൂളിൽ പഠിപ്പിക്കുന്നു' },
       place: { en: 'School', ml: 'സ്കൂൾ', emoji: '🏫' },
@@ -110,10 +110,10 @@
       sound: 'school bell',
       call:  null,
       day: [
-        { en: 'Rings the bell',      ml: 'മണി അടിക്കുന്നു' },
-        { en: 'Writes on the board', ml: 'ബോർഡിൽ എഴുതുന്നു' },
-        { en: 'The children read',   ml: 'കുട്ടികൾ വായിക്കുന്നു' },
-        { en: 'Corrects the books',  ml: 'പുസ്തകങ്ങൾ തിരുത്തുന്നു' }
+        { em: '🔔', en: 'Rings the bell',      ml: 'മണി അടിക്കുന്നു' },
+        { em: '🧑‍🏫', en: 'Writes on the board', ml: 'ബോർഡിൽ എഴുതുന്നു' },
+        { em: '📖', en: 'The children read',   ml: 'കുട്ടികൾ വായിക്കുന്നു' },
+        { em: '✅', en: 'Corrects the books',  ml: 'പുസ്തകങ്ങൾ തിരുത്തുന്നു' }
       ]
     },
 
@@ -131,15 +131,15 @@
       sound: 'water running into a field',
       call:  null,
       day: [
-        { en: 'Ploughs the field', ml: 'വയൽ ഉഴുതുന്നു' },
-        { en: 'Sows the seed',     ml: 'വിത്ത് വിതയ്ക്കുന്നു' },
-        { en: 'Waters the crop',   ml: 'വെള്ളം നനയ്ക്കുന്നു' },
-        { en: 'Harvests the rice', ml: 'നെല്ല് കൊയ്യുന്നു' }
+        { em: '🚜', en: 'Ploughs the field', ml: 'വയൽ ഉഴുതുന്നു' },
+        { em: '🌱', en: 'Sows the seed',     ml: 'വിത്ത് വിതയ്ക്കുന്നു' },
+        { em: '💧', en: 'Waters the crop',   ml: 'വെള്ളം നനയ്ക്കുന്നു' },
+        { em: '🌾', en: 'Harvests the rice', ml: 'നെല്ല് കൊയ്യുന്നു' }
       ]
     },
 
     fisherman: {
-      id: 'fisherman', emoji: '🎣', img: null,
+      id: 'fisherman', emoji: '🎣', img: IMG + 'fisherman.jpg',
       label: { en: 'Fisherman', ml: 'മത്സ്യത്തൊഴിലാളി' },
       does:  { en: 'Catches fish in the sea', ml: 'കടലിൽ മീൻ പിടിക്കുന്നു' },
       place: { en: 'Sea', ml: 'കടൽ', emoji: '🌊' },
@@ -152,10 +152,10 @@
       sound: 'waves and an outboard motor',
       call:  null,
       day: [
-        { en: 'Pushes the boat out', ml: 'വള്ളം കടലിലിറക്കുന്നു' },
-        { en: 'Casts the net',       ml: 'വല വീശുന്നു' },
-        { en: 'Pulls in the fish',   ml: 'മീൻ വലിച്ചെടുക്കുന്നു' },
-        { en: 'Sells at the market', ml: 'ചന്തയിൽ വിൽക്കുന്നു' }
+        { em: '🛶', en: 'Pushes the boat out', ml: 'വള്ളം കടലിലിറക്കുന്നു' },
+        { em: '🕸️', en: 'Casts the net',       ml: 'വല വീശുന്നു' },
+        { em: '🐟', en: 'Pulls in the fish',   ml: 'മീൻ വലിച്ചെടുക്കുന്നു' },
+        { em: '🛒', en: 'Sells at the market', ml: 'ചന്തയിൽ വിൽക്കുന്നു' }
       ]
     },
 
@@ -173,10 +173,10 @@
       sound: 'police whistle',
       call:  { when: { en: 'Something is stolen', ml: 'എന്തെങ്കിലും മോഷ്ടിക്കപ്പെട്ടു' }, number: '100' },
       day: [
-        { en: 'Stands on duty',      ml: 'ഡ്യൂട്ടിയിൽ നിൽക്കുന്നു' },
-        { en: 'Directs the traffic', ml: 'ഗതാഗതം നിയന്ത്രിക്കുന്നു' },
-        { en: 'Helps a lost child',  ml: 'വഴിതെറ്റിയ കുട്ടിയെ സഹായിക്കുന്നു' },
-        { en: 'Writes the report',   ml: 'റിപ്പോർട്ട് എഴുതുന്നു' }
+        { em: '👮', en: 'Stands on duty',      ml: 'ഡ്യൂട്ടിയിൽ നിൽക്കുന്നു' },
+        { em: '🚦', en: 'Directs the traffic', ml: 'ഗതാഗതം നിയന്ത്രിക്കുന്നു' },
+        { em: '🧒', en: 'Helps a lost child',  ml: 'വഴിതെറ്റിയ കുട്ടിയെ സഹായിക്കുന്നു' },
+        { em: '📋', en: 'Writes the report',   ml: 'റിപ്പോർട്ട് എഴുതുന്നു' }
       ]
     },
 
@@ -194,10 +194,10 @@
       sound: 'fire engine siren',
       call:  { when: { en: 'There is a fire', ml: 'തീപിടിത്തം ഉണ്ടായി' }, number: '101' },
       day: [
-        { en: 'The alarm rings',     ml: 'അലാറം മുഴങ്ങുന്നു' },
-        { en: 'Climbs into the truck', ml: 'വണ്ടിയിൽ കയറുന്നു' },
-        { en: 'Sprays the water',    ml: 'വെള്ളം ചീറ്റുന്നു' },
-        { en: 'The fire is out',     ml: 'തീ അണഞ്ഞു' }
+        { em: '🚨', en: 'The alarm rings',     ml: 'അലാറം മുഴങ്ങുന്നു' },
+        { em: '🚒', en: 'Climbs into the truck', ml: 'വണ്ടിയിൽ കയറുന്നു' },
+        { em: '🧯', en: 'Sprays the water',    ml: 'വെള്ളം ചീറ്റുന്നു' },
+        { em: '✅', en: 'The fire is out',     ml: 'തീ അണഞ്ഞു' }
       ]
     },
 
@@ -215,10 +215,10 @@
       sound: 'sizzling in a pan',
       call:  null,
       day: [
-        { en: 'Washes the vegetables', ml: 'പച്ചക്കറി കഴുകുന്നു' },
-        { en: 'Lights the stove',      ml: 'അടുപ്പ് കത്തിക്കുന്നു' },
-        { en: 'Stirs the curry',       ml: 'കറി ഇളക്കുന്നു' },
-        { en: 'Serves the meal',       ml: 'ഭക്ഷണം വിളമ്പുന്നു' }
+        { em: '🥕', en: 'Washes the vegetables', ml: 'പച്ചക്കറി കഴുകുന്നു' },
+        { em: '🔥', en: 'Lights the stove',      ml: 'അടുപ്പ് കത്തിക്കുന്നു' },
+        { em: '🍲', en: 'Stirs the curry',       ml: 'കറി ഇളക്കുന്നു' },
+        { em: '🍛', en: 'Serves the meal',       ml: 'ഭക്ഷണം വിളമ്പുന്നു' }
       ]
     },
 
@@ -236,10 +236,10 @@
       sound: 'a saw cutting wood',
       call:  null,
       day: [
-        { en: 'Measures the wood', ml: 'മരം അളക്കുന്നു' },
-        { en: 'Saws it to size',   ml: 'മുറിക്കുന്നു' },
-        { en: 'Nails it together', ml: 'ആണിയടിച്ച് ചേർക്കുന്നു' },
-        { en: 'The chair is ready', ml: 'കസേര തയ്യാറായി' }
+        { em: '📏', en: 'Measures the wood', ml: 'മരം അളക്കുന്നു' },
+        { em: '🪚', en: 'Saws it to size',   ml: 'മുറിക്കുന്നു' },
+        { em: '🔨', en: 'Nails it together', ml: 'ആണിയടിച്ച് ചേർക്കുന്നു' },
+        { em: '🪑', en: 'The chair is ready', ml: 'കസേര തയ്യാറായി' }
       ]
     },
 
@@ -257,15 +257,15 @@
       sound: 'a sewing machine',
       call:  null,
       day: [
-        { en: 'Measures the cloth', ml: 'തുണി അളക്കുന്നു' },
-        { en: 'Cuts the cloth',     ml: 'തുണി മുറിക്കുന്നു' },
-        { en: 'Stitches it',        ml: 'തയ്ക്കുന്നു' },
-        { en: 'The shirt is ready', ml: 'ഷർട്ട് തയ്യാറായി' }
+        { em: '📏', en: 'Measures the cloth', ml: 'തുണി അളക്കുന്നു' },
+        { em: '✂️', en: 'Cuts the cloth',     ml: 'തുണി മുറിക്കുന്നു' },
+        { em: '🧵', en: 'Stitches it',        ml: 'തയ്ക്കുന്നു' },
+        { em: '👕', en: 'The shirt is ready', ml: 'ഷർട്ട് തയ്യാറായി' }
       ]
     },
 
     barber: {
-      id: 'barber', emoji: '💈', img: null,
+      id: 'barber', emoji: '💈', img: IMG + 'barber.jpg',
       label: { en: 'Barber', ml: 'ബാർബർ' },
       does:  { en: 'Cuts hair', ml: 'മുടി വെട്ടുന്നു' },
       place: { en: 'Barber shop', ml: 'ബാർബർ ഷോപ്പ്', emoji: '💈' },
@@ -278,15 +278,15 @@
       sound: 'electric clippers',
       call:  null,
       day: [
-        { en: 'Seats the customer', ml: 'ആളെ ഇരുത്തുന്നു' },
-        { en: 'Puts on the cloth',  ml: 'തുണി ഇടുന്നു' },
-        { en: 'Cuts the hair',      ml: 'മുടി വെട്ടുന്നു' },
-        { en: 'Shows the mirror',   ml: 'കണ്ണാടി കാണിക്കുന്നു' }
+        { em: '💺', en: 'Seats the customer', ml: 'ആളെ ഇരുത്തുന്നു' },
+        { em: '🧣', en: 'Puts on the cloth',  ml: 'തുണി ഇടുന്നു' },
+        { em: '💇', en: 'Cuts the hair',      ml: 'മുടി വെട്ടുന്നു' },
+        { em: '🪞', en: 'Shows the mirror',   ml: 'കണ്ണാടി കാണിക്കുന്നു' }
       ]
     },
 
     driver: {
-      id: 'driver', emoji: '🧑‍✈️', img: null,
+      id: 'driver', emoji: '🧑‍✈️', img: IMG + 'driver.jpg',
       label: { en: 'Driver', ml: 'ഡ്രൈവർ' },
       does:  { en: 'Takes people where they need to go', ml: 'ആളുകളെ കൊണ്ടുപോകുന്നു' },
       place: { en: 'Road', ml: 'റോഡ്', emoji: '🛣️' },
@@ -299,10 +299,10 @@
       sound: 'an auto rickshaw horn',
       call:  null,
       day: [
-        { en: 'Checks the vehicle',  ml: 'വണ്ടി പരിശോധിക്കുന്നു' },
-        { en: 'Picks up the people', ml: 'ആളുകളെ കയറ്റുന്നു' },
-        { en: 'Drives carefully',    ml: 'ശ്രദ്ധയോടെ ഓടിക്കുന്നു' },
-        { en: 'Drops them safely',   ml: 'സുരക്ഷിതമായി ഇറക്കുന്നു' }
+        { em: '🔧', en: 'Checks the vehicle',  ml: 'വണ്ടി പരിശോധിക്കുന്നു' },
+        { em: '🚌', en: 'Picks up the people', ml: 'ആളുകളെ കയറ്റുന്നു' },
+        { em: '🛣️', en: 'Drives carefully',    ml: 'ശ്രദ്ധയോടെ ഓടിക്കുന്നു' },
+        { em: '🏁', en: 'Drops them safely',   ml: 'സുരക്ഷിതമായി ഇറക്കുന്നു' }
       ]
     },
 
@@ -320,15 +320,15 @@
       sound: 'a bicycle bell',
       call:  null,
       day: [
-        { en: 'Sorts the letters',   ml: 'കത്തുകൾ തരംതിരിക്കുന്നു' },
-        { en: 'Fills the bag',       ml: 'സഞ്ചി നിറയ്ക്കുന്നു' },
-        { en: 'Rides to the houses', ml: 'വീടുകളിലേക്ക് പോകുന്നു' },
-        { en: 'Hands over the post', ml: 'കത്ത് കൈമാറുന്നു' }
+        { em: '✉️', en: 'Sorts the letters',   ml: 'കത്തുകൾ തരംതിരിക്കുന്നു' },
+        { em: '👜', en: 'Fills the bag',       ml: 'സഞ്ചി നിറയ്ക്കുന്നു' },
+        { em: '🚲', en: 'Rides to the houses', ml: 'വീടുകളിലേക്ക് പോകുന്നു' },
+        { em: '📬', en: 'Hands over the post', ml: 'കത്ത് കൈമാറുന്നു' }
       ]
     },
 
     shopkeeper: {
-      id: 'shopkeeper', emoji: '🧑‍💼', img: null,
+      id: 'shopkeeper', emoji: '🧑‍💼', img: IMG + 'shopkeeper.jpg',
       label: { en: 'Shopkeeper', ml: 'കച്ചവടക്കാരൻ' },
       does:  { en: 'Sells things in the shop', ml: 'കടയിൽ സാധനം വിൽക്കുന്നു' },
       place: { en: 'Shop', ml: 'കട', emoji: '🏪' },
@@ -343,10 +343,10 @@
       /* At the Shop reuses the approved currency artwork rather than its own. */
       usesCurrency: true,
       day: [
-        { en: 'Opens the shop',     ml: 'കട തുറക്കുന്നു' },
-        { en: 'Weighs the goods',   ml: 'സാധനം തൂക്കുന്നു' },
-        { en: 'Takes the money',    ml: 'പണം വാങ്ങുന്നു' },
-        { en: 'Gives the change',   ml: 'ബാക്കി കൊടുക്കുന്നു' }
+        { em: '🏪', en: 'Opens the shop',     ml: 'കട തുറക്കുന്നു' },
+        { em: '⚖️', en: 'Weighs the goods',   ml: 'സാധനം തൂക്കുന്നു' },
+        { em: '💵', en: 'Takes the money',    ml: 'പണം വാങ്ങുന്നു' },
+        { em: '🪙', en: 'Gives the change',   ml: 'ബാക്കി കൊടുക്കുന്നു' }
       ]
     },
 
@@ -364,10 +364,10 @@
       sound: 'a drill',
       call:  { when: { en: 'The light has gone out', ml: 'വെളിച്ചം പോയി' }, number: null },
       day: [
-        { en: 'Switches off the power', ml: 'കറന്റ് ഓഫ് ചെയ്യുന്നു' },
-        { en: 'Checks the wire',        ml: 'വയർ പരിശോധിക്കുന്നു' },
-        { en: 'Fixes the connection',   ml: 'കണക്ഷൻ നന്നാക്കുന്നു' },
-        { en: 'The light works again',  ml: 'വെളിച്ചം വീണ്ടും വന്നു' }
+        { em: '🔌', en: 'Switches off the power', ml: 'കറന്റ് ഓഫ് ചെയ്യുന്നു' },
+        { em: '🔍', en: 'Checks the wire',        ml: 'വയർ പരിശോധിക്കുന്നു' },
+        { em: '🪛', en: 'Fixes the connection',   ml: 'കണക്ഷൻ നന്നാക്കുന്നു' },
+        { em: '💡', en: 'The light works again',  ml: 'വെളിച്ചം വീണ്ടും വന്നു' }
       ]
     },
 
@@ -385,10 +385,10 @@
       sound: 'water from a watering can',
       call:  null,
       day: [
-        { en: 'Digs the soil',      ml: 'മണ്ണ് കിളയ്ക്കുന്നു' },
-        { en: 'Plants the sapling', ml: 'തൈ നടുന്നു' },
-        { en: 'Waters it',          ml: 'വെള്ളം ഒഴിക്കുന്നു' },
-        { en: 'The flower blooms',  ml: 'പൂവ് വിരിയുന്നു' }
+        { em: '⛏️', en: 'Digs the soil',      ml: 'മണ്ണ് കിളയ്ക്കുന്നു' },
+        { em: '🌱', en: 'Plants the sapling', ml: 'തൈ നടുന്നു' },
+        { em: '🚿', en: 'Waters it',          ml: 'വെള്ളം ഒഴിക്കുന്നു' },
+        { em: '🌸', en: 'The flower blooms',  ml: 'പൂവ് വിരിയുന്നു' }
       ]
     },
 
@@ -406,15 +406,15 @@
       sound: 'a coconut falling',
       call:  null,
       day: [
-        { en: 'Ties the rope',        ml: 'കയർ കെട്ടുന്നു' },
-        { en: 'Climbs the palm',      ml: 'തെങ്ങിൽ കയറുന്നു' },
-        { en: 'Cuts the coconuts',    ml: 'തേങ്ങ വെട്ടുന്നു' },
-        { en: 'Gathers them below',   ml: 'താഴെ ശേഖരിക്കുന്നു' }
+        { em: '🪢', en: 'Ties the rope',        ml: 'കയർ കെട്ടുന്നു' },
+        { em: '🌴', en: 'Climbs the palm',      ml: 'തെങ്ങിൽ കയറുന്നു' },
+        { em: '🥥', en: 'Cuts the coconuts',    ml: 'തേങ്ങ വെട്ടുന്നു' },
+        { em: '🧺', en: 'Gathers them below',   ml: 'താഴെ ശേഖരിക്കുന്നു' }
       ]
     },
 
     potter: {
-      id: 'potter', emoji: '🏺', img: null,
+      id: 'potter', emoji: '🏺', img: IMG + 'potter.jpg',
       label: { en: 'Potter', ml: 'കുശവൻ' },
       does:  { en: 'Makes pots from clay', ml: 'കളിമണ്ണിൽ പാത്രം ഉണ്ടാക്കുന്നു' },
       place: { en: 'Pottery', ml: 'കളിമൺപണിശാല', emoji: '🏺' },
@@ -427,10 +427,10 @@
       sound: 'a potter’s wheel turning',
       call:  null,
       day: [
-        { en: 'Kneads the clay',    ml: 'കളിമണ്ണ് കുഴയ്ക്കുന്നു' },
-        { en: 'Turns the wheel',    ml: 'ചക്രം കറക്കുന്നു' },
-        { en: 'Shapes the pot',     ml: 'പാത്രം രൂപപ്പെടുത്തുന്നു' },
-        { en: 'Bakes it in the kiln', ml: 'ചൂളയിൽ ചുടുന്നു' }
+        { em: '🤲', en: 'Kneads the clay',    ml: 'കളിമണ്ണ് കുഴയ്ക്കുന്നു' },
+        { em: '🎡', en: 'Turns the wheel',    ml: 'ചക്രം കറക്കുന്നു' },
+        { em: '🏺', en: 'Shapes the pot',     ml: 'പാത്രം രൂപപ്പെടുത്തുന്നു' },
+        { em: '🔥', en: 'Bakes it in the kiln', ml: 'ചൂളയിൽ ചുടുന്നു' }
       ]
     }
   };
@@ -440,6 +440,35 @@
     'firefighter', 'cook', 'carpenter', 'tailor', 'barber', 'driver',
     'postman', 'shopkeeper', 'electrician', 'gardener', 'coconutClimber', 'potter'
   ];
+
+  /* Photographs of the workplaces (assets/new/images/places, chosen by eye
+     from Pexels; the room: "real images are needed — not able to identify
+     anything from this"). Keyed by the place's English name, so every job
+     sharing a place shares its picture. A place missing here keeps its emoji. */
+  var PLACES = '../assets/new/images/places/';
+  var PLACE_IMG = {
+    'Hospital': PLACES + 'hospital.jpg',
+    'School': PLACES + 'school.jpg',
+    'Paddy field': PLACES + 'paddy-field.jpg',
+    'Sea': PLACES + 'sea.jpg',
+    'Police station': PLACES + 'police-station.jpg',
+    'Fire station': PLACES + 'fire-station.jpg',
+    'Kitchen': PLACES + 'kitchen.jpg',
+    'Workshop': PLACES + 'workshop.jpg',
+    'Tailor shop': PLACES + 'tailor-shop.jpg',
+    'Barber shop': PLACES + 'barber-shop.jpg',
+    'Road': PLACES + 'road.jpg',
+    'Post office': PLACES + 'post-office.jpg',
+    'Shop': PLACES + 'shop.jpg',
+    'Anywhere with wiring': PLACES + 'house.jpg',
+    'Garden': PLACES + 'garden.jpg',
+    'Coconut grove': PLACES + 'coconut-grove.jpg',
+    'Pottery': PLACES + 'pottery.jpg'
+  };
+  Object.keys(JOBS).forEach(function (k) {
+    var pl = JOBS[k].place;
+    if (pl && PLACE_IMG[pl.en] && !pl.img) pl.img = PLACE_IMG[pl.en];
+  });
 
   function all() { return ORDER.map(function (k) { return JOBS[k]; }); }
 
@@ -467,10 +496,18 @@
     return withSound().map(function (j) { return { id: j.id, needs: j.sound }; });
   }
 
+  /** The picture for a worker or a place: its photograph when there is one,
+      its emoji otherwise. cls lets each page size it its own way. */
+  function art(item, cls) {
+    if (!item) return '';
+    if (item.img) return '<img class="' + (cls || 'ph') + '" src="' + item.img + '" alt="" draggable="false">';
+    return '<div class="' + (cls ? cls + ' ' : '') + 'em">' + (item.emoji || '📍') + '</div>';
+  }
+
   global.JOBS_DATA = {
     JOBS: JOBS, ORDER: ORDER, all: all,
     withHat: withHat, withTools: withTools, withCall: withCall, withSound: withSound,
-    places: places, soundList: soundList,
+    places: places, soundList: soundList, art: art,
     IMG: IMG
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = global.JOBS_DATA;

@@ -63,6 +63,14 @@
     justify-content:center;pointer-events:none}
   .staff span{font-size:clamp(16px,2.8vh,30px);animation:drop .34s ease-out}
   @keyframes drop{from{opacity:0;transform:translateY(-16px) scale(.6)}to{opacity:1;transform:none}}
+
+  /* ── bigger, real pictures (review: "big images needed", "real images") ── */
+  .ph{display:block;object-fit:cover;border-radius:16px;box-shadow:0 6px 16px rgba(30,40,60,.18)}
+  /* the photo fills the card above its name, edge to edge */
+  .placeph{width:calc(100% + 8px);flex:1 1 auto;min-height:0;margin:-6px -4px 4px;
+    border-radius:0;box-shadow:none}
+  .workph{width:min(20vh,140px);height:min(20vh,140px);margin:0 auto 4px}
+  .worker .em{font-size:min(12vh,90px)!important}
 </style>
 </head>
 <body>
@@ -128,7 +136,7 @@ TRIUP.start({
         var d = document.createElement('div');
         d.className = 'place';
         d.dataset.k = pl.en;
-        d.innerHTML = '<div class="staff"></div><div class="pe">' + (pl.emoji || '📍') + '</div>' +
+        d.innerHTML = '<div class="staff"></div>' + (pl.img ? JOBS_DATA.art(pl, 'ph placeph') : '<div class="pe">' + (pl.emoji || '📍') + '</div>') +
           '<div class="pn">' + pl.en + '</div><div class="pm">' + pl.ml + '</div>';
         places.appendChild(d);
       });
@@ -136,7 +144,7 @@ TRIUP.start({
       tray.innerHTML = '';
       var w = document.createElement('div');
       w.className = 'worker';
-      w.innerHTML = '<div class="em">' + job.emoji + '</div>' +
+      w.innerHTML = JOBS_DATA.art(job, 'ph workph') +
         '<div class="nm">' + WALL.t(job.label) + '</div>' +
         '<div class="ml">' + job.label.ml + '</div>';
       tray.appendChild(w);

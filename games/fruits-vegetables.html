@@ -66,7 +66,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Fruits vs Vegetables — 3 Players</title>
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+<script type="module" src="../js/vendor/model-viewer.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════════════════════
@@ -225,10 +225,21 @@ body:not(.ml-mode) .done-again .ml{display:none}
   box-shadow:0 8px 20px rgba(90,70,40,.2),inset 0 -12px 26px rgba(0,0,0,.07);
   display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;
   transition:box-shadow .2s}
-.pb .mouth::after{content:'';position:absolute;inset:0;pointer-events:none;
-  background:
-    repeating-linear-gradient(90deg,transparent 0 14px,rgba(0,0,0,.05) 14px 17px),
-    repeating-linear-gradient(0deg,transparent 0 18px,rgba(0,0,0,.045) 18px 21px)}
+/* A REAL BASKET, not a box (review: "the boxes should be in the form of a
+   fruit basket … same for vegetables"). Woven basket of fruit, wooden crate of
+   vegetables — drawn in SVG (BASKET_ART below), so it is sharp at any size
+   and needs no download. The count rides on the front of it. */
+.pb .mouth{border:0!important;background:transparent!important;box-shadow:none!important;
+  overflow:visible!important;border-radius:0!important}
+.pb .mouth::after{display:none}
+.pb .basket-art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  filter:drop-shadow(0 8px 10px rgba(90,60,20,.28))}
+.pb .count{position:relative;z-index:2;margin-top:28%;
+  background:rgba(255,255,255,.88);border-radius:999px;padding:0 .55em;min-width:1.6em;text-align:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.panel.asking .pb .mouth{animation:none}
+.panel.asking .pb .basket-art{animation:basketPulse 1.25s ease-in-out infinite}
+@keyframes basketPulse{50%{filter:drop-shadow(0 0 10px rgba(255,255,255,.95)) drop-shadow(0 10px 14px rgba(90,60,20,.3))}}
 .pb .count{font-size:clamp(22px,2.9vw,44px);font-weight:900;color:var(--bc);
   text-shadow:0 2px 0 rgba(255,255,255,.85);position:relative;z-index:2;
   transition:transform .2s cubic-bezier(.34,1.6,.64,1)}
@@ -380,6 +391,43 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
 <script src="../js/wall-backdrop.js"></script>
 
 <script>
+/* The two baskets. viewBox 200x170: produce heaped along the top edge
+   (y 10-70), the container below (y 60-165). */
+var BASKET_ART = {
+  fruit:
+    '<svg class="basket-art" viewBox="0 0 200 170" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
+      // fruit heaped above the rim
+      '<circle cx="60" cy="58" r="22" fill="#e63946"/><path d="M60 37 q4-10 12-12" stroke="#5a3a1a" stroke-width="3" fill="none"/>' +
+      '<ellipse cx="72" cy="30" rx="8" ry="4" fill="#4caf50" transform="rotate(-25 72 30)"/>' +
+      '<circle cx="100" cy="50" r="24" fill="#ff9f1c"/><circle cx="94" cy="43" r="4" fill="#ffd27a" opacity=".7"/>' +
+      '<path d="M120 62 q22-48 52-30 q-26 2-36 36 z" fill="#ffd60a" stroke="#c9a400" stroke-width="2"/>' +
+      '<circle cx="142" cy="60" r="18" fill="#8338ec"/><circle cx="130" cy="66" r="12" fill="#9d4edd"/>' +
+      '<circle cx="40" cy="64" r="15" fill="#7cb518"/>' +
+      // woven basket body
+      '<path d="M14 70 h172 l-18 92 q-2 6-8 6 h-120 q-6 0-8-6 z" fill="#c8862f"/>' +
+      '<g stroke="#9a5e1b" stroke-width="4" opacity=".75">' +
+        '<path d="M22 92 h156 M26 114 h148 M31 136 h138 M36 156 h128"/>' +
+        '<path d="M40 70 l6 96 M66 70 l3 96 M92 70 v96 M118 70 v96 M144 70 l-3 96 M168 70 l-6 96"/>' +
+      '</g>' +
+      '<rect x="8" y="62" width="184" height="14" rx="7" fill="#a86a22"/>' +
+      '<rect x="8" y="62" width="184" height="5" rx="2.5" fill="#d99a48"/>' +
+    '</svg>',
+  vegetable:
+    '<svg class="basket-art" viewBox="0 0 200 170" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
+      // vegetables above the crate
+      '<path d="M46 66 l-12 -48 q8 -4 14 2 l10 46 z" fill="#f77f00"/><path d="M36 20 q-6-14 4-16 M40 18 q2-14 12-10" stroke="#2d6a4f" stroke-width="4" fill="none"/>' +
+      '<circle cx="84" cy="52" r="22" fill="#d62828"/><path d="M76 32 q8 -8 16 0" stroke="#2d6a4f" stroke-width="5" fill="none"/>' +
+      '<ellipse cx="128" cy="50" rx="16" ry="26" fill="#6a1b9a" transform="rotate(30 128 50)"/><path d="M138 26 q6 -6 12 -2" stroke="#2d6a4f" stroke-width="5" fill="none"/>' +
+      '<circle cx="164" cy="58" r="18" fill="#b5835a"/><circle cx="158" cy="52" r="3" fill="#8a5a36"/><circle cx="170" cy="62" r="2.5" fill="#8a5a36"/>' +
+      '<path d="M100 66 q4 -30 14 -40 q-2 22 4 40 z" fill="#52b788"/>' +
+      // wooden crate
+      '<rect x="12" y="66" width="176" height="98" rx="6" fill="#d4a373"/>' +
+      '<g fill="#b07d4f"><rect x="12" y="66" width="176" height="12" rx="4"/><rect x="12" y="110" width="176" height="10"/><rect x="12" y="152" width="176" height="12" rx="4"/></g>' +
+      '<g fill="#a06a3a"><rect x="12" y="66" width="14" height="98" rx="4"/><rect x="174" y="66" width="14" height="98" rx="4"/></g>' +
+      '<g stroke="#8c5a2c" stroke-width="2" opacity=".5"><path d="M30 92 h140 M30 136 h140"/></g>' +
+    '</svg>'
+};
+
 /* illustrated backdrop, shared with the rebuilt activities */
 if (window.WALL_BACKDROP) WALL_BACKDROP.set('meadow');
 /* ══════════════════════════════════════════════════════════════
@@ -539,11 +587,11 @@ var PANEL_HTML =
   '<div class="p-field"></div>' +
   '<div class="p-baskets">' +
     '<div class="pb" data-cat="fruit">' +
-      '<div class="mouth"><span class="count">0</span></div>' +
+      '<div class="mouth">' + BASKET_ART.fruit + '<span class="count">0</span></div>' +
       '<div class="pb-label"><span class="en">Fruits</span><span class="ml">പഴങ്ങൾ</span></div>' +
     '</div>' +
     '<div class="pb" data-cat="vegetable">' +
-      '<div class="mouth"><span class="count">0</span></div>' +
+      '<div class="mouth">' + BASKET_ART.vegetable + '<span class="count">0</span></div>' +
       '<div class="pb-label"><span class="en">Vegetables</span><span class="ml">പച്ചക്കറികൾ</span></div>' +
     '</div>' +
   '</div>' +

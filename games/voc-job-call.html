@@ -67,6 +67,11 @@
   .key:active{transform:translateY(2px);box-shadow:0 1px 0 #e3d2ce}
   .askml{font-family:'Noto Sans Malayalam',sans-serif;font-weight:700;
     font-size:clamp(10.5px,1.6vh,17px);color:#8a5a54;text-align:center}
+
+  /* ── bigger, real pictures (review: "big images needed", "real images") ── */
+  .ph{display:block;object-fit:cover;border-radius:16px;box-shadow:0 6px 16px rgba(30,40,60,.18)}
+  .helpph{width:min(22vh,100%);height:min(22vh,100%);margin:0 auto 6px}
+  .helper .e{font-size:min(14vh,110px)!important}
 </style>
 </head>
 <body>
@@ -153,7 +158,7 @@ TRIUP.start({
       shuffle([job].concat(wrong)).forEach(function (h) {
         var b = document.createElement('div');
         b.className = 'helper';
-        b.innerHTML = '<div class="e">' + h.emoji + '</div><div class="n">' + WALL.t(h.label) + '</div>';
+        b.innerHTML = (h.img ? JOBS_DATA.art(h, 'ph helpph') : '<div class="e">' + h.emoji + '</div>') + '<div class="n">' + WALL.t(h.label) + '</div>';
         WALL.bindTouch(b, function () { choose(h, b); });
         helpers.appendChild(b);
       });
