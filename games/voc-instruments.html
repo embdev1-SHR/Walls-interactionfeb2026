@@ -133,7 +133,7 @@ TRIUP.start({
       pad.innerHTML = (INSTRUMENT_ICONS.has(i.k)
         ? '<img src="'+INSTRUMENT_ICONS.uri(i.k)+'" alt="">'
         : '<div class="em">'+i.em+'</div>') +
-        '<div class="nm">'+i.ml+'</div>';
+        '<div class="nm">'+WALL.t(i)+'</div>';
       WALL.bindTouch(pad,function(){
         strike(i);
         pad.classList.remove('hit'); void pad.offsetWidth; pad.classList.add('hit');
@@ -142,7 +142,7 @@ TRIUP.start({
            the name comes after the instrument has been heard, not over it */
         if(p===0&&WALL.voiceOn()){
           clearTimeout(st.nameT);
-          st.nameT=setTimeout(function(){ WALL.say(i.ml); },1400);
+          st.nameT=setTimeout(function(){ WALL.say(i); },1400);
         }
       });
       grid.appendChild(pad);

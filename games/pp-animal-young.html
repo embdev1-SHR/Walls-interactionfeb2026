@@ -135,7 +135,7 @@ function makeCard(item, side, id) {
   d.dataset.pair = id;
   d.dataset.side = side;
   d.innerHTML = '<img src="' + item.img + '" alt="">' +
-                '<div class="cap">' + item.ml + '</div>';
+                '<div class="cap">' + WALL.t(item) + '</div>';
   WALL.bindTouch(d, function () { tap(d, item); });
   return d;
 }
@@ -155,7 +155,7 @@ function tally() {
 
 function tap(el, item) {
   if (el.classList.contains('joined')) return;
-  if (WALL.voiceOn()) WALL.say(item.ml);
+  if (WALL.voiceOn()) WALL.say(item);
 
   if (!picked) { picked = el; el.classList.add('picked'); WALL.sfx.tap(); return; }
 

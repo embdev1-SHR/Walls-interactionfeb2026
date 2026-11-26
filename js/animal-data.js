@@ -40,7 +40,7 @@
   var A = {
     /* ── domestic / farm ─────────────────────────────────────────── */
     cat:    { ml: 'പൂച്ച',        en: 'Cat',    emoji: '🐱', img: NEW + 'cat.jpg',    snd: SND_NEW + 'meow.mp3' },
-    dog:    { ml: 'നായ / പട്ടി',  en: 'Dog',    emoji: '🐶', img: OLD + 'dog.webp',   snd: SND_NEW + 'bark.mp3' },
+    dog:    { ml: 'നായ / പട്ടി',  en: 'Dog',    emoji: '🐶', img: NEW + 'dog.jpg',   snd: SND_NEW + 'bark.mp3' },
     cow:    { ml: 'പശു',          en: 'Cow',    emoji: '🐮', img: NEW + 'cow.jpg',    snd: SND_OLD + 'cow.mp3' },
     hen:    { ml: 'കോഴി',         en: 'Hen',    emoji: '🐔', img: NEW + 'hen.jpg',    snd: SND_NEW + 'cluck.mp3' },
     sheep:  { ml: 'ചെമ്മരിയാട്',  en: 'Sheep',  emoji: '🐑', img: NEW + 'sheep.jpg',  snd: SND_NEW + 'baah.mp3' },
@@ -48,14 +48,14 @@
     horse:  { ml: 'കുതിര',        en: 'Horse',  emoji: '🐴', img: NEW + 'horse.jpg',  snd: SND_NEW + 'neigh.mp3' },
     duck:   { ml: 'താറാവ്',       en: 'Duck',   emoji: '🦆', img: NEW + 'duck.jpg',   snd: SND_NEW + 'quack.mp3' },
     pig:    { ml: 'പന്നി',        en: 'Pig',    emoji: '🐷', img: NEW + 'pig.jpg',    snd: SND_NEW + 'oink.mp3' },
-    rabbit: { ml: 'മുയൽ',         en: 'Rabbit', emoji: '🐰', img: OLD + 'rabbit.png', snd: SND_OLD + 'rabbit.mp3' },
+    rabbit: { ml: 'മുയൽ',         en: 'Rabbit', emoji: '🐰', img: NEW + 'rabbit.jpg', snd: SND_OLD + 'rabbit.mp3' },
 
     /* ── wild ────────────────────────────────────────────────────── */
-    lion:     { ml: 'സിംഹം',   en: 'Lion',          emoji: '🦁', img: OLD + 'lion.png',     snd: SND_NEW + 'lion-roar.mp3' },
+    lion:     { ml: 'സിംഹം',   en: 'Lion',          emoji: '🦁', img: NEW + 'lion.jpg',     snd: SND_NEW + 'lion-roar.mp3' },
     tiger:    { ml: 'കടുവ',    en: 'Tiger',         emoji: '🐯', img: NEW + 'tiger.jpg',    snd: SND_OLD + 'tiger.mp3' },
-    elephant: { ml: 'കാട്ടാന', en: 'Wild Elephant', emoji: '🐘', img: OLD + 'Elephant.png', snd: SND_OLD + 'elephant.mp3' },
+    elephant: { ml: 'കാട്ടാന', en: 'Wild Elephant', emoji: '🐘', img: NEW + 'elephant.jpg', snd: SND_OLD + 'elephant.mp3' },
     snake:    { ml: 'പാമ്പ്',  en: 'Snake',         emoji: '🐍', img: NEW + 'snake.jpg',    snd: SND_OLD + 'rattlesnake.mp3' },
-    monkey:   { ml: 'കുരങ്ങൻ', en: 'Monkey',        emoji: '🐵', img: OLD + 'monkey.png',   snd: SND_NEW + 'monkey-chatter.mp3' },
+    monkey:   { ml: 'കുരങ്ങൻ', en: 'Monkey',        emoji: '🐵', img: NEW + 'monkey.jpg',   snd: SND_NEW + 'monkey-chatter.mp3' },
     bear:     { ml: 'കരടി',    en: 'Bear',          emoji: '🐻', img: NEW + 'bear.jpg',     snd: SND_OLD + 'bear.mp3' },
 
     /* ── quiz distractors / sorting ──────────────────────────────── */

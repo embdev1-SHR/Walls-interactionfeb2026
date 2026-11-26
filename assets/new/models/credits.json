@@ -138,5 +138,95 @@
     "modelUrl": "https://sketchfab.com/3d-models/dog-e395f26615ca445ab32f01ded17ff3bf",
     "query": "uid:e395f26615ca445ab32f01ded17ff3bf",
     "sizeMB": 10.1
+  },
+  "body/boy.glb": {
+    "entry": "body/boy/scene.gltf",
+    "name": "Boy Character - Cartoon",
+    "author": "neshallads",
+    "authorUrl": "https://sketchfab.com/neshallads",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/boy-character-cartoon-1a6f93e9076b49cea4bb777a913b4bdd",
+    "query": "uid:1a6f93e9076b49cea4bb777a913b4bdd",
+    "sizeMB": 12.9
+  },
+  "street/traffic-light.glb": {
+    "entry": "street/traffic-light/scene.gltf",
+    "name": "Traffic Light",
+    "author": "Pieter Ferreira",
+    "authorUrl": "https://sketchfab.com/Badboy17Aiden",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/traffic-light-19a176596eb94d5e832cd12083a1cd4c",
+    "query": "uid:19a176596eb94d5e832cd12083a1cd4c",
+    "sizeMB": 5.1
+  },
+  "seasons/tree-summer.glb": {
+    "entry": "seasons/tree-summer/scene.gltf",
+    "name": "Ginkgo Tree Spring/Summer",
+    "author": "PuzzledPapaya",
+    "authorUrl": "https://sketchfab.com/PuzzledPapaya",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/ginkgo-tree-springsummer-2aa9348064c243f8b1f67ba73707c45e",
+    "query": "uid:2aa9348064c243f8b1f67ba73707c45e",
+    "sizeMB": 9.1
+  },
+  "seasons/tree-autumn.glb": {
+    "entry": "seasons/tree-autumn/scene.gltf",
+    "name": "Ginkgo Tree Autumn/Fall",
+    "author": "PuzzledPapaya",
+    "authorUrl": "https://sketchfab.com/PuzzledPapaya",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/ginkgo-tree-autumnfall-b3313ffda86a46a8b16a83de1bdb155a",
+    "query": "uid:b3313ffda86a46a8b16a83de1bdb155a",
+    "sizeMB": 7.9
+  },
+  "seasons/tree-winter.glb": {
+    "entry": "seasons/tree-winter/scene.gltf",
+    "name": "Ginkgo Tree Winter",
+    "author": "PuzzledPapaya",
+    "authorUrl": "https://sketchfab.com/PuzzledPapaya",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/ginkgo-tree-winter-642e034cf2bf4b18bc1879035aeecbf6",
+    "query": "uid:642e034cf2bf4b18bc1879035aeecbf6",
+    "sizeMB": 7
+  },
+  "seasons/ground.glb": {
+    "entry": "seasons/ground/scene.gltf",
+    "name": "Forest Ground [Free Download]",
+    "author": "Gaming Assets",
+    "authorUrl": "https://sketchfab.com/gamingassets",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/forest-ground-free-download-c6e70b4e68bb44d28f24221b05ddedf4",
+    "query": "uid:c6e70b4e68bb44d28f24221b05ddedf4",
+    "sizeMB": 7.1
+  },
+  "seasons/leaves.glb": {
+    "entry": "seasons/leaves/scene.gltf",
+    "name": "leave in forest - autumn scene - 3d scan",
+    "author": "Marco Fischer",
+    "authorUrl": "https://sketchfab.com/a2e",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/leave-in-forest-autumn-scene-3d-scan-b24b7084fe4c45309e5254e7762b2a1a",
+    "query": "uid:b24b7084fe4c45309e5254e7762b2a1a",
+    "sizeMB": 10.2
+  },
+  "street/road.glb": {
+    "entry": "street/road/scene.gltf",
+    "name": "[FREE] City Road Layout Mockup",
+    "author": "99.Miles",
+    "authorUrl": "https://sketchfab.com/99.Miles",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/free-city-road-layout-mockup-3260e3fef3434939bc8df94a0a15ead3",
+    "query": "uid:3260e3fef3434939bc8df94a0a15ead3",
+    "sizeMB": 38.6
+  },
+  "street/buildings.glb": {
+    "entry": "street/buildings/scene.gltf",
+    "name": "Brooklyn Street Row Buildings Low Poly",
+    "author": "B0rn2D13",
+    "authorUrl": "https://sketchfab.com/B0rn2D13",
+    "license": "CC Attribution",
+    "modelUrl": "https://sketchfab.com/3d-models/brooklyn-street-row-buildings-low-poly-370ca970f4cd4c638f95fe17617d0bc1",
+    "query": "uid:370ca970f4cd4c638f95fe17617d0bc1",
+    "sizeMB": 6.4
   }
 }

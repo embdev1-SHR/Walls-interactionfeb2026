@@ -1,0 +1,477 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 20680,
+      "max": [
+        45.16160583496094,
+        49.157005310058594,
+        92.87458801269531
+      ],
+      "min": [
+        -56.79583740234375,
+        -52.843624114990234,
+        13.022955894470215
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 248160,
+      "componentType": 5126,
+      "count": 20680,
+      "max": [
+        0.9999747276306152,
+        0.9999539852142334,
+        0.9998268485069275
+      ],
+      "min": [
+        -0.9998692274093628,
+        -0.9999920129776001,
+        -0.9999977946281433
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 20680,
+      "max": [
+        0.9999570846557617,
+        0.9998554587364197,
+        0.9999367594718933,
+        1.0
+      ],
+      "min": [
+        -0.9999725222587585,
+        -0.9999982714653015,
+        -0.9996568560600281,
+        -1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 20680,
+      "max": [
+        1.0,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 165440,
+      "componentType": 5126,
+      "count": 20680,
+      "max": [
+        1.0,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 31020,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 496320,
+      "componentType": 5126,
+      "count": 28999,
+      "max": [
+        39.903072357177734,
+        41.15773391723633,
+        79.97843170166016
+      ],
+      "min": [
+        -27.59999656677246,
+        -36.64656448364258,
+        0.0009272523457184434
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 844308,
+      "componentType": 5126,
+      "count": 28999,
+      "max": [
+        0.9999012351036072,
+        0.9999452233314514,
+        0.9999691247940063
+      ],
+      "min": [
+        -0.9997597336769104,
+        -0.9998208284378052,
+        -0.9999997019767761
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 330880,
+      "componentType": 5126,
+      "count": 28999,
+      "max": [
+        0.999856173992157,
+        1.0,
+        0.9996951818466187,
+        1.0
+      ],
+      "min": [
+        -0.9999979138374329,
+        -0.9999894499778748,
+        -0.999825656414032,
+        -1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 794864,
+      "componentType": 5126,
+      "count": 28999,
+      "max": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        0.9921568632125854,
+        0.9921568632125854,
+        0.9921568632125854,
+        0.9921568632125854
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 330880,
+      "componentType": 5126,
+      "count": 28999,
+      "max": [
+        0.9717357754707336,
+        0.9912427663803101
+      ],
+      "min": [
+        0.008774341084063053,
+        0.009530836716294289
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 562872,
+      "componentType": 5126,
+      "count": 28999,
+      "max": [
+        0.9717357754707336,
+        0.9912427663803101
+      ],
+      "min": [
+        0.008774341084063053,
+        0.009530836716294289
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 124080,
+      "componentType": 5125,
+      "count": 43248,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "PuzzledPapaya (https://sketchfab.com/PuzzledPapaya)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/ginkgo-tree-springsummer-2aa9348064c243f8b1f67ba73707c45e",
+      "title": "Ginkgo Tree Spring/Summer"
+    },
+    "generator": "Sketchfab-17.17.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 297072,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 794864,
+      "byteOffset": 297072,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1192296,
+      "byteOffset": 1091936,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1258848,
+      "byteOffset": 2284232,
+      "byteStride": 16,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 3543080,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/GinkgoLeavesGreen_baseColor.png"
+    },
+    {
+      "uri": "textures/GinkgoLeavesGreen_normal.png"
+    },
+    {
+      "uri": "textures/GinkgoTreeBark_baseColor.png"
+    },
+    {
+      "uri": "textures/GinkgoTreeBark_normal.png"
+    }
+  ],
+  "materials": [
+    {
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "name": "GinkgoLeavesGreen",
+      "normalTexture": {
+        "index": 1
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.5443795638234326
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "GinkgoTreeBark",
+      "normalTexture": {
+        "index": 3
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 2
+        },
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.9020204102886729
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Leaves Green_GinkgoLeavesGreen_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3,
+            "TEXCOORD_1": 4
+          },
+          "indices": 5,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Tree_GinkgoTreeBark_0",
+      "primitives": [
+        {
+          "attributes": {
+            "COLOR_0": 9,
+            "NORMAL": 7,
+            "POSITION": 6,
+            "TANGENT": 8,
+            "TEXCOORD_0": 10,
+            "TEXCOORD_1": 11
+          },
+          "indices": 12,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.009999999776482582,
+        0.0,
+        0.0,
+        -0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "701cffd46d6b47d8990f23a859b1c256.fbx"
+    },
+    {
+      "children": [
+        3,
+        5
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4
+      ],
+      "matrix": [
+        -99.99999999999885,
+        1.2246465878873718e-14,
+        -1.5099579909783704e-05,
+        0.0,
+        -1.509957990978366e-05,
+        7.549789993177569e-06,
+        99.99999999999856,
+        0.0,
+        1.1522330358069753e-12,
+        99.9999999999997,
+        -7.549789970973109e-06,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Leaves Green"
+    },
+    {
+      "mesh": 0,
+      "name": "Leaves Green_GinkgoLeavesGreen_0"
+    },
+    {
+      "children": [
+        6
+      ],
+      "matrix": [
+        100.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.629206793918314e-05,
+        -99.99999999999868,
+        0.0,
+        0.0,
+        99.99999999999868,
+        -1.629206793918314e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Tree"
+    },
+    {
+      "mesh": 1,
+      "name": "Tree_GinkgoTreeBark_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    }
+  ]
+}

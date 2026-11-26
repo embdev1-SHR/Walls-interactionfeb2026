@@ -538,7 +538,7 @@ function say(t, l) {
   try {
     if (typeof TTSEngine === 'undefined') return;
     if (window.speechSynthesis && window.speechSynthesis.speaking) return;
-    TTSEngine.speak(t, l, null);
+    (window.WALL && WALL.say ? WALL.say(t) : TTSEngine.speak(t, l, null));
   } catch (e) {}
 }
 function sayPraise() {
@@ -549,7 +549,7 @@ function sayPraise() {
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     praiseUntil = now + 1100;
     var l = isMl ? PRAISE_ML : PRAISE_EN;
-    TTSEngine.speak(l[praiseIdx++ % l.length], isMl ? 'ml' : 'en', null);
+    (window.WALL && WALL.say ? WALL.say(l[praiseIdx++ % l.length]) : TTSEngine.speak(l[praiseIdx++ % l.length], isMl ? 'ml' : 'en', null));
   } catch (e) {}
 }
 

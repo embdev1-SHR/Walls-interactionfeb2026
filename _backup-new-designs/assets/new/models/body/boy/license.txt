@@ -1,0 +1,11 @@
+Model Information:
+* title:	Boy Character - Cartoon
+* source:	https://sketchfab.com/3d-models/boy-character-cartoon-1a6f93e9076b49cea4bb777a913b4bdd
+* author:	neshallads (https://sketchfab.com/neshallads)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Boy Character - Cartoon" (https://sketchfab.com/3d-models/boy-character-cartoon-1a6f93e9076b49cea4bb777a913b4bdd) by neshallads (https://sketchfab.com/neshallads) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

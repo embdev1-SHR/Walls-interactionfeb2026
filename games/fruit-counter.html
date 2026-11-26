@@ -562,6 +562,8 @@ function getVoice(){
 }
 function speak(text,onDone){
   if(!text)return;
+  /* the universal voice (WALL.say): the 🌐 language, volume, speed and pitch, and the ☰ voice switch */
+  if(window.WALL&&WALL.say){ WALL.say(text); if(onDone) setTimeout(onDone, 500+String(text).length*75); return; }
   synth.cancel();
   const utt=new SpeechSynthesisUtterance(text);
   const v=getVoice();if(v)utt.voice=v;

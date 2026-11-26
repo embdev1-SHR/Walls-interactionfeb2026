@@ -155,7 +155,7 @@ function deal() {
     var a = ANIMALS.all[id];
     var d = document.createElement('div');
     d.className = 'card';
-    d.innerHTML = '<img src="' + a.img + '" alt=""><div class="cap">' + a.ml + '</div>';
+    d.innerHTML = '<img src="' + a.img + '" alt=""><div class="cap">' + WALL.t(a) + '</div>';
     WALL.bindTouch(d, function () { tap(d, id === odd, a, why); });
     board.appendChild(d);
   });
@@ -182,7 +182,7 @@ function tap(el, correct, animal, why) {
   /* The reason is the lesson. Seeing the odd one is only the question. */
   document.getElementById('whyText').textContent = WALL.t(why);
   document.getElementById('why').classList.add('show');
-  if (WALL.voiceOn()) WALL.say(why.ml);
+  if (WALL.voiceOn()) WALL.say(why);
   if (window.GUIDE) GUIDE.cheer({ en:'Yes! Well done!', ml:'കൊള്ളാം! നന്നായി!' });
 
   n++;

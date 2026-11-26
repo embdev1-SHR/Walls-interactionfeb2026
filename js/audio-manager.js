@@ -160,6 +160,11 @@ class AudioManager {
         this.audio = document.createElement('audio');
         this.audio.id = 'game-audio';
         this.audio.src = `${base}${audioFile}.mp3`;
+        /* the universal volume (🌐 panel / ☰ −/+) scales the music too */
+        const S = window.WALL_SETTINGS;
+        if (S && !this._volHooked) { this._volHooked = true; this._base = this.volume;
+            this.volume = this._base * S.get().volume;
+            S.onChange((what) => { if (what === 'voice') this.setVolume(this._base * S.get().volume); }); }
         this.audio.volume = this.volume;
         this.audio.preload = 'auto';
         this.audio.crossOrigin = 'anonymous';

@@ -146,7 +146,7 @@ TRIUP.start({
     ITEMS.forEach(function(it){
       var t=document.createElement('div'); t.className='tile sq';
       t.dataset.em=it.em;
-      t.innerHTML='<div class="em">'+it.em+'</div><div class="cap">'+it.ml+'</div>';
+      t.innerHTML='<div class="em">'+it.em+'</div><div class="cap">'+WALL.t(it)+'</div>';
       WALL.bindTouch(t,function(){
         if(st.held) st.held.classList.remove('ok');
         st.held=(st.held===t)?null:t;

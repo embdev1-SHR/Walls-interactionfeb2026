@@ -92,7 +92,7 @@ TRIUP.start({
         onAgain:function(){ st.n=0; api.pill(p,'score','0 / '+ROUNDS); deal(); }});
       var em=THINGS[Math.floor(Math.random()*THINGS.length)];
       var ask=ASK[Math.floor(Math.random()*ASK.length)];
-      lead.textContent=ask.ml;
+      lead.textContent=WALL.t(ask);
       /* same object, two sizes - a perceptual comparison, not a knowledge one */
       var sizes=sh([ {s:1,big:true}, {s:0.45,big:false} ]);
       pair.innerHTML='';
@@ -112,7 +112,7 @@ TRIUP.start({
         });
         pair.appendChild(d);
       });
-      if(p===0&&WALL.voiceOn()) WALL.say(ask.ml);
+      if(p===0&&WALL.voiceOn()) WALL.say(ask);
     }
     deal();
   }

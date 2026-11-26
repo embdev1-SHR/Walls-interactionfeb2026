@@ -100,7 +100,7 @@ TRIUP.start({
       sh([st.cur].concat(wrong)).forEach(function(id){
         var a=ANIMALS.all[id];
         var t=document.createElement('div'); t.className='tile';
-        t.innerHTML='<img src="'+a.img+'" alt=""><div class="cap">'+a.ml+'</div>';
+        t.innerHTML='<img src="'+a.img+'" alt=""><div class="cap">'+WALL.t(a)+'</div>';
         WALL.bindTouch(t,function(){
           if(id===st.cur){
             t.classList.add('ok'); st.n++;

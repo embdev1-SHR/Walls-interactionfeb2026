@@ -213,7 +213,7 @@ function buildRooms(){
 function say(item){
   /* The prompt is the object's name — the question "where does it go?" is
      already on screen and does not need repeating on every turn. */
-  if (WALL.voiceOn()) WALL.say(item.ml);
+  if (WALL.voiceOn()) WALL.say(item);
   if (window.GUIDE) GUIDE.say({ en: item.en, ml: item.ml });
 }
 

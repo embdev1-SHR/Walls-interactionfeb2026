@@ -103,7 +103,7 @@ TRIUP.start({
       var a=ANIMALS.all[st.cur.id];
       now.innerHTML='<img src="'+a.img+'" alt="">';
       api.pill(p,'sorted',st.done+' / '+TOTAL);
-      if(p===0&&WALL.voiceOn()) WALL.say(a.ml);
+      if(p===0&&WALL.voiceOn()) WALL.say(a);
     }
     function drop(pen){
       if(!st.cur) return;

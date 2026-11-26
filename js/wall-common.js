@@ -104,7 +104,9 @@
     size:    { en: 'SIZE',      ml: 'വലുപ്പം' },
     height:  { en: 'HEIGHT',    ml: 'ഉയരം' },
     reset:   { en: '↺ Restart', ml: '↺ വീണ്ടും' },
-    home:    { en: '🏠 Menu',   ml: '🏠 മെനു' }
+    pics:    { en: '🖼 Change pictures', ml: '🖼 ചിത്രങ്ങൾ മാറ്റാം' },
+    home:    { en: '🏠 Menu',   ml: '🏠 മെനു' },
+    volume:  { en: 'VOLUME',    ml: 'ശബ്ദം' }
   };
 
   var tbOpts = null;
@@ -118,7 +120,9 @@
     set('wallLang',  '🌐 ' + (S() ? S().lang().toUpperCase() : (state.ml ? 'ML' : 'EN')));
     set('wallVoice', t(TB_TEXT.voice));
     set('wallReset', t(TB_TEXT.reset));
+    set('wallPics',  t(TB_TEXT.pics));
     set('wallHome',  t(TB_TEXT.home));
+    set('wallBack',  t(TB_TEXT.back));
     // a page may pass its own menu label as {en, ml}
     if (tbOpts.menu) set('wallMenu', t(tbOpts.menu.label) || t(TB_TEXT.back));
     var caps = document.querySelectorAll('#wallToolbar .wall-tb-cap[data-cap]');
@@ -524,6 +528,13 @@
       '.wall-tb-row{display:flex;gap:5px}',
       '.wall-tb-row .wall-tb{flex:1;text-align:center;padding:7px 6px}',
       '.wall-tb-cap{font-size:9px;font-weight:800;color:#5d87a8;letter-spacing:.5px;text-align:center}',
+      'body.wall-edit-pics img{outline:6px dashed #ffb800!important;outline-offset:-6px;cursor:copy!important;pointer-events:auto!important;filter:none!important}',
+      '#wallPicsBar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483600;display:none;align-items:center;gap:20px;padding:12px 16px 12px 28px;',
+      '  border-radius:999px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.3);font:800 22px "Baloo 2",system-ui,sans-serif;color:#17245e}',
+      '#wallPicsBar button,#wallPicsPick button{border:0;border-radius:999px;padding:10px 22px;font:800 20px "Baloo 2",system-ui,sans-serif;cursor:pointer;background:#2fb344;color:#fff}',
+      '#wallPicsPick{position:fixed;z-index:2147483601;display:none;flex-direction:column;gap:10px;padding:14px;border-radius:22px;background:#fff;box-shadow:0 10px 36px rgba(0,0,0,.35)}',
+      '#wallPicsPick img{width:180px;height:180px;object-fit:cover;border-radius:14px;outline:none!important}',
+      '#wallPicsPick button[data-a=orig]{background:#8a97a6}#wallPicsPick button[data-a=x]{background:#eef2f6;color:#333}',
 
       /* ── FX ───────────────────────────────────────────────────── */
       '.wall-spark{position:fixed;pointer-events:none;z-index:900;border-radius:50%;',
@@ -578,9 +589,14 @@
 
     if (opts.menu)   html.push('<button class="wall-tb" id="wallMenu">' +
                                (t(opts.menu.label) || t(TB_TEXT.back)) + '</button>');
+    html.push('<button class="wall-tb" id="wallBack">' + t(TB_TEXT.back) + '</button>');
     if (opts.lang)   html.push('<button class="wall-tb" id="wallLang">🌐 ML</button>');
     if (opts.voice)  html.push('<button class="wall-tb" id="wallVoice">' +
                                t(TB_TEXT.voice) + '</button>');
+    if (S())         html.push('<div class="wall-tb-cap" data-cap="volume">' + t(TB_TEXT.volume) + '</div>',
+                               '<div class="wall-tb-row">' +
+                               '<button class="wall-tb" id="wallQuieter">🔈−</button>' +
+                               '<button class="wall-tb" id="wallLouder">🔊+</button></div>');
     if (opts.size)   html.push('<div class="wall-tb-cap" data-cap="size">' +
                                t(TB_TEXT.size) + '</div>',
                                '<div class="wall-tb-row">' +
@@ -591,6 +607,7 @@
                                '<div class="wall-tb-row">' +
                                '<button class="wall-tb" id="wallUp">⬆</button>' +
                                '<button class="wall-tb" id="wallDown">⬇</button></div>');
+    if (PICS.ok)     html.push('<button class="wall-tb" id="wallPics">' + t(TB_TEXT.pics) + '</button>');
     if (opts.reset)  html.push('<button class="wall-tb" id="wallReset">' +
                                t(TB_TEXT.reset) + '</button>');
     if (opts.home !== false)
@@ -620,9 +637,16 @@
       bindTouch(document.getElementById('wallUp'),   function () { bumpHeight(-1); });
       bindTouch(document.getElementById('wallDown'), function () { bumpHeight(1); });
     }
+    if (PICS.ok) bindTouch(document.getElementById('wallPics'), function () { close(); PICS.edit(true); });
     if (opts.reset) bindTouch(document.getElementById('wallReset'),
                               function () { close(); opts.reset(); });
     if (opts.home !== false) bindTouch(document.getElementById('wallHome'), home);
+    bindTouch(document.getElementById('wallBack'), function () { close(); back(); });
+    if (S()) {
+      var vol = function (d) { var v = Math.round((S().get().volume + d) * 10) / 10; S().setVoice({ volume: v }); tone(660, .08, 'sine', .1 * Math.max(.1, S().get().volume)); };
+      bindTouch(document.getElementById('wallQuieter'), function () { vol(-0.1); });
+      bindTouch(document.getElementById('wallLouder'),  function () { vol(0.1); });
+    }
 
     if (opts.heightTarget) heightTarget(opts.heightTarget);
 
@@ -642,7 +666,10 @@
     return new URLSearchParams(global.location.search).get(key);
   }
 
-  function home() { global.location.href = '../index.html'; }
+  function home() { try { sessionStorage.removeItem('auticareFromGroup'); } catch (e) {} global.location.href = '../index.html'; }
+  /* Back: to the submenu this activity was opened from (index.html reopens it) */
+  function back() { var g = ''; try { g = sessionStorage.getItem('auticareFromGroup') || ''; } catch (e) {}
+    global.location.href = '../index.html' + (g ? '?open=' + encodeURIComponent(g) : ''); }
 
   /** Shared across sec-name-id and sec-postman: the class name list. */
   var NAME_KEY = 'auticareWallNames';
@@ -655,6 +682,76 @@
   }
 
   var inited = false;
+  /* ═══════════════════════════════════════════════════════════════
+     OWN PICTURES — a teacher can replace any picture in an activity with
+     their own photo. ☰ → 🖼 Change pictures → tap a picture → choose a file.
+     The file is copied into this computer's app-data folder
+     (…/Auticare Blueroom Interactive/custom-pictures) with a map.json, and
+     from then on every page shows it wherever the original picture appears.
+     "Restore original" removes it. Nothing leaves the machine.
+     ═══════════════════════════════════════════════════════════════ */
+  var PICS = (function () {
+    var fs = null, pth = null, dir = '', map = {};
+    try { fs = require('fs'); pth = require('path'); var os = require('os');
+      var base = process.env.APPDATA || (process.platform === 'darwin' ? pth.join(os.homedir(), 'Library', 'Application Support') : pth.join(os.homedir(), '.config'));
+      dir = pth.join(base, 'Auticare Blueroom Interactive', 'custom-pictures');
+      fs.mkdirSync(dir, { recursive: true });
+      try { map = JSON.parse(fs.readFileSync(pth.join(dir, 'map.json'), 'utf8')) || {}; } catch (e) { map = {}; }
+    } catch (e) { fs = null; }
+    var ok = !!fs;
+    /* the original picture's path inside the app: assets/… or 3dmodels/… */
+    function keyOf(src) { if (!src) return ''; try { src = decodeURIComponent(src); } catch (e) {}
+      if (src.indexOf('custom-pictures') !== -1) return '';
+      var m = /(?:^|[\/\\])((?:assets|3dmodels)[\/\\][^?#]+)/.exec(src); return m ? m[1].replace(/\\/g, '/') : ''; }
+    function fileUrl(f) { return encodeURI('file:///' + pth.join(dir, f).replace(/\\/g, '/').replace(/^\/+/, '')) + '?v=' + (map.__v || 0); }
+    function apply(img) { if (!img || img.tagName !== 'IMG') return; var k = img.dataset.wallOrig || keyOf(img.getAttribute('src'));
+      if (!k) return;
+      /* dataset.wallSet remembers what we set, so our own change never re-triggers us */
+      if (map[k]) { if (!img.dataset.wallOrig) img.dataset.wallOrig = k; var u = fileUrl(map[k]); if (img.dataset.wallSet !== u) { img.dataset.wallSet = u; img.src = u; } }
+      else if (img.dataset.wallSet && img.dataset.wallOrigSrc) { delete img.dataset.wallSet; img.setAttribute('src', img.dataset.wallOrigSrc); } }
+    function applyAll(root) { if (!ok) return; [].forEach.call((root || document).querySelectorAll('img'), function (i) { if (!i.dataset.wallOrigSrc && keyOf(i.getAttribute('src'))) i.dataset.wallOrigSrc = i.getAttribute('src'); apply(i); }); }
+    function save() { map.__v = (map.__v || 0) + 1; try { fs.writeFileSync(pth.join(dir, 'map.json'), JSON.stringify(map, null, 1)); } catch (e) {} }
+    function setPic(k, file) { var ext = (/\.[a-z0-9]+$/i.exec(file.name || '') || ['.jpg'])[0].toLowerCase(), name = k.replace(/[^a-z0-9]+/gi, '_') + '_' + Date.now() + ext;
+      var done = function () { if (map[k]) { try { fs.unlinkSync(pth.join(dir, map[k])); } catch (e) {} } map[k] = name; save(); applyAll(); sfx.correct(); };
+      if (file.path) { try { fs.copyFileSync(file.path, pth.join(dir, name)); done(); return; } catch (e) {} }
+      var r = new FileReader(); r.onload = function () { try { fs.writeFileSync(pth.join(dir, name), Buffer.from(r.result)); done(); } catch (e) {} }; r.readAsArrayBuffer(file); }
+    function clearPic(k) { if (!map[k]) return; try { fs.unlinkSync(pth.join(dir, map[k])); } catch (e) {} delete map[k]; save();
+      [].forEach.call(document.querySelectorAll('img'), function (i) { if (i.dataset.wallOrig === k && i.dataset.wallOrigSrc) i.src = i.dataset.wallOrigSrc; }); sfx.tap(); }
+    /* edit mode */
+    var bar = null, picker = null, input = null, on = false;
+    function words(o) { return t(o); }
+    function edit(v) { on = v; document.body.classList.toggle('wall-edit-pics', v);
+      if (v && !bar) { bar = document.createElement('div'); bar.id = 'wallPicsBar'; document.body.appendChild(bar);
+        input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none'; document.body.appendChild(input);
+        picker = document.createElement('div'); picker.id = 'wallPicsPick'; document.body.appendChild(picker); }
+      if (bar) { bar.style.display = v ? 'flex' : 'none'; bar.innerHTML = '<span>' + words({ en: 'Tap a picture to change it', ml: 'മാറ്റാൻ ഒരു ചിത്രം തൊടൂ' }) + '</span><button id="wallPicsDone">✓ ' + words({ en: 'Done', ml: 'കഴിഞ്ഞു' }) + '</button>';
+        bar.querySelector('button').onclick = function () { edit(false); }; }
+      if (!v && picker) picker.style.display = 'none'; }
+    function choose(img) { var k = img.dataset.wallOrig || keyOf(img.dataset.wallOrigSrc || img.getAttribute('src')); if (!k) return;
+      var r = img.getBoundingClientRect(); picker.style.display = 'flex'; picker.style.left = Math.max(8, r.left) + 'px'; picker.style.top = Math.max(8, r.top) + 'px';
+      picker.innerHTML = '<img src="' + img.src + '"><button data-a="new">📷 ' + words({ en: 'Choose new picture', ml: 'പുതിയ ചിത്രം' }) + '</button>' +
+        (map[k] ? '<button data-a="orig">↺ ' + words({ en: 'Restore original', ml: 'പഴയ ചിത്രം' }) + '</button>' : '') + '<button data-a="x">✕</button>';
+      picker.onclick = function (e) { var b = e.target.closest('button'); if (!b) return; e.stopPropagation(); picker.style.display = 'none';
+        if (b.dataset.a === 'new') { input.value = ''; input.onchange = function () { if (input.files && input.files[0]) setPic(k, input.files[0]); }; input.click(); }
+        else if (b.dataset.a === 'orig') clearPic(k); }; }
+    /* while editing, a tap picks a picture and never reaches the activity */
+    ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'click'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) { if (!on) return;
+        if (e.target.closest && e.target.closest('#wallPicsBar,#wallPicsPick,#wallToolbar')) return;
+        e.stopPropagation(); if (e.cancelable) e.preventDefault(); if (ev !== 'click') return;
+        var el = e.target, img = el.tagName === 'IMG' ? el : (el.querySelector && el.querySelector('img'));
+        if (!img && el.closest) { var host = el.closest('div,button,figure,li'); img = host && host.querySelector('img'); }
+        if (img && !img.closest('#wallGuide,#wallToolbar')) choose(img); }, true); });
+    if (ok) { var start = function () { applyAll(); new MutationObserver(function (ms) { ms.forEach(function (m) {
+        if (m.type === 'attributes' && m.target.tagName === 'IMG') { var i = m.target, cur = i.getAttribute('src') || '';
+          if (cur === i.dataset.wallSet) return;                      // our own change
+          if (cur.indexOf('custom-pictures') === -1) { i.dataset.wallOrigSrc = cur; delete i.dataset.wallOrig; delete i.dataset.wallSet; } apply(i); }
+        else [].forEach.call(m.addedNodes, function (n) { if (n.nodeType === 1) { if (n.tagName === 'IMG') { if (!n.dataset.wallOrigSrc) n.dataset.wallOrigSrc = n.getAttribute('src'); apply(n); } else applyAll(n); } }); }); })
+        .observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] }); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start(); }
+    return { ok: ok, edit: edit, dir: dir };
+  })();
+
   function init() {
     if (inited) return;
     inited = true;

@@ -533,7 +533,10 @@ function initBg(){
 }
 
 function ttsSpeak(text, code, rate = 0.82, pitch = 1.15){
-  if(!audioEnabled || !speechSynthesis) return;
+  if(!audioEnabled) return;
+  /* the universal voice (WALL.say): the 🌐 language, volume, speed and pitch, and the ☰ voice switch */
+  if(window.WALL && WALL.say){ WALL.say(text); return; }
+  if(!speechSynthesis) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = code; u.rate = rate; u.pitch = pitch; u.volume = 1;

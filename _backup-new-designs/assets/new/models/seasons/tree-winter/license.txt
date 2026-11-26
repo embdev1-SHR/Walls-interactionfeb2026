@@ -1,0 +1,11 @@
+Model Information:
+* title:	Ginkgo Tree Winter
+* source:	https://sketchfab.com/3d-models/ginkgo-tree-winter-642e034cf2bf4b18bc1879035aeecbf6
+* author:	PuzzledPapaya (https://sketchfab.com/PuzzledPapaya)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Ginkgo Tree Winter" (https://sketchfab.com/3d-models/ginkgo-tree-winter-642e034cf2bf4b18bc1879035aeecbf6) by PuzzledPapaya (https://sketchfab.com/PuzzledPapaya) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,8 +1,9 @@
 {
   "animals/cat.jpg": {
-    "photographer": "Krishna Soni",
-    "url": "https://www.pexels.com/photo/close-up-of-a-stray-cat-14971365/",
-    "query": "indian street cat tabby"
+    "photographer": "Furkan  Aktaş",
+    "url": "https://www.pexels.com/photo/close-up-portrait-of-a-tabby-cat-sitting-outdoors-33135215/",
+    "query": "cat sitting portrait",
+    "chosen": "by eye"
   },
   "animals/cow.jpg": {
     "photographer": "SnipeShot",
@@ -32,9 +33,10 @@
     "query": "sheep standing close"
   },
   "animals/goat.jpg": {
-    "photographer": "Guillermo Berlin",
-    "url": "https://www.pexels.com/photo/young-goat-in-chascomus-park-setting-29721809/",
-    "query": "goat standing"
+    "photographer": "Md Shamim Shariar Sakil",
+    "url": "https://www.pexels.com/photo/portrait-of-a-brown-goat-standing-outdoors-34192054/",
+    "query": "goat standing farm",
+    "chosen": "by eye"
   },
   "animals/horse.jpg": {
     "photographer": "Adrian Roberts",
@@ -653,6 +655,36 @@
     "photographer": "Dario Moscato",
     "url": "https://www.pexels.com/photo/a-young-girl-in-knitted-sweater-7860729/",
     "query": "child combing hair",
+    "chosen": "by eye"
+  },
+  "animals/dog.jpg": {
+    "photographer": "Dorte Fjalland",
+    "url": "https://www.pexels.com/photo/black-and-white-short-coat-dog-closeup-photography-179221/",
+    "query": "indian dog sitting",
+    "chosen": "by eye"
+  },
+  "animals/elephant.jpg": {
+    "photographer": "Wolfgang Weiser",
+    "url": "https://www.pexels.com/photo/elefantenidylle-27964877/",
+    "query": "asian elephant",
+    "chosen": "by eye"
+  },
+  "animals/lion.jpg": {
+    "photographer": "Balazs Simon",
+    "url": "https://www.pexels.com/photo/portrait-of-lion-15994118/",
+    "query": "lion male portrait",
+    "chosen": "by eye"
+  },
+  "animals/monkey.jpg": {
+    "photographer": "Alvin Chin",
+    "url": "https://www.pexels.com/photo/close-up-portrait-of-a-long-tailed-macaque-in-singapore-34034188/",
+    "query": "macaque monkey",
+    "chosen": "by eye"
+  },
+  "animals/rabbit.jpg": {
+    "photographer": "Jay Brand",
+    "url": "https://www.pexels.com/photo/young-wild-rabbit-in-canonsburg-pennsylvania-33012107/",
+    "query": "white rabbit grass",
     "chosen": "by eye"
   }
 }

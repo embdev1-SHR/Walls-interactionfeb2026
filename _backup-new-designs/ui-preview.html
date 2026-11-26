@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  Blueroom UI preview — the new look, in ONE page, for review in Live Server
+================================================================================
+  Open with VS Code Live Server from the repo root:  /ui-preview.html
+  The wall is ONE 5780×1080 screen shared by several children. This page lays
+  out at exactly that size and scales it to your window. On the wall it is 1:1.
+
+  · Every LEVEL has its own look (scene, panels, signs, path, stops).
+  · Every STOP on a path is its own game — no two stops play the same way.
+  · Scenery is flat vector SVG, composed per scene: unique landmarks, no
+    rows of copies.
+  · Content is real: Pexels photos, 3D models, animal/vehicle/instrument
+    sounds, the app's translations and baked voices.
+  · Nothing tappable in the top 30%; a wrong tap only wiggles; one universal
+    control (☰, right-middle, draggable).
+  Query: ?lang=en|hi|ml|kn   ?go=<activity key> opens one activity directly
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+/* Any error is shown on screen, so a page that "does nothing" on another device says why. */
+window.onerror = function (msg, src, line) {
+  var b = document.getElementById('err') || document.documentElement.appendChild(document.createElement('div'));
+  b.id = 'err'; b.style.cssText = 'position:fixed;left:10px;right:10px;bottom:10px;z-index:2147483647;background:#b00020;color:#fff;font:16px/1.4 sans-serif;padding:12px 16px;border-radius:10px;white-space:pre-wrap';
+  b.textContent += 'Problem: ' + msg + (line ? '  (line ' + line + ')' : '') + '\n';
+};
+</script>
+<title>Blueroom UI Preview</title>
+<script type="importmap">{ "imports": { "three": "./js/vendor/three/build/three.module.min.js" } }</script>
+<script type="module" src="js/vendor/model-viewer.min.js"></script>
+<link rel="stylesheet" href="js/play/play.css">
+</head>
+<body>
+<div id="start">
+  <h1>Auticare Blueroom</h1>
+  <p>New look preview · drawn for the 5780 × 1080 wall</p>
+  <button id="startBtn" type="button">▶ Tap to start</button>
+  <small>Goes full screen. If nothing happens when you tap, open this file in Google Chrome or Microsoft Edge (not a file preview).</small>
+</div>
+<div id="scroller"><div id="frame">
+<div id="stage">
+  <svg width="0" height="0" style="position:absolute"><defs>
+    <linearGradient id="gStar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff38a"/><stop offset=".55" stop-color="#ffc928"/><stop offset="1" stop-color="#ff9a0d"/></linearGradient>
+    <symbol id="starSym" viewBox="-60 -60 120 120" overflow="visible"><path d="M0,-50 L14,-17 L49,-15 L22,8 L30,44 L0,25 L-30,44 L-22,8 L-49,-15 L-14,-17 Z"/></symbol>
+  </defs></svg>
+  <div class="scene" id="sceneA"></div><div class="scene" id="sceneB" style="opacity:0"></div>
+  <div id="content"></div>
+  <div id="owly"><img src="assets/avatar/owly-happy.png" alt=""></div>
+  <div id="bubble"></div>
+</div>
+</div></div>
+<div id="ui">
+  <div id="dock">
+    <div id="panel">
+      <div class="r"><button class="btn warm" data-act="back">◀ <span data-t="back"></span></button><button class="btn" data-act="home" style="flex:0 0 140px">🏠</button></div>
+      <div class="cap" data-t="lang"></div>
+      <div class="r"><button class="lang" data-lang="en">EN</button><button class="lang" data-lang="hi">हिन्दी</button><button class="lang" data-lang="ml">മലയാളം</button><button class="lang" data-lang="kn">ಕನ್ನಡ</button></div>
+      <div class="step"><button class="sq" data-act="up">▲</button><b data-t="height"></b><button class="sq" data-act="down">▼</button></div>
+      <div class="step"><button class="sq" data-act="smaller">−</button><b data-t="size"></b><button class="sq" data-act="bigger">+</button></div>
+      <div class="step"><button class="sq" data-act="quieter">🔈</button><b data-t="volume"></b><button class="sq" data-act="louder">🔊</button></div>
+      <div class="r"><button class="lang" data-act="full">⛶ <span data-t="full"></span></button><button class="lang" data-act="view">↔ <span data-t="view"></span></button></div>
+    </div>
+    <div id="knob">☰</div>
+  </div>
+</div>
+<script src="js/i18n-data.js"></script>
+<script src="js/wall-settings.js"></script>
+<script src="js/voice-manifest.js"></script>
+<script src="js/voice-clips.js"></script>
+<script src="js/menu-data.js"></script>
+<script src="js/animal-data.js"></script>
+<script src="js/play/engine.js"></script>
+<script type="module" src="js/play/scenes3d.js"></script>
+</body>
+</html>

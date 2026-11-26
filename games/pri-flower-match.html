@@ -100,7 +100,7 @@ TRIUP.start({
     function flip(t,f){
       if(st.busy||!t.classList.contains('down'))return;
       t.classList.remove('down'); WALL.sfx.tap();
-      if(p===0&&WALL.voiceOn()) WALL.say(f.label.ml);
+      if(p===0&&WALL.voiceOn()) WALL.say(f.label);
       if(!st.first){ st.first={t:t,f:f}; return; }
       if(st.first.t===t) return;
       if(st.first.f.id===f.id){

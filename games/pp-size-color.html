@@ -99,7 +99,7 @@ TRIUP.start({
     body.appendChild(obj); body.appendChild(lead); body.appendChild(bins);
     BINS.forEach(function(b){
       var d=document.createElement('div'); d.className='bin'; d.dataset.k=b.k;
-      d.textContent=b.ml;
+      d.textContent=WALL.t(b);
       WALL.bindTouch(d,function(){ drop(d,b.k); });
       bins.appendChild(d);
     });
@@ -111,7 +111,7 @@ TRIUP.start({
       obj.textContent=st.cur.em;
       lead.textContent=st.cur.ml;
       api.pill(p,'sorted',st.done+' / '+OBJ.length);
-      if(p===0&&WALL.voiceOn()) WALL.say(st.cur.ml);
+      if(p===0&&WALL.voiceOn()) WALL.say(st.cur);
     }
     function drop(d,k){
       if(!st.cur) return;

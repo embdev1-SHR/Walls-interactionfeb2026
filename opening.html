@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--
+  opening.html — the one-time opening: a virtual ribbon across the wall.
+  Press the button, the ribbon is cut, confetti, then the opening video plays
+  once and the app goes on to the menu. Shown only the first time
+  (localStorage 'auticareOpened'); login.html sends here until then.
+  Add ?again=1 to show it again.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Opening</title>
+<style>
+@font-face{font-family:'Baloo 2';src:url(assets/fonts/Baloo2.ttf);font-weight:400 800}
+html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#1e5fa8,#0b2246 75%);font-family:'Baloo 2',sans-serif;color:#fff}
+#title{position:absolute;left:0;right:0;top:8vh;text-align:center;font-size:9vh;font-weight:800;text-shadow:0 .8vh 0 rgba(0,0,0,.3)}
+#sub{position:absolute;left:0;right:0;top:20vh;text-align:center;font-size:4vh;opacity:.85}
+.post{position:absolute;top:30vh;width:3vh;height:62vh;border-radius:1vh;background:linear-gradient(90deg,#c9a24a,#ffe08a,#b88a2a)}
+.post.l{left:6vh}.post.r{right:6vh}
+.half{position:absolute;top:44vh;height:14vh;width:50%;background:linear-gradient(180deg,#ff4d6d,#d4143c 55%,#a50d2c);box-shadow:0 1vh 2vh rgba(0,0,0,.35);transition:transform 1.4s cubic-bezier(.5,0,.3,1)}
+.half::after{content:"";position:absolute;top:2vh;bottom:2vh;left:0;right:0;border-top:.5vh dashed rgba(255,230,160,.8);border-bottom:.5vh dashed rgba(255,230,160,.8)}
+.half.l{left:0;transform-origin:0 50%}.half.r{right:0;transform-origin:100% 50%}
+.cut .half.l{transform:rotate(-14deg) translateX(-40%) scaleX(.6)}
+.cut .half.r{transform:rotate(14deg) translateX(40%) scaleX(.6)}
+#bow{position:absolute;left:50%;top:39vh;width:26vh;height:24vh;transform:translateX(-50%);transition:transform 1s,opacity 1s}
+.cut #bow{transform:translateX(-50%) translateY(60vh) rotate(40deg);opacity:0}
+#btn{position:absolute;left:50%;top:70vh;transform:translateX(-50%);border:0;border-radius:8vh;padding:3vh 9vh 3.6vh;font:800 6vh 'Baloo 2',sans-serif;color:#3d2410;
+  background:linear-gradient(180deg,#ffe36a,#ffb01f);box-shadow:0 1.4vh 0 #b37400,0 2.4vh 4vh rgba(0,0,0,.4);cursor:pointer;animation:pulse 1.4s ease-in-out infinite}
+#btn:active{transform:translateX(-50%) translateY(1vh)}
+@keyframes pulse{50%{box-shadow:0 1.4vh 0 #b37400,0 0 0 3vh rgba(255,210,63,.25)}}
+.cut #btn{display:none}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none}
+#skip{position:absolute;right:3vh;bottom:3vh;border:0;border-radius:4vh;padding:1.4vh 4vh;font:700 3vh 'Baloo 2',sans-serif;background:rgba(255,255,255,.85);color:#222;display:none;cursor:pointer;z-index:5}
+.c{position:absolute;top:-4vh;width:1.6vh;height:3vh;border-radius:.4vh}
+</style>
+</head>
+<body>
+<div id="title">Auticare Blue Room</div>
+<div id="sub">Bethany Jeevan Jyothi</div>
+<div class="post l"></div><div class="post r"></div>
+<div class="half l"></div><div class="half r"></div>
+<svg id="bow" viewBox="0 0 200 180"><path d="M100,90 C60,20 0,30 10,80 C20,120 70,110 100,90Z M100,90 C140,20 200,30 190,80 C180,120 130,110 100,90Z" fill="#ff3d63" stroke="#a50d2c" stroke-width="6"/>
+  <path d="M100,90 L70,175 L88,160 L100,175 Z M100,90 L130,175 L112,160 L100,175Z" fill="#d4143c"/><circle cx="100" cy="90" r="20" fill="#ffd23f" stroke="#b37400" stroke-width="6"/></svg>
+<button id="btn">✂ Cut the ribbon</button>
+<video id="video" src="assets/video/opening.mp4" playsinline preload="auto"></video>
+<button id="skip">Skip ▶</button>
+<script>
+(function () {
+  var done = function () { try { localStorage.setItem('auticareOpened', '1'); } catch (e) {} location.href = 'index.html'; };
+  var ac = null; function tone(f, d, dl) { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); var t = ac.currentTime + (dl || 0), o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.15, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d); } catch (e) {} }
+  function confetti() { var cols = ['#ff6b6b', '#ffcf3d', '#5ab8ff', '#7bd86b', '#c486ff', '#ff9f43'];
+    for (var i = 0; i < 160; i++) { var c = document.createElement('div'); c.className = 'c'; c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % 6];
+      c.style.transition = 'transform ' + (2.5 + Math.random() * 2) + 's cubic-bezier(.3,.6,.6,1), opacity 1s 3s'; document.body.appendChild(c);
+      (function (c) { requestAnimationFrame(function () { requestAnimationFrame(function () { c.style.transform = 'translate(' + (Math.random() - .5) * 30 + 'vw,110vh) rotate(' + Math.random() * 900 + 'deg)'; c.style.opacity = 0; }); }); })(c); } }
+  document.getElementById('btn').addEventListener('click', function () {
+    document.body.classList.add('cut'); [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone(f, .5, i * .1); }); confetti();
+    setTimeout(function () { var v = document.getElementById('video'), sk = document.getElementById('skip'); v.style.display = 'block'; sk.style.display = 'block';
+      v.addEventListener('ended', done); v.addEventListener('error', done); sk.addEventListener('click', done);
+      var p = v.play(); if (p && p.catch) p.catch(function () { v.muted = true; v.play().catch(done); }); }, 3200);
+  });
+})();
+</script>
+</body>
+</html>

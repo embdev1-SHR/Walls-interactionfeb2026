@@ -1,0 +1,11 @@
+Model Information:
+* title:	leave in forest - autumn scene - 3d scan
+* source:	https://sketchfab.com/3d-models/leave-in-forest-autumn-scene-3d-scan-b24b7084fe4c45309e5254e7762b2a1a
+* author:	Marco Fischer (https://sketchfab.com/a2e)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "leave in forest - autumn scene - 3d scan" (https://sketchfab.com/3d-models/leave-in-forest-autumn-scene-3d-scan-b24b7084fe4c45309e5254e7762b2a1a) by Marco Fischer (https://sketchfab.com/a2e) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

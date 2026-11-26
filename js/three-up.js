@@ -110,7 +110,42 @@
       '.tu-pick-row{display:flex;gap:2.4vw;flex-wrap:wrap;justify-content:center}',
       '.tu-pick-b{border:0;border-radius:22px;color:#fff;cursor:pointer;font-weight:900;',
       '  padding:3.4vh 5.2vw;font-size:clamp(17px,3.4vw,30px);box-shadow:0 8px 0 rgba(0,0,0,.13)}',
-      '.tu-pick-b:active{transform:translateY(3px);box-shadow:0 5px 0 rgba(0,0,0,.13)}'
+      '.tu-pick-b:active{transform:translateY(3px);box-shadow:0 5px 0 rgba(0,0,0,.13)}',
+      /* ── QUIZ LOOK (mild): the menu's painted landscape behind, each player on a
+         white rounded card, answers as pastel tiles with A B C D badges, the name
+         on a white tag, and a green tick on the right one ── */
+      'body{background:url(../assets/new/menu/menu-bg.jpg) center 38%/cover fixed,#7ec4f0!important}',
+      '.wall-backdrop{display:none!important}',
+      '.tu-wrap{padding:14px 10px;gap:14px}',
+      '.tu-div{display:none}',
+      '.tu-panel{border-radius:34px;background:transparent}',
+      /* the white card sits behind the question and the answers only, so the landscape shows around it */
+      '.tu-body>.row{background:rgba(255,255,255,.93);border-radius:30px;padding:30px 26px 18px;box-shadow:0 8px 0 rgba(30,70,130,.16),0 16px 34px rgba(20,50,100,.22);width:auto!important;max-width:100%}',
+      '.tu-body>.lead,.tu-body>.leadml{background:rgba(255,255,255,.93);border-radius:999px;padding:.6vh 3vh;box-shadow:0 5px 0 rgba(30,70,130,.14)}',
+      '.tu-hdr .tu-name{background:#fff;border-radius:999px;padding:2px 14px;box-shadow:0 3px 0 rgba(0,0,0,.08)}',
+      '.tu-hint{background:rgba(255,255,255,.85);border-radius:999px;margin:0 auto 6px;padding:4px 18px;width:max-content;max-width:90%;color:#17245e}',
+      '.tu-banner{height:10px;border-radius:34px 34px 0 0}',
+      '.tu-hdr{background:transparent;border-bottom:0}',
+      '.tu-pill{border-radius:999px;background:#fff;box-shadow:0 3px 0 rgba(0,0,0,.08)}',
+      '.tu-pick{background:url(../assets/new/menu/menu-bg.jpg) center 38%/cover}',
+      '.tu-pick h2{background:rgba(255,255,255,.92);padding:1.2vh 4vh;border-radius:999px;box-shadow:0 6px 0 rgba(0,0,0,.1)}',
+      '.tu-body .lead{color:#17245e!important}',
+      '.tu-body>.row{counter-reset:opt}',
+      '.tu-body>.row>.tile{counter-increment:opt;overflow:visible!important;border-radius:22px!important;border-width:4px!important;padding:6px 6px 0}',
+      '.tu-body>.row>.tile::before{content:counter(opt,upper-alpha);position:absolute;top:-14px;left:50%;transform:translateX(-50%);z-index:3;',
+      '  min-width:30px;padding:1px 8px;border-radius:9px;color:#fff;font-weight:900;font-size:clamp(12px,calc(var(--tu-tile,88px) * .11),24px);text-align:center;background:#4f7bff}',
+      '.tu-body>.row>.tile:nth-child(4n+1){background:#e3f1ff!important;border-color:#8cc2ff!important}',
+      '.tu-body>.row>.tile:nth-child(4n+2){background:#fff4d6!important;border-color:#f6cd5d!important}',
+      '.tu-body>.row>.tile:nth-child(4n+3){background:#e4f8e2!important;border-color:#8fd884!important}',
+      '.tu-body>.row>.tile:nth-child(4n+4){background:#ffe6f1!important;border-color:#f3a1c6!important}',
+      '.tu-body>.row>.tile:nth-child(4n+2)::before{background:#5b7cf0}',
+      '.tu-body>.row>.tile:nth-child(4n+3)::before{background:#1e9a8a}',
+      '.tu-body>.row>.tile:nth-child(4n+4)::before{background:#7a5cf0}',
+      '.tu-body>.row>.tile>img{border-radius:16px}',
+      '.tu-body>.row>.tile .cap{background:#fff!important;border-radius:999px;margin:4px auto 6px;width:max-content;max-width:92%;padding:2px 12px!important;color:#17245e!important}',
+      '.tu-body>.row>.tile.ok{border-color:#2fb344!important;background:#dff7da!important;box-shadow:0 0 0 4px rgba(47,179,68,.3)!important}',
+      '.tu-body>.row>.tile.ok::after{content:"\\2713";position:absolute;top:-16px;right:-16px;width:38px;height:38px;border-radius:50%;background:#2fb344;color:#fff;',
+      '  font-weight:900;font-size:24px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;z-index:4}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -319,7 +354,7 @@
       wrap.appendChild(panel.root);
     }
     document.body.appendChild(wrap);
-    if (global.WALL && cfg.toolbar !== false) WALL.toolbar(cfg.toolbar || {});
+    if (global.WALL && cfg.toolbar !== false) WALL.toolbar(tbOpts());
     /* Each panel's content is built independently, so touches in one
        never reach another — no pointer-id bookkeeping needed. */
     for (var q = 0; q < n; q++) cfg.build(q, panels[q].body, api);
@@ -327,6 +362,9 @@
     if (cfg.onReady) cfg.onReady(api);
   }
 
+  /* every 3-panel page gets the full universal controls: language, voice and
+     height, plus whatever the page itself asks for */
+  function tbOpts() { var o = { lang: true, voice: true, height: true }, c = cfg.toolbar || {}; for (var k in c) o[k] = c[k]; return o; }
   function chooser() {
     var box = document.createElement('div');
     box.className = 'tu-pick';
@@ -345,6 +383,9 @@
     });
     box.appendChild(h); box.appendChild(row);
     document.body.appendChild(box);
+    /* the universal controls (Back, Menu, language, sound) from the first screen,
+       not only after a player count is chosen */
+    if (global.WALL && cfg.toolbar !== false) WALL.toolbar(tbOpts());
   }
 
   var TRIUP = {

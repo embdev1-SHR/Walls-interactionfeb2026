@@ -95,7 +95,7 @@ TRIUP.start({
       grid.innerHTML='';
       sh(HOUSES).forEach(function(h){
         var t=document.createElement('div'); t.className='tile big';
-        t.innerHTML='<img src="'+h.img+'" alt=""><div class="cap">'+h.ml+'</div>';
+        t.innerHTML='<img src="'+h.img+'" alt=""><div class="cap">'+WALL.t(h)+'</div>';
         WALL.bindTouch(t,function(){
           if(h.id===want.id){
             t.classList.add('ok'); st.n++;
@@ -106,7 +106,7 @@ TRIUP.start({
         });
         grid.appendChild(t);
       });
-      if(p===0&&WALL.voiceOn()) WALL.say(want.clue.ml);
+      if(p===0&&WALL.voiceOn()) WALL.say(want.clue);
     }
     function start(){ st.order=sh(HOUSES); st.n=0; deal(); }
     start();

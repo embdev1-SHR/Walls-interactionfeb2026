@@ -327,9 +327,9 @@ body > *:not(#wallToolbar):not(script):not(style):not(link) {
       function pronounceCurrent() {
         const item = getData()[currentIdx];
         if (lang === 'en') {
-          TTSEngine.speak(item.upper, 'en', item.word);
+          (window.WALL && WALL.say ? WALL.say(item.upper) : TTSEngine.speak(item.upper, 'en', item.word));
         } else {
-          TTSEngine.speak(item.letter, 'ml', item.word);
+          (window.WALL && WALL.say ? WALL.say(item.letter) : TTSEngine.speak(item.letter, 'ml', item.word));
         }
         soundBtn.classList.add('playing');
         setTimeout(() => soundBtn.classList.remove('playing'), 600);

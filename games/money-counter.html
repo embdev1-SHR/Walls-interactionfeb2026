@@ -471,6 +471,8 @@ function getBestVoice() {
 }
 function speak(txt, cb) {
   if (!txt) return;
+  /* the universal voice (WALL.say): the 🌐 language, volume, speed and pitch, and the ☰ voice switch */
+  if (window.WALL && WALL.say) { WALL.say(txt); if (cb) setTimeout(cb, 500 + String(txt).length * 75); return; }
   synth.cancel();
   const u = new SpeechSynthesisUtterance(txt);
   const v = getBestVoice(); if (v) u.voice = v;

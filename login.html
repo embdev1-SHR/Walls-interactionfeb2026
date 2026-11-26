@@ -488,7 +488,7 @@ document.getElementById('pick-guest').onclick = () => {
   Session.set({ mode:'guest', submode:null, token:null,
     center: LICENSE ? LICENSE.center : null,
     classId:null, className:null, studentId:null, studentName:null });
-  location.href = 'index.html';
+  location.href = (function () { try { return localStorage.getItem('auticareOpened') ? 'index.html' : 'opening.html'; } catch (e) { return 'index.html'; } })();   /* one-time ribbon-cutting opening */
 };
 document.getElementById('pick-online').onclick = () => { setErr('login-err',''); show('screen-login'); };
 
@@ -528,7 +528,7 @@ document.getElementById('pick-class-mode').onclick = async () => {
     classId: draft.classId, className: draft.className, studentId:null, studentName:null,
     sessionId: newSessionId(), deviceId: LICENSE.deviceId });
   await Session.startLiveSession();
-  location.href = 'index.html';
+  location.href = (function () { try { return localStorage.getItem('auticareOpened') ? 'index.html' : 'opening.html'; } catch (e) { return 'index.html'; } })();   /* one-time ribbon-cutting opening */
 };
 document.getElementById('pick-individual-mode').onclick = async () => {
   setErr('student-err','');
@@ -559,7 +559,7 @@ document.getElementById('btn-student').onclick = async () => {
     studentId: sel.value, studentName,
     sessionId: newSessionId(), deviceId: LICENSE.deviceId });
   await Session.startLiveSession();
-  location.href = 'index.html';
+  location.href = (function () { try { return localStorage.getItem('auticareOpened') ? 'index.html' : 'opening.html'; } catch (e) { return 'index.html'; } })();   /* one-time ribbon-cutting opening */
 };
 
 // DEV: Ctrl+Shift+R clears activation

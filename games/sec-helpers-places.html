@@ -97,7 +97,7 @@ TRIUP.start({
       grid.innerHTML='';
       HELPERS.forEach(function(h){
         var t=document.createElement('div'); t.className='tile sq';
-        t.innerHTML='<img src="'+h.img+'" alt=""><div class="cap">'+h.ml+'</div>';
+        t.innerHTML='<img src="'+h.img+'" alt=""><div class="cap">'+WALL.t(h)+'</div>';
         WALL.bindTouch(t,function(){
           if(st.met[h.k])return; st.met[h.k]=1; t.classList.add('ok');
           api.pill(p,'met',Object.keys(st.met).length+' / '+HELPERS.length);
@@ -116,13 +116,13 @@ TRIUP.start({
     function nextMatch(){
       if(!st.queue.length) return api.win(p,{title:{en:'All matched!',ml:'\u0d0e\u0d32\u0d4d\u0d32\u0d3e\u0d02 \u0d1a\u0d47\u0d7c\u0d24\u0d4d\u0d24\u0d41!'},onAgain:meet});
       var h=st.queue.shift();
-      lead.textContent=h.ml+' \u0d0e\u0d35\u0d3f\u0d1f\u0d46?';
+      lead.textContent=WALL.t({en:'Where is the '+h.en.toLowerCase()+'?',ml:h.ml+' \u0d0e\u0d35\u0d3f\u0d1f\u0d46?'});
       var keys=sh(Object.keys(PLACES).filter(function(k){return k!==h.place;})).slice(0,2);
       grid.innerHTML='';
       sh([h.place].concat(keys)).forEach(function(k){
         var pl=PLACES[k];
         var t=document.createElement('div'); t.className='tile sq';
-        t.innerHTML='<img src="'+pl.img+'" alt=""><div class="cap">'+pl.ml+'</div>';
+        t.innerHTML='<img src="'+pl.img+'" alt=""><div class="cap">'+WALL.t(pl)+'</div>';
         WALL.bindTouch(t,function(){
           if(k===h.place){ t.classList.add('ok'); st.done++;
             api.pill(p,'matched',st.done+' / '+HELPERS.length);
@@ -132,7 +132,7 @@ TRIUP.start({
         });
         grid.appendChild(t);
       });
-      if(p===0&&WALL.voiceOn()) WALL.say(h.ml);
+      if(p===0&&WALL.voiceOn()) WALL.say(h);
     }
     meet();
   }

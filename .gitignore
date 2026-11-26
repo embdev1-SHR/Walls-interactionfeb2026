@@ -16,3 +16,7 @@ release/
 release.zip
 release (*).zip
 Auticare-*.zip
+
+# Jupyter notebooks (may hold tokens)
+*.ipynb
+_originals/

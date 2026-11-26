@@ -219,6 +219,7 @@ gameCards.forEach(card => {
 });
 
 function handleOptionTap(option) {
+    try { sessionStorage.setItem('auticareFromGroup', option._parentKey || ''); } catch (e) {}
     playSound('click');
     closeSubmenu();
     setTimeout(() => loadGame(option.game), 300);
@@ -678,3 +679,17 @@ document.addEventListener('touchstart', (event) => {
         ring.addEventListener('animationend', () => ring.remove());
     }
 }, { passive: true });
+
+/* Back from an activity (index.html?open=<submenu>): straight to that submenu, no loading screen */
+(function () {
+    const m = /[?&]open=([a-z0-9-]+)/.exec(location.search);
+    if (!m || !CATEGORIES[m[1]]) return;
+    const open = () => {
+        const ld = document.getElementById('loading-screen'), mm = document.getElementById('main-menu');
+        if (ld) ld.style.display = 'none';
+        if (mm) { mm.style.display = 'flex'; mm.style.opacity = '1'; }
+        document.querySelectorAll('.card-stagger').forEach(c => c.classList.add('show'));
+        showSubmenu(m[1]);
+    };
+    if (document.readyState === 'complete') open(); else window.addEventListener('load', open);
+})();

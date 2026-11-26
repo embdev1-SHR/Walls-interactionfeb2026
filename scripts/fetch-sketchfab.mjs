@@ -39,7 +39,7 @@
  * the installer. Prefer a simple model that loads instantly on a wall PC.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, statSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { relative, join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 /* decodeURIComponent is load-bearing. `import.meta.url` is a file: URL, so the
@@ -52,7 +52,7 @@ const MDL = join(ROOT, 'assets', 'new', 'models');
 const CREDITS = join(MDL, 'credits.json');
 
 /** Anything bigger than this is not worth the install size on a wall PC. */
-const MAX_MB = 18;
+const MAX_MB = +(process.env.MAX_MB || 18);   // MAX_MB=45 for a deliberately large environment
 
 /** Licences we can actually honour.
  *
@@ -100,6 +100,21 @@ const WANT = {
   'animals/goat.glb':         'uid:15692d6248564a19bf2514ce2344ce70',
   'animals/cat.glb':          'uid:51cc3bfb49b64128aa54ffa29f36d8c1',
   'animals/dog.glb':          'uid:e395f26615ca445ab32f01ded17ff3bf',
+
+  /* 3D & Play: My Body (one child, not a pack) and the Traffic Light crossing */
+  'body/boy.glb':             'uid:1a6f93e9076b49cea4bb777a913b4bdd',
+  'street/traffic-light.glb': 'uid:19a176596eb94d5e832cd12083a1cd4c',
+
+  /* Seasons Explorer: one realistic scanned tree in its seasons, and real ground scans */
+  'seasons/tree-summer.glb':  'uid:2aa9348064c243f8b1f67ba73707c45e',
+  'seasons/tree-autumn.glb':  'uid:b3313ffda86a46a8b16a83de1bdb155a',
+  'seasons/tree-winter.glb':  'uid:642e034cf2bf4b18bc1879035aeecbf6',
+  'seasons/ground.glb':       'uid:c6e70b4e68bb44d28f24221b05ddedf4',
+  'seasons/leaves.glb':       'uid:b24b7084fe4c45309e5254e7762b2a1a',
+
+  /* Traffic: a realistic road with a zebra crossing and sidewalks, and a street of buildings */
+  'street/road.glb':          'uid:3260e3fef3434939bc8df94a0a15ead3',
+  'street/buildings.glb':     'uid:370ca970f4cd4c638f95fe17617d0bc1',
 };
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -154,9 +169,13 @@ function choose(results) {
  */
 function unpack(zipPath, outDir) {
   mkdirSync(outDir, { recursive: true });
-  execFileSync('powershell', ['-NoProfile', '-Command',
-    `Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${outDir}' -Force`],
-    { stdio: 'pipe' });
+  if (process.platform === 'win32') {
+    execFileSync('powershell', ['-NoProfile', '-Command',
+      `Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${outDir}' -Force`],
+      { stdio: 'pipe' });
+  } else {
+    execFileSync('unzip', ['-o', '-q', zipPath, '-d', outDir], { stdio: 'pipe' });   // macOS / Linux
+  }
   rmSync(zipPath, { force: true });
 
   const walk = (d, out = []) => {
@@ -169,7 +188,7 @@ function unpack(zipPath, outDir) {
   };
   const files = walk(outDir);
   const entry = files.find((f) => /\.(glb|gltf)$/i.test(f));
-  return entry ? entry.replace(MDL + '\\', '').replace(/\\/g, '/') : null;
+  return entry ? relative(MDL, entry).replace(/\\/g, '/') : null;   // relative on Windows and macOS alike
 }
 
 /**

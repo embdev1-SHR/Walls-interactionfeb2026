@@ -544,7 +544,7 @@ function sayPraise() {
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     praiseUntil = now + 1100;
     var list = isMl ? PRAISE_ML : PRAISE_EN;
-    TTSEngine.speak(list[praiseIdx++ % list.length], isMl ? 'ml' : 'en', null);
+    (window.WALL && WALL.say ? WALL.say(list[praiseIdx++ % list.length]) : TTSEngine.speak(list[praiseIdx++ % list.length], isMl ? 'ml' : 'en', null));
   } catch (e) {}
 }
 function sfxCelebrate() {
@@ -568,7 +568,7 @@ function say(item) {
   try {
     if (typeof TTSEngine === 'undefined') return;
     if (window.speechSynthesis && window.speechSynthesis.speaking) return;
-    TTSEngine.speak(isMl ? item.ml : item.en, isMl ? 'ml' : 'en', null);
+    (window.WALL && WALL.say ? WALL.say(isMl ? item.ml : item.en) : TTSEngine.speak(isMl ? item.ml : item.en, isMl ? 'ml' : 'en', null));
   } catch (e) {}
 }
 

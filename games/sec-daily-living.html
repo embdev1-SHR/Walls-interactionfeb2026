@@ -123,7 +123,7 @@ TRIUP.start({
       var WASH = st.r.steps;
       cover.src = st.r.cover;
       lead.textContent = st.r.ml;
-      if (p===0 && WALL.voiceOn()) WALL.say(st.r.ml);
+      if (p===0 && WALL.voiceOn()) WALL.say(st.r);
       api.pill(p,'step','0 / '+WASH.length);
       slots.innerHTML=''; rack.innerHTML='';
       WASH.forEach(function(_,i){
