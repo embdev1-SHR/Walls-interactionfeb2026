@@ -45,6 +45,7 @@
     'secondary':           { name: { en: 'Secondary', ml: 'സെക്കൻഡറി' }, desc: 'Big steps' },
     'vocational':          { name: { en: 'Vocational', ml: 'തൊഴിൽപരിചയം' }, desc: 'Work skills' },
     'kannada':             { name: { en: 'Kannada', ml: 'കന്നഡ' }, desc: 'ಕನ್ನಡ' },
+    'facp':                { name: { en: 'FACP', ml: 'FACP' }, desc: 'Interactive Session' },
     'money-counter':       { name: { en: 'Money Counter', ml: 'പണം എണ്ണാം' }, desc: 'Shopping' },
     'shape-sorter':        { name: { en: 'Shape Sorter', ml: 'ആകൃതികൾ' }, desc: 'Shapes & colours' },
     'video-360-player':    { name: { en: '360° Videos', ml: '360° വീഡിയോ' }, desc: 'Watch' }

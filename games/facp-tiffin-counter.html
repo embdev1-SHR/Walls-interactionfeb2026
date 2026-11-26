@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  Tiffin Counter - FACP interactive session - Pangappara Blueroom
+================================================================================
+  Occupational domain - multi-rule assembly: serve exactly the South Indian order on the banana leaf.
+  1/2/3 players (three-up.js); universal voice, 4 languages and the ☰ toolbar
+  come from wall-common.js. Shared FACP helpers: js/facp-kit.js.
+  Pictures: assets/new/images/facp/ (drawn by scripts/gen-pictures.js from
+  scripts/facp-pictures.json; teachers can swap any of them with 🖼 Change pictures).
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Tiffin Counter</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam','Nirmala UI',system-ui,sans-serif;user-select:none;touch-action:none}
+  .row{display:flex;gap:.7vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .tile{flex:0 0 auto;aspect-ratio:1;width:88px;border-radius:14px;background:#fff;border:3px solid #d3e0b8;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(40,50,70,.13);display:grid;place-items:center;
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;text-align:center;font-weight:800;color:#26313b;line-height:1.25}
+  .tf-order{flex-shrink:0;display:flex;align-items:center;gap:2vh;max-width:96%;background:rgba(255,255,255,.95);border-radius:30px;
+    padding:1.2vh 2.6vh 1.2vh 1.2vh;box-shadow:0 8px 0 rgba(30,70,130,.16),0 16px 34px rgba(20,50,100,.22)}
+  .tf-cust{width:14vh;height:14vh;border-radius:50%;object-fit:cover;border:5px solid #ffd77a;flex-shrink:0}
+  .tf-bubble{display:flex;flex-wrap:wrap;gap:.9vh;align-items:center}
+  .tf-bubble .say{width:100%;font-weight:900;color:#17245e;font-size:clamp(14px,2.5vh,30px)}
+  .tf-chip{display:inline-flex;align-items:center;gap:.7vh;background:#fff4d6;border:3px solid #f6cd5d;border-radius:999px;
+    padding:.3vh 1.6vh .3vh .3vh;font-weight:800;color:#17245e;font-size:clamp(12px,2.2vh,26px)}
+  .tf-chip img{width:6vh;height:6vh;border-radius:50%;object-fit:cover}
+  .tf-leaf{flex-shrink:0;height:19vh;width:min(94%,92vh);border-radius:40px;display:flex;align-items:center;justify-content:center;
+    flex-wrap:wrap;gap:1.2vh;padding:1.6vh 4vh;background:url(../assets/new/images/facp/food-leaf.jpg) center/cover,#5fae4a;
+    box-shadow:0 8px 0 rgba(30,70,130,.16),0 16px 34px rgba(20,50,100,.22)}
+  .tf-leaf img{width:11.5vh;height:11.5vh;border-radius:50%;object-fit:cover;border:4px solid #fff;cursor:pointer;
+    box-shadow:0 5px 12px rgba(0,0,0,.25);animation:tfIn .25s ease-out}
+  .tf-item{display:inline-flex;cursor:pointer}
+  .tf-item>.facp-emo{width:11.5vh!important;height:11.5vh!important;font-size:8vh!important;border-radius:50%;pointer-events:auto;cursor:pointer}
+  @keyframes tfIn{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+  .tu-body>.row.shelf>.tile::before{display:none}
+  /* eight items always on one line: never wider than an eighth of the shelf */
+  .tu-body>.row.shelf{flex-wrap:nowrap!important;padding:22px 20px 14px!important;width:min(100%,190vh)!important}
+  .tu-body>.row.shelf>.tile{width:calc(min(var(--tu-tile,88px), (100% - 7 * clamp(8px,1.2vw,22px)) / 8))!important;height:auto!important;aspect-ratio:1;flex-shrink:1!important}
+
+</style>
+</head>
+<body>
+<script src="../js/i18n-data.js"></script>
+<script src="../js/wall-settings.js"></script>
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/three-up.js"></script>
+<script src="../js/facp-kit.js"></script>
+<script>
+/* Tiffin Counter: a South Indian food counter. A customer orders; the child
+   puts exactly those items on the banana leaf and taps Serve. A wrong or
+   missing item is never a fail: the counter just says what to change. */
+var FOOD = {
+  idli: { en: 'Idli', ml: 'ഇഡ്ഡലി', hi: 'इडली', kn: 'ಇಡ್ಲಿ' },
+  dosa: { en: 'Dosa', ml: 'ദോശ', hi: 'डोसा', kn: 'ದೋಸೆ' },
+  vada: { en: 'Vada', ml: 'വട', hi: 'वड़ा', kn: 'ವಡೆ' },
+  coffee: { en: 'Filter coffee', ml: 'ഫിൽറ്റർ കാപ്പി', hi: 'फ़िल्टर कॉफ़ी', kn: 'ಫಿಲ್ಟರ್ ಕಾಫಿ' },
+  chutney: { en: 'Chutney', ml: 'ചട്ണി', hi: 'चटनी', kn: 'ಚಟ್ನಿ' },
+  sambar: { en: 'Sambar', ml: 'സാമ്പാർ', hi: 'सांबर', kn: 'ಸಾಂಬಾರ್' },
+  rice: { en: 'Rice', ml: 'ചോറ്', hi: 'चावल', kn: 'ಅನ್ನ' },
+  rasam: { en: 'Rasam', ml: 'രസം', hi: 'रसम', kn: 'ಸಾರು' },
+  curd: { en: 'Curd', ml: 'തൈര്', hi: 'दही', kn: 'ಮೊಸರು' },
+  papad: { en: 'Papad', ml: 'പപ്പടം', hi: 'पापड़', kn: 'ಹಪ್ಪಳ' },
+  pickle: { en: 'Pickle', ml: 'അച്ചാർ', hi: 'अचार', kn: 'ಉಪ್ಪಿನಕಾಯಿ' },
+  payasam: { en: 'Payasam', ml: 'പായസം', hi: 'पायसम', kn: 'ಪಾಯಸ' }
+};
+var ORDERS = [
+  ['idli', 'chutney', 'sambar'],
+  ['dosa', 'chutney', 'sambar'],
+  ['vada', 'chutney'],
+  ['coffee'],
+  ['idli', 'vada', 'sambar'],
+  ['dosa', 'coffee'],
+  ['rice', 'sambar', 'rasam', 'curd', 'papad', 'pickle'],
+  ['rice', 'sambar', 'curd', 'papad', 'payasam']
+];
+var MEALS = ['rice', 'rasam', 'curd', 'papad', 'pickle', 'payasam'];
+var CUST = ['cust-man', 'cust-woman', 'cust-granny'];
+var L = ['en', 'ml', 'hi', 'kn'];
+var TXT = {
+  want: { en: 'Please give me:', ml: 'എനിക്ക് വേണ്ടത്:', hi: 'मुझे चाहिए:', kn: 'ನನಗೆ ಬೇಕು:' },
+  tap: { en: 'Tap the food to put it on the leaf', ml: 'ഭക്ഷണത്തിൽ തൊട്ട് ഇലയിൽ വെക്കൂ', hi: 'खाना छूकर पत्ते पर रखो', kn: 'ಆಹಾರ ಮುಟ್ಟಿ ಎಲೆಯ ಮೇಲೆ ಇಡು' },
+  serve: { en: '🍽 Serve', ml: '🍽 വിളമ്പൂ', hi: '🍽 परोसो', kn: '🍽 ಬಡಿಸು' },
+  empty: { en: 'Put the food on the leaf first', ml: 'ആദ്യം ഭക്ഷണം ഇലയിൽ വെക്കൂ', hi: 'पहले खाना पत्ते पर रखो', kn: 'ಮೊದಲು ಆಹಾರ ಎಲೆಯ ಮೇಲೆ ಇಡು' },
+  need: { en: 'We still need:', ml: 'ഇനിയും വേണം:', hi: 'अभी और चाहिए:', kn: 'ಇನ್ನೂ ಬೇಕು:' },
+  extra: { en: 'Not asked for (tap it on the leaf to take it off):', ml: 'ചോദിക്കാത്തത് (ഇലയിൽ തൊട്ട് മാറ്റൂ):', hi: 'यह नहीं माँगा (पत्ते पर छूकर हटाओ):', kn: 'ಕೇಳದಿರುವುದು (ಎಲೆಯ ಮೇಲೆ ಮುಟ್ಟಿ ತೆಗೆ):' },
+  thanks: { en: 'Thank you! ⭐', ml: 'നന്ദി! ⭐', hi: 'धन्यवाद! ⭐', kn: 'ಧನ್ಯವಾದ! ⭐' },
+  right: { en: 'You served the right order.', ml: 'ശരിയായ ഓർഡർ തന്നെ വിളമ്പി.', hi: 'तुमने सही ऑर्डर परोसा।', kn: 'ನೀನು ಸರಿಯಾದ ಆರ್ಡರ್ ಬಡಿಸಿದೆ.' },
+  next: { en: 'Next customer ▶', ml: 'അടുത്ത ആൾ ▶', hi: 'अगला ग्राहक ▶', kn: 'ಮುಂದಿನ ಗ್ರಾಹಕ ▶' },
+  win: { en: 'Great job at the counter!', ml: 'കൗണ്ടറിൽ മികച്ച ജോലി!', hi: 'काउंटर पर बढ़िया काम!', kn: 'ಕೌಂಟರ್‌ನಲ್ಲಿ ಉತ್ತಮ ಕೆಲಸ!' }
+};
+/* "We still need:" + names, in every language at once (so the voice and the
+   language button both work) */
+function line(head, ids) {
+  var o = {};
+  L.forEach(function (l) { o[l] = head[l] + ' ' + ids.map(function (id) { return FOOD[id][l]; }).join(', '); });
+  return o;
+}
+
+TRIUP.start({
+  title: { en: 'Tiffin Counter', ml: 'ടിഫിൻ കൗണ്ടർ', hi: 'टिफ़िन काउंटर', kn: 'ಟಿಫಿನ್ ಕೌಂಟರ್' },
+  hint: { en: 'Give the customer exactly what they ordered', ml: 'ഓർഡർ ചെയ്തത് മാത്രം കൊടുക്കൂ', hi: 'ग्राहक को ठीक वही दो जो उसने माँगा', kn: 'ಗ್ರಾಹಕರು ಕೇಳಿದ್ದನ್ನೇ ಕೊಡು' },
+  build: function (p, body, api) {
+    var st = { list: [], i: 0, tray: [], served: 0 };
+    var order = document.createElement('div'); order.className = 'tf-order';
+    var leaf = document.createElement('div'); leaf.className = 'tf-leaf';
+    var hint = document.createElement('div'); hint.className = 'facp-hint';
+    var shelf = document.createElement('div'); shelf.className = 'row shelf';
+    var serve = FACP.button(TXT.serve, api.colour(p), doServe);
+    body.appendChild(order); body.appendChild(leaf); body.appendChild(hint); body.appendChild(shelf); body.appendChild(serve);
+
+    function cur() { return st.list[st.i]; }
+    function showHint(o) { hint.textContent = o ? FACP.T(o) : ''; hint._o = o; }
+
+    function renderOrder() {
+      var ids = cur();
+      order.innerHTML = '<img class="tf-cust" src="' + FACP.pic(st.cust) + '" alt=""><div class="tf-bubble"><div class="say">' + FACP.T(TXT.want) + '</div>' +
+        ids.map(function (id) { return '<span class="tf-chip"><img src="' + FACP.pic('food-' + id) + '" alt="">' + FACP.T(FOOD[id]) + '</span>'; }).join('') + '</div>';
+    }
+    function renderLeaf() {
+      leaf.innerHTML = '';
+      st.tray.forEach(function (id) {
+        var wrap = document.createElement('span'); wrap.className = 'tf-item';
+        var im = document.createElement('img'); im.src = FACP.pic('food-' + id); im.alt = '';
+        wrap.appendChild(im);
+        WALL.bindTouch(wrap, function () { st.tray.splice(st.tray.indexOf(id), 1); WALL.sfx.tap(); renderLeaf(); renderShelf(); });
+        leaf.appendChild(wrap);
+      });
+    }
+    function renderShelf() {
+      shelf.innerHTML = '';
+      st.shelf.forEach(function (id) {
+        var t = FACP.tile({ id: id, img: FACP.pic('food-' + id), label: FOOD[id] });
+        if (st.tray.indexOf(id) !== -1) t.classList.add('ok');
+        WALL.bindTouch(t, function () {
+          if (st.tray.indexOf(id) !== -1) return;
+          st.tray.push(id); WALL.sfx.pop ? WALL.sfx.pop() : WALL.sfx.tap();
+          showHint(null); renderLeaf(); renderShelf();
+        });
+        shelf.appendChild(t);
+      });
+    }
+    function deal() {
+      if (st.i >= st.list.length) return api.win(p, { title: TXT.win, onAgain: start });
+      var ids = cur();
+      st.cust = CUST[st.i % CUST.length];
+      st.tray = [];
+      /* the shelf: the order plus a few others, eight in all */
+      var pool = ids.indexOf('rice') !== -1 ? MEALS.concat(['sambar', 'idli', 'coffee']) : Object.keys(FOOD).filter(function (k) { return MEALS.indexOf(k) === -1; }).concat(['payasam']);
+      var extra = FACP.sh(pool.filter(function (k) { return ids.indexOf(k) === -1; }));
+      st.shelf = FACP.sh(ids.concat(extra).slice(0, Math.max(8, ids.length)));
+      api.pill(p, 'n', '⭐ ' + st.served);
+      showHint(TXT.tap);
+      renderOrder(); renderLeaf(); renderShelf();
+      FACP.say(p, line(TXT.want, ids));
+    }
+    function doServe() {
+      var ids = cur();
+      if (!st.tray.length) { showHint(TXT.empty); FACP.say(p, TXT.empty); WALL.sfx.nudge(); return; }
+      var miss = ids.filter(function (id) { return st.tray.indexOf(id) === -1; });
+      var extra = st.tray.filter(function (id) { return ids.indexOf(id) === -1; });
+      if (extra.length) { var o = line(TXT.extra, extra); showHint(o); FACP.say(p, o); WALL.sfx.nudge(); return; }
+      if (miss.length) { var m = line(TXT.need, miss); showHint(m); FACP.say(p, m); WALL.sfx.nudge(); return; }
+      WALL.sfx.correct(); st.served++; st.i++;
+      api.pill(p, 'n', '⭐ ' + st.served);
+      api.popup(p, { img: ids.indexOf('rice') !== -1 ? FACP.pic('food-meals') : FACP.pic(st.cust), title: TXT.thanks, body: TXT.right, close: TXT.next, onClose: deal });
+    }
+    function start() { st.list = FACP.sh(ORDERS).slice(0, 6); st.i = 0; st.served = 0; deal(); }
+    FACP.onLang(function () {
+      if (st.i >= st.list.length) return;
+      renderOrder(); renderShelf(); showHint(hint._o);
+      serve.textContent = FACP.T(TXT.serve);
+    });
+    start();
+  }
+});
+
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

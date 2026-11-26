@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  Clean It Right - FACP interactive session - Pangappara Blueroom
+================================================================================
+  Personal domain - tool to problem: pick what really cleans each mess (plain water never works alone).
+  1/2/3 players (three-up.js); universal voice, 4 languages and the ☰ toolbar
+  come from wall-common.js. Shared FACP helpers: js/facp-kit.js.
+  Pictures: assets/new/images/facp/ (drawn by scripts/gen-pictures.js from
+  scripts/facp-pictures.json; teachers can swap any of them with 🖼 Change pictures).
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Clean It Right</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam','Nirmala UI',system-ui,sans-serif;user-select:none;touch-action:none}
+  .row{display:flex;gap:.7vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .tile{flex:0 0 auto;aspect-ratio:1;width:88px;border-radius:14px;background:#fff;border:3px solid #d3e0b8;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(40,50,70,.13);display:grid;place-items:center;
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;text-align:center;font-weight:800;color:#26313b;line-height:1.25}
+
+</style>
+</head>
+<body>
+<script src="../js/i18n-data.js"></script>
+<script src="../js/wall-settings.js"></script>
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/three-up.js"></script>
+<script src="../js/facp-kit.js"></script>
+<script>
+/* One mess or problem in the picture; the child picks what cleans it. Plain
+   water is always one of the choices: it never works on its own, so a child
+   who tries it is told why and thinks again. */
+var TOOLS = {
+  detergent: { en: 'Detergent', ml: 'ഡിറ്റർജന്റ്', hi: 'डिटर्जेंट', kn: 'ಡಿಟರ್ಜೆಂಟ್' },
+  antiseptic: { en: 'Antiseptic', ml: 'ആന്റിസെപ്റ്റിക്', hi: 'एंटीसेप्टिक', kn: 'ಆಂಟಿಸೆಪ್ಟಿಕ್' },
+  soap: { en: 'Soap', ml: 'സോപ്പ്', hi: 'साबुन', kn: 'ಸೋಪು' },
+  brush: { en: 'Shoe brush', ml: 'ഷൂ ബ്രഷ്', hi: 'जूते का ब्रश', kn: 'ಶೂ ಬ್ರಶ್' },
+  dishwash: { en: 'Dish wash', ml: 'ഡിഷ് വാഷ്', hi: 'डिश वॉश', kn: 'ಡಿಶ್ ವಾಶ್' },
+  broom: { en: 'Broom', ml: 'ചൂല്', hi: 'झाड़ू', kn: 'ಪೊರಕೆ' },
+  sanitizer: { en: 'Sanitizer', ml: 'സാനിറ്റൈസർ', hi: 'सैनिटाइज़र', kn: 'ಸ್ಯಾನಿಟೈಸರ್' },
+  toothpaste: { en: 'Toothbrush & paste', ml: 'ബ്രഷും പേസ്റ്റും', hi: 'ब्रश और पेस्ट', kn: 'ಬ್ರಶ್ ಮತ್ತು ಪೇಸ್ಟ್' },
+  water: { en: 'Plain water', ml: 'വെറും വെള്ളം', hi: 'सिर्फ़ पानी', kn: 'ಬರೀ ನೀರು' }
+};
+var PROBLEMS = [
+  { id: 'clothes', tool: 'detergent',
+    title: { en: 'Detergent cleans clothes!', ml: 'ഡിറ്റർജന്റ് തുണി വൃത്തിയാക്കും!', hi: 'डिटर्जेंट कपड़े साफ़ करता है!', kn: 'ಡಿಟರ್ಜೆಂಟ್ ಬಟ್ಟೆ ಸ್ವಚ್ಛಗೊಳಿಸುತ್ತದೆ!' },
+    body: { en: 'Wash muddy clothes with detergent and water.', ml: 'ചെളിയുള്ള തുണി ഡിറ്റർജന്റും വെള്ളവും കൊണ്ട് കഴുകൂ.', hi: 'कीचड़ वाले कपड़े डिटर्जेंट और पानी से धोओ।', kn: 'ಕೆಸರಿನ ಬಟ್ಟೆಯನ್ನು ಡಿಟರ್ಜೆಂಟ್ ಮತ್ತು ನೀರಿನಿಂದ ತೊಳೆ.' } },
+  { id: 'cut', tool: 'antiseptic',
+    title: { en: 'Antiseptic for a cut!', ml: 'മുറിവിന് ആന്റിസെപ്റ്റിക്!', hi: 'चोट पर एंटीसेप्टिक!', kn: 'ಗಾಯಕ್ಕೆ ಆಂಟಿಸೆಪ್ಟಿಕ್!' },
+    body: { en: 'Tell an adult. Clean the cut with antiseptic and put on a plaster.', ml: 'മുതിർന്നവരോട് പറയൂ. മുറിവ് ആന്റിസെപ്റ്റിക് കൊണ്ട് വൃത്തിയാക്കി പ്ലാസ്റ്റർ ഒട്ടിക്കൂ.', hi: 'किसी बड़े को बताओ। चोट को एंटीसेप्टिक से साफ़ करो और पट्टी लगाओ।', kn: 'ದೊಡ್ಡವರಿಗೆ ಹೇಳು. ಗಾಯವನ್ನು ಆಂಟಿಸೆಪ್ಟಿಕ್‌ನಿಂದ ಸ್ವಚ್ಛಗೊಳಿಸಿ ಪ್ಲಾಸ್ಟರ್ ಹಚ್ಚು.' } },
+  { id: 'grease', tool: 'soap',
+    title: { en: 'Soap takes the grease away!', ml: 'സോപ്പ് എണ്ണമയം കളയും!', hi: 'साबुन चिकनाई हटाता है!', kn: 'ಸೋಪು ಜಿಡ್ಡು ತೆಗೆಯುತ್ತದೆ!' },
+    body: { en: 'Water alone cannot remove oil. Rub your hands with soap, then rinse.', ml: 'വെറും വെള്ളം കൊണ്ട് എണ്ണ പോകില്ല. സോപ്പ് തേച്ച് കഴുകൂ.', hi: 'सिर्फ़ पानी से तेल नहीं जाता। साबुन लगाकर धोओ।', kn: 'ಬರೀ ನೀರಿನಿಂದ ಎಣ್ಣೆ ಹೋಗುವುದಿಲ್ಲ. ಸೋಪು ಹಚ್ಚಿ ತೊಳೆ.' } },
+  { id: 'shoes', tool: 'brush',
+    title: { en: 'Brush off the mud!', ml: 'ബ്രഷ് കൊണ്ട് ചെളി കളയൂ!', hi: 'ब्रश से कीचड़ हटाओ!', kn: 'ಬ್ರಶ್‌ನಿಂದ ಕೆಸರು ತೆಗೆ!' },
+    body: { en: 'Let the mud dry, then brush the shoes clean.', ml: 'ചെളി ഉണങ്ങിയ ശേഷം ബ്രഷ് കൊണ്ട് ഷൂ വൃത്തിയാക്കൂ.', hi: 'कीचड़ सूखने दो, फिर ब्रश से जूते साफ़ करो।', kn: 'ಕೆಸರು ಒಣಗಲಿ, ನಂತರ ಬ್ರಶ್‌ನಿಂದ ಶೂ ಸ್ವಚ್ಛಗೊಳಿಸು.' } },
+  { id: 'plates', tool: 'dishwash',
+    title: { en: 'Dish wash for plates!', ml: 'പാത്രങ്ങൾക്ക് ഡിഷ് വാഷ്!', hi: 'बर्तनों के लिए डिश वॉश!', kn: 'ಪಾತ್ರೆಗಳಿಗೆ ಡಿಶ್ ವಾಶ್!' },
+    body: { en: 'Scrub the plates with dish wash and a sponge, then rinse.', ml: 'ഡിഷ് വാഷും സ്പോഞ്ചും കൊണ്ട് ഉരച്ച് കഴുകൂ.', hi: 'डिश वॉश और स्पंज से रगड़ो, फिर धो लो।', kn: 'ಡಿಶ್ ವಾಶ್ ಮತ್ತು ಸ್ಪಂಜಿನಿಂದ ಉಜ್ಜಿ, ನಂತರ ತೊಳೆ.' } },
+  { id: 'floor', tool: 'broom',
+    title: { en: 'Sweep with a broom!', ml: 'ചൂല് കൊണ്ട് അടിച്ചുവാരൂ!', hi: 'झाड़ू से साफ़ करो!', kn: 'ಪೊರಕೆಯಿಂದ ಗುಡಿಸು!' },
+    body: { en: 'Sweep the dust into the dustpan and throw it in the bin.', ml: 'പൊടി അടിച്ചുകൂട്ടി കുപ്പത്തൊട്ടിയിൽ ഇടൂ.', hi: 'धूल झाड़कर कूड़ेदान में डालो।', kn: 'ಧೂಳು ಗುಡಿಸಿ ಕಸದ ಬುಟ್ಟಿಗೆ ಹಾಕು.' } },
+  { id: 'bus', tool: 'sanitizer',
+    title: { en: 'Sanitizer when there is no water!', ml: 'വെള്ളമില്ലെങ്കിൽ സാനിറ്റൈസർ!', hi: 'पानी न हो तो सैनिटाइज़र!', kn: 'ನೀರಿಲ್ಲದಿದ್ದರೆ ಸ್ಯಾನಿಟೈಸರ್!' },
+    body: { en: 'No tap nearby? Rub a little sanitizer on your hands to kill germs.', ml: 'അടുത്ത് പൈപ്പില്ലേ? അല്പം സാനിറ്റൈസർ കൈയിൽ തേച്ചാൽ രോഗാണുക്കൾ നശിക്കും.', hi: 'पास में नल नहीं? थोड़ा सैनिटाइज़र हाथों पर मलो, कीटाणु मर जाएँगे।', kn: 'ಹತ್ತಿರ ನಲ್ಲಿ ಇಲ್ಲವೇ? ಸ್ವಲ್ಪ ಸ್ಯಾನಿಟೈಸರ್ ಕೈಗೆ ಉಜ್ಜು, ಕೀಟಾಣುಗಳು ಸಾಯುತ್ತವೆ.' } },
+  { id: 'teeth', tool: 'toothpaste',
+    title: { en: 'Brush your teeth!', ml: 'പല്ലു തേക്കൂ!', hi: 'दाँत ब्रश करो!', kn: 'ಹಲ್ಲುಜ್ಜು!' },
+    body: { en: 'Brush with toothpaste in the morning and at night.', ml: 'രാവിലെയും രാത്രിയും പേസ്റ്റ് ഉപയോഗിച്ച് പല്ലു തേക്കൂ.', hi: 'सुबह और रात को पेस्ट से ब्रश करो।', kn: 'ಬೆಳಿಗ್ಗೆ ಮತ್ತು ರಾತ್ರಿ ಪೇಸ್ಟ್‌ನಿಂದ ಹಲ್ಲುಜ್ಜು.' } }
+];
+var WATER_NO = { en: 'Water alone leaves the dirt behind. Try another!', ml: 'വെറും വെള്ളം കൊണ്ട് അഴുക്ക് പോകില്ല. മറ്റൊന്ന് നോക്കൂ!', hi: 'सिर्फ़ पानी से गंदगी नहीं जाती। दूसरा चुनो!', kn: 'ಬರೀ ನೀರಿನಿಂದ ಕೊಳೆ ಹೋಗುವುದಿಲ್ಲ. ಇನ್ನೊಂದು ನೋಡು!' };
+var NOT_THIS = { en: 'That is not the right one for this. Try another!', ml: 'ഇതിന് അത് പറ്റില്ല. മറ്റൊന്ന് നോക്കൂ!', hi: 'यह इसके लिए सही नहीं है। दूसरा चुनो!', kn: 'ಇದಕ್ಕೆ ಅದು ಸರಿಯಲ್ಲ. ಇನ್ನೊಂದು ನೋಡು!' };
+
+function toolTile(id) { return { id: id, img: FACP.pic('tool-' + id), label: TOOLS[id] }; }
+
+TRIUP.start({
+  title: { en: 'Clean It Right', ml: 'ശരിയായി വൃത്തിയാക്കാം', hi: 'सही तरीके से साफ़ करो', kn: 'ಸರಿಯಾಗಿ ಸ್ವಚ್ಛಗೊಳಿಸು' },
+  hint: { en: 'Pick the right thing to clean it', ml: 'വൃത്തിയാക്കാൻ ശരിയായത് തിരഞ്ഞെടുക്കൂ', hi: 'साफ़ करने के लिए सही चीज़ चुनो', kn: 'ಸ್ವಚ್ಛಗೊಳಿಸಲು ಸರಿಯಾದದ್ದನ್ನು ಆರಿಸು' },
+  build: function (p, body, api) {
+    FACP.quiz(p, body, api, {
+      rounds: PROBLEMS,
+      pic: function (r) { return FACP.pic('clean-' + r.id); },
+      ask: function () { return { en: 'What should we use to clean this?', ml: 'ഇത് വൃത്തിയാക്കാൻ എന്ത് ഉപയോഗിക്കണം?', hi: 'इसे साफ़ करने के लिए क्या इस्तेमाल करें?', kn: 'ಇದನ್ನು ಸ್ವಚ್ಛಗೊಳಿಸಲು ಏನು ಬಳಸಬೇಕು?' }; },
+      options: function (r) {
+        var others = FACP.sh(Object.keys(TOOLS).filter(function (k) { return k !== r.tool && k !== 'water'; })).slice(0, 2);
+        return [r.tool, 'water'].concat(others).map(toolTile);
+      },
+      answer: function (r) { return r.tool; },
+      wrong: function (r, op) { return op.id === 'water' ? WATER_NO : NOT_THIS; },
+      after: function (r) { return { img: FACP.pic('tool-' + r.tool), title: r.title, body: r.body }; },
+      winTitle: { en: 'Everything is clean!', ml: 'എല്ലാം വൃത്തിയായി!', hi: 'सब कुछ साफ़ हो गया!', kn: 'ಎಲ್ಲವೂ ಸ್ವಚ್ಛವಾಯಿತು!' }
+    });
+  }
+});
+
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

@@ -98,6 +98,13 @@ class AudioManager {
             'voc-cap-match':    'Learning',
             'voc-party-decorate': 'Learning',
             'pp-size-quiz':     'forest',
+            /* FACP interactive session */
+            'facp-fix-mistake':   'Daily life scenarios',
+            'facp-clean-right':   'Daily life scenarios',
+            'facp-feelings':      'Learning',
+            'facp-who-to-call':   'Daily life scenarios',
+            'facp-tiffin-counter':'Learning',
+            'facp-quality-check': 'jyproject-endless-shore-part2-399386',
 
             /* -- Older activities that include audio-manager.js but had
                   no track, so they played silence and logged a warning. */

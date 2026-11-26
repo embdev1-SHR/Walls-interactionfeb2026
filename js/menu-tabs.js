@@ -30,7 +30,7 @@
   var TABS = [
     { key: 'learn',   label: { en: 'Learn', ml: 'പഠിക്കാം' },   colour: '#3E9BE9', icon: 'tab-learn',
       say: { ml: 'നമുക്ക് പഠിക്കാം!', en: "Let's learn!" },
-      cards: ['pre-primary', 'primary', 'secondary', 'vocational', 'kannada',
+      cards: ['pre-primary', 'primary', 'secondary', 'vocational', 'kannada', 'facp',
               'learning', 'daily-skills', 'money-counter', 'creature-creator'] },
     { key: 'play',    label: { en: 'Play', ml: 'കളിക്കാം' },    colour: '#FF8A3D', icon: 'tab-play',
       say: { ml: 'നമുക്ക് കളിക്കാം!', en: "Let's play!" },

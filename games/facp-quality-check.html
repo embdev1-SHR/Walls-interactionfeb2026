@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  Quality Check - FACP interactive session - Pangappara Blueroom
+================================================================================
+  Occupational domain - quality control: tap the faulty pieces on the production line before they ship.
+  1/2/3 players (three-up.js); universal voice, 4 languages and the ☰ toolbar
+  come from wall-common.js. Shared FACP helpers: js/facp-kit.js.
+  Pictures: assets/new/images/facp/ (drawn by scripts/gen-pictures.js from
+  scripts/facp-pictures.json; teachers can swap any of them with 🖼 Change pictures).
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Quality Check</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam','Nirmala UI',system-ui,sans-serif;user-select:none;touch-action:none}
+  .row{display:flex;gap:.7vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .tile{flex:0 0 auto;aspect-ratio:1;width:88px;border-radius:14px;background:#fff;border:3px solid #d3e0b8;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(40,50,70,.13);display:grid;place-items:center;
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;text-align:center;font-weight:800;color:#26313b;line-height:1.25}
+  .qc-ref{flex-shrink:0;display:flex;align-items:center;gap:2.4vh;background:rgba(255,255,255,.95);border-radius:30px;padding:1.4vh 2.6vh;
+    box-shadow:0 8px 0 rgba(30,70,130,.16),0 16px 34px rgba(20,50,100,.22)}
+  .qc-ref figure{display:flex;flex-direction:column;align-items:center;gap:.6vh}
+  .qc-ref img{width:19vh;height:19vh;object-fit:cover;border-radius:18px;border:5px solid #8fd884}
+  .qc-ref figure.bad img{width:24vh;height:24vh;border-color:#f08a5d;box-shadow:0 0 0 6px rgba(240,138,93,.25)}
+  .qc-ref figcaption{font-weight:900;font-size:clamp(13px,2.4vh,28px);color:#2f8f3a}
+  .qc-ref figure.bad figcaption{color:#c2410c}
+  .qc-what{max-width:30vh;text-align:center;font-weight:900;color:#17245e;font-size:clamp(14px,2.8vh,32px)}
+  .qc-belt{position:relative;flex-shrink:0;height:27vh;width:min(100%,190vh);border-radius:24px;overflow:hidden;
+    background:repeating-linear-gradient(90deg,#667085 0 40px,#586276 40px 80px);background-position:var(--qc-shift,0) 0;
+    border-bottom:2.6vh solid #343b4a;box-shadow:inset 0 10px 18px rgba(0,0,0,.25),0 10px 26px rgba(20,50,100,.25)}
+  .qc-item{position:absolute;left:0;top:50%;border-radius:20px;background:#fff;padding:5px;cursor:pointer;
+    box-shadow:0 8px 14px rgba(0,0,0,.3);will-change:transform}
+  .qc-item img{width:100%;height:100%;object-fit:cover;border-radius:15px;display:block;pointer-events:none}
+  .qc-item.out{transition:opacity .4s,margin .4s;opacity:0;margin-top:-14vh}
+  .qc-item.no{animation:facpWob .44s ease-in-out}
+
+</style>
+</head>
+<body>
+<script src="../js/i18n-data.js"></script>
+<script src="../js/wall-settings.js"></script>
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/three-up.js"></script>
+<script src="../js/facp-kit.js"></script>
+<script>
+/* Quality Check: pieces ride along a production line. The faulty piece to
+   look for is shown above the belt; the child taps every faulty one before
+   it ships. Tapping a good one costs nothing. Five faulty pieces shipped
+   stops the line, gently, with the count caught and "try again". */
+var PRODUCTS = [
+  { id: 'cup', bad: { en: 'A cracked cup', ml: 'പൊട്ടിയ കപ്പ്', hi: 'टूटा हुआ कप', kn: 'ಬಿರುಕು ಬಿಟ್ಟ ಕಪ್' } },
+  { id: 'car', bad: { en: 'A car with a missing wheel', ml: 'ഒരു ചക്രം ഇല്ലാത്ത കാർ', hi: 'एक पहिया गायब कार', kn: 'ಒಂದು ಚಕ್ರ ಇಲ್ಲದ ಕಾರು' } },
+  { id: 'biscuit', bad: { en: 'A broken biscuit', ml: 'പൊട്ടിയ ബിസ്കറ്റ്', hi: 'टूटा बिस्किट', kn: 'ಮುರಿದ ಬಿಸ್ಕತ್' } },
+  { id: 'bottle', bad: { en: 'A bottle with no cap', ml: 'അടപ്പില്ലാത്ത കുപ്പി', hi: 'बिना ढक्कन की बोतल', kn: 'ಮುಚ್ಚಳ ಇಲ್ಲದ ಬಾಟಲಿ' } }
+];
+var PER_PRODUCT = 5, MAX_MISS = 5, CROSS_S = 13;
+var TX = {
+  find: { en: 'Tap the faulty ones before they ship!', ml: 'അയക്കുന്നതിനു മുൻപ് കേടായവയിൽ തൊടൂ!', hi: 'भेजने से पहले खराब वालों को छुओ!', kn: 'ಕಳುಹಿಸುವ ಮೊದಲು ದೋಷದವನ್ನು ಮುಟ್ಟು!' },
+  good: { en: '✓ Good', ml: '✓ നല്ലത്', hi: '✓ अच्छा', kn: '✓ ಒಳ್ಳೆಯದು' },
+  faulty: { en: '✗ Faulty', ml: '✗ കേടായത്', hi: '✗ खराब', kn: '✗ ದೋಷಯುಕ್ತ' },
+  okOne: { en: 'That one is good. Let it go!', ml: 'അത് നല്ലതാണ്. പോകട്ടെ!', hi: 'वह ठीक है। जाने दो!', kn: 'ಅದು ಸರಿಯಿದೆ. ಹೋಗಲಿ!' },
+  caught: { en: 'Caught it! 👍', ml: 'പിടിച്ചു! 👍', hi: 'पकड़ लिया! 👍', kn: 'ಹಿಡಿದೆ! 👍' },
+  missed: { en: 'A faulty one slipped past. Watch closely!', ml: 'ഒരു കേടായത് കടന്നുപോയി. ശ്രദ്ധിച്ചു നോക്കൂ!', hi: 'एक खराब वाला निकल गया। ध्यान से देखो!', kn: 'ಒಂದು ದೋಷದ್ದು ಹೋಯಿತು. ಗಮನವಿಟ್ಟು ನೋಡು!' },
+  newP: { en: 'New product! Faulty ones look like this.', ml: 'പുതിയ ഉൽപ്പന്നം! കേടായവ ഇങ്ങനെയിരിക്കും.', hi: 'नया सामान! खराब वाले ऐसे दिखते हैं।', kn: 'ಹೊಸ ವಸ್ತು! ದೋಷದವು ಹೀಗಿರುತ್ತವೆ.' },
+  start: { en: 'Start the line ▶', ml: 'ലൈൻ തുടങ്ങാം ▶', hi: 'लाइन चालू करो ▶', kn: 'ಲೈನ್ ಶುರು ಮಾಡು ▶' },
+  stop: { en: 'Line stopped', ml: 'ലൈൻ നിർത്തി', hi: 'लाइन रुक गई', kn: 'ಲೈನ್ ನಿಂತಿದೆ' },
+  win: { en: 'All products checked!', ml: 'എല്ലാം പരിശോധിച്ചു!', hi: 'सब सामान जाँच लिया!', kn: 'ಎಲ್ಲಾ ವಸ್ತು ಪರಿಶೀಲಿಸಿದೆ!' }
+};
+function caughtLine(n) {
+  return { en: 'Five faulty pieces slipped past. You caught ' + n + '! Let us try again.',
+           ml: 'അഞ്ച് കേടായവ കടന്നുപോയി. നിങ്ങൾ ' + n + ' എണ്ണം പിടിച്ചു! വീണ്ടും നോക്കാം.',
+           hi: 'पाँच खराब टुकड़े निकल गए। तुमने ' + n + ' पकड़े! चलो फिर से करें।',
+           kn: 'ಐದು ದೋಷದ ತುಂಡುಗಳು ಹೋದವು. ನೀನು ' + n + ' ಹಿಡಿದೆ! ಮತ್ತೆ ಪ್ರಯತ್ನಿಸೋಣ.' };
+}
+
+TRIUP.start({
+  title: { en: 'Quality Check', ml: 'ഗുണനിലവാര പരിശോധന', hi: 'गुणवत्ता जाँच', kn: 'ಗುಣಮಟ್ಟ ಪರಿಶೀಲನೆ' },
+  hint: { en: 'Find the faulty pieces on the line', ml: 'ലൈനിലെ കേടായവ കണ്ടെത്തൂ', hi: 'लाइन पर खराब टुकड़े ढूँढो', kn: 'ಲೈನ್‌ನಲ್ಲಿ ದೋಷದ ತುಂಡುಗಳನ್ನು ಹುಡುಕು' },
+  build: function (p, body, api) {
+    var st = {};
+    var ref = document.createElement('div'); ref.className = 'qc-ref';
+    var lead = document.createElement('div'); lead.className = 'leadml';
+    var belt = document.createElement('div'); belt.className = 'qc-belt';
+    var hint = document.createElement('div'); hint.className = 'facp-hint';
+    body.appendChild(ref); body.appendChild(lead); body.appendChild(belt); body.appendChild(hint);
+
+    function prod() { return st.order[st.pi]; }
+    function renderRef() {
+      var pr = prod();
+      ref.innerHTML = '<figure class="bad"><img src="' + FACP.pic('qc-' + pr.id + '-bad') + '" alt=""><figcaption>' + FACP.T(TX.faulty) + '</figcaption></figure>' +
+        '<div class="qc-what">' + FACP.T(pr.bad) + '</div>' +
+        '<figure><img src="' + FACP.pic('qc-' + pr.id + '-ok') + '" alt=""><figcaption>' + FACP.T(TX.good) + '</figcaption></figure>';
+      lead.textContent = FACP.T(TX.find);
+    }
+    function pills() {
+      api.pill(p, 'c', '✓ ' + st.caught);
+      api.pill(p, 'm', '📦 ' + st.missed + ' / ' + MAX_MISS);
+    }
+    function showHint(o) { hint.textContent = o ? FACP.T(o) : ''; hint._o = o; }
+
+    function spawn() {
+      var pr = prod(), bad = Math.random() < 0.38;
+      if (st.lastBad >= 2) bad = false;              // never three faulty in a row
+      if (st.sinceBad >= 4) bad = true;               // and never too long without one
+      st.lastBad = bad ? st.lastBad + 1 : 0; st.sinceBad = bad ? 0 : st.sinceBad + 1;
+      var el = document.createElement('div'); el.className = 'qc-item';
+      el.innerHTML = '<img src="' + FACP.pic('qc-' + pr.id + (bad ? '-bad' : '-ok')) + '" alt="">';
+      var it = { el: el, bad: bad, x: -st.size, done: false };
+      WALL.bindTouch(el, function () {
+        if (it.done || !st.running) return;
+        if (it.bad) {
+          it.done = true; st.caught++; st.got++; el.classList.add('out'); WALL.sfx.correct();
+          showHint(TX.caught); pills();
+          setTimeout(function () { el.remove(); }, 420);
+          if (st.got >= PER_PRODUCT) nextProduct();
+        } else { FACP.nudge(el); showHint(TX.okOne); FACP.say(p, TX.okOne); }
+      });
+      belt.appendChild(el); st.items.push(it);
+    }
+    function tick(now) {
+      if (!st.running) { st.raf = 0; return; }
+      var dt = Math.min(0.05, (now - (st.t || now)) / 1000); st.t = now;
+      var W = belt.clientWidth, S = st.size = Math.round(belt.clientHeight * 0.74);
+      var speed = (W + S) / CROSS_S;
+      belt.style.setProperty('--qc-shift', (st.shift = ((st.shift || 0) + speed * dt) % 80) + 'px');
+      var last = st.items[st.items.length - 1];
+      if (!last || last.x > S * 1.7) spawn();
+      st.items = st.items.filter(function (it) {
+        if (it.done) return it.el.isConnected;
+        it.x += speed * dt;
+        it.el.style.width = it.el.style.height = S + 'px';
+        it.el.style.transform = 'translate(' + it.x + 'px,-50%)';
+        if (it.x > W) {
+          it.el.remove();
+          if (it.bad) {
+            st.missed++; pills(); showHint(TX.missed); FACP.say(p, TX.missed); WALL.sfx.nudge();
+            if (st.missed >= MAX_MISS) { stop(); api.win(p, { title: TX.stop, body: caughtLine(st.caught), onAgain: start }); }
+          }
+          return false;
+        }
+        return true;
+      });
+      st.raf = requestAnimationFrame(tick);
+    }
+    function run() { if (st.running) return; st.running = true; st.t = 0; st.raf = requestAnimationFrame(tick); }
+    function stop() { st.running = false; }
+    function clearBelt() { st.items.forEach(function (it) { it.el.remove(); }); st.items = []; }
+    function intro() {
+      stop(); renderRef(); pills(); showHint(null);
+      api.popup(p, { img: FACP.pic('qc-' + prod().id + '-bad'), title: prod().bad, body: TX.newP, close: TX.start, onClose: run });
+    }
+    function nextProduct() {
+      stop(); st.pi++; st.got = 0;
+      setTimeout(function () {
+        clearBelt();
+        if (st.pi >= st.order.length) { stop(); api.win(p, { title: TX.win, body: { en: '✓ ' + st.caught, ml: '✓ ' + st.caught, hi: '✓ ' + st.caught, kn: '✓ ' + st.caught }, onAgain: start }); return; }
+        intro();
+      }, 450);
+    }
+    function start() {
+      stop(); if (st.items) clearBelt();
+      st.order = FACP.sh(PRODUCTS); st.pi = 0; st.got = 0; st.caught = 0; st.missed = 0;
+      st.items = []; st.lastBad = 0; st.sinceBad = 0; st.size = 100;
+      intro();
+    }
+    FACP.onLang(function () { if (st.order) { renderRef(); showHint(hint._o); } });
+    start();
+  }
+});
+
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

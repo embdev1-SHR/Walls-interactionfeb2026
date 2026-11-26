@@ -97,6 +97,19 @@ const CATEGORIES = {
             { name: 'Party Decoration',   ml: '🎈 ജന്മദിന അലങ്കാരം', game: 'voc-party-decorate' }
         ]
     },
+    // FACP interactive session: personal, social and occupational domains.
+    'facp': {
+        title: 'FACP Interactive Session',
+        titleMl: 'FACP ഇന്ററാക്ടീവ് സെഷൻ',
+        options: [
+            { name: 'Fix the Mistake',  ml: '🔍 തെറ്റ് തിരുത്താം', game: 'facp-fix-mistake' },
+            { name: 'Clean It Right',   ml: '🧼 ശരിയായി വൃത്തിയാക്കാം', game: 'facp-clean-right' },
+            { name: 'Feelings',         ml: '😀 വികാരങ്ങൾ', game: 'facp-feelings' },
+            { name: 'Emergency Help',   ml: '🚨 അടിയന്തര സഹായം', game: 'facp-who-to-call' },
+            { name: 'Tiffin Counter',   ml: '🍛 ടിഫിൻ കൗണ്ടർ', game: 'facp-tiffin-counter' },
+            { name: 'Quality Check',    ml: '🏭 ഗുണനിലവാര പരിശോധന', game: 'facp-quality-check' }
+        ]
+    },
     // Kannada starts with the alphabet on its own; words and the rest join
     // later as more options here.
     'kannada': {
@@ -263,7 +276,8 @@ function showSubmenu(categoryName) {
     if (categoryName === 'pre-primary' || categoryName === 'primary' ||
         categoryName === 'secondary' ||
         categoryName === 'vocational' ||
-        categoryName === 'kannada') box.classList.add('pp-grid');
+        categoryName === 'kannada' ||
+        categoryName === 'facp') box.classList.add('pp-grid');
 
     // \u2500\u2500 Back button \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.parent) {
@@ -607,6 +621,24 @@ function loadGame(gameName) {
                 break;
             case 'voc-party-decorate':
                 window.location.href = 'games/voc-party-decorate.html';
+                break;
+            case 'facp-fix-mistake':
+                window.location.href = 'games/facp-fix-mistake.html';
+                break;
+            case 'facp-clean-right':
+                window.location.href = 'games/facp-clean-right.html';
+                break;
+            case 'facp-feelings':
+                window.location.href = 'games/facp-feelings.html';
+                break;
+            case 'facp-who-to-call':
+                window.location.href = 'games/facp-who-to-call.html';
+                break;
+            case 'facp-tiffin-counter':
+                window.location.href = 'games/facp-tiffin-counter.html';
+                break;
+            case 'facp-quality-check':
+                window.location.href = 'games/facp-quality-check.html';
                 break;
             case 'voc-cap-match':
                 window.location.href = 'games/voc-cap-match.html';

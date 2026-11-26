@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  Emergency Help - FACP interactive session - Pangappara Blueroom
+================================================================================
+  Social domain - cause and effect: which helper and number to call in each emergency.
+  1/2/3 players (three-up.js); universal voice, 4 languages and the ☰ toolbar
+  come from wall-common.js. Shared FACP helpers: js/facp-kit.js.
+  Pictures: assets/new/images/facp/ (drawn by scripts/gen-pictures.js from
+  scripts/facp-pictures.json; teachers can swap any of them with 🖼 Change pictures).
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Emergency Help</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam','Nirmala UI',system-ui,sans-serif;user-select:none;touch-action:none}
+  .row{display:flex;gap:.7vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .tile{flex:0 0 auto;aspect-ratio:1;width:88px;border-radius:14px;background:#fff;border:3px solid #d3e0b8;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(40,50,70,.13);display:grid;place-items:center;
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;text-align:center;font-weight:800;color:#26313b;line-height:1.25}
+
+</style>
+</head>
+<body>
+<script src="../js/i18n-data.js"></script>
+<script src="../js/wall-settings.js"></script>
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/three-up.js"></script>
+<script src="../js/facp-kit.js"></script>
+<script>
+/* Emergency help: what is happening in the picture, and who (which number)
+   to call. Written new for FACP; it does not use the older emergency or
+   jobs activities. */
+var HELP = {
+  fire: { num: '101', name: { en: 'Fire Force', ml: 'ഫയർ ഫോഴ്സ്', hi: 'फ़ायर ब्रिगेड', kn: 'ಅಗ್ನಿಶಾಮಕ ದಳ' } },
+  ambulance: { num: '108', name: { en: 'Ambulance', ml: 'ആംബുലൻസ്', hi: 'एम्बुलेंस', kn: 'ಆಂಬುಲೆನ್ಸ್' } },
+  police: { num: '100', name: { en: 'Police', ml: 'പോലീസ്', hi: 'पुलिस', kn: 'ಪೊಲೀಸ್' } },
+  electric: { num: '1912', name: { en: 'Electricity Board', ml: 'വൈദ്യുതി ബോർഡ്', hi: 'बिजली विभाग', kn: 'ವಿದ್ಯುತ್ ಮಂಡಳಿ' } },
+  gas: { num: '1906', name: { en: 'Gas Helpline', ml: 'ഗ്യാസ് ഹെൽപ്‌ലൈൻ', hi: 'गैस हेल्पलाइन', kn: 'ಗ್ಯಾಸ್ ಸಹಾಯವಾಣಿ' } }
+};
+var CALL_POLICE = { en: 'Call the Police: 100', ml: 'പോലീസിനെ വിളിക്കൂ: 100', hi: 'पुलिस को फ़ोन करो: 100', kn: 'ಪೊಲೀಸರಿಗೆ ಕರೆ ಮಾಡು: 100' };
+var SOS = [
+  { id: 'fire', help: 'fire',
+    ask: { en: 'The house is on fire! Who should we call?', ml: 'വീടിന് തീ പിടിച്ചു! ആരെ വിളിക്കണം?', hi: 'घर में आग लगी है! किसे फ़ोन करें?', kn: 'ಮನೆಗೆ ಬೆಂಕಿ ಬಿದ್ದಿದೆ! ಯಾರಿಗೆ ಕರೆ ಮಾಡಬೇಕು?' },
+    title: { en: 'Call the Fire Force: 101', ml: 'ഫയർ ഫോഴ്സിനെ വിളിക്കൂ: 101', hi: 'फ़ायर ब्रिगेड को फ़ोन करो: 101', kn: 'ಅಗ್ನಿಶಾಮಕ ದಳಕ್ಕೆ ಕರೆ ಮಾಡು: 101' },
+    body: { en: 'First get out of the house. Then call 101.', ml: 'ആദ്യം വീടിന് പുറത്തിറങ്ങൂ. എന്നിട്ട് 101 വിളിക്കൂ.', hi: 'पहले घर से बाहर निकलो। फिर 101 पर फ़ोन करो।', kn: 'ಮೊದಲು ಮನೆಯಿಂದ ಹೊರಗೆ ಬಾ. ನಂತರ 101ಗೆ ಕರೆ ಮಾಡು.' } },
+  { id: 'hurt', help: 'ambulance',
+    ask: { en: 'Grandpa fell and is hurt! Who should we call?', ml: 'അപ്പൂപ്പൻ വീണു, പരിക്കുണ്ട്! ആരെ വിളിക്കണം?', hi: 'दादाजी गिर गए और चोट लगी! किसे फ़ोन करें?', kn: 'ಅಜ್ಜ ಬಿದ್ದು ಗಾಯವಾಗಿದೆ! ಯಾರಿಗೆ ಕರೆ ಮಾಡಬೇಕು?' },
+    title: { en: 'Call the Ambulance: 108', ml: 'ആംബുലൻസ് വിളിക്കൂ: 108', hi: 'एम्बुलेंस को फ़ोन करो: 108', kn: 'ಆಂಬುಲೆನ್ಸ್‌ಗೆ ಕರೆ ಮಾಡು: 108' },
+    body: { en: 'Stay with grandpa, call an adult, and call 108.', ml: 'അപ്പൂപ്പന്റെ കൂടെ നിൽക്കൂ, മുതിർന്നവരെ വിളിക്കൂ, 108 വിളിക്കൂ.', hi: 'दादाजी के पास रहो, किसी बड़े को बुलाओ और 108 पर फ़ोन करो।', kn: 'ಅಜ್ಜನ ಜೊತೆ ಇರು, ದೊಡ್ಡವರನ್ನು ಕರೆ, 108ಗೆ ಕರೆ ಮಾಡು.' } },
+  { id: 'thief', help: 'police',
+    ask: { en: 'A thief is climbing in! Who should we call?', ml: 'ഒരു കള്ളൻ അകത്തു കയറുന്നു! ആരെ വിളിക്കണം?', hi: 'एक चोर अंदर घुस रहा है! किसे फ़ोन करें?', kn: 'ಕಳ್ಳನೊಬ್ಬ ಒಳಗೆ ಬರುತ್ತಿದ್ದಾನೆ! ಯಾರಿಗೆ ಕರೆ ಮಾಡಬೇಕು?' },
+    title: CALL_POLICE,
+    body: { en: 'Stay quiet and safe in a locked room. Call 100.', ml: 'പൂട്ടിയ മുറിയിൽ ശബ്ദമുണ്ടാക്കാതെ സുരക്ഷിതമായി ഇരിക്കൂ. 100 വിളിക്കൂ.', hi: 'बंद कमरे में चुपचाप सुरक्षित रहो। 100 पर फ़ोन करो।', kn: 'ಬೀಗ ಹಾಕಿದ ಕೋಣೆಯಲ್ಲಿ ಸದ್ದಿಲ್ಲದೆ ಸುರಕ್ಷಿತವಾಗಿರು. 100ಗೆ ಕರೆ ಮಾಡು.' } },
+  { id: 'wire', help: 'electric',
+    ask: { en: 'A wire is sparking on the road! Who should we call?', ml: 'റോഡിൽ ഒരു വയറിൽ നിന്ന് തീപ്പൊരി! ആരെ വിളിക്കണം?', hi: 'सड़क पर तार से चिंगारी निकल रही है! किसे फ़ोन करें?', kn: 'ರಸ್ತೆಯಲ್ಲಿ ತಂತಿಯಿಂದ ಕಿಡಿ ಹಾರುತ್ತಿದೆ! ಯಾರಿಗೆ ಕರೆ ಮಾಡಬೇಕು?' },
+    title: { en: 'Call the Electricity Board: 1912', ml: 'വൈദ്യുതി ബോർഡിനെ വിളിക്കൂ: 1912', hi: 'बिजली विभाग को फ़ोन करो: 1912', kn: 'ವಿದ್ಯುತ್ ಮಂಡಳಿಗೆ ಕರೆ ಮಾಡು: 1912' },
+    body: { en: 'Never touch it! Keep far away and call 1912.', ml: 'ഒരിക്കലും തൊടരുത്! ദൂരെ മാറി നിന്ന് 1912 വിളിക്കൂ.', hi: 'कभी मत छूना! दूर रहो और 1912 पर फ़ोन करो।', kn: 'ಎಂದಿಗೂ ಮುಟ್ಟಬೇಡ! ದೂರ ಇರು, 1912ಗೆ ಕರೆ ಮಾಡು.' } },
+  { id: 'lost', help: 'police',
+    ask: { en: 'A small child is lost in the market! Who should we call?', ml: 'ചന്തയിൽ ഒരു കുഞ്ഞ് വഴിതെറ്റി! ആരെ വിളിക്കണം?', hi: 'बाज़ार में एक छोटा बच्चा खो गया! किसे फ़ोन करें?', kn: 'ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ ಪುಟ್ಟ ಮಗು ಕಳೆದುಹೋಗಿದೆ! ಯಾರಿಗೆ ಕರೆ ಮಾಡಬೇಕು?' },
+    title: CALL_POLICE,
+    body: { en: 'Stay with the child where you are and call 100. Police help lost children.', ml: 'കുഞ്ഞിനൊപ്പം അവിടെത്തന്നെ നിൽക്കൂ, 100 വിളിക്കൂ. വഴിതെറ്റിയ കുട്ടികളെ പോലീസ് സഹായിക്കും.', hi: 'बच्चे के साथ वहीं रहो और 100 पर फ़ोन करो। पुलिस खोए बच्चों की मदद करती है।', kn: 'ಮಗುವಿನ ಜೊತೆ ಅಲ್ಲೇ ಇರು, 100ಗೆ ಕರೆ ಮಾಡು. ಕಳೆದುಹೋದ ಮಕ್ಕಳಿಗೆ ಪೊಲೀಸರು ಸಹಾಯ ಮಾಡುತ್ತಾರೆ.' } },
+  { id: 'gas', help: 'gas',
+    ask: { en: 'It smells of gas in the kitchen! Who should we call?', ml: 'അടുക്കളയിൽ ഗ്യാസിന്റെ മണം! ആരെ വിളിക്കണം?', hi: 'रसोई में गैस की बदबू है! किसे फ़ोन करें?', kn: 'ಅಡುಗೆಮನೆಯಲ್ಲಿ ಗ್ಯಾಸ್ ವಾಸನೆ! ಯಾರಿಗೆ ಕರೆ ಮಾಡಬೇಕು?' },
+    title: { en: 'Call the Gas Helpline: 1906', ml: 'ഗ്യാസ് ഹെൽപ്‌ലൈൻ വിളിക്കൂ: 1906', hi: 'गैस हेल्पलाइन को फ़ोन करो: 1906', kn: 'ಗ್ಯಾಸ್ ಸಹಾಯವಾಣಿಗೆ ಕರೆ ಮಾಡು: 1906' },
+    body: { en: 'Do not switch on lights or fire. Open the windows, go outside and call 1906.', ml: 'ലൈറ്റോ തീയോ കത്തിക്കരുത്. ജനലുകൾ തുറന്ന്, പുറത്തിറങ്ങി 1906 വിളിക്കൂ.', hi: 'बत्ती या आग मत जलाओ। खिड़कियाँ खोलो, बाहर जाओ और 1906 पर फ़ोन करो।', kn: 'ದೀಪ ಅಥವಾ ಬೆಂಕಿ ಹಚ್ಚಬೇಡ. ಕಿಟಕಿ ತೆರೆದು, ಹೊರಗೆ ಹೋಗಿ 1906ಗೆ ಕರೆ ಮಾಡು.' } }
+];
+function helpTile(id) { return { id: id, img: FACP.pic('help-' + id), label: HELP[id].name, num: HELP[id].num }; }
+
+TRIUP.start({
+  title: { en: 'Emergency Help', ml: 'അടിയന്തര സഹായം', hi: 'आपातकालीन मदद', kn: 'ತುರ್ತು ಸಹಾಯ' },
+  hint: { en: 'Who can help us? Pick the right helper', ml: 'ആർക്കാണ് സഹായിക്കാൻ കഴിയുക? ശരിയായ സഹായിയെ തിരഞ്ഞെടുക്കൂ', hi: 'कौन मदद कर सकता है? सही मददगार चुनो', kn: 'ಯಾರು ಸಹಾಯ ಮಾಡಬಹುದು? ಸರಿಯಾದ ಸಹಾಯಕನನ್ನು ಆರಿಸು' },
+  build: function (p, body, api) {
+    FACP.quiz(p, body, api, {
+      rounds: SOS,
+      pic: function (r) { return FACP.pic('sos-' + r.id); },
+      ask: function (r) { return r.ask; },
+      options: function (r) {
+        var others = FACP.sh(Object.keys(HELP).filter(function (k) { return k !== r.help; })).slice(0, 3);
+        return [r.help].concat(others).map(helpTile);
+      },
+      answer: function (r) { return r.help; },
+      after: function (r) { return { img: FACP.pic('help-' + r.help), title: r.title, body: r.body }; },
+      winTitle: { en: 'You know who to call!', ml: 'ആരെ വിളിക്കണമെന്ന് അറിയാം!', hi: 'तुम जानते हो किसे फ़ोन करना है!', kn: 'ಯಾರಿಗೆ ಕರೆ ಮಾಡಬೇಕು ಎಂದು ಗೊತ್ತು!' },
+      winBody: { en: 'In any emergency you can also call 112.', ml: 'ഏത് അടിയന്തര സാഹചര്യത്തിലും 112 വിളിക്കാം.', hi: 'किसी भी आपात स्थिति में 112 पर भी फ़ोन कर सकते हो।', kn: 'ಯಾವುದೇ ತುರ್ತು ಸ್ಥಿತಿಯಲ್ಲಿ 112ಗೆ ಕೂಡ ಕರೆ ಮಾಡಬಹುದು.' }
+    });
+  }
+});
+
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  Feelings - FACP interactive session - Pangappara Blueroom
+================================================================================
+  Social domain - learn the feelings (picture, emoji, name), then say how the child in the picture feels.
+  1/2/3 players (three-up.js); universal voice, 4 languages and the ☰ toolbar
+  come from wall-common.js. Shared FACP helpers: js/facp-kit.js.
+  Pictures: assets/new/images/facp/ (drawn by scripts/gen-pictures.js from
+  scripts/facp-pictures.json; teachers can swap any of them with 🖼 Change pictures).
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Feelings</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam','Nirmala UI',system-ui,sans-serif;user-select:none;touch-action:none}
+  .row{display:flex;gap:.7vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .tile{flex:0 0 auto;aspect-ratio:1;width:88px;border-radius:14px;background:#fff;border:3px solid #d3e0b8;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(40,50,70,.13);display:grid;place-items:center;
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;text-align:center;font-weight:800;color:#26313b;line-height:1.25}
+.tu-body>.row.learn>.tile::before{display:none}
+
+</style>
+</head>
+<body>
+<script src="../js/i18n-data.js"></script>
+<script src="../js/wall-settings.js"></script>
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/three-up.js"></script>
+<script src="../js/facp-kit.js"></script>
+<script>
+/* Feelings: a learn part first (tap each face: picture, emoji, name, a line
+   about why), then the quiz "How does this child feel?" with emoji answers. */
+var FEEL = [
+  { id: 'happy', em: '😀', name: { en: 'Happy', ml: 'സന്തോഷം', hi: 'खुश', kn: 'ಸಂತೋಷ' },
+    why: { en: 'The child got a balloon and feels happy.', ml: 'കുട്ടിക്ക് ബലൂൺ കിട്ടി. കുട്ടിക്ക് സന്തോഷമായി.', hi: 'बच्चे को गुब्बारा मिला। वह खुश है।', kn: 'ಮಗುವಿಗೆ ಬಲೂನು ಸಿಕ್ಕಿತು. ಮಗು ಸಂತೋಷವಾಗಿದೆ.' } },
+  { id: 'sad', em: '😢', name: { en: 'Sad', ml: 'സങ്കടം', hi: 'उदास', kn: 'ದುಃಖ' },
+    why: { en: 'The toy broke. The child feels sad.', ml: 'കളിപ്പാട്ടം പൊട്ടി. കുട്ടിക്ക് സങ്കടമായി.', hi: 'खिलौना टूट गया। बच्चा उदास है।', kn: 'ಆಟಿಕೆ ಮುರಿಯಿತು. ಮಗುವಿಗೆ ದುಃಖವಾಗಿದೆ.' } },
+  { id: 'angry', em: '😠', name: { en: 'Angry', ml: 'ദേഷ്യം', hi: 'गुस्सा', kn: 'ಕೋಪ' },
+    why: { en: 'Red face and folded arms. The child feels angry.', ml: 'മുഖം ചുവന്നു, കൈ കെട്ടി. കുട്ടിക്ക് ദേഷ്യമാണ്.', hi: 'लाल चेहरा, बँधे हाथ। बच्चा गुस्से में है।', kn: 'ಕೆಂಪು ಮುಖ, ಕಟ್ಟಿದ ಕೈ. ಮಗುವಿಗೆ ಕೋಪ ಬಂದಿದೆ.' } },
+  { id: 'scared', em: '😨', name: { en: 'Scared', ml: 'പേടി', hi: 'डरा हुआ', kn: 'ಭಯ' },
+    why: { en: 'The thunder is loud. The child feels scared.', ml: 'ഇടി ശബ്ദം കേട്ട് കുട്ടിക്ക് പേടിയായി.', hi: 'बादल ज़ोर से गरजा। बच्चा डर गया।', kn: 'ಗುಡುಗಿನ ಸದ್ದು ಕೇಳಿ ಮಗುವಿಗೆ ಭಯವಾಗಿದೆ.' } },
+  { id: 'surprised', em: '😲', name: { en: 'Surprised', ml: 'അത്ഭുതം', hi: 'हैरान', kn: 'ಆಶ್ಚರ್ಯ' },
+    why: { en: 'A gift! The child feels surprised.', ml: 'ഒരു സമ്മാനം! കുട്ടിക്ക് അത്ഭുതമായി.', hi: 'एक तोहफ़ा! बच्चा हैरान है।', kn: 'ಒಂದು ಉಡುಗೊರೆ! ಮಗುವಿಗೆ ಆಶ್ಚರ್ಯವಾಗಿದೆ.' } },
+  { id: 'tired', em: '😴', name: { en: 'Tired', ml: 'ക്ഷീണം', hi: 'थका हुआ', kn: 'ಆಯಾಸ' },
+    why: { en: 'Yawning and sleepy. The child feels tired.', ml: 'കോട്ടുവായിട്ട് ഉറക്കം വരുന്നു. കുട്ടിക്ക് ക്ഷീണമാണ്.', hi: 'उबासी और नींद। बच्चा थका हुआ है।', kn: 'ಆಕಳಿಕೆ, ನಿದ್ದೆ. ಮಗುವಿಗೆ ಆಯಾಸವಾಗಿದೆ.' } }
+];
+var BY = {}; FEEL.forEach(function (f) { BY[f.id] = f; });
+var LEARN = { en: 'Tap a face to learn the feeling', ml: 'മുഖത്ത് തൊട്ട് വികാരം പഠിക്കൂ', hi: 'चेहरे को छूकर भावना सीखो', kn: 'ಮುಖ ಮುಟ್ಟಿ ಭಾವನೆ ಕಲಿ' };
+var QUIZ = { en: '▶ Quiz time', ml: '▶ ക്വിസ് തുടങ്ങാം', hi: '▶ क्विज़ शुरू', kn: '▶ ಕ್ವಿಜ್ ಶುರು' };
+var ASK = { en: 'How does this child feel?', ml: 'ഈ കുട്ടിക്ക് എന്ത് തോന്നുന്നു?', hi: 'यह बच्चा कैसा महसूस कर रहा है?', kn: 'ಈ ಮಗುವಿಗೆ ಹೇಗನಿಸುತ್ತಿದೆ?' };
+function capOf(f) { return f.em + ' ' + FACP.T(f.name); }
+
+TRIUP.start({
+  title: { en: 'Feelings', ml: 'വികാരങ്ങൾ', hi: 'भावनाएँ', kn: 'ಭಾವನೆಗಳು' },
+  hint: { en: 'How do they feel?', ml: 'അവർക്ക് എന്ത് തോന്നുന്നു?', hi: 'वे कैसा महसूस करते हैं?', kn: 'ಅವರಿಗೆ ಹೇಗನಿಸುತ್ತದೆ?' },
+  build: function (p, body, api) {
+    var mode = 'learn';
+    function learn() {
+      mode = 'learn'; body.innerHTML = '';
+      api.pill(p, 'n', '📖');
+      var lead = document.createElement('div'); lead.className = 'leadml'; lead.textContent = FACP.T(LEARN);
+      var row = document.createElement('div'); row.className = 'row learn';
+      FEEL.forEach(function (f) {
+        var t = document.createElement('div'); t.className = 'tile';
+        t.innerHTML = '<img src="' + FACP.pic('feel-' + f.id) + '" alt=""><div class="cap">' + capOf(f) + '</div>';
+        WALL.bindTouch(t, function () {
+          t.classList.add('ok'); WALL.sfx.tap();
+          api.popup(p, { img: FACP.pic('feel-' + f.id), title: { en: f.em + ' ' + f.name.en, ml: f.em + ' ' + f.name.ml, hi: f.em + ' ' + f.name.hi, kn: f.em + ' ' + f.name.kn }, body: f.why, say: false });
+          FACP.say(p, f.why);
+        });
+        row.appendChild(t);
+      });
+      var go = FACP.button(QUIZ, api.colour(p), quiz);
+      body.appendChild(lead); body.appendChild(row); body.appendChild(go);
+      FACP.say(p, LEARN);
+    }
+    function quiz() {
+      mode = 'quiz'; body.innerHTML = '';
+      FACP.quiz(p, body, api, {
+        rounds: FEEL,
+        pic: function (r) { return FACP.pic('feel-' + r.id); },
+        ask: function () { return ASK; },
+        options: function (r) {
+          var others = FACP.sh(FEEL.filter(function (f) { return f.id !== r.id; })).slice(0, 3);
+          return [r].concat(others).map(function (f) { return { id: f.id, em: f.em, label: f.name }; });
+        },
+        answer: function (r) { return r.id; },
+        after: function (r) { return { img: FACP.pic('feel-' + r.id), title: { en: r.em + ' ' + r.name.en, ml: r.em + ' ' + r.name.ml, hi: r.em + ' ' + r.name.hi, kn: r.em + ' ' + r.name.kn }, body: r.why }; },
+        winTitle: { en: 'You know all the feelings!', ml: 'എല്ലാ വികാരങ്ങളും അറിയാം!', hi: 'तुम सारी भावनाएँ जानते हो!', kn: 'ಎಲ್ಲಾ ಭಾವನೆಗಳು ಗೊತ್ತು!' }
+      });
+    }
+    FACP.onLang(function () { if (mode === 'learn') learn(); });
+    learn();
+  }
+});
+
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

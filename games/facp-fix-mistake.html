@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  Fix the Mistake - FACP interactive session - Pangappara Blueroom
+================================================================================
+  Personal domain - deduction and repair: a routine has gone wrong in the picture; find the broken step.
+  1/2/3 players (three-up.js); universal voice, 4 languages and the ☰ toolbar
+  come from wall-common.js. Shared FACP helpers: js/facp-kit.js.
+  Pictures: assets/new/images/facp/ (drawn by scripts/gen-pictures.js from
+  scripts/facp-pictures.json; teachers can swap any of them with 🖼 Change pictures).
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Fix the Mistake</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Baloo 2','Noto Sans Malayalam','Nirmala UI',system-ui,sans-serif;user-select:none;touch-action:none}
+  .row{display:flex;gap:.7vw;flex-wrap:wrap;justify-content:center;width:100%;flex-shrink:0}
+  .tile{flex:0 0 auto;aspect-ratio:1;width:88px;border-radius:14px;background:#fff;border:3px solid #d3e0b8;cursor:pointer;
+    overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(40,50,70,.13);display:grid;place-items:center;
+    transition:transform .14s,border-color .14s,opacity .25s}
+  .tile:active{transform:scale(.95)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .tile .cap{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;text-align:center;font-weight:800;color:#26313b;line-height:1.25}
+
+</style>
+</head>
+<body>
+<script src="../js/i18n-data.js"></script>
+<script src="../js/wall-settings.js"></script>
+<script src="../js/tts-engine.js"></script>
+<script src="../js/voice-manifest.js"></script>
+<script src="../js/voice-clips.js"></script>
+<script src="../js/wall-common.js"></script>
+<script src="../js/wall-backdrop.js"></script>
+<script src="../js/three-up.js"></script>
+<script src="../js/facp-kit.js"></script>
+<script>
+/* A routine has gone wrong in the picture. The child finds the broken step
+   among the options; the right answer shows the fixed routine. */
+var ASK = { en: 'What is wrong in this picture?', ml: 'ഈ ചിത്രത്തിൽ എന്താണ് തെറ്റ്?', hi: 'इस तस्वीर में क्या गलत है?', kn: 'ಈ ಚಿತ್ರದಲ್ಲಿ ಏನು ತಪ್ಪಾಗಿದೆ?' };
+var ROUNDS = [
+  { id: 'socks',
+    right: { em: '🧦', label: { en: 'Socks go on before shoes', ml: 'ഷൂസിനു മുൻപ് സോക്സ് ഇടണം', hi: 'जूतों से पहले मोज़े पहनो', kn: 'ಶೂಗಿಂತ ಮೊದಲು ಸಾಕ್ಸ್ ಹಾಕಬೇಕು' } },
+    wrong: [
+      { em: '🪑', label: { en: 'He should not sit on a chair', ml: 'അവൻ കസേരയിൽ ഇരിക്കരുത്', hi: 'उसे कुर्सी पर नहीं बैठना चाहिए', kn: 'ಅವನು ಕುರ್ಚಿಯ ಮೇಲೆ ಕೂರಬಾರದು' } },
+      { em: '👕', label: { en: 'His shirt is the wrong colour', ml: 'ഷർട്ടിന്റെ നിറം തെറ്റാണ്', hi: 'उसकी कमीज़ का रंग गलत है', kn: 'ಅವನ ಅಂಗಿಯ ಬಣ್ಣ ತಪ್ಪು' } } ],
+    title: { en: 'Socks first, then shoes!', ml: 'ആദ്യം സോക്സ്, പിന്നെ ഷൂസ്!', hi: 'पहले मोज़े, फिर जूते!', kn: 'ಮೊದಲು ಸಾಕ್ಸ್, ನಂತರ ಶೂ!' },
+    body: { en: 'First put on your socks, then your shoes.', ml: 'ആദ്യം സോക്സ് ഇടൂ, എന്നിട്ട് ഷൂസ് ഇടൂ.', hi: 'पहले मोज़े पहनो, फिर जूते पहनो।', kn: 'ಮೊದಲು ಸಾಕ್ಸ್ ಹಾಕು, ನಂತರ ಶೂ ಹಾಕು.' } },
+  { id: 'paste',
+    right: { em: '🦷', label: { en: 'That is face wash, not toothpaste', ml: 'അത് ഫേസ് വാഷ് ആണ്, ടൂത്ത്പേസ്റ്റ് അല്ല', hi: 'यह फेस वॉश है, टूथपेस्ट नहीं', kn: 'ಅದು ಫೇಸ್ ವಾಶ್, ಟೂತ್‌ಪೇಸ್ಟ್ ಅಲ್ಲ' } },
+    wrong: [
+      { em: '☀️', label: { en: 'She is brushing in the morning', ml: 'അവൾ രാവിലെ പല്ലു തേക്കുന്നു', hi: 'वह सुबह ब्रश कर रही है', kn: 'ಅವಳು ಬೆಳಿಗ್ಗೆ ಹಲ್ಲುಜ್ಜುತ್ತಿದ್ದಾಳೆ' } },
+      { em: '🚰', label: { en: 'The sink is white', ml: 'സിങ്ക് വെളുത്തതാണ്', hi: 'सिंक सफ़ेद है', kn: 'ಸಿಂಕ್ ಬಿಳಿಯಾಗಿದೆ' } } ],
+    title: { en: 'Use toothpaste!', ml: 'ടൂത്ത്പേസ്റ്റ് ഉപയോഗിക്കൂ!', hi: 'टूथपेस्ट लगाओ!', kn: 'ಟೂತ್‌ಪೇಸ್ಟ್ ಬಳಸು!' },
+    body: { en: 'Face wash is for the face. Toothpaste is for the teeth.', ml: 'ഫേസ് വാഷ് മുഖത്തിന്. ടൂത്ത്പേസ്റ്റ് പല്ലിന്.', hi: 'फेस वॉश चेहरे के लिए है। टूथपेस्ट दाँतों के लिए।', kn: 'ಫೇಸ್ ವಾಶ್ ಮುಖಕ್ಕೆ. ಟೂತ್‌ಪೇಸ್ಟ್ ಹಲ್ಲಿಗೆ.' } },
+  { id: 'hands',
+    right: { em: '🧼', label: { en: 'His hands are dirty. Wash first', ml: 'കൈ അഴുക്കാണ്. ആദ്യം കഴുകണം', hi: 'हाथ गंदे हैं। पहले धोओ', kn: 'ಕೈ ಕೊಳಕಾಗಿದೆ. ಮೊದಲು ತೊಳೆ' } },
+    wrong: [
+      { em: '🍚', label: { en: 'He is eating rice', ml: 'അവൻ ചോറ് കഴിക്കുന്നു', hi: 'वह चावल खा रहा है', kn: 'ಅವನು ಅನ್ನ ತಿನ್ನುತ್ತಿದ್ದಾನೆ' } },
+      { em: '🪑', label: { en: 'He is sitting at the table', ml: 'അവൻ മേശയ്ക്കരികിൽ ഇരിക്കുന്നു', hi: 'वह मेज़ पर बैठा है', kn: 'ಅವನು ಮೇಜಿನ ಬಳಿ ಕುಳಿತಿದ್ದಾನೆ' } } ],
+    title: { en: 'Wash hands before eating!', ml: 'കഴിക്കും മുൻപ് കൈ കഴുകൂ!', hi: 'खाने से पहले हाथ धोओ!', kn: 'ಊಟಕ್ಕೆ ಮೊದಲು ಕೈ ತೊಳೆ!' },
+    body: { en: 'Wash your hands with soap and water before you eat.', ml: 'കഴിക്കുന്നതിനു മുൻപ് സോപ്പും വെള്ളവും കൊണ്ട് കൈ കഴുകണം.', hi: 'खाने से पहले साबुन और पानी से हाथ धोओ।', kn: 'ಊಟಕ್ಕೆ ಮೊದಲು ಸೋಪು ಮತ್ತು ನೀರಿನಿಂದ ಕೈ ತೊಳೆ.' } },
+  { id: 'comb',
+    right: { em: '💇', label: { en: 'That is a toothbrush, not a comb', ml: 'അത് ടൂത്ത്ബ്രഷ് ആണ്, ചീപ്പ് അല്ല', hi: 'यह टूथब्रश है, कंघी नहीं', kn: 'ಅದು ಟೂತ್‌ಬ್ರಶ್, ಬಾಚಣಿಗೆ ಅಲ್ಲ' } },
+    wrong: [
+      { em: '🪞', label: { en: 'She is looking in the mirror', ml: 'അവൾ കണ്ണാടിയിൽ നോക്കുന്നു', hi: 'वह शीशे में देख रही है', kn: 'ಅವಳು ಕನ್ನಡಿಯಲ್ಲಿ ನೋಡುತ್ತಿದ್ದಾಳೆ' } },
+      { em: '👧', label: { en: 'Her hair is long', ml: 'അവളുടെ മുടി നീളമുള്ളതാണ്', hi: 'उसके बाल लंबे हैं', kn: 'ಅವಳ ಕೂದಲು ಉದ್ದವಾಗಿದೆ' } } ],
+    title: { en: 'Use a comb!', ml: 'ചീപ്പ് ഉപയോഗിക്കൂ!', hi: 'कंघी इस्तेमाल करो!', kn: 'ಬಾಚಣಿಗೆ ಬಳಸು!' },
+    body: { en: 'A comb is for hair. A toothbrush is for teeth.', ml: 'ചീപ്പ് മുടിക്ക്. ടൂത്ത്ബ്രഷ് പല്ലിന്.', hi: 'कंघी बालों के लिए है। टूथब्रश दाँतों के लिए।', kn: 'ಬಾಚಣಿಗೆ ಕೂದಲಿಗೆ. ಟೂತ್‌ಬ್ರಶ್ ಹಲ್ಲಿಗೆ.' } },
+  { id: 'soup',
+    right: { em: '🥄', label: { en: 'Soup needs a spoon, not a fork', ml: 'സൂപ്പിന് സ്പൂൺ വേണം, ഫോർക്ക് അല്ല', hi: 'सूप के लिए चम्मच चाहिए, काँटा नहीं', kn: 'ಸೂಪ್‌ಗೆ ಚಮಚ ಬೇಕು, ಫೋರ್ಕ್ ಅಲ್ಲ' } },
+    wrong: [
+      { em: '🥣', label: { en: 'The bowl is round', ml: 'പാത്രം വട്ടത്തിലാണ്', hi: 'कटोरा गोल है', kn: 'ಬಟ್ಟಲು ದುಂಡಾಗಿದೆ' } },
+      { em: '😋', label: { en: 'He is hungry', ml: 'അവന് വിശക്കുന്നു', hi: 'उसे भूख लगी है', kn: 'ಅವನಿಗೆ ಹಸಿವಾಗಿದೆ' } } ],
+    title: { en: 'Use a spoon!', ml: 'സ്പൂൺ ഉപയോഗിക്കൂ!', hi: 'चम्मच इस्तेमाल करो!', kn: 'ಚಮಚ ಬಳಸು!' },
+    body: { en: 'We drink soup with a spoon.', ml: 'സൂപ്പ് സ്പൂൺ കൊണ്ടാണ് കുടിക്കുന്നത്.', hi: 'सूप हम चम्मच से पीते हैं।', kn: 'ನಾವು ಸೂಪ್ ಅನ್ನು ಚಮಚದಿಂದ ಕುಡಿಯುತ್ತೇವೆ.' } },
+  { id: 'rain',
+    right: { em: '☂️', label: { en: 'Open the umbrella in the rain', ml: 'മഴയത്ത് കുട തുറക്കണം', hi: 'बारिश में छाता खोलो', kn: 'ಮಳೆಯಲ್ಲಿ ಕೊಡೆ ತೆರೆಯಬೇಕು' } },
+    wrong: [
+      { em: '🎒', label: { en: 'She has a school bag', ml: 'അവൾക്ക് സ്കൂൾ ബാഗ് ഉണ്ട്', hi: 'उसके पास स्कूल बैग है', kn: 'ಅವಳ ಬಳಿ ಶಾಲೆ ಚೀಲ ಇದೆ' } },
+      { em: '🚶', label: { en: 'She is walking', ml: 'അവൾ നടക്കുന്നു', hi: 'वह चल रही है', kn: 'ಅವಳು ನಡೆಯುತ್ತಿದ್ದಾಳೆ' } } ],
+    title: { en: 'Open your umbrella!', ml: 'കുട തുറക്കൂ!', hi: 'छाता खोलो!', kn: 'ಕೊಡೆ ತೆರೆ!' },
+    body: { en: 'When it rains, open your umbrella to stay dry.', ml: 'മഴ പെയ്യുമ്പോൾ നനയാതിരിക്കാൻ കുട തുറക്കൂ.', hi: 'बारिश हो तो सूखे रहने के लिए छाता खोलो।', kn: 'ಮಳೆ ಬಂದಾಗ ಒದ್ದೆಯಾಗದಿರಲು ಕೊಡೆ ತೆರೆ.' } }
+];
+var PICS = { socks: 'fix-socks', paste: 'fix-paste', hands: 'fix-hands', comb: 'fix-comb', soup: 'fix-soup', rain: 'fix-rain' };
+
+TRIUP.start({
+  title: { en: 'Fix the Mistake', ml: 'തെറ്റ് തിരുത്താം', hi: 'गलती ठीक करो', kn: 'ತಪ್ಪು ಸರಿಪಡಿಸು' },
+  hint: { en: 'Find what is wrong in the picture', ml: 'ചിത്രത്തിലെ തെറ്റ് കണ്ടെത്തൂ', hi: 'तस्वीर में गलती ढूँढो', kn: 'ಚಿತ್ರದಲ್ಲಿ ತಪ್ಪು ಹುಡುಕು' },
+  build: function (p, body, api) {
+    FACP.quiz(p, body, api, {
+      /* the rain pictures came out unclear (open umbrella in both); left out until redrawn */
+      rounds: ROUNDS.filter(function (r) { return r.id !== 'rain'; }),
+      pic: function (r) { return FACP.pic(PICS[r.id] + '-wrong'); },
+      ask: function () { return ASK; },
+      options: function (r) {
+        return [{ id: 'ok', em: r.right.em, label: r.right.label }].concat(r.wrong.map(function (w, i) { return { id: 'w' + i, em: w.em, label: w.label }; }));
+      },
+      answer: function () { return 'ok'; },
+      after: function (r) { return { img: FACP.pic(PICS[r.id] + '-right'), title: r.title, body: r.body }; },
+      winTitle: { en: 'You fixed every mistake!', ml: 'എല്ലാ തെറ്റും തിരുത്തി!', hi: 'तुमने हर गलती ठीक कर दी!', kn: 'ಎಲ್ಲಾ ತಪ್ಪುಗಳನ್ನು ಸರಿಪಡಿಸಿದೆ!' }
+    });
+  }
+});
+
+</script>
+<script src="../js/audio-manager.js"></script>
+</body>
+</html>

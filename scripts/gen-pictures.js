@@ -32,7 +32,8 @@ app.whenReady().then(async () => {
     fd.append('image', new Blob([canvas]), 'canvas.png');
     const p = `Draw on this blank canvas: ${what}. A bright, clean, cute cartoon illustration for young children, ` +
       'soft shading, simple shapes, clear outlines, plain soft pastel background, centred, whole subject visible. ' +
-      'Indian setting and Indian people where people appear. No text, no letters, no numbers, no frames, no user-interface elements.';
+      'Draw ONLY what is described: no extra people, no crowd, no bystanders in the background. ' +
+      'No text, no letters, no numbers, no labels, no frames, no user-interface elements.';
     if (MODE === 'edit') { fd.append('prompt', p); fd.append('raw_prompt', 'true'); }
     else { refs.forEach((r, i) => fd.append('refs', new Blob([r]), 'ref' + i + '.png')); fd.append('prompt', p); }
     fd.append('size', '768'); fd.append('seed', String(spec.seed || 11));
