@@ -110,7 +110,7 @@ TRIUP.start({
       api.pill(p, 'c', '✓ ' + st.caught);
       api.pill(p, 'm', '📦 ' + st.missed + ' / ' + MAX_MISS);
     }
-    function showHint(o) { hint.textContent = o ? FACP.T(o) : ''; hint._o = o; }
+    function showHint(o, wrong) { hint.textContent = o ? (wrong ? FACP.T(FACP.WRONG) + ' ' : '') + FACP.T(o) : ''; hint._o = o; hint._w = wrong; }
 
     function spawn() {
       var pr = prod(), bad = Math.random() < 0.38;
@@ -127,7 +127,7 @@ TRIUP.start({
           showHint(TX.caught); pills();
           setTimeout(function () { el.remove(); }, 420);
           if (st.got >= PER_PRODUCT) nextProduct();
-        } else { FACP.nudge(el); showHint(TX.okOne); FACP.say(p, TX.okOne); }
+        } else { FACP.nudge(el); showHint(TX.okOne, true); FACP.sayAll([FACP.WRONG, TX.okOne]); }
       });
       belt.appendChild(el); st.items.push(it);
     }
@@ -161,7 +161,9 @@ TRIUP.start({
     function clearBelt() { st.items.forEach(function (it) { it.el.remove(); }); st.items = []; }
     function intro() {
       stop(); renderRef(); pills(); showHint(null);
-      api.popup(p, { img: FACP.pic('qc-' + prod().id + '-bad'), title: prod().bad, body: TX.newP, close: TX.start, onClose: run });
+      api.popup(p, { img: FACP.pic('qc-' + prod().id + '-bad'), title: prod().bad, body: TX.newP, close: TX.start, onClose: run, say: false });
+      /* the activity's spoken intro comes first, then the product */
+      if (p === 0) FACP.intro(function () { FACP.sayAll([prod().bad, TX.newP]); });
     }
     function nextProduct() {
       stop(); st.pi++; st.got = 0;
@@ -173,11 +175,11 @@ TRIUP.start({
     }
     function start() {
       stop(); if (st.items) clearBelt();
-      st.order = FACP.sh(PRODUCTS); st.pi = 0; st.got = 0; st.caught = 0; st.missed = 0;
+      st.order = FACP.group('qc', function () { return FACP.sh(PRODUCTS); }).list; st.pi = 0;   /* same products, same order, every panel */ st.got = 0; st.caught = 0; st.missed = 0;
       st.items = []; st.lastBad = 0; st.sinceBad = 0; st.size = 100;
       intro();
     }
-    FACP.onLang(function () { if (st.order) { renderRef(); showHint(hint._o); } });
+    FACP.onLang(function () { if (st.order) { renderRef(); showHint(hint._o, hint._w); } });
     start();
   }
 });

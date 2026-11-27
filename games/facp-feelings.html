@@ -80,13 +80,13 @@ TRIUP.start({
         WALL.bindTouch(t, function () {
           t.classList.add('ok'); WALL.sfx.tap();
           api.popup(p, { img: FACP.pic('feel-' + f.id), title: { en: f.em + ' ' + f.name.en, ml: f.em + ' ' + f.name.ml, hi: f.em + ' ' + f.name.hi, kn: f.em + ' ' + f.name.kn }, body: f.why, say: false });
-          FACP.say(p, f.why);
+          FACP.sayAny(f.why);
         });
         row.appendChild(t);
       });
       var go = FACP.button(QUIZ, api.colour(p), quiz);
       body.appendChild(lead); body.appendChild(row); body.appendChild(go);
-      FACP.say(p, LEARN);
+      FACP.intro();
     }
     function quiz() {
       mode = 'quiz'; body.innerHTML = '';

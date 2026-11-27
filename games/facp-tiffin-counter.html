@@ -115,7 +115,7 @@ TRIUP.start({
   title: { en: 'Tiffin Counter', ml: 'ടിഫിൻ കൗണ്ടർ', hi: 'टिफ़िन काउंटर', kn: 'ಟಿಫಿನ್ ಕೌಂಟರ್' },
   hint: { en: 'Give the customer exactly what they ordered', ml: 'ഓർഡർ ചെയ്തത് മാത്രം കൊടുക്കൂ', hi: 'ग्राहक को ठीक वही दो जो उसने माँगा', kn: 'ಗ್ರಾಹಕರು ಕೇಳಿದ್ದನ್ನೇ ಕೊಡು' },
   build: function (p, body, api) {
-    var st = { list: [], i: 0, tray: [], served: 0 };
+    var st = { tray: [], served: 0, list: null, i: -1 };
     var order = document.createElement('div'); order.className = 'tf-order';
     var leaf = document.createElement('div'); leaf.className = 'tf-leaf';
     var hint = document.createElement('div'); hint.className = 'facp-hint';
@@ -123,13 +123,20 @@ TRIUP.start({
     var serve = FACP.button(TXT.serve, api.colour(p), doServe);
     body.appendChild(order); body.appendChild(leaf); body.appendChild(hint); body.appendChild(shelf); body.appendChild(serve);
 
-    function cur() { return st.list[st.i]; }
-    function showHint(o) { hint.textContent = o ? FACP.T(o) : ''; hint._o = o; }
+    /* every panel serves the same customers in the same order */
+    var fresh = !FACP.group.has('tiffin');
+    var G = FACP.group('tiffin', function () { return FACP.sh(ORDERS).slice(0, 6); }, sayOrder);
+    function sayOrder() { if (!G.over()) FACP.sayAny(line(TXT.want, G.cur())); }
+    function cur() { return G.cur(); }
+    function cust() { return CUST[G.i % CUST.length]; }
+    function showHint(o, wrong) { hint.textContent = o ? (wrong ? FACP.T(FACP.WRONG) + ' ' : '') + FACP.T(o) : ''; hint._o = o; hint._w = wrong; }
 
     function renderOrder() {
       var ids = cur();
-      order.innerHTML = '<img class="tf-cust" src="' + FACP.pic(st.cust) + '" alt=""><div class="tf-bubble"><div class="say">' + FACP.T(TXT.want) + '</div>' +
+      order.innerHTML = '<img class="tf-cust" src="' + FACP.pic(cust()) + '" alt=""><div class="tf-bubble"><div class="say">' + FACP.T(TXT.want) + '</div>' +
         ids.map(function (id) { return '<span class="tf-chip"><img src="' + FACP.pic('food-' + id) + '" alt="">' + FACP.T(FOOD[id]) + '</span>'; }).join('') + '</div>';
+      /* tap the order to hear it again */
+      WALL.bindTouch(order, sayOrder);
     }
     function renderLeaf() {
       leaf.innerHTML = '';
@@ -141,9 +148,18 @@ TRIUP.start({
         leaf.appendChild(wrap);
       });
     }
+    function shelfIds() {
+      /* the shelf: the order plus a few others, eight in all — chosen once
+         per customer so every panel has the same shelf */
+      if (G.data) return G.data;
+      var ids = cur();
+      var pool = ids.indexOf('rice') !== -1 ? MEALS.concat(['sambar', 'idli', 'coffee']) : Object.keys(FOOD).filter(function (k) { return MEALS.indexOf(k) === -1; }).concat(['payasam']);
+      var extra = FACP.sh(pool.filter(function (k) { return ids.indexOf(k) === -1; }));
+      return (G.data = FACP.sh(ids.concat(extra).slice(0, Math.max(8, ids.length))));
+    }
     function renderShelf() {
       shelf.innerHTML = '';
-      st.shelf.forEach(function (id) {
+      shelfIds().forEach(function (id) {
         var t = FACP.tile({ id: id, img: FACP.pic('food-' + id), label: FOOD[id] });
         if (st.tray.indexOf(id) !== -1) t.classList.add('ok');
         WALL.bindTouch(t, function () {
@@ -154,38 +170,45 @@ TRIUP.start({
         shelf.appendChild(t);
       });
     }
-    function deal() {
-      if (st.i >= st.list.length) return api.win(p, { title: TXT.win, onAgain: start });
-      var ids = cur();
-      st.cust = CUST[st.i % CUST.length];
-      st.tray = [];
-      /* the shelf: the order plus a few others, eight in all */
-      var pool = ids.indexOf('rice') !== -1 ? MEALS.concat(['sambar', 'idli', 'coffee']) : Object.keys(FOOD).filter(function (k) { return MEALS.indexOf(k) === -1; }).concat(['payasam']);
-      var extra = FACP.sh(pool.filter(function (k) { return ids.indexOf(k) === -1; }));
-      st.shelf = FACP.sh(ids.concat(extra).slice(0, Math.max(8, ids.length)));
+    function wait() {
+      shelf.innerHTML = ''; leaf.innerHTML = ''; serve.style.display = 'none';
+      showHint(FACP.WAIT);
+    }
+    function show() {
+      if (st.list !== G.list) { st.list = G.list; st.served = 0; }
+      if (G.over()) {
+        order.innerHTML = ''; shelf.innerHTML = ''; leaf.innerHTML = ''; serve.style.display = 'none';
+        if (G.ready[p]) return showHint(FACP.WAIT);
+        showHint(null);
+        return api.win(p, { title: TXT.win, onAgain: function () { G.done(p); } });
+      }
+      if (st.i !== G.i) { st.i = G.i; st.tray = []; }
       api.pill(p, 'n', '⭐ ' + st.served);
+      renderOrder();
+      if (G.ready[p]) return wait();
+      serve.style.display = '';
       showHint(TXT.tap);
-      renderOrder(); renderLeaf(); renderShelf();
-      FACP.say(p, line(TXT.want, ids));
+      renderLeaf(); renderShelf();
     }
     function doServe() {
       var ids = cur();
-      if (!st.tray.length) { showHint(TXT.empty); FACP.say(p, TXT.empty); WALL.sfx.nudge(); return; }
+      if (!st.tray.length) { showHint(TXT.empty); FACP.sayAny(TXT.empty); WALL.sfx.nudge(); return; }
       var miss = ids.filter(function (id) { return st.tray.indexOf(id) === -1; });
       var extra = st.tray.filter(function (id) { return ids.indexOf(id) === -1; });
-      if (extra.length) { var o = line(TXT.extra, extra); showHint(o); FACP.say(p, o); WALL.sfx.nudge(); return; }
-      if (miss.length) { var m = line(TXT.need, miss); showHint(m); FACP.say(p, m); WALL.sfx.nudge(); return; }
-      WALL.sfx.correct(); st.served++; st.i++;
+      if (extra.length) { var o = line(TXT.extra, extra); showHint(o, true); FACP.sayAll([FACP.WRONG, o]); WALL.sfx.nudge(); return; }
+      if (miss.length) { var m = line(TXT.need, miss); showHint(m, true); FACP.sayAll([FACP.WRONG, m]); WALL.sfx.nudge(); return; }
+      WALL.sfx.correct(); st.served++;
       api.pill(p, 'n', '⭐ ' + st.served);
-      api.popup(p, { img: ids.indexOf('rice') !== -1 ? FACP.pic('food-meals') : FACP.pic(st.cust), title: TXT.thanks, body: TXT.right, close: TXT.next, onClose: deal });
+      api.popup(p, { img: ids.indexOf('rice') !== -1 ? FACP.pic('food-meals') : FACP.pic(cust()), title: TXT.thanks, body: TXT.right, close: TXT.next,
+                     onClose: function () { G.done(p); } });
     }
-    function start() { st.list = FACP.sh(ORDERS).slice(0, 6); st.i = 0; st.served = 0; deal(); }
+    G.join(p, { show: show, wait: wait });
+    if (fresh) FACP.intro(sayOrder);
     FACP.onLang(function () {
-      if (st.i >= st.list.length) return;
-      renderOrder(); renderShelf(); showHint(hint._o);
       serve.textContent = FACP.T(TXT.serve);
+      if (G.over()) return;
+      renderOrder(); if (!G.ready[p]) renderShelf(); showHint(hint._o, hint._w);
     });
-    start();
   }
 });
 

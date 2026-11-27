@@ -232,10 +232,10 @@
       var x = new XMLHttpRequest();
       x.open('GET', src); x.responseType = 'arraybuffer';
       x.onload = function () {
-        var AC = global.AudioContext || global.webkitAudioContext;
-        var dec = new AC();
+        /* decode offline: opening a live AudioContext per clip (and closing it
+           inside its own decode callback) crashed the renderer on Windows */
+        var dec = new OfflineAudioContext(1, 1, 44100);
         dec.decodeAudioData(x.response, function (b) {
-          try { dec.close(); } catch (e) {}
           var outLen = Math.ceil(b.length / p);
           var off = new OfflineAudioContext(b.numberOfChannels, outLen, b.sampleRate);
           var s = off.createBufferSource();
@@ -264,13 +264,14 @@
       rate(s);
       return Promise.resolve();
     }
-    return pitchedUrl(src, p).then(function (url) {
-      if (el.src !== url) el.src = url;
-      rate(s / p);
-    }, function () {                      // could not render: play it unpitched
-      if (el.src !== src) el.src = src;
-      rate(s);
-    });
+    /* Pitch by playing the clip faster/slower WITHOUT preserving pitch, so
+       pitch and pace move together a little. The cleaner way (pitchedUrl:
+       re-render the clip offline, then time-stretch it) crashed the Electron
+       28 renderer on Windows (access violation), so it is not used. */
+    if (el.src !== src) el.src = src;
+    try { el.preservesPitch = false; } catch (e) {}
+    el.defaultPlaybackRate = s * p; el.playbackRate = s * p;
+    return Promise.resolve();
   }
 
   var MP = global.HTMLMediaElement && global.HTMLMediaElement.prototype;

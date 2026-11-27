@@ -175,6 +175,8 @@
 
   global.VOICE = {
     has: has, say: say, stop: stop, coverage: coverage,
+    /** the clip that is still playing, or null — lets a caller wait for it */
+    current: function () { return playing && !playing.paused && !playing.ended ? playing : null; },
     get available() { return !!manifest(); }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

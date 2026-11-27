@@ -97,15 +97,47 @@ const CATEGORIES = {
             { name: 'Party Decoration',   ml: '🎈 ജന്മദിന അലങ്കാരം', game: 'voc-party-decorate' }
         ]
     },
-    // FACP interactive session: personal, social and occupational domains.
+    // FACP interactive session. The three domains come first (one big
+    // header each), then the activities inside the chosen domain.
     'facp': {
         title: 'FACP Interactive Session',
         titleMl: 'FACP ഇന്ററാക്ടീവ് സെഷൻ',
+        header: { en: 'Choose a domain', ml: 'ഒരു മേഖല തിരഞ്ഞെടുക്കൂ' },
+        subcategories: [
+            { name: '🧍 Personal Domain',     ml: '🧍 വ്യക്തിഗത മേഖല',  key: 'facp-personal',
+              desc: 'Fix the Mistake · Clean It Right',  descMl: 'തെറ്റ് തിരുത്താം · ശരിയായി വൃത്തിയാക്കാം' },
+            { name: '🤝 Social Domain',       ml: '🤝 സാമൂഹിക മേഖല',   key: 'facp-social',
+              desc: 'Feelings · Emergency Help',         descMl: 'വികാരങ്ങൾ · അടിയന്തര സഹായം' },
+            { name: '💼 Occupational Domain', ml: '💼 തൊഴിൽ മേഖല',     key: 'facp-occupational',
+              desc: 'Tiffin Counter · Quality Check',    descMl: 'ടിഫിൻ കൗണ്ടർ · ഗുണനിലവാര പരിശോധന' }
+        ]
+    },
+    'facp-personal': {
+        title: 'FACP Interactive Session',
+        titleMl: 'FACP ഇന്ററാക്ടീവ് സെഷൻ',
+        parent: 'facp', domain: 'personal',
+        header: { en: '🧍 Personal Domain', ml: '🧍 വ്യക്തിഗത മേഖല' },
         options: [
             { name: 'Fix the Mistake',  ml: '🔍 തെറ്റ് തിരുത്താം', game: 'facp-fix-mistake' },
-            { name: 'Clean It Right',   ml: '🧼 ശരിയായി വൃത്തിയാക്കാം', game: 'facp-clean-right' },
+            { name: 'Clean It Right',   ml: '🧼 ശരിയായി വൃത്തിയാക്കാം', game: 'facp-clean-right' }
+        ]
+    },
+    'facp-social': {
+        title: 'FACP Interactive Session',
+        titleMl: 'FACP ഇന്ററാക്ടീവ് സെഷൻ',
+        parent: 'facp', domain: 'social',
+        header: { en: '🤝 Social Domain', ml: '🤝 സാമൂഹിക മേഖല' },
+        options: [
             { name: 'Feelings',         ml: '😀 വികാരങ്ങൾ', game: 'facp-feelings' },
-            { name: 'Emergency Help',   ml: '🚨 അടിയന്തര സഹായം', game: 'facp-who-to-call' },
+            { name: 'Emergency Help',   ml: '🚨 അടിയന്തര സഹായം', game: 'facp-who-to-call' }
+        ]
+    },
+    'facp-occupational': {
+        title: 'FACP Interactive Session',
+        titleMl: 'FACP ഇന്ററാക്ടീവ് സെഷൻ',
+        parent: 'facp', domain: 'occupational',
+        header: { en: '💼 Occupational Domain', ml: '💼 തൊഴിൽ മേഖല' },
+        options: [
             { name: 'Tiffin Counter',   ml: '🍛 ടിഫിൻ കൗണ്ടർ', game: 'facp-tiffin-counter' },
             { name: 'Quality Check',    ml: '🏭 ഗുണനിലവാര പരിശോധന', game: 'facp-quality-check' }
         ]
@@ -270,7 +302,8 @@ function showSubmenu(categoryName) {
     const optsCont  = document.getElementById('submenu-options');
     titleEl.innerHTML = labelHTML(category.title, category.titleMl);
     optsCont.innerHTML  = '';
-    box.classList.remove('pp-grid');
+    box.classList.remove('pp-grid', 'facp-pick', 'facp-dom');
+    box.removeAttribute('data-domain');
     // All level modules use the compact 3-up grid; Secondary has 9
     // entries and would otherwise render as one very tall column.
     if (categoryName === 'pre-primary' || categoryName === 'primary' ||
@@ -278,6 +311,17 @@ function showSubmenu(categoryName) {
         categoryName === 'vocational' ||
         categoryName === 'kannada' ||
         categoryName === 'facp') box.classList.add('pp-grid');
+
+    // FACP: a big header above the choices — "Choose a domain" on the
+    // first screen, the domain's own name inside it.
+    if (category.header) {
+        box.classList.add(category.domain ? 'facp-dom' : 'facp-pick');
+        if (category.domain) box.setAttribute('data-domain', category.domain);
+        const hd = document.createElement('div');
+        hd.className = 'facp-header';
+        hd.innerHTML = labelHTML(category.header.en, category.header.ml);
+        optsCont.appendChild(hd);
+    }
 
     // \u2500\u2500 Back button \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if (category.parent) {
@@ -302,8 +346,10 @@ function showSubmenu(categoryName) {
         category.subcategories.forEach(sub => {
             if (!categoryAllowed(sub.key)) return; // mode gating
             const subEl = document.createElement('div');
-            subEl.className   = 'submenu-option';
-            subEl.innerHTML   = labelHTML(sub.name, sub.ml);
+            subEl.className   = 'submenu-option' + (sub.desc ? ' facp-domain' : '');
+            if (sub.desc) subEl.setAttribute('data-domain', sub.key.replace('facp-', ''));
+            subEl.innerHTML   = labelHTML(sub.name, sub.ml) +
+                (sub.desc ? '<span class="facp-acts">' + labelHTML(sub.desc, sub.descMl) + '</span>' : '');
             const goSub = (e) => {
                 if (e.type === 'click' && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
                 if (e.type === 'touchend') e.preventDefault();

@@ -355,6 +355,11 @@ def main() -> None:
                     help="which language's corpus to render (default ml)")
     ap.add_argument("--force", action="store_true",
                     help="re-render lines that already have a clip")
+    ap.add_argument("--from-file", default="",
+                    help="render only lines whose text appears in this file (e.g. js/facp-kit.js)")
+    ap.add_argument("--shard", default="",
+                    help="K/N: render only every Nth line, starting at K (1-based), "
+                         "so N processes can share one language")
     args = ap.parse_args()
     utf8_console()
 
@@ -422,6 +427,13 @@ def main() -> None:
 
     todo = [(t, f) for t, f in items
             if args.force or not (OUT / f).exists() or f in set(stale)]
+    if args.from_file:
+        src = (ROOT / args.from_file).read_text(encoding="utf-8")
+        todo = [(t, f) for t, f in todo if t in src]
+    if args.shard:
+        k, n = (int(x) for x in args.shard.split("/"))
+        mine = {f for _, f in items[k - 1::n]}
+        todo = [(t, f) for t, f in todo if f in mine]
     print(f"{len(items)} lines, {len(items) - len(todo)} already rendered, "
           f"{len(todo)} to do")
     if not todo:
@@ -497,6 +509,8 @@ def main() -> None:
         # every clip from a stopped run as "predates this file" and never
         # re-check it again.
         heard[fname] = said
+        if args.shard and HEARD.exists():
+            heard = {**json.loads(HEARD.read_text(encoding="utf-8")), **heard}
         HEARD.write_text(json.dumps(heard, ensure_ascii=False, indent=1),
                          encoding="utf-8")
 

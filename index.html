@@ -292,6 +292,23 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 .pp-grid{ max-width:700px !important; }
 .pp-grid .submenu-options{ display:grid !important; grid-template-columns:1fr 1fr 1fr; }
 .pp-grid .submenu-option{ text-align:center; padding:18px 10px; font-size:14px; }
+/* FACP: domains first, each with a big header */
+.facp-pick,.facp-dom{ max-width:860px !important; }
+.facp-header{ grid-column:1/-1; text-align:center; font-size:34px; font-weight:900; color:#4c1d95;
+  background:linear-gradient(135deg,#ede9fe,#c4b5fd); border-radius:20px; padding:14px 18px;
+  box-shadow:0 6px 0 rgba(76,29,149,.18); margin-bottom:6px; }
+.facp-header .opt-en{ font-size:.5em; }
+.facp-dom[data-domain=personal] .facp-header{ background:linear-gradient(135deg,#dcfce7,#86efac); color:#14532d; }
+.facp-dom[data-domain=social] .facp-header{ background:linear-gradient(135deg,#fef3c7,#fcd34d); color:#78350f; }
+.facp-dom[data-domain=occupational] .facp-header{ background:linear-gradient(135deg,#dbeafe,#93c5fd); color:#1e3a8a; }
+.facp-dom .submenu-option:not(.facp-header){ font-size:20px; padding:26px 12px; }
+.facp-pick .submenu-options{ grid-template-columns:1fr 1fr 1fr; }
+.submenu-option.facp-domain{ font-size:24px; padding:26px 12px; border-width:3px; }
+.submenu-option.facp-domain[data-domain=personal]{ background:linear-gradient(135deg,#f0fdf4,#bbf7d0); border-color:#22c55e; }
+.submenu-option.facp-domain[data-domain=social]{ background:linear-gradient(135deg,#fffbeb,#fde68a); border-color:#f59e0b; }
+.submenu-option.facp-domain[data-domain=occupational]{ background:linear-gradient(135deg,#eff6ff,#bfdbfe); border-color:#3b82f6; }
+.facp-acts{ display:block; margin-top:10px; font-size:.55em; font-weight:700; opacity:.8; }
+.facp-acts .opt-ml{ font-weight:700; }
 /* Malayalam-first submenu labels, English underneath */
 .opt-ml{ display:block; font-family:'Noto Sans Malayalam','Baloo 2',sans-serif;
          font-weight:800; line-height:1.25; }

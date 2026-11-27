@@ -82,7 +82,6 @@ var PROBLEMS = [
     body: { en: 'Brush with toothpaste in the morning and at night.', ml: 'രാവിലെയും രാത്രിയും പേസ്റ്റ് ഉപയോഗിച്ച് പല്ലു തേക്കൂ.', hi: 'सुबह और रात को पेस्ट से ब्रश करो।', kn: 'ಬೆಳಿಗ್ಗೆ ಮತ್ತು ರಾತ್ರಿ ಪೇಸ್ಟ್‌ನಿಂದ ಹಲ್ಲುಜ್ಜು.' } }
 ];
 var WATER_NO = { en: 'Water alone leaves the dirt behind. Try another!', ml: 'വെറും വെള്ളം കൊണ്ട് അഴുക്ക് പോകില്ല. മറ്റൊന്ന് നോക്കൂ!', hi: 'सिर्फ़ पानी से गंदगी नहीं जाती। दूसरा चुनो!', kn: 'ಬರೀ ನೀರಿನಿಂದ ಕೊಳೆ ಹೋಗುವುದಿಲ್ಲ. ಇನ್ನೊಂದು ನೋಡು!' };
-var NOT_THIS = { en: 'That is not the right one for this. Try another!', ml: 'ഇതിന് അത് പറ്റില്ല. മറ്റൊന്ന് നോക്കൂ!', hi: 'यह इसके लिए सही नहीं है। दूसरा चुनो!', kn: 'ಇದಕ್ಕೆ ಅದು ಸರಿಯಲ್ಲ. ಇನ್ನೊಂದು ನೋಡು!' };
 
 function toolTile(id) { return { id: id, img: FACP.pic('tool-' + id), label: TOOLS[id] }; }
 
@@ -99,7 +98,7 @@ TRIUP.start({
         return [r.tool, 'water'].concat(others).map(toolTile);
       },
       answer: function (r) { return r.tool; },
-      wrong: function (r, op) { return op.id === 'water' ? WATER_NO : NOT_THIS; },
+      wrong: function (r, op) { return op.id === 'water' ? WATER_NO : null; },   /* the kit already says "That is wrong. Think again!" */
       after: function (r) { return { img: FACP.pic('tool-' + r.tool), title: r.title, body: r.body }; },
       winTitle: { en: 'Everything is clean!', ml: 'എല്ലാം വൃത്തിയായി!', hi: 'सब कुछ साफ़ हो गया!', kn: 'ಎಲ್ಲವೂ ಸ್ವಚ್ಛವಾಯಿತು!' }
     });

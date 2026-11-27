@@ -39,17 +39,113 @@
     return title || page || 'menu';
   }
 
+  // ---- center token upkeep -------------------------------------------------
+  // The center token from /external/center-auth expires. It used to be fetched
+  // once at login and never renewed, so every request after expiry got a 401,
+  // the session silently "ended" and all later touches/scores were lost.
+  // Now: renew shortly before expiry, and retry once on a 401.
+  var REFRESH_MARGIN_MS = 10 * 60 * 1000;
+  var KEEPALIVE_MAX_BYTES = 60000; // Chromium rejects keepalive bodies > 64KB
+  var refreshing = null;
+
+  function tokenExpiry(token) {
+    try {
+      var part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      var payload = JSON.parse(atob(part));
+      return payload.exp ? payload.exp * 1000 : 0;
+    } catch (_) { return 0; }
+  }
+
+  function needsRefresh(token) {
+    var exp = tokenExpiry(token);
+    return !!exp && exp - Date.now() < REFRESH_MARGIN_MS;
+  }
+
+  function refreshToken() {
+    if (refreshing) return refreshing;
+    var ipc = require('electron').ipcRenderer;
+    refreshing = ipc.invoke('store:get', 'license')
+      .then(function (lic) {
+        if (!lic || !lic.centerApiKey) throw new Error('not activated');
+        return fetch(BASE + '/api/v1/external/center-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ CenterApiKey: lic.centerApiKey })
+        }).then(function (r) {
+          if (!r.ok) throw new Error('center-auth ' + r.status);
+          return r.json();
+        }).then(function (j) {
+          var token = j && j.results && j.results.token;
+          if (!token) throw new Error('no token');
+          lic.token = token;
+          ipc.invoke('store:set', 'license', lic);
+          var s = getSession();
+          if (s) {
+            s.token = token;
+            localStorage.setItem('auticareSession', JSON.stringify(s));
+          }
+          return token;
+        });
+      })
+      .finally(function () { refreshing = null; });
+    return refreshing;
+  }
+
+  // ---- operator-facing connection note ----------------------------------------
+  // Small and quiet on purpose (children are looking at this screen): a muted
+  // line in the bottom corner, only while recording is actually failing.
+  var failures = 0;
+  function setOnline(ok) {
+    failures = ok ? 0 : failures + 1;
+    var el = document.getElementById('blueroom-offline-note');
+    if (failures >= 3) {
+      if (!el && document.body) {
+        el = document.createElement('div');
+        el.id = 'blueroom-offline-note';
+        el.textContent = 'Not recording — reconnecting…';
+        el.style.cssText = 'position:fixed;right:12px;bottom:10px;z-index:2147483647;' +
+          'font:12px/1.4 system-ui,sans-serif;color:#6b7280;background:rgba(255,255,255,.85);' +
+          'padding:4px 10px;border-radius:10px;pointer-events:none;';
+        document.body.appendChild(el);
+      }
+    } else if (el) {
+      el.remove();
+    }
+  }
+
+  function send(path, json, token) {
+    return fetch(BASE + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: json,
+      keepalive: json.length < KEEPALIVE_MAX_BYTES
+    });
+  }
+
+  function sendWithRetry(path, json, token) {
+    return send(path, json, token).then(function (r) {
+      if (r.status !== 401) return r;
+      return refreshToken().then(function (fresh) { return send(path, json, fresh); });
+    });
+  }
+
   function post(path, body) {
     var s = activeSession();
     if (!s) return;
+    var json = JSON.stringify(body);
+    var done = function (r) { setOnline(!!(r && r.ok)); };
+    var fail = function () { setOnline(false); };
     try {
-      fetch(BASE + path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.token },
-        body: JSON.stringify(body),
-        keepalive: true
-      }).catch(function () {});
-    } catch (_) {}
+      if (needsRefresh(s.token)) {
+        refreshToken()
+          .catch(function () { return s.token; })
+          .then(function (t) { return sendWithRetry(path, json, t); })
+          .then(done, fail);
+      } else {
+        // Fire synchronously so beforeunload events still go out.
+        sendWithRetry(path, json, s.token).then(done, fail);
+      }
+    } catch (_) { fail(); }
   }
 
   function logActivity(eventType, data) {
